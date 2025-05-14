@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "network_puzzles"
+authors = [
+    {name = "Tim Young"},
+    {name = "Nate Marti", email = "nate_marti@sil.org"},
+]
+description = "A simple program for teaching network principles"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+dependencies = [
+    "kivy",
+]
+dynamic = ["readme", "version"]
+
+[project.optional-dependencies]
+build = [
+    "buildozer",
+    "pyinstaller",
+]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"], content-type = "text/plain"}
+version = {attr = "network_puzzles.__version__"}
