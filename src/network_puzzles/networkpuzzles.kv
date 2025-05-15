@@ -1,0 +1,98 @@
+#:kivy 2.0
+
+BoxLayout:
+    BoxLayout:
+        size_hint_x: 1/3
+        orientation: 'vertical'
+        BoxLayout:  # menu buttons group
+            size_hint_y: 0.1
+            width: self.width
+            padding: dp(5)
+            spacing: dp(5)
+            AppButton:
+                id: menu
+                text: 'Menu'
+                on_press: app.on_menu()
+            AppButton:
+                id: help
+                pos_hint: {'right': 1, 'x': 1}
+                text: "?"
+                on_press: app.on_help()
+        HSeparator:
+        AppLabel:
+            id: instructions
+            size_hint_y: 0.75
+            border_width: dp(3)
+            border_color: app.DARK_COLOR
+            text: "Puzzle instructions"
+        TerminalLabel:
+            id: terminal
+            size_hint_y: 0.15
+            text: f"Terminal output...\nline 2...\nline 3...\nline 4..."
+            max_lines: 4
+    VSeparator:
+    FloatLayout:
+        size_hint_x: 2/3
+        AppLabel:
+            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
+            text: "Network devices layout"
+
+
+<AppButton@Button>
+    background_normal: ''  # sets initial background to white
+    background_color: (1, 1, 1, 0)  # makes it transparent
+    size_hint_x: None
+    width: self.height
+    color: app.DARK_COLOR
+    bold: True
+    canvas.before:
+        Color:
+            rgba: app.LIGHT_COLOR if self.state == 'normal' else app.LIGHTEST_COLOR
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [dp(10)]
+
+
+<AppLabel@Label>
+    padding: dp(10)
+    canvas.before:
+        Color:
+            rgba: app.LIGHTER_COLOR
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    color: app.DARK_COLOR
+    halign: 'left'
+    valign: 'top'
+    text_size: self.size
+    font_size: sp(16)
+
+<TerminalLabel@AppLabel>
+    canvas.before:
+        Color:
+            rgba: app.LIGHTEST_COLOR
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    color: app.DARK_COLOR
+    font_name: 'RobotoMono-Regular'
+    valign: 'bottom'
+    font_size: sp(12)
+
+
+<Separator@Widget>:
+    canvas:
+        Color:
+            rgba: app.DARK_COLOR
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<HSeparator@Separator>:
+    size_hint_y: None
+    height: dp(1)
+
+<VSeparator@Separator>:
+    size_hint_x: None
+    width: dp(1)

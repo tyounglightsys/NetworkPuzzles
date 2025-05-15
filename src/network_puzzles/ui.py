@@ -13,7 +13,7 @@ class CLI(UI):
 class GUI(UI):
     def __init__(self, kivyapp):
         self.app = kivyapp()
-        self.app.title = self.TITLE
+        # self.app.title = self.TITLE  # inferred from App subclass in .gui
 
     def run(self):
         self.app.run()
