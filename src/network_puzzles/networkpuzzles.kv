@@ -21,15 +21,15 @@ BoxLayout:
         HSeparator:
         AppLabel:
             id: instructions
-            size_hint_y: 0.75
+            size_hint_y: 0.72
             border_width: dp(3)
             border_color: app.DARK_COLOR
             text: "Puzzle instructions"
         TerminalLabel:
             id: terminal
-            size_hint_y: 0.15
-            text: f"Terminal output...\nline 2...\nline 3...\nline 4..."
-            max_lines: 4
+            size_hint_y: 0.18
+            text: f"Terminal output...\nline 2...\nline 3...\nline 4...\nline 5...\nline 6..."
+            max_lines: 6
     VSeparator:
     FloatLayout:
         size_hint_x: 2/3
@@ -38,7 +38,7 @@ BoxLayout:
             text: "Network devices layout"
 
 
-<AppButton@Button>
+<AppButton@Button>:
     background_normal: ''  # sets initial background to white
     background_color: (1, 1, 1, 0)  # makes it transparent
     size_hint_x: None
@@ -54,7 +54,7 @@ BoxLayout:
             radius: [dp(10)]
 
 
-<AppLabel@Label>
+<AppLabel@Label>:
     padding: dp(10)
     canvas.before:
         Color:
@@ -68,7 +68,7 @@ BoxLayout:
     text_size: self.size
     font_size: sp(16)
 
-<TerminalLabel@AppLabel>
+<TerminalLabel@AppLabel>:
     canvas.before:
         Color:
             rgba: app.LIGHTEST_COLOR

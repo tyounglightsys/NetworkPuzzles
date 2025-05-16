@@ -1,7 +1,16 @@
 class UI:
     TITLE = 'NetworkPuzzles'
 
+    def console_write(self, line):
+        """Used to show terminal output to the user."""
+        raise NotImplementedError
+
+    def load_puzzle(self, file_path):
+        """Set up the UI based on the data in the puzzle file."""
+        raise NotImplementedError
+
     def run(self):
+        """Startup the app when first launched."""
         raise NotImplementedError
 
 
