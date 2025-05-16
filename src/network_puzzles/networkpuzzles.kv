@@ -38,7 +38,7 @@ BoxLayout:
             text: "Network devices layout"
 
 
-<AppButton@Button>
+<AppButton@Button>:
     background_normal: ''  # sets initial background to white
     background_color: (1, 1, 1, 0)  # makes it transparent
     size_hint_x: None
@@ -54,7 +54,7 @@ BoxLayout:
             radius: [dp(10)]
 
 
-<AppLabel@Label>
+<AppLabel@Label>:
     padding: dp(10)
     canvas.before:
         Color:
@@ -68,7 +68,7 @@ BoxLayout:
     text_size: self.size
     font_size: sp(16)
 
-<TerminalLabel@AppLabel>
+<TerminalLabel@AppLabel>:
     canvas.before:
         Color:
             rgba: app.LIGHTEST_COLOR
