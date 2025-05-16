@@ -1,0 +1,138 @@
+{
+  "EduNetworkBuilder": {
+    "Network": {
+      "fr_message": "Pour apprendre comment ce programme fonctionne, nous allons d'abord vous familiariser avec l'aide. La plupart des énigmes que vous faites, vous voudrez faire avec le moins d'aide possible. Mais, il y a de l'aide quand vous en avez besoin. Pour ce puzzle, cliquez sur l'un des quatre niveaux d'aide (boutons ronds) sur la droite. Passez ensuite la souris sur le PC et voyez les messages. Lorsque vous avez survolé tous les boutons (et appuyé sur la touche?), Ce casse-tête sera terminé.",
+      "en_message": "To learn how this program works, first we will acquaint you with the 'Help.'  Most of the puzzles you do, you will want to do with as little help as possible.  But, there is help when you need it.  For this puzzle, click one of the four help-levels (round buttons) on the right.  Then mouse-over the PC and see the messages.  When you have moused-over for all the buttons (and pressed the ? box), this puzzle will be completed.",
+      "en_title": "Learn how help works",
+      "en_url": "https://youtu.be/GcmGomZImhs",
+      "height": "1024",
+      "width": "1024",
+      "itemsize": "100",
+      "showlabels": "full",
+      "level": "0",
+      "sortorder": "0",
+      "uniqueidentifier": "106",
+      "startinghelplevel": "full",
+      "vlansenabled": "True",
+      "VLANPacketColors": "False",
+      "device": {
+        "hostname": "pc0",
+        "size": "100",
+        "uniqueidentifier": "100",
+        "location": "400,420",
+        "mytype": "pc",
+        "isdns": "False",
+        "isdhcp": "False",
+        "gateway": {
+          "ip": "0.0.0.0",
+          "mask": "0.0.0.0",
+          "gateway": "0.0.0.0",
+          "type": "gw"
+        },
+        "nic": [
+          {
+            "nictype": [
+              "lo",
+              "lo"
+            ],
+            "nicname": "lo0",
+            "myid": {
+              "hostid": "100",
+              "nicid": "101",
+              "hostname": "pc0",
+              "nicname": "lo0"
+            },
+            "uniqueidentifier": "101",
+            "usesdhcp": "False",
+            "ssid": null,
+            "interface": {
+              "nicname": "lo0",
+              "myip": {
+                "ip": "127.0.0.1",
+                "mask": "255.0.0.0",
+                "gateway": "0.0.0.0",
+                "type": "ip"
+              },
+              "VLAN": {
+                "@ID": "1",
+                "#text": "Untagged"
+              }
+            }
+          },
+          {
+            "nictype": [
+              "eth",
+              "eth"
+            ],
+            "nicname": "eth0",
+            "myid": {
+              "hostid": "100",
+              "nicid": "102",
+              "hostname": "pc0",
+              "nicname": "eth0"
+            },
+            "uniqueidentifier": "102",
+            "usesdhcp": "False",
+            "ssid": null,
+            "interface": {
+              "nicname": "eth0",
+              "myip": {
+                "ip": "192.168.1.1",
+                "mask": "255.255.255.0",
+                "gateway": "0.0.0.0",
+                "type": "ip"
+              },
+              "VLAN": {
+                "@ID": "1",
+                "#text": "Untagged"
+              }
+            }
+          }
+        ]
+      },
+      "nettest": [
+        {
+          "shost": "pc0",
+          "dhost": "none",
+          "thetest": "HelpRequest"
+        },
+        {
+          "shost": "pc0",
+          "dhost": "basic",
+          "thetest": "HelpRequest"
+        },
+        {
+          "shost": "pc0",
+          "dhost": "hints",
+          "thetest": "HelpRequest"
+        },
+        {
+          "shost": "pc0",
+          "dhost": "full",
+          "thetest": "HelpRequest"
+        },
+        {
+          "shost": "pc0",
+          "dhost": "?Button",
+          "thetest": "HelpRequest"
+        },
+        {
+          "shost": "pc0",
+          "dhost": "ViewButton",
+          "thetest": "HelpRequest"
+        },
+        {
+          "shost": "Help",
+          "dhost": "Read",
+          "thetest": "ReadContextHelp"
+        }
+      ],
+      "tag": "Help",
+      "VLANName": {
+        "@ID": "1",
+        "@Color": "Blue",
+        "#text": "Default"
+      }
+    }
+  }
+}

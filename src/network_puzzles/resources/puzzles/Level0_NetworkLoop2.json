@@ -1,0 +1,2030 @@
+{
+  "EduNetworkBuilder": {
+    "Network": {
+      "fr_message": "Les commutateurs gérés peuvent utiliser algorithme de l'arbre (STP), qui détermine intelligemment le chemin le moins éloigné d'un point. Il est fait pour que vous puissiez avoir des boucles réseau et survivre. Essayez de pinger pc1 deux fois à partir de pc0. La première fois, certains paquets sont perdus. Mais à la deuxième fois le paquet ira là où il devrait.",
+      "en_message": "Managed Switches can use Spanning Tree, which intelligently figures out the least distance path to a point.  It is made so you can have network loops and survive.  Try pinging pc1 twice from pc0.  The first time, some packets are lost.  But the second time the packet goes where it should.",
+      "en_title": "Network Loop2",
+      "en_url": null,
+      "height": "1024",
+      "width": "1024",
+      "itemsize": "100",
+      "showlabels": "none",
+      "level": "0",
+      "sortorder": "3.5",
+      "uniqueidentifier": "214",
+      "startinghelplevel": "full",
+      "vlansenabled": "True",
+      "VLANPacketColors": "False",
+      "device": [
+        {
+          "hostname": "net_switch0",
+          "size": "100",
+          "uniqueidentifier": "100",
+          "location": "210,410",
+          "mytype": "net_switch",
+          "isdns": "False",
+          "isdhcp": "False",
+          "gateway": {
+            "ip": "0.0.0.0",
+            "mask": "0.0.0.0",
+            "gateway": "0.0.0.0",
+            "type": "gw"
+          },
+          "nic": [
+            {
+              "nictype": [
+                "lo",
+                "lo"
+              ],
+              "nicname": "lo0",
+              "myid": {
+                "hostid": "100",
+                "nicid": "101",
+                "hostname": "net_switch0",
+                "nicname": "lo0"
+              },
+              "uniqueidentifier": "101",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "lo0",
+                "myip": {
+                  "ip": "127.0.0.1",
+                  "mask": "255.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "management_interface",
+                "management_interface"
+              ],
+              "nicname": "management_interface0",
+              "myid": {
+                "hostid": "100",
+                "nicid": "102",
+                "hostname": "net_switch0",
+                "nicname": "management_interface0"
+              },
+              "uniqueidentifier": "102",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "management_interface0",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port1",
+              "myid": {
+                "hostid": "100",
+                "nicid": "103",
+                "hostname": "net_switch0",
+                "nicname": "port1"
+              },
+              "uniqueidentifier": "103",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port1",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port2",
+              "myid": {
+                "hostid": "100",
+                "nicid": "104",
+                "hostname": "net_switch0",
+                "nicname": "port2"
+              },
+              "uniqueidentifier": "104",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port2",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port3",
+              "myid": {
+                "hostid": "100",
+                "nicid": "105",
+                "hostname": "net_switch0",
+                "nicname": "port3"
+              },
+              "uniqueidentifier": "105",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port3",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port4",
+              "myid": {
+                "hostid": "100",
+                "nicid": "106",
+                "hostname": "net_switch0",
+                "nicname": "port4"
+              },
+              "uniqueidentifier": "106",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port4",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port5",
+              "myid": {
+                "hostid": "100",
+                "nicid": "107",
+                "hostname": "net_switch0",
+                "nicname": "port5"
+              },
+              "uniqueidentifier": "107",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port5",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port6",
+              "myid": {
+                "hostid": "100",
+                "nicid": "108",
+                "hostname": "net_switch0",
+                "nicname": "port6"
+              },
+              "uniqueidentifier": "108",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port6",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port7",
+              "myid": {
+                "hostid": "100",
+                "nicid": "109",
+                "hostname": "net_switch0",
+                "nicname": "port7"
+              },
+              "uniqueidentifier": "109",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port7",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "hostname": "net_switch1",
+          "size": "100",
+          "uniqueidentifier": "110",
+          "location": "360,280",
+          "mytype": "net_switch",
+          "isdns": "False",
+          "isdhcp": "False",
+          "gateway": {
+            "ip": "0.0.0.0",
+            "mask": "0.0.0.0",
+            "gateway": "0.0.0.0",
+            "type": "gw"
+          },
+          "nic": [
+            {
+              "nictype": [
+                "lo",
+                "lo"
+              ],
+              "nicname": "lo0",
+              "myid": {
+                "hostid": "110",
+                "nicid": "111",
+                "hostname": "net_switch1",
+                "nicname": "lo0"
+              },
+              "uniqueidentifier": "111",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "lo0",
+                "myip": {
+                  "ip": "127.0.0.1",
+                  "mask": "255.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "management_interface",
+                "management_interface"
+              ],
+              "nicname": "management_interface0",
+              "myid": {
+                "hostid": "110",
+                "nicid": "112",
+                "hostname": "net_switch1",
+                "nicname": "management_interface0"
+              },
+              "uniqueidentifier": "112",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "management_interface0",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port1",
+              "myid": {
+                "hostid": "110",
+                "nicid": "113",
+                "hostname": "net_switch1",
+                "nicname": "port1"
+              },
+              "uniqueidentifier": "113",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port1",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port2",
+              "myid": {
+                "hostid": "110",
+                "nicid": "114",
+                "hostname": "net_switch1",
+                "nicname": "port2"
+              },
+              "uniqueidentifier": "114",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port2",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port3",
+              "myid": {
+                "hostid": "110",
+                "nicid": "115",
+                "hostname": "net_switch1",
+                "nicname": "port3"
+              },
+              "uniqueidentifier": "115",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port3",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port4",
+              "myid": {
+                "hostid": "110",
+                "nicid": "116",
+                "hostname": "net_switch1",
+                "nicname": "port4"
+              },
+              "uniqueidentifier": "116",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port4",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port5",
+              "myid": {
+                "hostid": "110",
+                "nicid": "117",
+                "hostname": "net_switch1",
+                "nicname": "port5"
+              },
+              "uniqueidentifier": "117",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port5",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port6",
+              "myid": {
+                "hostid": "110",
+                "nicid": "118",
+                "hostname": "net_switch1",
+                "nicname": "port6"
+              },
+              "uniqueidentifier": "118",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port6",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port7",
+              "myid": {
+                "hostid": "110",
+                "nicid": "119",
+                "hostname": "net_switch1",
+                "nicname": "port7"
+              },
+              "uniqueidentifier": "119",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port7",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "hostname": "net_switch2",
+          "size": "100",
+          "uniqueidentifier": "120",
+          "location": "350,480",
+          "mytype": "net_switch",
+          "isdns": "False",
+          "isdhcp": "False",
+          "gateway": {
+            "ip": "0.0.0.0",
+            "mask": "0.0.0.0",
+            "gateway": "0.0.0.0",
+            "type": "gw"
+          },
+          "nic": [
+            {
+              "nictype": [
+                "lo",
+                "lo"
+              ],
+              "nicname": "lo0",
+              "myid": {
+                "hostid": "120",
+                "nicid": "121",
+                "hostname": "net_switch2",
+                "nicname": "lo0"
+              },
+              "uniqueidentifier": "121",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "lo0",
+                "myip": {
+                  "ip": "127.0.0.1",
+                  "mask": "255.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "management_interface",
+                "management_interface"
+              ],
+              "nicname": "management_interface0",
+              "myid": {
+                "hostid": "120",
+                "nicid": "122",
+                "hostname": "net_switch2",
+                "nicname": "management_interface0"
+              },
+              "uniqueidentifier": "122",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "management_interface0",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port1",
+              "myid": {
+                "hostid": "120",
+                "nicid": "123",
+                "hostname": "net_switch2",
+                "nicname": "port1"
+              },
+              "uniqueidentifier": "123",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port1",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port2",
+              "myid": {
+                "hostid": "120",
+                "nicid": "124",
+                "hostname": "net_switch2",
+                "nicname": "port2"
+              },
+              "uniqueidentifier": "124",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port2",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port3",
+              "myid": {
+                "hostid": "120",
+                "nicid": "125",
+                "hostname": "net_switch2",
+                "nicname": "port3"
+              },
+              "uniqueidentifier": "125",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port3",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port4",
+              "myid": {
+                "hostid": "120",
+                "nicid": "126",
+                "hostname": "net_switch2",
+                "nicname": "port4"
+              },
+              "uniqueidentifier": "126",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port4",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port5",
+              "myid": {
+                "hostid": "120",
+                "nicid": "127",
+                "hostname": "net_switch2",
+                "nicname": "port5"
+              },
+              "uniqueidentifier": "127",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port5",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port6",
+              "myid": {
+                "hostid": "120",
+                "nicid": "128",
+                "hostname": "net_switch2",
+                "nicname": "port6"
+              },
+              "uniqueidentifier": "128",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port6",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port7",
+              "myid": {
+                "hostid": "120",
+                "nicid": "129",
+                "hostname": "net_switch2",
+                "nicname": "port7"
+              },
+              "uniqueidentifier": "129",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port7",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "hostname": "net_switch6",
+          "size": "100",
+          "uniqueidentifier": "160",
+          "location": "620,480",
+          "mytype": "net_switch",
+          "isdns": "False",
+          "isdhcp": "False",
+          "gateway": {
+            "ip": "0.0.0.0",
+            "mask": "0.0.0.0",
+            "gateway": "0.0.0.0",
+            "type": "gw"
+          },
+          "nic": [
+            {
+              "nictype": [
+                "lo",
+                "lo"
+              ],
+              "nicname": "lo0",
+              "myid": {
+                "hostid": "160",
+                "nicid": "161",
+                "hostname": "net_switch6",
+                "nicname": "lo0"
+              },
+              "uniqueidentifier": "161",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "lo0",
+                "myip": {
+                  "ip": "127.0.0.1",
+                  "mask": "255.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "management_interface",
+                "management_interface"
+              ],
+              "nicname": "management_interface0",
+              "myid": {
+                "hostid": "160",
+                "nicid": "162",
+                "hostname": "net_switch6",
+                "nicname": "management_interface0"
+              },
+              "uniqueidentifier": "162",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "management_interface0",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port1",
+              "myid": {
+                "hostid": "160",
+                "nicid": "163",
+                "hostname": "net_switch6",
+                "nicname": "port1"
+              },
+              "uniqueidentifier": "163",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port1",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port2",
+              "myid": {
+                "hostid": "160",
+                "nicid": "164",
+                "hostname": "net_switch6",
+                "nicname": "port2"
+              },
+              "uniqueidentifier": "164",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port2",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port3",
+              "myid": {
+                "hostid": "160",
+                "nicid": "165",
+                "hostname": "net_switch6",
+                "nicname": "port3"
+              },
+              "uniqueidentifier": "165",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port3",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port4",
+              "myid": {
+                "hostid": "160",
+                "nicid": "166",
+                "hostname": "net_switch6",
+                "nicname": "port4"
+              },
+              "uniqueidentifier": "166",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port4",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port5",
+              "myid": {
+                "hostid": "160",
+                "nicid": "167",
+                "hostname": "net_switch6",
+                "nicname": "port5"
+              },
+              "uniqueidentifier": "167",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port5",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port6",
+              "myid": {
+                "hostid": "160",
+                "nicid": "168",
+                "hostname": "net_switch6",
+                "nicname": "port6"
+              },
+              "uniqueidentifier": "168",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port6",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port7",
+              "myid": {
+                "hostid": "160",
+                "nicid": "169",
+                "hostname": "net_switch6",
+                "nicname": "port7"
+              },
+              "uniqueidentifier": "169",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port7",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "hostname": "net_switch7",
+          "size": "100",
+          "uniqueidentifier": "170",
+          "location": "620,280",
+          "mytype": "net_switch",
+          "isdns": "False",
+          "isdhcp": "False",
+          "gateway": {
+            "ip": "0.0.0.0",
+            "mask": "0.0.0.0",
+            "gateway": "0.0.0.0",
+            "type": "gw"
+          },
+          "nic": [
+            {
+              "nictype": [
+                "lo",
+                "lo"
+              ],
+              "nicname": "lo0",
+              "myid": {
+                "hostid": "170",
+                "nicid": "171",
+                "hostname": "net_switch7",
+                "nicname": "lo0"
+              },
+              "uniqueidentifier": "171",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "lo0",
+                "myip": {
+                  "ip": "127.0.0.1",
+                  "mask": "255.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "management_interface",
+                "management_interface"
+              ],
+              "nicname": "management_interface0",
+              "myid": {
+                "hostid": "170",
+                "nicid": "172",
+                "hostname": "net_switch7",
+                "nicname": "management_interface0"
+              },
+              "uniqueidentifier": "172",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "management_interface0",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port1",
+              "myid": {
+                "hostid": "170",
+                "nicid": "173",
+                "hostname": "net_switch7",
+                "nicname": "port1"
+              },
+              "uniqueidentifier": "173",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port1",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port2",
+              "myid": {
+                "hostid": "170",
+                "nicid": "174",
+                "hostname": "net_switch7",
+                "nicname": "port2"
+              },
+              "uniqueidentifier": "174",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port2",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port3",
+              "myid": {
+                "hostid": "170",
+                "nicid": "175",
+                "hostname": "net_switch7",
+                "nicname": "port3"
+              },
+              "uniqueidentifier": "175",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port3",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port4",
+              "myid": {
+                "hostid": "170",
+                "nicid": "176",
+                "hostname": "net_switch7",
+                "nicname": "port4"
+              },
+              "uniqueidentifier": "176",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port4",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port5",
+              "myid": {
+                "hostid": "170",
+                "nicid": "177",
+                "hostname": "net_switch7",
+                "nicname": "port5"
+              },
+              "uniqueidentifier": "177",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port5",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port6",
+              "myid": {
+                "hostid": "170",
+                "nicid": "178",
+                "hostname": "net_switch7",
+                "nicname": "port6"
+              },
+              "uniqueidentifier": "178",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port6",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port7",
+              "myid": {
+                "hostid": "170",
+                "nicid": "179",
+                "hostname": "net_switch7",
+                "nicname": "port7"
+              },
+              "uniqueidentifier": "179",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port7",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "hostname": "net_switch8",
+          "size": "100",
+          "uniqueidentifier": "180",
+          "location": "750,370",
+          "mytype": "net_switch",
+          "isdns": "False",
+          "isdhcp": "False",
+          "gateway": {
+            "ip": "0.0.0.0",
+            "mask": "0.0.0.0",
+            "gateway": "0.0.0.0",
+            "type": "gw"
+          },
+          "nic": [
+            {
+              "nictype": [
+                "lo",
+                "lo"
+              ],
+              "nicname": "lo0",
+              "myid": {
+                "hostid": "180",
+                "nicid": "181",
+                "hostname": "net_switch8",
+                "nicname": "lo0"
+              },
+              "uniqueidentifier": "181",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "lo0",
+                "myip": {
+                  "ip": "127.0.0.1",
+                  "mask": "255.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "management_interface",
+                "management_interface"
+              ],
+              "nicname": "management_interface0",
+              "myid": {
+                "hostid": "180",
+                "nicid": "182",
+                "hostname": "net_switch8",
+                "nicname": "management_interface0"
+              },
+              "uniqueidentifier": "182",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "management_interface0",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port1",
+              "myid": {
+                "hostid": "180",
+                "nicid": "183",
+                "hostname": "net_switch8",
+                "nicname": "port1"
+              },
+              "uniqueidentifier": "183",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port1",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port2",
+              "myid": {
+                "hostid": "180",
+                "nicid": "184",
+                "hostname": "net_switch8",
+                "nicname": "port2"
+              },
+              "uniqueidentifier": "184",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port2",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port3",
+              "myid": {
+                "hostid": "180",
+                "nicid": "185",
+                "hostname": "net_switch8",
+                "nicname": "port3"
+              },
+              "uniqueidentifier": "185",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port3",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port4",
+              "myid": {
+                "hostid": "180",
+                "nicid": "186",
+                "hostname": "net_switch8",
+                "nicname": "port4"
+              },
+              "uniqueidentifier": "186",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port4",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port5",
+              "myid": {
+                "hostid": "180",
+                "nicid": "187",
+                "hostname": "net_switch8",
+                "nicname": "port5"
+              },
+              "uniqueidentifier": "187",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port5",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port6",
+              "myid": {
+                "hostid": "180",
+                "nicid": "188",
+                "hostname": "net_switch8",
+                "nicname": "port6"
+              },
+              "uniqueidentifier": "188",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port6",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "port",
+                "port"
+              ],
+              "nicname": "port7",
+              "myid": {
+                "hostid": "180",
+                "nicid": "189",
+                "hostname": "net_switch8",
+                "nicname": "port7"
+              },
+              "uniqueidentifier": "189",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "port7",
+                "myip": {
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "hostname": "pc0",
+          "size": "100",
+          "uniqueidentifier": "190",
+          "location": "880,380",
+          "mytype": "pc",
+          "isdns": "False",
+          "isdhcp": "False",
+          "gateway": {
+            "ip": "0.0.0.0",
+            "mask": "0.0.0.0",
+            "gateway": "0.0.0.0",
+            "type": "gw"
+          },
+          "nic": [
+            {
+              "nictype": [
+                "lo",
+                "lo"
+              ],
+              "nicname": "lo0",
+              "myid": {
+                "hostid": "190",
+                "nicid": "191",
+                "hostname": "pc0",
+                "nicname": "lo0"
+              },
+              "uniqueidentifier": "191",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "lo0",
+                "myip": {
+                  "ip": "127.0.0.1",
+                  "mask": "255.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "eth",
+                "eth"
+              ],
+              "nicname": "eth0",
+              "myid": {
+                "hostid": "190",
+                "nicid": "192",
+                "hostname": "pc0",
+                "nicname": "eth0"
+              },
+              "uniqueidentifier": "192",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "eth0",
+                "myip": {
+                  "ip": "192.168.1.2",
+                  "mask": "255.255.255.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "hostname": "pc1",
+          "size": "100",
+          "uniqueidentifier": "193",
+          "location": "50,420",
+          "mytype": "pc",
+          "isdns": "False",
+          "isdhcp": "False",
+          "gateway": {
+            "ip": "0.0.0.0",
+            "mask": "0.0.0.0",
+            "gateway": "0.0.0.0",
+            "type": "gw"
+          },
+          "nic": [
+            {
+              "nictype": [
+                "lo",
+                "lo"
+              ],
+              "nicname": "lo0",
+              "myid": {
+                "hostid": "193",
+                "nicid": "194",
+                "hostname": "pc1",
+                "nicname": "lo0"
+              },
+              "uniqueidentifier": "194",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "lo0",
+                "myip": {
+                  "ip": "127.0.0.1",
+                  "mask": "255.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            },
+            {
+              "nictype": [
+                "eth",
+                "eth"
+              ],
+              "nicname": "eth0",
+              "myid": {
+                "hostid": "193",
+                "nicid": "195",
+                "hostname": "pc1",
+                "nicname": "eth0"
+              },
+              "uniqueidentifier": "195",
+              "usesdhcp": "False",
+              "encryptionkey": null,
+              "interface": {
+                "nicname": "eth0",
+                "myip": {
+                  "ip": "192.168.1.1",
+                  "mask": "255.255.255.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
+                },
+                "VLAN": {
+                  "@ID": "1",
+                  "#text": "Untagged"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "link": [
+        {
+          "SrcNic": {
+            "hostid": "193",
+            "nicid": "195",
+            "hostname": "pc1",
+            "nicname": "eth0"
+          },
+          "DstNic": {
+            "hostid": "100",
+            "nicid": "103",
+            "hostname": "net_switch0",
+            "nicname": "port1"
+          },
+          "hostname": "pc1_link_net_switch0",
+          "linktype": "normal",
+          "uniqueidentifier": "196"
+        },
+        {
+          "SrcNic": {
+            "hostid": "100",
+            "nicid": "105",
+            "hostname": "net_switch0",
+            "nicname": "port3"
+          },
+          "DstNic": {
+            "hostid": "120",
+            "nicid": "123",
+            "hostname": "net_switch2",
+            "nicname": "port1"
+          },
+          "hostname": "net_switch0_link_net_switch2",
+          "linktype": "normal",
+          "uniqueidentifier": "198"
+        },
+        {
+          "SrcNic": {
+            "hostid": "100",
+            "nicid": "104",
+            "hostname": "net_switch0",
+            "nicname": "port2"
+          },
+          "DstNic": {
+            "hostid": "110",
+            "nicid": "113",
+            "hostname": "net_switch1",
+            "nicname": "port1"
+          },
+          "hostname": "net_switch0_link_net_switch1",
+          "linktype": "normal",
+          "uniqueidentifier": "197"
+        },
+        {
+          "SrcNic": {
+            "hostid": "170",
+            "nicid": "175",
+            "hostname": "net_switch7",
+            "nicname": "port3"
+          },
+          "DstNic": {
+            "hostid": "180",
+            "nicid": "183",
+            "hostname": "net_switch8",
+            "nicname": "port1"
+          },
+          "hostname": "net_switch7_link_net_switch8",
+          "linktype": "normal",
+          "uniqueidentifier": "207"
+        },
+        {
+          "SrcNic": {
+            "hostid": "160",
+            "nicid": "165",
+            "hostname": "net_switch6",
+            "nicname": "port3"
+          },
+          "DstNic": {
+            "hostid": "180",
+            "nicid": "184",
+            "hostname": "net_switch8",
+            "nicname": "port2"
+          },
+          "hostname": "net_switch6_link_net_switch8",
+          "linktype": "normal",
+          "uniqueidentifier": "208"
+        },
+        {
+          "SrcNic": {
+            "hostid": "180",
+            "nicid": "185",
+            "hostname": "net_switch8",
+            "nicname": "port3"
+          },
+          "DstNic": {
+            "hostid": "190",
+            "nicid": "192",
+            "hostname": "pc0",
+            "nicname": "eth0"
+          },
+          "hostname": "net_switch8_link_pc0",
+          "linktype": "normal",
+          "uniqueidentifier": "209"
+        },
+        {
+          "SrcNic": {
+            "hostid": "110",
+            "nicid": "114",
+            "hostname": "net_switch1",
+            "nicname": "port2"
+          },
+          "DstNic": {
+            "hostid": "160",
+            "nicid": "163",
+            "hostname": "net_switch6",
+            "nicname": "port1"
+          },
+          "hostname": "net_switch1_link_net_switch6",
+          "linktype": "normal",
+          "uniqueidentifier": "210"
+        },
+        {
+          "SrcNic": {
+            "hostid": "120",
+            "nicid": "124",
+            "hostname": "net_switch2",
+            "nicname": "port2"
+          },
+          "DstNic": {
+            "hostid": "170",
+            "nicid": "173",
+            "hostname": "net_switch7",
+            "nicname": "port1"
+          },
+          "hostname": "net_switch2_link_net_switch7",
+          "linktype": "normal",
+          "uniqueidentifier": "211"
+        },
+        {
+          "SrcNic": {
+            "hostid": "110",
+            "nicid": "115",
+            "hostname": "net_switch1",
+            "nicname": "port3"
+          },
+          "DstNic": {
+            "hostid": "170",
+            "nicid": "174",
+            "hostname": "net_switch7",
+            "nicname": "port2"
+          },
+          "hostname": "net_switch1_link_net_switch7",
+          "linktype": "normal",
+          "uniqueidentifier": "212"
+        },
+        {
+          "SrcNic": {
+            "hostid": "120",
+            "nicid": "125",
+            "hostname": "net_switch2",
+            "nicname": "port3"
+          },
+          "DstNic": {
+            "hostid": "160",
+            "nicid": "164",
+            "hostname": "net_switch6",
+            "nicname": "port2"
+          },
+          "hostname": "net_switch2_link_net_switch6",
+          "linktype": "normal",
+          "uniqueidentifier": "213"
+        }
+      ],
+      "nettest": [
+        {
+          "shost": "pc0",
+          "dhost": "pc1",
+          "thetest": "SuccessfullyPings"
+        },
+        {
+          "shost": "pc0",
+          "dhost": "pc1",
+          "thetest": "SuccessfullyPingsWithoutLoop"
+        }
+      ],
+      "tag": "Ping",
+      "VLANName": {
+        "@ID": "1",
+        "@Color": "Blue",
+        "#text": "Default"
+      }
+    }
+  }
+}
