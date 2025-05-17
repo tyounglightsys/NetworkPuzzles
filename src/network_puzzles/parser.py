@@ -32,11 +32,9 @@ def parse(command:str):
                      print(a)
             elif items[0].lower() in ['load', 'open']:
                 if len(items) == 2:
-                    print("loading 2: " + items[1])
-                    puzzle.chooseNetwork(items[1])
+                    puzzle.choosePuzzle(items[1])
                 elif len(items) == 3:
-                    print("loading 3: " + items[1] + " " + items[2])
-                    puzzle.chooseNetwork(items[1],items[2])
+                    puzzle.choosePuzzle(items[1],items[2])
 
                 else:
                     print("loading: ")

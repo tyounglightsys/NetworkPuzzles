@@ -9,8 +9,8 @@ import re
 import os
 
 #define the global network list
-networklist=[]
-network={}
+puzzlelist=[]
+puzzle={}
 maclist=[]
 
 def read_json_file(file_path):
@@ -46,46 +46,46 @@ def listPuzzles(regex_pattern:str = None):
             puzzleNames.append(justName)
     return puzzleNames
 
-def readNetwork():
+def readPuzzle():
     """Read in the puzzles from the various .json files"""
-    global networklist 
-    if len(networklist) == 0:
+    global puzzlelist 
+    if len(puzzlelist) == 0:
         allfiles=listPuzzles("Level.*")
         for one in allfiles:
             #We stripped off the ".json" from the name, so we need to add it back
             file_path = 'src/network_puzzles/resources/puzzles/' + one + ".json"
             oneentry =read_json_file(file_path)
             oneentry['EduNetworkBuilder']['Network']['name'] = one
-            networklist.append(oneentry)
+            puzzlelist.append(oneentry)
             #print("loading: " + one)
 
-def chooseNetworkFromName(what:str):
+def choosePuzzleFromName(what:str):
     """
     Choose a puzzle using the puzzle name.
     Args: 
         what: string - The puzzle name, matching case and everything, of the puzzle we want to select
     """
-    readNetwork()
-    global network
-    global networklist
-    print ("Length of networklist: " + str(len(networklist)))
+    readPuzzle()
+    global puzzle
+    global puzzlelist
+    #print ("Length of puzzleslist: " + str(len(puzzlelist)))
 
-    for one in networklist:
+    for one in puzzlelist:
         if one['EduNetworkBuilder']['Network']['name'] == what:
-            network=copy.deepcopy(one['EduNetworkBuilder']['Network'])
-            return network
+            puzzle=copy.deepcopy(one['EduNetworkBuilder']['Network'])
+            return puzzle
 
-def chooseNetwork(what, filter=None):
+def choosePuzzle(what, filter=None):
     """
     Choose a puzzle from the list of available puzzles.
     Args: 
         what: int - the index of the puzzle we want to select
-        what: str - use chooseNetworkFromName
+        what: str - use choosePuzzleFromName
         filter: str - this is a filter to use.  For example ".*DHCP.*".  Then the int would apply to the index in the filtered list
     """
-    readNetwork()
-    global network
-    global networklist
+    readPuzzle()
+    global puzzle
+    global puzzlelist
     myint=1
     if filter != None:
         #We have a filter.  We need to try to look up the item from the filtered list
@@ -99,39 +99,39 @@ def chooseNetwork(what, filter=None):
                 myint=1
 
     if isinstance(what,int):
-       network=copy.deepcopy(networklist[what]['EduNetworkBuilder']['Network'])
+       puzzle=copy.deepcopy(puzzlelist[what]['EduNetworkBuilder']['Network'])
     else:
         try:
             #if the int(what) fails, we treat it as a name
-            network=copy.deepcopy(networklist[int(what)]['EduNetworkBuilder']['Network'])
+            puzzle=copy.deepcopy(puzzlelist[int(what)]['EduNetworkBuilder']['Network'])
         except:
-            network=chooseNetworkFromName(what)
-    if network != None:
-        print("Loaded: " + network['name'])
-    return network
+            puzzle=choosePuzzleFromName(what)
+    if puzzle != None:
+        print("Loaded: " + puzzle['name'])
+    return puzzle
 
 def allDevices():
     """
-    Return a list that contains all devices on the network.
+    Return a list that contains all devices in the puzzle.
     """
-    global network
+    global puzzle
     devicelist=[]
-    if not 'device' in network:
-        network['device'] = [];
-    for one in network['device']:
+    if not 'device' in puzzle:
+        puzzle['device'] = []
+    for one in puzzle['device']:
         if 'hostname' in one:
             devicelist.append(one)
     return devicelist
 
 def allLinks():
     """
-    Return a list that contains all devices on the network.
+    Return a list that contains all devices in the puzzle.
     """
-    global network
+    global puzzle
     linklist=[]
-    if not 'link' in network:
-        network['link'] = [];
-    for one in network['link']:
+    if not 'link' in puzzle:
+        puzzle['link'] = []
+    for one in puzzle['link']:
         if 'hostname' in one:
             linklist.append(one)
     return linklist
@@ -577,8 +577,8 @@ def newPacket():
 
 def doTest():
 
-    #mynet=chooseNetwork('Level0-NeedsLink')
-    mynet=chooseNetwork(3)
+    #mynet=choosePuzzlek('Level0-NeedsLink')
+    mynet=choosePuzzle(3)
     print (mynet['name'])
     mydevice=deviceFromID('110');
     #print(mydevice)

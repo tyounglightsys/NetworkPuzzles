@@ -25,6 +25,48 @@ class UI:
         """Startup the app when first launched."""
         raise NotImplementedError
 
+    def getDevice(self,what:str):
+        """Return a device from either a name or ID
+        Args: what:str - a string value that is either a hostname 'pc0' or a device id '102'
+        Returns: a device record or None
+        """
+        #try retrieving it from name
+        item=None
+        try:
+            #if it is just a number, use it as an ID
+            test=int(what)
+            item=puzzle.deviceFromID(what)
+        except:
+            #if it is not a number, use it as a name
+            item=puzzle.deviceFromName(what)
+        return item
+
+
+    def getLink(self,what:str):
+        """Return a link from either a name or ID
+        Args: what:str - a string value that is either a linkname 'pc0_link_pc1' or a device id '102'
+        Returns: a device record or None
+        """
+        #try retrieving it from name
+        item=None
+        try:
+            #if it is just a number, use it as an ID
+            test=int(what)
+            item=puzzle.linkFromID(what)
+        except:
+            #if it is not a number, use it as a name
+            item=puzzle.linkFromName(what)
+        return item
+
+    def allDevices(self):
+        """return a list of all the devices - good for iterating"""
+        return puzzle.allDevices()
+
+    def allLinks(self):
+        """return a list of all the links - good for iterating"""
+        return puzzle.allLinks()
+
+
 
 class CLI(UI): 
     def run(self):
