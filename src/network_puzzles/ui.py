@@ -16,10 +16,12 @@ class UI:
             puzzle:int - the index of the puzzle to load
             filter:str - a valid regex filter.  Like ".*DNS.*"  Or None
         """
+        val=None
         if filter != None:
-            parser.parse("load " + puzzle + " " + filter)
+            val=parser.parse("load " + puzzle + " " + filter)
         else:
-            parser.parse("load " + puzzle)
+            val=parser.parse("load " + puzzle)
+        return val
 
     def run(self):
         """Startup the app when first launched."""

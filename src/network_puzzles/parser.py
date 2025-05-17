@@ -9,9 +9,12 @@ from src.network_puzzles import puzzle
 def parse(command:str):
     #We will make this a lot more interesting later.  For now, just do a very simple thing
     #try:
+        val=None
+        cmd=""
         items = command.split() #break at all whitespace
         if len(items) > 0:
             #we have stuff.  Process it
+            cmd=items[0].lower()
             if items[0].lower() in ['list','show','search']:
                 #We want to list all the items.
                 pattern=None
@@ -28,16 +31,18 @@ def parse(command:str):
                     if not re.search(r"\.\*$",pattern):
                         pattern=pattern+r".*"
                 list=puzzle.listPuzzles(pattern)
+                val=list
                 for a in list:
                      print(a)
+                return { 'command':cmd, 'value':val }
             elif items[0].lower() in ['load', 'open']:
                 if len(items) == 2:
-                    puzzle.choosePuzzle(items[1])
+                    val=puzzle.choosePuzzle(items[1])
                 elif len(items) == 3:
-                    puzzle.choosePuzzle(items[1],items[2])
-
+                    val=puzzle.choosePuzzle(items[1],items[2])
                 else:
                     print("loading: ")
+                return { 'command':cmd, 'value':val }
             elif items[0].lower() in ['exit', 'quit', 'stop']:
                  sys.exit()
             else:
