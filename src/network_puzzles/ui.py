@@ -1,5 +1,5 @@
-from src.network_puzzles import parser
-from src.network_puzzles import puzzle
+from . import parser
+from . import puzzle
 import sys
 
 class UI:
@@ -102,8 +102,11 @@ class CLI(UI):
 
 class GUI(UI):
     def __init__(self, kivyapp):
-        self.app = kivyapp()
+        self.app = kivyapp(ui=self)
         # self.app.title = self.TITLE  # inferred from App subclass in .gui
+
+    def console_write(self, line):
+        self.app.add_terminal_line(line)
 
     def run(self):
         self.app.run()
