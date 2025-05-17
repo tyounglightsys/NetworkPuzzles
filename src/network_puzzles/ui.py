@@ -25,6 +25,11 @@ class UI:
         """Startup the app when first launched."""
         raise NotImplementedError
 
+    def getAllPuzzleNames(self,filter=None):
+        """return a list of all the puzzle names
+        Args: filter:str a string, regex filter such as '.*DHCP.'"""
+        return puzzle.listPuzzles(filter)
+
     def getDevice(self,what:str):
         """Return a device from either a name or ID
         Args: what:str - a string value that is either a hostname 'pc0' or a device id '102'
