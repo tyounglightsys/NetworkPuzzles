@@ -32,12 +32,13 @@ class NetworkPuzzlesApp(App):
         print('menu clicked')
 
     def _test(self, *args, **kwargs):
-        raise NotImplementedError
+        self.ui.load_puzzle('5')
+        print(sorted(globals().keys()))
+        # raise NotImplementedError
 
 
 class AppExceptionHandler(ExceptionHandler):
     def handle_exception(self, exception):
-        print(dir(exception), str(exception.__traceback__.__dir__()))
         ExceptionPopup(message=traceback.format_exc()).open()
         return ExceptionManager.PASS
 
