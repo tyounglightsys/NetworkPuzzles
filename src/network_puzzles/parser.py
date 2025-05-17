@@ -3,8 +3,8 @@
 #import puzzle
 import sys
 import re
-from src.network_puzzles import ui
-from src.network_puzzles import puzzle
+from . import ui
+from . import puzzle
 
 def parse(command:str):
     #We will make this a lot more interesting later.  For now, just do a very simple thing
