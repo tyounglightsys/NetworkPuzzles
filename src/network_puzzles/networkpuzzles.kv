@@ -14,6 +14,10 @@ BoxLayout:
                 text: 'Menu'
                 on_press: app.on_menu()
             AppButton:
+                id: test
+                text: "Test"
+                on_press: app._test()
+            AppButton:
                 id: help
                 pos_hint: {'right': 1, 'x': 1}
                 text: "?"
@@ -28,7 +32,7 @@ BoxLayout:
         TerminalLabel:
             id: terminal
             size_hint_y: 0.18
-            text: f"Terminal output...\nline 2...\nline 3...\nline 4...\nline 5...\nline 6..."
+            #text: f"Terminal output...\nline 2...\nline 3...\nline 4...\nline 5...\nline 6..."
             max_lines: 6
     VSeparator:
     FloatLayout:
@@ -38,11 +42,11 @@ BoxLayout:
             text: "Network devices layout"
 
 
-<AppButton@Button>:
+<ThemedButton@Button>:
     background_normal: ''  # sets initial background to white
     background_color: (1, 1, 1, 0)  # makes it transparent
-    size_hint_x: None
-    width: self.height
+    size_hint_y: 1
+    size_hint_max_y: dp(50)
     color: app.DARK_COLOR
     bold: True
     canvas.before:
@@ -53,8 +57,12 @@ BoxLayout:
             pos: self.pos
             radius: [dp(10)]
 
+<AppButton@ThemedButton>:
+    size_hint_x: None
+    width: self.height
 
-<AppLabel@Label>:
+
+<ThemedLabel@Label>:
     padding: dp(10)
     canvas.before:
         Color:
@@ -65,8 +73,10 @@ BoxLayout:
     color: app.DARK_COLOR
     halign: 'left'
     valign: 'top'
-    text_size: self.size
     font_size: sp(16)
+
+<AppLabel@ThemedLabel>:
+    text_size: self.size
 
 <TerminalLabel@AppLabel>:
     canvas.before:
@@ -96,3 +106,33 @@ BoxLayout:
 <VSeparator@Separator>:
     size_hint_x: None
     width: dp(1)
+
+
+<ExceptionPopup>:
+    title: "Error"
+    title_size: dp(18)
+    size_hint: (1/2, 3/4)
+    BoxLayout:
+        orientation: 'vertical'
+        spacing: dp(10)
+        ScrollView:
+            size_hint_y: 0.8
+            do_scroll_x: False
+            do_scroll_y: True
+            ThemedLabel:
+                id: message
+                padding: dp(3)
+                size_hint_y: None
+                height: self.texture_size[1]
+                font_name: 'RobotoMono-Regular'
+                font_size: dp(12)
+                text_size: (self.width, None)
+                size: self.texture_size
+        ThemedButton:
+            pos_hint: {"center_x": 0.5}
+            size_hint_x: None
+            size_hint_max_x: None
+            size_hint_y: 0.2
+            font_size: dp(18)
+            text: "Quit"
+            on_release: app.stop()
