@@ -1,4 +1,5 @@
 #:kivy 2.0
+#:import _ network_puzzles._
 
 BoxLayout:
     BoxLayout:
@@ -11,16 +12,16 @@ BoxLayout:
             spacing: dp(5)
             AppButton:
                 id: menu
-                text: 'Menu'
+                text: _("Menu")
                 on_press: app.on_menu()
             AppButton:
                 id: test
-                text: "Test"
+                text: _("Test")
                 on_press: app._test()
             AppButton:
                 id: help
                 pos_hint: {'right': 1, 'x': 1}
-                text: "?"
+                text: _("?")
                 on_press: app.on_help()
         HSeparator:
         AppLabel:
@@ -28,7 +29,7 @@ BoxLayout:
             size_hint_y: 0.72
             border_width: dp(3)
             border_color: app.DARK_COLOR
-            text: "Puzzle instructions"
+            #text: "Puzzle instructions"
         TerminalLabel:
             id: terminal
             size_hint_y: 0.18
@@ -107,7 +108,7 @@ BoxLayout:
 
 
 <ExceptionPopup>:
-    title: "Error"
+    title: _("Error")
     title_size: dp(18)
     size_hint: (1/2, 3/4)
     BoxLayout:
@@ -132,5 +133,5 @@ BoxLayout:
             size_hint_max_x: None
             size_hint_y: 0.2
             font_size: dp(18)
-            text: "Quit"
+            text: _("Quit")
             on_release: app.stop()
