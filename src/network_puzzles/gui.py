@@ -14,6 +14,7 @@ from pathlib import Path
 
 from . import device
 from . import link
+from . import messages
 
 
 class NetworkPuzzlesApp(App):
@@ -45,13 +46,16 @@ class NetworkPuzzlesApp(App):
         print('menu clicked')
 
     def setup_puzzle(self, puzzle_data):
-        self.title += f": {puzzle_data.get('en_title')}"
-        info = puzzle_data.get('en_message')
-        self.device_data= puzzle_data.get('device')
+        puzzle_id = puzzle_data.get('uniqueidentifier')
+        print(f"{puzzle_id=}")
+        puzzle_messages = messages.puzzles.get(puzzle_id)
+        self.title += f": {puzzle_messages.get('title')}"
+        self.root.ids.info.text = puzzle_messages.get('message')
+
+        self.device_data = puzzle_data.get('device')
         self.link_data = puzzle_data.get('link')
         self.devices = []
         self.links = []
-        self.root.ids.info.text = info
 
         for dev in self.device_data:
             w = Device(dev)
@@ -76,8 +80,8 @@ class NetworkPuzzlesApp(App):
                 return w
 
     def _test(self, *args, **kwargs):
-        # self.setup_puzzle(self.ui.load_puzzle('5'))
-        raise NotImplementedError
+        self.setup_puzzle(self.ui.load_puzzle('5'))
+        # raise NotImplementedError
 
 
 class AppExceptionHandler(ExceptionHandler):

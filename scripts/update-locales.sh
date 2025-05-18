@@ -12,7 +12,7 @@ usage(){
 }
 
 if [[ $1 == po ]]; then
-    xgettext -L python -o "$messages_temp" -D "${pkg_dir}" networkpuzzles.kv gui.py
+    xgettext -L python -o "$messages_temp" -D "${pkg_dir}" networkpuzzles.kv gui.py messages.py
     for lang in "en" "fr"; do
         msgmerge --update --no-fuzzy-matching --backup=off "${locale_dir}/${lang}.po" "$messages_temp"
     done

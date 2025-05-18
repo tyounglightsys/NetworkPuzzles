@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-18 16:52+0100\n"
+"POT-Creation-Date: 2025-05-18 18:45+0100\n"
 "PO-Revision-Date: 2025-05-18 16:52+0100\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -36,3 +36,58 @@ msgstr "Erreur"
 #: networkpuzzles.kv:136
 msgid "Quit"
 msgstr "Quitter"
+
+#: messages.py:5
+msgid "Bad Power Supply"
+msgstr ""
+
+#: messages.py:6
+msgid ""
+"Occasionally a piece of hardware will break, This often happens after long "
+"periods of use, though sometimes after just sitting around unused.\n"
+"\n"
+"This puzzle makes it look a little worse than it usually would look.  Go "
+"ahead and turn on the switch.  After that, right-click and replace it.\n"
+"\n"
+"Things that have been replaced will need to have their settings put back.  "
+"So make sure to give the new switch a good IP and gateway."
+msgstr ""
+
+#: messages.py:9
+msgid "Network Loop"
+msgstr "Boucle réseau"
+
+#: messages.py:10
+msgid ""
+"This puzzle shows you what happens when you create a network loop.  A loop "
+"is made when you have your switches connected to themselves or to another "
+"one that is connected back to the first one.  Ping from pc0 to pc1 to see "
+"what happens.  You do not need to fix the problem, but right-clicking one of "
+"the switches and removing one of the offending links would do it."
+msgstr ""
+"Ce puzzle vous montre ce qui se passe lorsque vous créez une boucle réseau. "
+"Une boucle est créée lorsque vos commutateurs sont connectés à eux-mêmes ou "
+"à un autre qui est connecté au premier. Pinger du pc0 à pc1 pour voir ce qui "
+"se passe. Pas la paine de résoudre le problème, mais un clique droite sur "
+"l'un des commutateurs et la suppression d'un des liens incriminés le "
+"réglerait."
+
+#: messages.py:13
+msgid "Network Loop 2"
+msgstr "Boucle réseau 2"
+
+#: messages.py:14
+msgid ""
+"Managed Switches can use Spanning Tree, which intelligently figures out the "
+"least distance path to a point.  It is made so you can have network loops "
+"and survive.  Try pinging pc1 twice from pc0.  The first time, some packets "
+"are lost.  But the second time the packet goes where it should."
+msgstr ""
+"Les commutateurs gérés peuvent utiliser algorithme de l'arbre (STP), qui "
+"détermine intelligemment le chemin le moins éloigné à un point. Il est fait "
+"pour que vous puissiez avoir des boucles réseaux et survivre. Essayez de "
+"pinger pc1 deux fois à partir de pc0. La première fois, certains paquets sont "
+"perdus. Mais à la deuxième fois le paquet ira là où il devrait."
+
+#~ msgid "Network loop"
+#~ msgstr "Boucle réseau"
