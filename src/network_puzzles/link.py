@@ -1,6 +1,6 @@
 import copy
 
-class link:
+class Link:
     def __init__(self, linkrec):
         self.hostname = linkrec['hostname']
         self.linktype = linkrec['linktype']
