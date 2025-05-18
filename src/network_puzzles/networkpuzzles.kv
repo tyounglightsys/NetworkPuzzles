@@ -24,7 +24,7 @@ BoxLayout:
                 on_press: app.on_help()
         HSeparator:
         AppLabel:
-            id: instructions
+            id: info
             size_hint_y: 0.72
             border_width: dp(3)
             border_color: app.DARK_COLOR
@@ -35,11 +35,9 @@ BoxLayout:
             #text: f"Terminal output...\nline 2...\nline 3...\nline 4...\nline 5...\nline 6..."
             max_lines: 6
     VSeparator:
-    FloatLayout:
+    RelativeLayout:
+        id: layout
         size_hint_x: 2/3
-        AppLabel:
-            pos_hint: {'center_x': 0.5, 'center_y': 0.5}
-            text: "Network devices layout"
 
 
 <ThemedButton@Button>:

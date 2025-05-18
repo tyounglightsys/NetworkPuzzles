@@ -113,5 +113,5 @@ class GUI(UI):
 
     def load_puzzle(self, puzzle, filter:str = None):
         """Load and set up the UI based on the data in the puzzle file."""
-        super().load_puzzle(puzzle,filter)
+        return super().load_puzzle(puzzle,filter).get('value')
         #do any aftermath.  Probably display the loaded puzzle when we have that functionality
