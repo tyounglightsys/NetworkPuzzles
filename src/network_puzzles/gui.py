@@ -76,8 +76,8 @@ class NetworkPuzzlesApp(App):
                 return w
 
     def _test(self, *args, **kwargs):
-        self.setup_puzzle(self.ui.load_puzzle('5'))
-        # raise NotImplementedError
+        # self.setup_puzzle(self.ui.load_puzzle('5'))
+        raise NotImplementedError
 
 
 class AppExceptionHandler(ExceptionHandler):
