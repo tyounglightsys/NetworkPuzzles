@@ -122,6 +122,38 @@ class Device(Button):
                 img = 'Switch.png'
             case 'pc':
                 img = 'PC.png'
+            case 'laptop':
+                img = 'Laptop.png'
+            case 'router':
+                img = 'Router.png'
+            case 'firewall':
+                img = 'firewall.png'
+            case 'copier':
+                img = 'Copier.png'
+            case 'cellphone':
+                img = 'cellphone.png'
+            case 'fluorescent':
+                img = 'fluorescent.png'
+            case 'ip_phone':
+                img = 'ip_phone.png'
+            case 'microwave':
+                img = 'microwave.png'
+            case 'printer':
+                img = 'Printer.png'
+            case 'server':
+                img = 'Server.png'
+            case 'tablet':
+                img = 'tablet.png'
+            case 'tree':
+                img = 'tree.png'
+            case 'wap':
+                img = 'WAP.png'
+            case 'wbridge':
+                img = 'WBridge.png'
+            case 'wrepeater':
+                img = 'WRepeater.png'
+            case 'wrouter':
+                img = 'WRouter.png'
             case _:
                 raise TypeError(f"Unhandled device type: {self.data.get('mytype')}")
         self.background_normal = str(self.app.IMAGES / img)
