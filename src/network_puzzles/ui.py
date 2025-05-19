@@ -1,6 +1,8 @@
+import sys
+
+from . import current_network
 from . import parser
 from . import puzzle
-import sys
 
 class UI:
     TITLE = 'NetworkPuzzles'
@@ -9,18 +11,21 @@ class UI:
         """Used to show terminal output to the user."""
         raise NotImplementedError
 
-    def load_puzzle(self, puzzle, filter:str=None):
+    def load_puzzle(self, puzzle, filter:str = None):
         """Set up the UI based on the data in the puzzle file.
         Args: 
             puzzle:str - the name of the puzzle itself
             puzzle:int - the index of the puzzle to load
             filter:str - a valid regex filter.  Like ".*DNS.*"  Or None
         """
-        val=None
-        if filter != None:
+        val = None
+        if filter is not None:
             val=parser.parse("load " + puzzle + " " + filter)
         else:
             val=parser.parse("load " + puzzle)
+        
+        # Save selected puzzle to current_network.
+        current_network.puzzle = val.get('value')
         return val
 
     def run(self):

@@ -8,10 +8,9 @@ import random
 import re
 import os
 
-#define the global network list
-puzzlelist=[]
-puzzle={}
-maclist=[]
+# define the global network list
+from . import current_network
+
 
 def read_json_file(file_path):
     """
@@ -40,7 +39,7 @@ def listPuzzles(regex_pattern:str = None):
     list = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
     for one in list:
         justName=re.sub(r"\.json","", one)
-        if regex_pattern == None:
+        if regex_pattern is None:
             puzzleNames.append(justName)
         elif re.match(regex_pattern,justName):
             puzzleNames.append(justName)
@@ -48,15 +47,14 @@ def listPuzzles(regex_pattern:str = None):
 
 def readPuzzle():
     """Read in the puzzles from the various .json files"""
-    global puzzlelist 
-    if len(puzzlelist) == 0:
+    if len(current_network.puzzlelist) == 0:
         allfiles=listPuzzles("Level.*")
         for one in allfiles:
             #We stripped off the ".json" from the name, so we need to add it back
             file_path = 'src/network_puzzles/resources/puzzles/' + one + ".json"
             oneentry =read_json_file(file_path)
             oneentry['EduNetworkBuilder']['Network']['name'] = one
-            puzzlelist.append(oneentry)
+            current_network.puzzlelist.append(oneentry)
             #print("loading: " + one)
 
 def choosePuzzleFromName(what:str):
@@ -66,14 +64,11 @@ def choosePuzzleFromName(what:str):
         what: string - The puzzle name, matching case and everything, of the puzzle we want to select
     """
     readPuzzle()
-    global puzzle
-    global puzzlelist
     #print ("Length of puzzleslist: " + str(len(puzzlelist)))
 
-    for one in puzzlelist:
+    for one in current_network.puzzlelist:
         if one['EduNetworkBuilder']['Network']['name'] == what:
-            puzzle=copy.deepcopy(one['EduNetworkBuilder']['Network'])
-            return puzzle
+            return copy.deepcopy(one['EduNetworkBuilder']['Network'])
 
 def choosePuzzle(what, filter=None):
     """
@@ -84,41 +79,38 @@ def choosePuzzle(what, filter=None):
         filter: str - this is a filter to use.  For example ".*DHCP.*".  Then the int would apply to the index in the filtered list
     """
     readPuzzle()
-    global puzzle
-    global puzzlelist
     myint=1
-    if filter != None:
+    if filter is not None:
         #We have a filter.  We need to try to look up the item from the filtered list
         filteredList=listPuzzles(filter)
         if len(filteredList) > 0:
             #this means it is a valid filter. Try to use it.
             try:
                 what = filteredList[int(what)]
-            except:
+            except Exception:
                 #It did not work.  Ignore the filter.
                 myint=1
 
     if isinstance(what,int):
-       puzzle=copy.deepcopy(puzzlelist[what]['EduNetworkBuilder']['Network'])
+       puz = copy.deepcopy(current_network.puzzlelist[what]['EduNetworkBuilder']['Network'])
     else:
         try:
             #if the int(what) fails, we treat it as a name
-            puzzle=copy.deepcopy(puzzlelist[int(what)]['EduNetworkBuilder']['Network'])
-        except:
-            puzzle=choosePuzzleFromName(what)
-    if puzzle != None:
-        print("Loaded: " + puzzle['name'])
-    return puzzle
+            puz = copy.deepcopy(current_network.puzzlelist[int(what)]['EduNetworkBuilder']['Network'])
+        except Exception:
+            puz = choosePuzzleFromName(what)
+    if puz is not None:
+        print("Loaded: " + puz['name'])
+    return puz
 
 def allDevices():
     """
     Return a list that contains all devices in the puzzle.
     """
-    global puzzle
     devicelist=[]
-    if not 'device' in puzzle:
-        puzzle['device'] = []
-    for one in puzzle['device']:
+    if 'device' not in current_network.puzzle:
+        current_network.puzzle['device'] = []
+    for one in current_network.puzzle['device']:
         if 'hostname' in one:
             devicelist.append(one)
     return devicelist
@@ -127,11 +119,11 @@ def allLinks():
     """
     Return a list that contains all devices in the puzzle.
     """
-    global puzzle
+    # global puzzle
     linklist=[]
-    if not 'link' in puzzle:
-        puzzle['link'] = []
-    for one in puzzle['link']:
+    if 'link' not in current_network.puzzle:
+        current_network.puzzle['link'] = []
+    for one in current_network.puzzle['link']:
         if 'hostname' in one:
             linklist.append(one)
     return linklist
@@ -178,14 +170,14 @@ def maclistFromDevice(src):
 
 def buildGlobalMACList():
     """Build/rebuild the global MAC list.  Should be run when we load a new puzzle, when we change IPs, or add/remove NICs."""
-    global maclist
-    maclist=[] #clear it out
+    # global maclist
+    current_network.maclist = [] #clear it out
     for onedevice in allDevices():
         for onemac in maclistFromDevice(onedevice):
-            maclist.append(onemac)
+            current_network.maclist.append(onemac)
     #print("Built maclist")
     #print(maclist)
-    return maclist
+    return current_network.maclist
 
 def justIP(ip):
     """return just the IP address as a string, stripping the subnet if there was one"""
@@ -203,15 +195,14 @@ def globalArpLookup(ip):
     Returns:
         The MAC address corresponding to the IP as a string or None.
     """
-    global maclist
-    if not isinstance(maclist,list):
+    if not isinstance(current_network.maclist,list):
         buildGlobalMACList()
     print("we have maclist")
-    print(maclist)
+    print(current_network.maclist)
     if isinstance(ip,str):
         ip = ipaddress.IPv4Address(ip)
         print ("globalARP: Converting ip: " + str(ip))
-    for oneMac in maclist:
+    for oneMac in current_network.maclist:
         print ("globalARP: comparing: " + justIP(oneMac['ip']) + " to " + justIP(ip))
         if justIP(oneMac['ip']) == justIP(ip):
             return oneMac['mac']
@@ -238,7 +229,7 @@ def arpLookup(srcDevice, ip):
     if isinstance(ip,str):
         ip = ipaddress.IPv4Address(ip)
         print ("ARP: Converting ip: " + justIP(ip))
-    if not 'maclist' in srcDevice:
+    if 'maclist' not in srcDevice:
         srcDevice['maclist']=[] #make an empty list.  That way we can itterate through it
     #The maclist on a device should have the port on which the MAC is found.  Particularly on switches. 
     #Does the device arp list have any records?  If so, use that.
@@ -249,7 +240,7 @@ def arpLookup(srcDevice, ip):
             return oneMAC['mac'] #Return the one in the local arp.
     #If we cannot find it on the device, look it up from the global list
     tmac = globalArpLookup(ip)
-    if tmac != None:
+    if tmac is not None:
         #Store the mac address in the local list
         arp = {
             'ip':ip,

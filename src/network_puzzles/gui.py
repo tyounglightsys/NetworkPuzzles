@@ -15,6 +15,7 @@ from pathlib import Path
 from . import device
 from . import link
 from . import messages
+# from . import current_network
 
 
 class NetworkPuzzlesApp(App):
@@ -47,7 +48,6 @@ class NetworkPuzzlesApp(App):
 
     def setup_puzzle(self, puzzle_data):
         puzzle_id = puzzle_data.get('uniqueidentifier')
-        print(f"{puzzle_id=}")
         puzzle_messages = messages.puzzles.get(puzzle_id)
         self.title += f": {puzzle_messages.get('title')}"
         self.root.ids.info.text = puzzle_messages.get('message')
@@ -61,7 +61,7 @@ class NetworkPuzzlesApp(App):
             w = Device(dev)
             self.devices.append(w)
             self.root.ids.layout.add_widget(w)
-        # Add links one tick after devices so that device positions are updated.
+        # Add links one tick after devices so that devices are positioned first.
         Clock.schedule_once(self._setup_links)
 
     def _setup_links(self, *args):
@@ -75,6 +75,8 @@ class NetworkPuzzlesApp(App):
             self.root.ids.layout.add_widget(d)
 
     def get_device_by_id(self, device_id):
+        # This returns the gui.Device widget, which is different from
+        # puzzle.deviceFromId, which returns a data dict.
         for w in self.root.ids.layout.children:
             if w.data.get('uniqueidentifier') == device_id:
                 return w
