@@ -6,9 +6,16 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.graphics import Color
 from kivy.graphics import Line
+from kivy.properties import BooleanProperty
 from kivy.properties import ListProperty
+from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.button import Button
+from kivy.uix.label import Label
 from kivy.uix.popup import Popup
+from kivy.uix.recycleboxlayout import RecycleBoxLayout
+from kivy.uix.recycleview import RecycleView
+from kivy.uix.recycleview.layout import LayoutSelectionBehavior
+from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.widget import Widget
 from pathlib import Path
 
@@ -33,6 +40,7 @@ class NetworkPuzzlesApp(App):
         self.ui = ui
         self.app_title = self.ui.TITLE
         self.title = self.app_title
+        self.selected_puzzle = None
         self.ct = 1
 
     def add_terminal_line(self, line):
@@ -46,11 +54,23 @@ class NetworkPuzzlesApp(App):
     def on_menu(self):
         print('menu clicked')
 
+    def on_puzzle_chooser(self):
+        PuzzleChooserPopup().open()
+
     def setup_puzzle(self, puzzle_data):
         puzzle_id = puzzle_data.get('uniqueidentifier')
+        # Get puzzle text from localized messages, if possible, but fallback to
+        # English text in JSON data.
         puzzle_messages = messages.puzzles.get(puzzle_id)
-        self.title += f": {puzzle_messages.get('title')}"
-        self.root.ids.info.text = puzzle_messages.get('message')
+        if puzzle_messages:
+            title = puzzle_messages.get('title')
+            title = puzzle_messages.get('message')
+        else:
+            title = puzzle_data.get('en_title', '<no title>')
+            message = puzzle_data.get('en_message', '<no message>')
+        
+        self.title += f": {title}"
+        self.root.ids.info.text = message
 
         self.device_data = puzzle_data.get('device')
         self.link_data = puzzle_data.get('link')
@@ -90,18 +110,35 @@ class NetworkPuzzlesApp(App):
 class AppExceptionHandler(ExceptionHandler):
     def handle_exception(self, exception):
         ExceptionPopup(message=traceback.format_exc()).open()
-        return ExceptionManager.PASS
+        # return ExceptionManager.PASS
+        return ExceptionManager.RAISE
 
 
-class ExceptionPopup(Popup):
-    def __init__(self, message, **kwargs):
+class AppPopup(Popup):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
-        self.ids.message.text = message
+
+class ExceptionPopup(AppPopup):
+    def __init__(self, message, **kwargs):
+        super().__init__(**kwargs)
+        self.ids.exception.text = message
     
     def on_dismiss(self):
         # Don't allow the app to continue running.
         self.app.stop()
+
+class PuzzleChooserPopup(AppPopup):
+    def on_cancel(self):
+        self.dismiss()
+
+    def on_dismiss(self):
+        self.app.selected_puzzle = None
+
+    def on_load(self):
+        session.puzzle = self.app.selected_puzzle
+        self.app.setup_puzzle(session.puzzle)
+        self.dismiss()
 
 
 class Device(Button):
@@ -188,3 +225,53 @@ class Link(Widget):
         self.start = start_dev.center
         end_dev = self.app.get_device_by_id(self.data.get('DstNic').get('hostid'))
         self.end = end_dev.center
+
+
+class SelectableRecycleBoxLayout(
+    FocusBehavior,
+    LayoutSelectionBehavior,
+    RecycleBoxLayout
+):
+    ''' Adds selection and focus behaviour to the view. '''
+    pass
+
+class ThemedLabel(Label):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+
+class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
+    ''' Add selection support to the Label '''
+    index = None
+    selected = BooleanProperty(False)
+    selectable = BooleanProperty(True)
+
+    def refresh_view_attrs(self, rv, index, data):
+        ''' Catch and handle the view changes '''
+        self.index = index
+        return super(SelectableLabel, self).refresh_view_attrs(rv, index, data)
+
+    def on_touch_down(self, touch):
+        ''' Add selection on touch down '''
+        if super(SelectableLabel, self).on_touch_down(touch):
+            return True
+        if self.collide_point(*touch.pos) and self.selectable:
+            return self.parent.select_with_touch(self.index, touch)
+
+    def apply_selection(self, rv, index, is_selected):
+        ''' Respond to the selection of items in the view. '''
+        name = rv.data[index].get('text')
+        self.selected = is_selected
+        if is_selected:
+            self.app.selected_puzzle = self.app.ui.load_puzzle(name)
+
+class AppRecView(RecycleView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+
+class PuzzlesRecView(AppRecView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.filter = None
+        self.data = [{'text': n} for n in sorted(self.app.ui.getAllPuzzleNames(self.filter))]
