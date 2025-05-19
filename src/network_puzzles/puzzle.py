@@ -9,7 +9,7 @@ import re
 import os
 
 # define the global network list
-from . import current_network
+from . import session
 
 
 def read_json_file(file_path):
@@ -47,14 +47,14 @@ def listPuzzles(regex_pattern:str = None):
 
 def readPuzzle():
     """Read in the puzzles from the various .json files"""
-    if len(current_network.puzzlelist) == 0:
+    if len(session.puzzlelist) == 0:
         allfiles=listPuzzles("Level.*")
         for one in allfiles:
             #We stripped off the ".json" from the name, so we need to add it back
             file_path = 'src/network_puzzles/resources/puzzles/' + one + ".json"
             oneentry =read_json_file(file_path)
             oneentry['EduNetworkBuilder']['Network']['name'] = one
-            current_network.puzzlelist.append(oneentry)
+            session.puzzlelist.append(oneentry)
             #print("loading: " + one)
 
 def choosePuzzleFromName(what:str):
@@ -66,7 +66,7 @@ def choosePuzzleFromName(what:str):
     readPuzzle()
     #print ("Length of puzzleslist: " + str(len(puzzlelist)))
 
-    for one in current_network.puzzlelist:
+    for one in session.puzzlelist:
         if one['EduNetworkBuilder']['Network']['name'] == what:
             return copy.deepcopy(one['EduNetworkBuilder']['Network'])
 
@@ -92,11 +92,11 @@ def choosePuzzle(what, filter=None):
                 myint=1
 
     if isinstance(what,int):
-       puz = copy.deepcopy(current_network.puzzlelist[what]['EduNetworkBuilder']['Network'])
+       puz = copy.deepcopy(session.puzzlelist[what]['EduNetworkBuilder']['Network'])
     else:
         try:
             #if the int(what) fails, we treat it as a name
-            puz = copy.deepcopy(current_network.puzzlelist[int(what)]['EduNetworkBuilder']['Network'])
+            puz = copy.deepcopy(session.puzzlelist[int(what)]['EduNetworkBuilder']['Network'])
         except Exception:
             puz = choosePuzzleFromName(what)
     if puz is not None:
@@ -108,9 +108,9 @@ def allDevices():
     Return a list that contains all devices in the puzzle.
     """
     devicelist=[]
-    if 'device' not in current_network.puzzle:
-        current_network.puzzle['device'] = []
-    for one in current_network.puzzle['device']:
+    if 'device' not in session.puzzle:
+        session.puzzle['device'] = []
+    for one in session.puzzle['device']:
         if 'hostname' in one:
             devicelist.append(one)
     return devicelist
@@ -121,9 +121,9 @@ def allLinks():
     """
     # global puzzle
     linklist=[]
-    if 'link' not in current_network.puzzle:
-        current_network.puzzle['link'] = []
-    for one in current_network.puzzle['link']:
+    if 'link' not in session.puzzle:
+        session.puzzle['link'] = []
+    for one in session.puzzle['link']:
         if 'hostname' in one:
             linklist.append(one)
     return linklist
@@ -171,13 +171,13 @@ def maclistFromDevice(src):
 def buildGlobalMACList():
     """Build/rebuild the global MAC list.  Should be run when we load a new puzzle, when we change IPs, or add/remove NICs."""
     # global maclist
-    current_network.maclist = [] #clear it out
+    session.maclist = [] #clear it out
     for onedevice in allDevices():
         for onemac in maclistFromDevice(onedevice):
-            current_network.maclist.append(onemac)
+            session.maclist.append(onemac)
     #print("Built maclist")
     #print(maclist)
-    return current_network.maclist
+    return session.maclist
 
 def justIP(ip):
     """return just the IP address as a string, stripping the subnet if there was one"""
@@ -195,14 +195,14 @@ def globalArpLookup(ip):
     Returns:
         The MAC address corresponding to the IP as a string or None.
     """
-    if not isinstance(current_network.maclist,list):
+    if not isinstance(session.maclist,list):
         buildGlobalMACList()
     print("we have maclist")
-    print(current_network.maclist)
+    print(session.maclist)
     if isinstance(ip,str):
         ip = ipaddress.IPv4Address(ip)
         print ("globalARP: Converting ip: " + str(ip))
-    for oneMac in current_network.maclist:
+    for oneMac in session.maclist:
         print ("globalARP: comparing: " + justIP(oneMac['ip']) + " to " + justIP(ip))
         if justIP(oneMac['ip']) == justIP(ip):
             return oneMac['mac']

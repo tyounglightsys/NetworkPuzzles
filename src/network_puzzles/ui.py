@@ -1,8 +1,8 @@
 import sys
 
-from . import current_network
 from . import parser
 from . import puzzle
+from . import session
 
 class UI:
     TITLE = 'NetworkPuzzles'
@@ -24,8 +24,8 @@ class UI:
         else:
             val=parser.parse("load " + puzzle)
         
-        # Save selected puzzle to current_network.
-        current_network.puzzle = val.get('value')
+        # Save selected puzzle to session variable.
+        session.puzzle = val.get('value')
         return val
 
     def run(self):

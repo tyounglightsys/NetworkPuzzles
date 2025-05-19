@@ -15,7 +15,7 @@ from pathlib import Path
 from . import device
 from . import link
 from . import messages
-# from . import current_network
+from . import session
 
 
 class NetworkPuzzlesApp(App):
@@ -83,6 +83,7 @@ class NetworkPuzzlesApp(App):
 
     def _test(self, *args, **kwargs):
         self.setup_puzzle(self.ui.load_puzzle('5'))
+        print(session.__dict__)
         # raise NotImplementedError
 
 
