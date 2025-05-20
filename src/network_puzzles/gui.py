@@ -2,24 +2,15 @@ from kivy.app import App
 from kivy.base import ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.properties import BooleanProperty
-from kivy.properties import StringProperty
-from kivy.uix.behaviors import FocusBehavior
-from kivy.uix.checkbox import CheckBox
-from kivy.uix.label import Label
-from kivy.uix.recycleboxlayout import RecycleBoxLayout
-from kivy.uix.recycleview import RecycleView
-from kivy.uix.recycleview.layout import LayoutSelectionBehavior
-from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.relativelayout import RelativeLayout
 from pathlib import Path
 
 from . import messages
 from . import session
 from .gui_base import AppExceptionHandler
+from .gui_base import AppPopup
 from .gui_base import Device
 from .gui_base import Link
-from .gui_base import AppPopup
 
 
 class NetworkPuzzlesApp(App):
@@ -47,6 +38,20 @@ class NetworkPuzzlesApp(App):
             line += '\n'
         self.root.ids.terminal.text += f"{line}"
 
+    def get_device_by_id(self, device_id):
+        # This returns the gui.Device widget, which is different from
+        # puzzle.deviceFromId, which returns a data dict.
+        for w in self.root.ids.layout.children:
+            if w.data.get('uniqueidentifier') == device_id:
+                return w
+
+    def on_checkbox_activate(self, inst):
+        if inst.state == 'down':
+            print(f"{inst.name} is checked")
+            self.filters.append(inst.name)
+        elif inst.state == 'normal':
+            self.filters.remove(inst.name)
+
     def on_help(self):
         print('help clicked')
 
@@ -55,6 +60,17 @@ class NetworkPuzzlesApp(App):
 
     def on_puzzle_chooser(self):
         PuzzleChooserPopup().open()
+
+    def setup_links(self, *args):
+        if self.link_data:  # not every puzzle has links
+            for lin in self.link_data:
+                w = Link(lin)
+                self.links.append(w)
+                self.root.ids.layout.add_widget(w)
+            # Remove and re-add Devices so that they're on top of Links.
+            for d in self.devices:
+                self.root.ids.layout.remove_widget(d)
+                self.root.ids.layout.add_widget(d)
 
     def setup_puzzle(self, puzzle_data):
         # Remove any existing widgets in the layout.
@@ -84,45 +100,12 @@ class NetworkPuzzlesApp(App):
             self.devices.append(w)
             self.root.ids.layout.add_widget(w)
         # Add links one tick after devices so that devices are positioned first.
-        Clock.schedule_once(self._setup_links)
-
-    def get_device_by_id(self, device_id):
-        # This returns the gui.Device widget, which is different from
-        # puzzle.deviceFromId, which returns a data dict.
-        for w in self.root.ids.layout.children:
-            if w.data.get('uniqueidentifier') == device_id:
-                return w
-
-    def on_checkbox_activate(self, inst):
-        if inst.state == 'down':
-            self.filters.append(inst.name)
-        elif inst.state == 'normal':
-            self.filters.remove(inst.name)
-
-    def _setup_links(self, *args):
-        if self.link_data:  # not every puzzle has links
-            for lin in self.link_data:
-                w = Link(lin)
-                self.links.append(w)
-                self.root.ids.layout.add_widget(w)
-            # Remove and re-add Devices so that they're on top of Links.
-            for d in self.devices:
-                self.root.ids.layout.remove_widget(d)
-                self.root.ids.layout.add_widget(d)
+        Clock.schedule_once(self.setup_links)
 
     def _test(self, *args, **kwargs):
         self.setup_puzzle(self.ui.load_puzzle('5'))
         print(session.__dict__)
         # raise NotImplementedError
-
-
-class PuzzleLayout(RelativeLayout):
-    def clear(self):
-        app = App.get_running_app()
-        app.links = []
-        app.devices = []
-        for w in self.children:
-            self.remove_widget(w)
 
 
 class PuzzleChooserPopup(AppPopup):
@@ -138,63 +121,10 @@ class PuzzleChooserPopup(AppPopup):
         self.dismiss()
 
 
-class SelectableRecycleBoxLayout(
-    FocusBehavior,
-    LayoutSelectionBehavior,
-    RecycleBoxLayout
-):
-    ''' Adds selection and focus behaviour to the view. '''
-    pass
-
-
-class ThemedCheckBox(CheckBox):
-    name = StringProperty
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-    def on_activate(self):
-        self.app.on_checkbox_activate(self)
-
-
-class ThemedLabel(Label):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
-    ''' Add selection support to the Label '''
-    index = None
-    selected = BooleanProperty(False)
-    selectable = BooleanProperty(True)
-
-    def refresh_view_attrs(self, rv, index, data):
-        ''' Catch and handle the view changes '''
-        self.index = index
-        return super(SelectableLabel, self).refresh_view_attrs(rv, index, data)
-
-    def on_touch_down(self, touch):
-        ''' Add selection on touch down '''
-        if super(SelectableLabel, self).on_touch_down(touch):
-            return True
-        if self.collide_point(*touch.pos) and self.selectable:
-            return self.parent.select_with_touch(self.index, touch)
-
-    def apply_selection(self, rv, index, is_selected):
-        ''' Respond to the selection of items in the view. '''
-        name = rv.data[index].get('text')
-        self.selected = is_selected
-        if is_selected:
-            self.app.selected_puzzle = self.app.ui.load_puzzle(name)
-
-class AppRecView(RecycleView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-class PuzzlesRecView(AppRecView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.filter = None
-        self.data = [{'text': n} for n in sorted(self.app.ui.getAllPuzzleNames(self.filter))]
+class PuzzleLayout(RelativeLayout):
+    def clear(self):
+        app = App.get_running_app()
+        app.links = []
+        app.devices = []
+        for w in self.children:
+            self.remove_widget(w)

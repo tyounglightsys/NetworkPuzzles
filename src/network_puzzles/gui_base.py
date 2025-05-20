@@ -4,9 +4,18 @@ from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
 from kivy.graphics import Color
 from kivy.graphics import Line
+from kivy.properties import BooleanProperty
 from kivy.properties import ListProperty
+from kivy.properties import StringProperty
 from kivy.uix.button import Button
+from kivy.uix.behaviors import FocusBehavior
+from kivy.uix.checkbox import CheckBox
+from kivy.uix.label import Label
 from kivy.uix.popup import Popup
+from kivy.uix.recycleboxlayout import RecycleBoxLayout
+from kivy.uix.recycleview import RecycleView
+from kivy.uix.recycleview.layout import LayoutSelectionBehavior
+from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.widget import Widget
 from . import device
 from . import link
@@ -98,10 +107,24 @@ class Link(Widget):
         self.end = end_dev.center
 
 
+class AppExceptionHandler(ExceptionHandler):
+    def handle_exception(self, exception):
+        ExceptionPopup(message=traceback.format_exc()).open()
+        # return ExceptionManager.RAISE  # kills app right away
+        return ExceptionManager.PASS
+
+
 class AppPopup(Popup):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
+
+
+class AppRecView(RecycleView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+
 
 class ExceptionPopup(AppPopup):
     def __init__(self, message, **kwargs):
@@ -113,8 +136,60 @@ class ExceptionPopup(AppPopup):
         self.app.stop()
 
 
-class AppExceptionHandler(ExceptionHandler):
-    def handle_exception(self, exception):
-        ExceptionPopup(message=traceback.format_exc()).open()
-        # return ExceptionManager.RAISE  # kills app right away
-        return ExceptionManager.PASS
+class PuzzlesRecView(AppRecView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.filter = None
+        self.data = [{'text': n} for n in sorted(self.app.ui.getAllPuzzleNames(self.filter))]
+
+
+class ThemedLabel(Label):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+
+
+class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
+    ''' Add selection support to the Label '''
+    index = None
+    selected = BooleanProperty(False)
+    selectable = BooleanProperty(True)
+
+    def refresh_view_attrs(self, rv, index, data):
+        ''' Catch and handle the view changes '''
+        self.index = index
+        return super(SelectableLabel, self).refresh_view_attrs(rv, index, data)
+
+    def on_touch_down(self, touch):
+        ''' Add selection on touch down '''
+        if super(SelectableLabel, self).on_touch_down(touch):
+            return True
+        if self.collide_point(*touch.pos) and self.selectable:
+            return self.parent.select_with_touch(self.index, touch)
+
+    def apply_selection(self, rv, index, is_selected):
+        ''' Respond to the selection of items in the view. '''
+        name = rv.data[index].get('text')
+        self.selected = is_selected
+        if is_selected:
+            self.app.selected_puzzle = self.app.ui.load_puzzle(name)
+
+
+class SelectableRecycleBoxLayout(
+    FocusBehavior,
+    LayoutSelectionBehavior,
+    RecycleBoxLayout
+):
+    ''' Adds selection and focus behaviour to the view. '''
+    pass
+
+
+class ThemedCheckBox(CheckBox):
+    name = StringProperty
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+
+    def on_activate(self):
+        self.app.on_checkbox_activate(self)
