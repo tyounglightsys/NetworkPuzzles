@@ -34,11 +34,11 @@ def read_json_file(file_path):
         return None
 
 def listPuzzles(regex_pattern:str = None):
-    puzzleNames=[]
+    puzzleNames = []
     directory_path="src/network_puzzles/resources/puzzles"
-    list = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
-    for one in list:
-        justName=re.sub(r"\.json","", one)
+    files = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
+    for one in files:
+        justName = re.sub(r"\.json","", one)
         if regex_pattern is None:
             puzzleNames.append(justName)
         elif re.match(regex_pattern,justName):
