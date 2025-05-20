@@ -29,32 +29,49 @@ ThemedBoxLayout:
                 text: _("?")
                 on_press: app.on_help()
         HSeparator:
-        AppLabel:
+        ThemedLabel:  # puzzle information
             id: info
             size_hint_y: 0.72
             border_width: dp(3)
-            border_color: app.DARK_COLOR
-            #text: "Puzzle instructions"
+            border_color: app.DARKEST_COLOR
+
+    VSeparator:
+    ThemedBoxLayout:
+        orientation: 'vertical'
+        size_hint_x: 2/3
+        PuzzleLayout:
+            id: layout
+            size_hint_y: 0.90
         TerminalLabel:
             id: terminal
-            size_hint_y: 0.18
+            size_hint_y: 0.10
             #text: f"Terminal output...\nline 2...\nline 3...\nline 4...\nline 5...\nline 6..."
             max_lines: 6
-    VSeparator:
-    RelativeLayout:
-        id: layout
-        size_hint_x: 2/3
 
 
 <ThemedBoxLayout@BoxLayout>:
     spacing: dp(5)
+    canvas:
+        Color:
+            rgba: app.LIGHTER_COLOR
+        Rectangle: 
+            pos: self.pos
+            size: self.size
+
+<PuzzleLayout>:
+    canvas:
+        Color:
+            rgba: app.LIGHTEST_COLOR
+        Rectangle: 
+            pos: self.pos
+            size: self.size
 
 <ThemedButton@Button>:
     background_normal: ''  # sets initial background to white
     background_color: (1, 1, 1, 0)  # makes it transparent
     size_hint_y: 1
     size_hint_max_y: dp(50)
-    color: app.DARK_COLOR
+    color: app.DARKEST_COLOR
     bold: True
     canvas.before:
         Color:
@@ -80,34 +97,49 @@ ThemedBoxLayout:
         Rectangle:
             pos: self.pos
             size: self.size
-    color: app.DARK_COLOR
+    color: app.DARKEST_COLOR
     halign: 'left'
     valign: 'top'
     font_size: sp(16)
-
-<AppLabel@ThemedLabel>:
     text_size: self.size
+
+<CheckBoxLabel@ThemedLabel>:
+    valign: 'center'
 
 <SelectableLabel>:
     canvas.before:
         Color:
-            rgba: app.LIGHT_COLOR if self.selected else app.LIGHTER_COLOR
+            rgba: app.LIGHTER_COLOR if self.selected else app.LIGHTEST_COLOR
         Rectangle:
             pos: self.pos
             size: self.size
 
-<TerminalLabel@AppLabel>:
+<TerminalLabel@ThemedLabel>:
     canvas.before:
         Color:
             rgba: app.LIGHTEST_COLOR
         Rectangle:
             pos: self.pos
             size: self.size
-    color: app.DARK_COLOR
+    color: app.DARKEST_COLOR
     font_name: 'RobotoMono-Regular'
     valign: 'bottom'
     font_size: sp(12)
 
+
+<ThemedCheckBox>:
+    canvas.before:
+        Color:
+            rgba: app.LIGHTER_COLOR
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    color: app.DARK_COLOR
+    font_size: sp(12)
+    on_active: self.on_activate()
+
+<FiltersCheckBox@ThemedCheckBox>:
+    size_hint_x: 0.15
 
 <Separator@Widget>:
     canvas:
@@ -132,10 +164,69 @@ ThemedBoxLayout:
 
 <PuzzleChooserPopup>:
     title: _("Puzzles")
+    size_hint_x: 1/3
     ThemedBoxLayout:
+        canvas.before:
+            Color:
+                rgba: app.LIGHTER_COLOR
+            Rectangle:
+                pos: self.pos
+                size: self.size
         orientation: 'vertical'
-        PuzzlesRecView:
+        padding: dp(5)
         ThemedBoxLayout:
+            size_hint_y: 0.9
+            ThemedBoxLayout:
+                orientation: 'vertical'
+                ThemedLabel:
+                    text: _("Filter the puzzles by level:")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'level0'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 0")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'level1'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 1")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'level2'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 2")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'level3'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 3")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'level4'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 4")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'level5'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 5")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'level6'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 6")
+            VSeparator:
+            PuzzlesRecView:
+        ThemedBoxLayout:
+            size_hint_y: 0.1
+            size_hint_max_y: dp(50)
             PopupButton:
                 text: _("Cancel")
                 on_press: root.on_cancel()
