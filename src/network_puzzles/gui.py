@@ -14,9 +14,11 @@ from .gui_base import Link
 
 
 class NetworkPuzzlesApp(App):
-    DARKEST_COLOR = (0.1, 0.1, 0.1, 1)
-    DARK_COLOR = (0.15, 0.15, 0.15, 1)
-    LIGHT_COLOR = (0.8, 0.8, 0.8, 1)
+    DARKEST_COLOR = (0.10, 0.10, 0.10, 1)
+    DARKER_COLOR = (0.15, 0.15, 0.15, 1)
+    DARK_COLOR = (0.20, 0.20, 0.20, 1)
+    MEDIUM_COLOR = (0.50, 0.50, 0.50, 1)
+    LIGHT_COLOR = (0.80, 0.80, 0.80, 1)
     LIGHTER_COLOR = (0.95, 0.95, 0.95, 1)
     LIGHTEST_COLOR = (0.98, 0.98, 0.98, 1)
     Window.clearcolor = LIGHTER_COLOR
