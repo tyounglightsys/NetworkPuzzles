@@ -109,10 +109,11 @@ ThemedBoxLayout:
 <SelectableLabel>:
     canvas.before:
         Color:
-            rgba: app.LIGHTER_COLOR if self.selected else app.LIGHTEST_COLOR
+            rgba: app.LIGHT_COLOR if self.selected else app.LIGHTEST_COLOR
         Rectangle:
             pos: self.pos
             size: self.size
+    valign: 'center'
 
 <TerminalLabelOld@ThemedLabel>:
     canvas.before:

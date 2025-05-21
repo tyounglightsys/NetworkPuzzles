@@ -31,9 +31,21 @@ class NetworkPuzzlesApp(App):
         self.ui = ui
         self.app_title = self.ui.TITLE
         self.title = self.app_title
+
+        self.devices = []
+        self.links = []
+        self.filtered_puzzles = []
         self.filters = []
         self.selected_puzzle = None
         self.ct = 1
+
+    def add_device(self, device_inst):
+        self.devices.append(device_inst)
+        self.root.ids.layout.add_widget(device_inst)
+
+    def add_link(self, link_inst):
+        self.links.append(link_inst)
+        self.root.ids.layout.add_widget(link_inst)
 
     def add_terminal_line(self, line):
         if not line.endswith('\n'):
@@ -68,20 +80,36 @@ class NetworkPuzzlesApp(App):
     def on_puzzle_chooser(self):
         PuzzleChooserPopup().open()
 
+    def remove_device(self, device_inst):
+        self.root.ids.layout.remove_widget(device_inst)
+        self.devices.remove(device_inst)
+
+    def remove_link(self, link_inst):
+        self.root.ids.layout.remove_widget(link_inst)
+        self.links.remove(link_inst)
+
     def setup_links(self, *args):
         if self.link_data:  # not every puzzle has links
             for lin in self.link_data:
-                w = Link(lin)
-                self.links.append(w)
-                self.root.ids.layout.add_widget(w)
+                self.add_link(Link(lin))
             # Remove and re-add Devices so that they're on top of Links.
             for d in self.devices:
-                self.root.ids.layout.remove_widget(d)
-                self.root.ids.layout.add_widget(d)
+                self.remove_device(d)
+                self.add_device(d)
 
     def setup_puzzle(self, puzzle_data):
         # Remove any existing widgets in the layout.
+        for device in self.devices:
+            self.remove_device(device)
+        for link in self.links:
+            self.remove_link(link)
+        self.devices = []
+        self.links = []
+        # Remove any remaining child widgets.
         self.root.ids.layout.clear()
+        if puzzle_data is None:
+            print("No puzzle selected.")
+            return
 
         puzzle_id = puzzle_data.get('uniqueidentifier')
         # Get puzzle text from localized messages, if possible, but fallback to
@@ -96,38 +124,36 @@ class NetworkPuzzlesApp(App):
         
         self.title += f": {title}"
         self.root.ids.info.text = message
-
         self.device_data = puzzle_data.get('device')
         self.link_data = puzzle_data.get('link')
-        self.devices = []
-        self.links = []
 
-        for dev in self.device_data:
-            w = Device(dev)
-            self.devices.append(w)
-            self.root.ids.layout.add_widget(w)
-        # Add links one tick after devices so that devices are positioned first.
-        Clock.schedule_once(self.setup_links)
+        # self.device_data is typically a list of devices, but it's occasionally
+        # a one-device dict.
+        if isinstance(self.device_data, dict):
+            self.add_device(Device(self.device_data))
+        elif isinstance(self.device_data, list):
+            for dev in self.device_data:
+                self.add_device(Device(dev))
+        
+        if self.links:
+            # Add links one tick after devices so that devices are positioned first.
+            Clock.schedule_once(self.setup_links)
 
     def update_puzzle_list(self, popup=None):
         # TODO: At the moment self.filter is a list that can include 0 or more
         # puzzle names, but getAllPuzzleNames only accepts a single string. So
         # we currenly just accept the first item in the list as the filter.
         pfilter = None
-        print(f"{session.puzzlelist=}")
-        print(f"{self.filters=}")
         if isinstance(self.filters, list) and len(self.filters) > 0:
             pfilter = f"{self.filters[0]}"
         elif isinstance(self.filters, str):
             pfilter = self.filters
-        print(f"{pfilter=}")
-        session.puzzlelist = sorted(self.ui.getAllPuzzleNames(pfilter))
+        self.filtered_puzzlelist = sorted(self.ui.getAllPuzzleNames(pfilter))
         if popup:
             popup.ids.puzzles_view.update_data()
 
     def _test(self, *args, **kwargs):
         self.setup_puzzle(self.ui.load_puzzle('5'))
-        print(session.__dict__)
         # raise NotImplementedError
 
 
@@ -139,7 +165,7 @@ class PuzzleChooserPopup(AppPopup):
         self.app.selected_puzzle = None
 
     def on_load(self):
-        session.puzzle = self.app.selected_puzzle
+        session.puzzle = self.app.ui.load_puzzle(self.app.selected_puzzle)
         self.app.setup_puzzle(session.puzzle)
         self.dismiss()
 

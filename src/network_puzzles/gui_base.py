@@ -20,7 +20,6 @@ from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 from . import device
 from . import link
-from . import session
 
 
 class Device(Button):
@@ -146,7 +145,7 @@ class PuzzlesRecView(AppRecView):
         self.update_data()
     
     def update_data(self):
-        self.data = [{'text': n} for n in session.puzzlelist]
+        self.data = [{'text': n} for n in self.app.filtered_puzzlelist]
 
 
 class ThemedLabel(Label):
@@ -178,7 +177,7 @@ class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
         name = rv.data[index].get('text')
         self.selected = is_selected
         if is_selected:
-            self.app.selected_puzzle = self.app.ui.load_puzzle(name)
+            self.app.selected_puzzle = name
 
 
 class SelectableRecycleBoxLayout(
