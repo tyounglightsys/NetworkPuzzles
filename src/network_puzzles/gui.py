@@ -52,6 +52,18 @@ class NetworkPuzzlesApp(App):
             line += '\n'
         self.root.ids.terminal.text += f"{line}"
 
+    def clear_puzzle(self):
+        """Remove any existing widgets in the puzzle layout."""
+        for device in self.devices:
+            self.remove_device(device)
+        for link in self.links:
+            self.remove_link(link)
+        self.devices = []
+        self.links = []
+        self.selected_puzzle = None
+        # Remove any remaining child widgets from puzzle layout.
+        self.root.ids.layout.clear()
+
     def get_device_by_id(self, device_id):
         # This returns the gui.Device widget, which is different from
         # puzzle.deviceFromId, which returns a data dict.
@@ -89,24 +101,21 @@ class NetworkPuzzlesApp(App):
         self.links.remove(link_inst)
 
     def setup_links(self, *args):
-        if self.link_data:  # not every puzzle has links
-            for lin in self.link_data:
-                self.add_link(Link(lin))
-            # Remove and re-add Devices so that they're on top of Links.
-            for d in self.devices:
-                self.remove_device(d)
-                self.add_device(d)
+        # self.link_data is typically a list of links, but it's occasionally
+        # a one-link dict.
+        if isinstance(self.link_data, dict):
+            self.add_link(Link(self.link_data))
+        elif isinstance(self.link_data, list):
+            for link in self.link_data:
+                self.add_link(Link(link))
 
-    def setup_puzzle(self, puzzle_data):
-        # Remove any existing widgets in the layout.
+        # Remove and re-add Devices so that they're on top of Links.
         for device in self.devices:
             self.remove_device(device)
-        for link in self.links:
-            self.remove_link(link)
-        self.devices = []
-        self.links = []
-        # Remove any remaining child widgets.
-        self.root.ids.layout.clear()
+            self.add_device(device)
+
+    def setup_puzzle(self, puzzle_data):
+        self.clear_puzzle()
         if puzzle_data is None:
             print("No puzzle selected.")
             return
@@ -135,7 +144,7 @@ class NetworkPuzzlesApp(App):
             for dev in self.device_data:
                 self.add_device(Device(dev))
         
-        if self.links:
+        if self.link_data:
             # Add links one tick after devices so that devices are positioned first.
             Clock.schedule_once(self.setup_links)
 
@@ -172,8 +181,5 @@ class PuzzleChooserPopup(AppPopup):
 
 class PuzzleLayout(RelativeLayout):
     def clear(self):
-        app = App.get_running_app()
-        app.links = []
-        app.devices = []
         for w in self.children:
             self.remove_widget(w)
