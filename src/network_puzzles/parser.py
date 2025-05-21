@@ -16,7 +16,7 @@ def parse(command:str):
             # we have stuff. Process it
             cmd = items[0].lower()
             match cmd:
-                case 'list'|'show'|'search':
+                case 'puzzles'|'search':
                     #We want to list all the items.
                     pattern = None
                     if len(items) > 1:
@@ -48,6 +48,30 @@ def parse(command:str):
                     return {'command':cmd, 'value':val}
                 case 'exit' | 'quit' | 'stop':
                      sys.exit()
+                case 'ping':
+                    if len(items) != 3:
+                        print("invalid ping command: usage: ping source_hostname destination_hostname");
+                        print(" example: ping pc0 pc1");
+                        return None;
+                    shost = puzzle.deviceFromName( items[1] );
+                    dhost = puzzle.deviceFromName( items[2] );
+                    if (shost == None):
+                        print("No such host: " + items[1]);
+                        return
+                    if (dhost == None):
+                        print("No such host: " + items[2] );
+                        return
+                    #if we get here, we are ready to try to ping.
+                    puzzle.Ping(shost,dhost);
+                case 'show' | 'list':
+                    #list the hosts.  Or, show information about a specifici host
+                    if len(items) == 1:
+                        #Just the show command.  List all the devices
+                        devicelist = puzzle.allDevices()
+                        for one in devicelist:
+                            print(one['hostname'])
+                    if len(items) == 2:
+                        print ("Not done yet")
                 case _:
                     print(f"unknown: {command}")
     #except:
