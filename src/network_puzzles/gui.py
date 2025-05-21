@@ -53,6 +53,11 @@ class NetworkPuzzlesApp(App):
             self.filters.append(inst.name)
         elif inst.state == 'normal':
             self.filters.remove(inst.name)
+        # TODO: Refresh the puzzle list using the updated self.filters.
+        # I have the checkbox instance, but it doesn't seem to contain any
+        # reference to the parent popup window, whose PuzzlesRecView I need to
+        # update.
+        self.update_puzzle_list(inst.get_popup())
 
     def on_help(self):
         print('help clicked')
@@ -103,6 +108,22 @@ class NetworkPuzzlesApp(App):
             self.root.ids.layout.add_widget(w)
         # Add links one tick after devices so that devices are positioned first.
         Clock.schedule_once(self.setup_links)
+
+    def update_puzzle_list(self, popup=None):
+        # TODO: At the moment self.filter is a list that can include 0 or more
+        # puzzle names, but getAllPuzzleNames only accepts a single string. So
+        # we currenly just accept the first item in the list as the filter.
+        pfilter = None
+        print(f"{session.puzzlelist=}")
+        print(f"{self.filters=}")
+        if isinstance(self.filters, list) and len(self.filters) > 0:
+            pfilter = f"{self.filters[0]}"
+        elif isinstance(self.filters, str):
+            pfilter = self.filters
+        print(f"{pfilter=}")
+        session.puzzlelist = sorted(self.ui.getAllPuzzleNames(pfilter))
+        if popup:
+            popup.ids.puzzles_view.update_data()
 
     def _test(self, *args, **kwargs):
         self.setup_puzzle(self.ui.load_puzzle('5'))

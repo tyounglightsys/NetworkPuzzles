@@ -114,7 +114,7 @@ ThemedBoxLayout:
             pos: self.pos
             size: self.size
 
-<TerminalLabel@ThemedLabel>:
+<TerminalLabelOld@ThemedLabel>:
     canvas.before:
         Color:
             rgba: app.LIGHTEST_COLOR
@@ -125,6 +125,17 @@ ThemedBoxLayout:
     font_name: 'RobotoMono-Regular'
     valign: 'bottom'
     font_size: sp(12)
+
+<TerminalLabel>:
+    background_color: app.LIGHTEST_COLOR
+    foreground_color: app.DARKEST_COLOR
+    halign: 'left'
+    valign: 'bottom'
+    font_name: 'RobotoMono-Regular'
+    font_size: sp(12)
+    text_size: self.size
+    readonly: True
+    do_wrap: False
 
 
 <ThemedCheckBox>:
@@ -182,48 +193,49 @@ ThemedBoxLayout:
                     text: _("Filter the puzzles by level:")
                 ThemedBoxLayout:
                     FiltersCheckBox:
-                        name: 'level0'
+                        name: 'Level0'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 0")
                 ThemedBoxLayout:
                     FiltersCheckBox:
-                        name: 'level1'
+                        name: 'Level1'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 1")
                 ThemedBoxLayout:
                     FiltersCheckBox:
-                        name: 'level2'
+                        name: 'Level2'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 2")
                 ThemedBoxLayout:
                     FiltersCheckBox:
-                        name: 'level3'
+                        name: 'Level3'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 3")
                 ThemedBoxLayout:
                     FiltersCheckBox:
-                        name: 'level4'
+                        name: 'Level4'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 4")
                 ThemedBoxLayout:
                     FiltersCheckBox:
-                        name: 'level5'
+                        name: 'Level5'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 5")
                 ThemedBoxLayout:
                     FiltersCheckBox:
-                        name: 'level6'
+                        name: 'Level6'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 6")
             VSeparator:
             PuzzlesRecView:
+                id: puzzles_view
         HSeparator:
         ThemedBoxLayout:  # bottom buttons
             size_hint_y: 0.1
@@ -242,17 +254,19 @@ ThemedBoxLayout:
         orientation: 'vertical'
         ScrollView:
             size_hint_y: 0.8
-            do_scroll_x: False
+            bar_width: dp(5)
+            scroll_type: ['bars', 'content']
+            do_scroll_x: True
             do_scroll_y: True
+            effect_cls: 'ScrollEffect'
             TerminalLabel:
                 id: exception
                 padding: dp(3)
+                size_hint_x: None
                 size_hint_y: None
-                height: self.texture_size[1]
-                font_name: 'RobotoMono-Regular'
-                font_size: dp(12)
+                height: self.line_height * len(self.text.split('\n'))
+                width: self._get_row_width(self.get_max_row(self.text))
                 text_size: (self.width, None)
-                size: self.texture_size
         HSeparator:
         PopupButton:
             pos_hint: {"center_x": 0.5}

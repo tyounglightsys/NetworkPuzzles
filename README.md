@@ -38,3 +38,8 @@ Run the GUI app:
 ```shell
 python src/main.py
 ```
+
+## Prerequisites
+
+Ubuntu (more specifically Wayland) requires the installation of the `xsel`
+package for selection and clipboard features to work (Kivy runs under XWayland).

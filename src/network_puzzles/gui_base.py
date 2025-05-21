@@ -16,9 +16,11 @@ from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
+from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 from . import device
 from . import link
+from . import session
 
 
 class Device(Button):
@@ -130,7 +132,7 @@ class ExceptionPopup(AppPopup):
     def __init__(self, message, **kwargs):
         super().__init__(**kwargs)
         self.ids.exception.text = message
-    
+
     def on_dismiss(self):
         # Don't allow the app to continue running.
         self.app.stop()
@@ -139,8 +141,12 @@ class ExceptionPopup(AppPopup):
 class PuzzlesRecView(AppRecView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.filter = None
-        self.data = [{'text': n} for n in sorted(self.app.ui.getAllPuzzleNames(self.filter))]
+        self.app.update_puzzle_list()
+        self.data = {}
+        self.update_data()
+    
+    def update_data(self):
+        self.data = [{'text': n} for n in session.puzzlelist]
 
 
 class ThemedLabel(Label):
@@ -184,12 +190,29 @@ class SelectableRecycleBoxLayout(
     pass
 
 
+class TerminalLabel(TextInput):
+    def get_max_row(self, text):
+        max_row = 0
+        max_length = 0
+        for i, line in enumerate(text.split('\n')):
+            if len(line) > max_length:
+                max_row = i
+                max_length = len(line)
+        return max_row
+
+
 class ThemedCheckBox(CheckBox):
     name = StringProperty
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
+
+    def get_popup(self):
+        for win in self.get_parent_window().children:
+            # Only Popup widget has 'content' attribute.
+            if hasattr(win, 'content'):
+                return win
 
     def on_activate(self):
         self.app.on_checkbox_activate(self)
