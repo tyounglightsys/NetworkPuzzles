@@ -3,9 +3,11 @@
 
 ThemedBoxLayout:
     ThemedBoxLayout:
-        size_hint_x: 1/3
+        size_hint_x: 1/4
         orientation: 'vertical'
+        padding: dp(5)
         ThemedBoxLayout:  # menu buttons group
+            spacing: dp(5)
             size_hint_y: 0.1
             width: self.width
             padding: dp(5)
@@ -38,7 +40,8 @@ ThemedBoxLayout:
     VSeparator:
     ThemedBoxLayout:
         orientation: 'vertical'
-        size_hint_x: 2/3
+        size_hint_x: 3/4
+        padding: dp(3)
         PuzzleLayout:
             id: layout
             size_hint_y: 0.90
@@ -50,7 +53,6 @@ ThemedBoxLayout:
 
 
 <ThemedBoxLayout@BoxLayout>:
-    spacing: dp(5)
     canvas:
         Color:
             rgba: app.LIGHTER_COLOR
@@ -63,10 +65,10 @@ ThemedBoxLayout:
         Color:
             rgba: app.LIGHTEST_COLOR
         Rectangle: 
-            pos: self.pos
+            pos: (0, 0)
             size: self.size
 
-<ThemedButton@Button>:
+<ThemedButton>:
     background_normal: ''  # sets initial background to white
     background_color: (1, 1, 1, 0)  # makes it transparent
     size_hint_y: 1
@@ -101,7 +103,7 @@ ThemedBoxLayout:
     halign: 'left'
     valign: 'top'
     font_size: sp(16)
-    text_size: self.size
+    text_size: (self.width - dp(10), self.height - dp(10))
 
 <CheckBoxLabel@ThemedLabel>:
     valign: 'center'
@@ -170,6 +172,9 @@ ThemedBoxLayout:
     width: dp(1)
 
 
+<ActionsPopup>:
+    ThemedBoxLayout:
+
 <AppPopup>:
     title_size: dp(18)
     size_hint: (1/2, 3/4)
@@ -185,7 +190,7 @@ ThemedBoxLayout:
                 pos: self.pos
                 size: self.size
         orientation: 'vertical'
-        padding: [dp(5), dp(5), dp(5), dp(5)]
+        padding: dp(5)
         ThemedBoxLayout:  # top section
             size_hint_y: 0.9
             ThemedBoxLayout:
@@ -239,6 +244,8 @@ ThemedBoxLayout:
                 id: puzzles_view
         HSeparator:
         ThemedBoxLayout:  # bottom buttons
+            padding: dp(5)
+            spacing: dp(5)
             size_hint_y: 0.1
             size_hint_max_y: dp(50)
             PopupButton:
@@ -276,6 +283,10 @@ ThemedBoxLayout:
             size_hint_y: 0.2
             text: _("Quit")
             on_release: app.stop()
+
+
+<SelectableRecycleBoxLayout>
+    padding: dp(5)
 
 
 <PuzzlesRecView>:
