@@ -552,6 +552,50 @@ def Ping(src, dest):
         packet['packettype']="ping"
         print (packet)
 
+def splitXYfromString(xystring:str):
+    try:
+        sx, sy =xystring.split(',')
+        ix = int(sx)
+        iy = int(sy)
+        return { ix, iy}
+    except:
+        return None
+
+def getPacketLocation(packetrec):
+    """
+    Return the x/y location of a paket.
+    Args: packetrec - a valid packet structure.
+    returns: an {x,y} structure showing the center-point of the packet or None
+    """
+    if(packetrec == None or not 'packetlocation' in packetrec):
+        return None
+    #packets are only displayed when they are on links.
+    thelink = linkFromName(packetrec['packetlocation'])
+    if (thelink == None):
+        return None #We could not find the link
+    #if we get here, we have the link that the packet is on
+    sdevice = deviceFromID(thelink['SrcNic']['hostid'])
+    ddevice = deviceFromID(thelink['DstNic']['hostid'])
+    if(sdevice == None or ddevice == None):
+        return None #This should never happen.  But exit gracefully.
+    if packetrec['packetDirection'] == 1:
+        #set the start of the link as the source
+        sx, sy = splitXYfromString(sdevice['location'])
+        dx, dy = splitXYfromString(ddevice['location'])
+    else:
+        #set the start of the link as the destination
+        sx, sy = splitXYfromString(ddevice['location'])
+        dx, dy = splitXYfromString(sdevice['location'])
+    #We now have a line that the packet is somewhere on.
+    deltax = (sx - dx) / 100
+    deltay = (sy - dy) / 100
+
+    amountx = deltax * packetrec['packetDistance']
+    amounty = deltay * packetrec['packetDistance']
+
+    #return a {x,y} structure
+    return { sx + deltax , sy + deltay }
+
 def newPacket():
     packet={
         'packetype':"",
@@ -562,7 +606,9 @@ def newPacket():
         'sourceMAC':"",
         'destMAC':"",
         'payload':"",
-        'packetDirection':0 #Which direction are we going on a network link.  1=src to dest, 2=dest to src
+        'packetlocation':"",#where the packet is.  Should almost always be a link name
+        'packetDirection':0, #Which direction are we going on a network link.  1=src to dest, 2=dest to src
+        'packetDistance':0 #The % distance the packet has traversed.  This is incremented until it reaches 100%
     }
     return packet
 
