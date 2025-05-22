@@ -6,11 +6,12 @@ from kivy.uix.relativelayout import RelativeLayout
 from pathlib import Path
 
 from . import messages
-from . import session
 from .gui_base import AppExceptionHandler
-from .gui_base import AppPopup
 from .gui_base import Device
 from .gui_base import Link
+from .gui_labels import ThemedLabel  # noqa: F401, imported here for KV file access
+from .gui_layouts import SelectableRecycleBoxLayout  # noqa: F401, imported here for KV file access
+from .gui_popups import PuzzleChooserPopup
 
 
 class NetworkPuzzlesApp(App):
@@ -166,20 +167,9 @@ class NetworkPuzzlesApp(App):
         # raise NotImplementedError
 
 
-class PuzzleChooserPopup(AppPopup):
-    def on_cancel(self):
-        self.dismiss()
-
-    def on_dismiss(self):
-        self.app.selected_puzzle = None
-
-    def on_load(self):
-        session.puzzle = self.app.ui.load_puzzle(self.app.selected_puzzle)
-        self.app.setup_puzzle(session.puzzle)
-        self.dismiss()
-
-
 class PuzzleLayout(RelativeLayout):
     def clear(self):
         for w in self.children:
             self.remove_widget(w)
+
+

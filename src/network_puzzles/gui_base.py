@@ -4,27 +4,65 @@ from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
 from kivy.graphics import Color
 from kivy.graphics import Line
-from kivy.properties import BooleanProperty
 from kivy.properties import ListProperty
 from kivy.properties import StringProperty
 from kivy.uix.button import Button
-from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.checkbox import CheckBox
-from kivy.uix.label import Label
-from kivy.uix.popup import Popup
-from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview import RecycleView
-from kivy.uix.recycleview.layout import LayoutSelectionBehavior
-from kivy.uix.recycleview.views import RecycleDataViewBehavior
-from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
+
 from . import device
 from . import link
+from .gui_buttons import Ping
+from .gui_popups import ActionsPopup
+from .gui_popups import ExceptionPopup
+
+
+class AppExceptionHandler(ExceptionHandler):
+    def handle_exception(self, exception):
+        ExceptionPopup(message=traceback.format_exc()).open()
+        # return ExceptionManager.RAISE  # kills app right away
+        return ExceptionManager.PASS
+
+
+class AppRecView(RecycleView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+
+
+class PuzzlesRecView(AppRecView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app.update_puzzle_list()
+        self.data = {}
+        self.update_data()
+    
+    def update_data(self):
+        self.data = [{'text': n} for n in self.app.filtered_puzzlelist]
+
+
+class ThemedCheckBox(CheckBox):
+    name = StringProperty
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+
+    def get_popup(self):
+        for win in self.get_parent_window().children:
+            # Only Popup widget has 'content' attribute.
+            if hasattr(win, 'content'):
+                return win
+
+    def on_activate(self):
+        self.app.on_checkbox_activate(self)
 
 
 class Device(Button):
     def __init__(self, init_data, **kwargs):
         super().__init__(**kwargs)
+        self.actions = []
         self.app = App.get_running_app()
         self.data = init_data
         self.base = device.Device(self.data)
@@ -33,6 +71,13 @@ class Device(Button):
         self.size_hint_x = self.data.get('width')
         self.size_hint_y = self.data.get('height')
         self._set_image()
+
+    def on_press(self):
+        self.actions = [
+            {'text': 'Ping 1.1.1.1', 'func': Ping, 'kwargs': {'src': self, 'dest': '1.1.1.1'}},
+        ]
+        p = ActionsPopup(device=self, actions=self.actions)
+        p.open()
 
     def _set_image(self):
         img = ''
@@ -106,112 +151,3 @@ class Link(Widget):
         self.start = start_dev.center
         end_dev = self.app.get_device_by_id(self.data.get('DstNic').get('hostid'))
         self.end = end_dev.center
-
-
-class AppExceptionHandler(ExceptionHandler):
-    def handle_exception(self, exception):
-        ExceptionPopup(message=traceback.format_exc()).open()
-        # return ExceptionManager.RAISE  # kills app right away
-        return ExceptionManager.PASS
-
-
-class AppPopup(Popup):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-
-class AppRecView(RecycleView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-
-class ExceptionPopup(AppPopup):
-    def __init__(self, message, **kwargs):
-        super().__init__(**kwargs)
-        self.ids.exception.text = message
-
-    def on_dismiss(self):
-        # Don't allow the app to continue running.
-        self.app.stop()
-
-
-class PuzzlesRecView(AppRecView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app.update_puzzle_list()
-        self.data = {}
-        self.update_data()
-    
-    def update_data(self):
-        self.data = [{'text': n} for n in self.app.filtered_puzzlelist]
-
-
-class ThemedLabel(Label):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-
-class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
-    ''' Add selection support to the Label '''
-    index = None
-    selected = BooleanProperty(False)
-    selectable = BooleanProperty(True)
-
-    def refresh_view_attrs(self, rv, index, data):
-        ''' Catch and handle the view changes '''
-        self.index = index
-        return super(SelectableLabel, self).refresh_view_attrs(rv, index, data)
-
-    def on_touch_down(self, touch):
-        ''' Add selection on touch down '''
-        if super(SelectableLabel, self).on_touch_down(touch):
-            return True
-        if self.collide_point(*touch.pos) and self.selectable:
-            return self.parent.select_with_touch(self.index, touch)
-
-    def apply_selection(self, rv, index, is_selected):
-        ''' Respond to the selection of items in the view. '''
-        name = rv.data[index].get('text')
-        self.selected = is_selected
-        if is_selected:
-            self.app.selected_puzzle = name
-
-
-class SelectableRecycleBoxLayout(
-    FocusBehavior,
-    LayoutSelectionBehavior,
-    RecycleBoxLayout
-):
-    ''' Adds selection and focus behaviour to the view. '''
-    pass
-
-
-class TerminalLabel(TextInput):
-    def get_max_row(self, text):
-        max_row = 0
-        max_length = 0
-        for i, line in enumerate(text.split('\n')):
-            if len(line) > max_length:
-                max_row = i
-                max_length = len(line)
-        return max_row
-
-
-class ThemedCheckBox(CheckBox):
-    name = StringProperty
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-    def get_popup(self):
-        for win in self.get_parent_window().children:
-            # Only Popup widget has 'content' attribute.
-            if hasattr(win, 'content'):
-                return win
-
-    def on_activate(self):
-        self.app.on_checkbox_activate(self)
