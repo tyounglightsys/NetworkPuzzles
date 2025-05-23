@@ -1,4 +1,9 @@
+import time
+
 from . import puzzle
+from . import session
+from . import link
+from . import nic
 
 def getPacketLocation(packetrec):
     """
@@ -45,7 +50,10 @@ def newPacket():
         'destIP':"",
         'sourceMAC':"",
         'destMAC':"",
+        'status':"good",
+        'statusmessage':"",
         'payload':"",
+        'starttime': int(time.time() * 1000), #secondssince epoc.  Failsafe that will kill the packet if too much time has passed
         'packetlocation':"",#where the packet is.  Should almost always be a link name
         'packetDirection':0, #Which direction are we going on a network link.  1=src to dest, 2=dest to src
         'packetDistance':0 #The % distance the packet has traversed.  This is incremented until it reaches 100%
@@ -66,3 +74,63 @@ def splitXYfromString(xystring:str):
     except ValueError:
         return None
 
+def addPacketToPacketlist(thepacket):
+    if thepacket is not None:
+        session.packetlist.append(thepacket)
+
+def packetsNeedProcessing():
+    """determine if we should continue to loop through packets
+    returns true or false"""
+    return len(session.packetlist) > 0
+
+def processPackets():
+    """loop through all packets, moving them along through the system"""
+    #here we loop through all packets and process them
+    curtime = int(time.time() * 1000)
+    for one in session.packetlist:
+        #figure out where the packet is
+        theLink = puzzle.linkFromName(one['packetlocation'])
+        if theLink is not None:
+            #the packet is traversing a link
+            one['packetDistance'] += 10 #traverse the link.  If we were smarter, we could do it in different chunks based on the time it takes to redraw
+            if one['packetDistance'] > 100:
+                #We have arrived.  We need to process the arrival!
+                #get interface from link
+                nicrec = theLink['SrcNic']
+                if one['packetDirection'] == 2:
+                    nicrec = theLink['DstNic']
+                tNic = link.getInterfaceFromLinkNicRec(nicrec)
+                if tNic is None:
+                    #We could not find the record.  This should never happen.  For now, blow up
+                    print ("Bad Link:")
+                    print (theLink)
+                    print ("Direction = " + str(one['packetDirection']))
+                    raise Exception("Could not find the endpoint of the link. ")
+                #We are here.  Call a function on the nic to start the packet entering the device
+                nic.beginIngress(one, tNic)
+
+        #If the packet has been going too long.  Kill it.
+        if curtime - one['starttime'] > 20000:
+            #over 20 seconds have passed.  Kill the packet
+            one['status'] = 'failed'
+            one['statusmessage'] = "Packet timed out"
+    #When we are done with all the processing, kill any packets that need killing.
+    cleanupPackets()
+
+def cleanupPackets():
+    """After processing packets, remove any "done" ones from the list."""
+    for index in range(len(session.packetlist) - 1, -1, -1): 
+        one = session.packetlist[index]
+        match one['status']:
+            case 'good':
+                continue
+            case 'failed':
+                #We may need to log/track this.  But we simply remove it for now
+                del session.packetlist[index]
+                continue
+            case 'done':
+                #We may need to log/track this.  But we simply remove it for now
+                del session.packetlist[index]
+                continue
+
+            

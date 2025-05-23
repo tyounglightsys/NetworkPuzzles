@@ -3,6 +3,7 @@ import sys
 from . import parser
 from . import puzzle
 from . import session
+from . import packet
 
 class UI:
     TITLE = 'NetworkPuzzles'
@@ -99,6 +100,9 @@ class CLI(UI):
         """A CLI only function.  Prompt for imput and process it"""
         answer = input("-> ")
         parser.parse(answer)
+        #if we created packets, process them until done.
+        while packet.packetsNeedProcessing():
+            packet.processPackets()
 
     def load_puzzle(self, puzzle, filter:str = None):
         """Load and set up the UI based on the data in the puzzle file."""

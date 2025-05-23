@@ -568,6 +568,7 @@ def Ping(src, dest):
         nPacket['destMAC'] = globalArpLookup(dest)
         nPacket['packettype']="ping"
         print (nPacket)
+        packet.addPacketToPacketlist(nPacket)
 
 def doTest():
 
