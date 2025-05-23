@@ -33,7 +33,7 @@ def read_json_file(file_path):
         print(f"Error: Invalid JSON format in: {file_path}")
         return None
 
-def listPuzzles(regex_pattern:str = None):
+def listPuzzlesFromDisk(regex_pattern:str = None):
     puzzleNames = []
     directory_path="src/network_puzzles/resources/puzzles"
     files = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
@@ -45,10 +45,22 @@ def listPuzzles(regex_pattern:str = None):
             puzzleNames.append(justName)
     return puzzleNames
 
+def listPuzzles(regex_pattern:str = None):
+    if len(session.puzzlelist) == 0:
+        readPuzzle()
+    puzzleNames = []
+    for one in session.puzzlelist:
+        justName=one['EduNetworkBuilder']['Network']['name']
+        if regex_pattern is None:
+            puzzleNames.append(justName)
+        elif re.match(regex_pattern,justName):
+            puzzleNames.append(justName)
+    return puzzleNames
+
 def readPuzzle():
     """Read in the puzzles from the various .json files"""
     if len(session.puzzlelist) == 0:
-        allfiles=listPuzzles("Level.*")
+        allfiles=listPuzzlesFromDisk("Level.*")
         for one in allfiles:
             #We stripped off the ".json" from the name, so we need to add it back
             file_path = 'src/network_puzzles/resources/puzzles/' + one + ".json"
@@ -56,6 +68,7 @@ def readPuzzle():
             oneentry['EduNetworkBuilder']['Network']['name'] = one
             session.puzzlelist.append(oneentry)
             #print("loading: " + one)
+        session.puzzlelist.sort(key = lambda x: (float(x['EduNetworkBuilder']['Network']['level']), float(x['EduNetworkBuilder']['Network']['sortorder']) ))
 
 def choosePuzzleFromName(what:str):
     """
