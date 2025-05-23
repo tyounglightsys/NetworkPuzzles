@@ -546,16 +546,16 @@ def Ping(src, dest):
         return None
     if isinstance(dest,ipaddress.IPv4Address):
         #This is what we are hoping for.
-        packet=packet.newPacket() #make an empty packet
-        packet['sourceIP'] = sourceIP(src, dest)
+        nPacket=packet.newPacket() #make an empty packet
+        nPacket['sourceIP'] = sourceIP(src, dest)
         #packet['sourceMAC'] = #the MAC address of the above IP
-        packet['sourceMAC'] = arpLookup(src,packet['sourceIP'])
+        nPacket['sourceMAC'] = arpLookup(src,nPacket['sourceIP'])
         #packet['destIP'] = #figure this out
-        packet['destIP'] = dest #this should now be the IP
+        nPacket['destIP'] = dest #this should now be the IP
         #packet['destMAC'] = #If the IP is local, we use the MAC of the host.  Otherwise it is the MAC of the gateway
-        packet['destMAC'] = globalArpLookup(dest)
-        packet['packettype']="ping"
-        print (packet)
+        nPacket['destMAC'] = globalArpLookup(dest)
+        nPacket['packettype']="ping"
+        print (nPacket)
 
 def doTest():
 

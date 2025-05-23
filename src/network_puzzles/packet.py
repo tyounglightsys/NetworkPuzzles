@@ -37,7 +37,7 @@ def getPacketLocation(packetrec):
 
 def newPacket():
     """Returns an empty packet with all the fields."""
-    packet={
+    nPacket={
         'packetype':"",
         'VLANID':0, #start on the default vlan
         'health':100, #health.  This will drop as the packet goes too close to things causing interferance
@@ -50,7 +50,7 @@ def newPacket():
         'packetDirection':0, #Which direction are we going on a network link.  1=src to dest, 2=dest to src
         'packetDistance':0 #The % distance the packet has traversed.  This is incremented until it reaches 100%
     }
-    return packet
+    return nPacket
 
 def splitXYfromString(xystring:str):
     """Take a string like "50,50" and change it to be { 50,50 }
