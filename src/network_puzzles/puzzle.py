@@ -10,7 +10,7 @@ import os
 
 # define the global network list
 from . import session
-
+from . import packet
 
 def read_json_file(file_path):
     """
@@ -511,22 +511,27 @@ def is_ipv4(string):
             return False
 
 def Ping(src, dest):
+    """Generate a ping packet, starting at the srcdevice and destined for the destination device
+    Args:
+        src:srcDevice (also works with a hostname)
+        dest:dstDevice (also works with a hostname)
+        """
     #src should be a device, not just a name.  Sanity check.
-    if not 'hostname' in src:
+    if 'hostname' not in src:
         #The function is being improperly used. Can we fix it?
         newsrc = deviceFromName(src)
-        if newsrc != None:
+        if newsrc is not None:
             src=newsrc
         else:
             #we were unable to fix it.  Complain bitterly
             print('Error: invalid source passed to ping function.  src must be a device.')
             return None
-    if src == None:
+    if src is None:
         #the function is being improperly used
         print('Error: ping function must have a valid device as src.  None was passed in.')
         return None
     #dest should be a device, an ip address, or a hostname
-    if dest == None:
+    if dest is None:
         print('Error: You must have a destination for ping.  None was passed in.')
         return None
     if isinstance(dest,str) and not is_ipv4(dest):
@@ -535,13 +540,13 @@ def Ping(src, dest):
     if 'hostname' in dest:
         #If we passed in a device or hostname, convert it to an IP
         dest = destIP(src,dest)
-    if dest == None:
+    if dest is None:
         #This means we were unable to figure out the dest.  No such host, or something
         print('Error: Not a valid ping target')
         return None
     if isinstance(dest,ipaddress.IPv4Address):
         #This is what we are hoping for.
-        packet=newPacket() #make an empty packet
+        packet=packet.newPacket() #make an empty packet
         packet['sourceIP'] = sourceIP(src, dest)
         #packet['sourceMAC'] = #the MAC address of the above IP
         packet['sourceMAC'] = arpLookup(src,packet['sourceIP'])
@@ -551,66 +556,6 @@ def Ping(src, dest):
         packet['destMAC'] = globalArpLookup(dest)
         packet['packettype']="ping"
         print (packet)
-
-def splitXYfromString(xystring:str):
-    try:
-        sx, sy =xystring.split(',')
-        ix = int(sx)
-        iy = int(sy)
-        return { ix, iy}
-    except:
-        return None
-
-def getPacketLocation(packetrec):
-    """
-    Return the x/y location of a paket.
-    Args: packetrec - a valid packet structure.
-    returns: an {x,y} structure showing the center-point of the packet or None
-    """
-    if(packetrec == None or not 'packetlocation' in packetrec):
-        return None
-    #packets are only displayed when they are on links.
-    thelink = linkFromName(packetrec['packetlocation'])
-    if (thelink == None):
-        return None #We could not find the link
-    #if we get here, we have the link that the packet is on
-    sdevice = deviceFromID(thelink['SrcNic']['hostid'])
-    ddevice = deviceFromID(thelink['DstNic']['hostid'])
-    if(sdevice == None or ddevice == None):
-        return None #This should never happen.  But exit gracefully.
-    if packetrec['packetDirection'] == 1:
-        #set the start of the link as the source
-        sx, sy = splitXYfromString(sdevice['location'])
-        dx, dy = splitXYfromString(ddevice['location'])
-    else:
-        #set the start of the link as the destination
-        sx, sy = splitXYfromString(ddevice['location'])
-        dx, dy = splitXYfromString(sdevice['location'])
-    #We now have a line that the packet is somewhere on.
-    deltax = (sx - dx) / 100
-    deltay = (sy - dy) / 100
-
-    amountx = deltax * packetrec['packetDistance']
-    amounty = deltay * packetrec['packetDistance']
-
-    #return a {x,y} structure
-    return { sx + deltax , sy + deltay }
-
-def newPacket():
-    packet={
-        'packetype':"",
-        'VLANID':0, #start on the default vlan
-        'health':100, #health.  This will drop as the packet goes too close to things causing interferance
-        'sourceIP':"",
-        'destIP':"",
-        'sourceMAC':"",
-        'destMAC':"",
-        'payload':"",
-        'packetlocation':"",#where the packet is.  Should almost always be a link name
-        'packetDirection':0, #Which direction are we going on a network link.  1=src to dest, 2=dest to src
-        'packetDistance':0 #The % distance the packet has traversed.  This is incremented until it reaches 100%
-    }
-    return packet
 
 def doTest():
 
