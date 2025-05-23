@@ -79,7 +79,6 @@ def choosePuzzle(what, filter=None):
         filter: str - this is a filter to use.  For example ".*DHCP.*".  Then the int would apply to the index in the filtered list
     """
     readPuzzle()
-    myint=1
     if filter is not None:
         #We have a filter.  We need to try to look up the item from the filtered list
         filteredList=listPuzzles(filter)
@@ -89,7 +88,7 @@ def choosePuzzle(what, filter=None):
                 what = filteredList[int(what)]
             except Exception:
                 #It did not work.  Ignore the filter.
-                myint=1
+                1 #This command does nothing.  It allows us to have an exception that does not blow anything up
 
     if isinstance(what,int):
        puz = copy.deepcopy(session.puzzlelist[what]['EduNetworkBuilder']['Network'])
@@ -142,15 +141,15 @@ def maclistFromDevice(src):
     maclist=[]
     if isinstance(src,str):
         src = deviceFromName(str)
-    if src == None:
+    if src is None:
         return None
-    if not 'nic' in src:
+    if 'nic' not in src:
         return None
     if not isinstance(src['nic'],list):
         src['nic'] = [src['nic']]
     for onenic in src['nic']:
         #iterate through the list of nics
-        if not 'Mac' in onenic:
+        if 'Mac' not in onenic:
             #Most of the network cards do not have this done yet.  We generate a new random one
             localmac=""
             for i in range(1,13):
@@ -217,13 +216,13 @@ def arpLookup(srcDevice, ip):
         ip:ipaddress the ip address we are trying to find
         """
     oldsrc=""
-    if srcDevice == None:
+    if srcDevice is None:
         print("Error: source to arpLookup is None")
     if isinstance(srcDevice, str):
         #We need to look the device up
         oldsrc = srcDevice
         srcDevice = deviceFromName(srcDevice)
-    if srcDevice == None:
+    if srcDevice is None:
         print("Error: Unable to find source for arpLookup: " + oldsrc)
     #If we are here, src should be a valid device
     if isinstance(ip,str):
@@ -262,7 +261,7 @@ def nicFromName(theDevice,what):
         """
     if isinstance(theDevice, str):
         theDevice = deviceFromName(theDevice)
-    if theDevice == None:
+    if theDevice is None:
         return None
     for one in theDevice['nic']:
         if one['nicname'] == what:
@@ -335,10 +334,10 @@ def linkFromDevices(srcDevice, dstDevice):
     #Now we should have srcstr and dststr set.  Use them to concoct a link name
     #The link name looks like: pc0_link_pc1
     result = linkFromName(srcstr + "_link_" + dststr)
-    if result != None:
+    if result is not None:
         return result
     result = linkFromName(dststr + "_link_" + srcstr)
-    if result != None:
+    if result is not None:
         return result
     #if we get here, we could not find it.  Return none
     return None
@@ -358,13 +357,13 @@ def linkFromID(what):
 def itemFromID(what):
     """return the item matching the ID.  Could be a device, a link, or a nic"""
     result = deviceFromID(what)
-    if result != None:
+    if result is not None:
         return result
     result = linkFromID(what)
-    if result != None:
+    if result is not None:
         return result
     result = nicFromID(what)
-    if result != None:
+    if result is not None:
         return result
     return None
 
@@ -380,9 +379,9 @@ def DeviceIPs(src, ignoreLoopback=True):
     """
     interfacelist=[]
     srcDevice=src
-    if not 'hostname' in src:
+    if 'hostname' not in src:
         srcDevice=deviceFromName(src)
-    if srcDevice == None:
+    if srcDevice is None:
         print('Error: passed in an invalid source to function: sourceIP')
         return None
     if not isinstance(srcDevice['nic'],list):
@@ -395,7 +394,7 @@ def DeviceIPs(src, ignoreLoopback=True):
             onenic['interface']=[onenic['interface']]
         for oneinterface in onenic['interface']:
             #add it to the list
-            if oneinterface['nicname'] == "lo0" and ignoreLoopback == True:
+            if oneinterface['nicname'] == "lo0" and ignoreLoopback:
                 #skip this interface if we are told to do so
                 continue
             print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
@@ -416,22 +415,22 @@ def destIP(srcDevice,dstDevice):
         the string IP address of the nic that is local betwee the two devices, or the IP address on the destination 
         that is connected to its gateway IP.  None if the IP cannot be determined 
     """
-    if srcDevice == None:
+    if srcDevice is None:
         print("Error: function destIP: None passed in as source.")
         return None
-    if dstDevice == None:
+    if dstDevice is None:
         print("Error: function destIP: None passed in as destination.")
         return None
-    if not 'hostname' in srcDevice:
+    if 'hostname' not in srcDevice:
         print("Error: function destIP: Not a valid source device.")
         return None
-    if not 'hostname' in dstDevice:
+    if 'hostname' not in dstDevice:
         print("Error: function destIP: Not a valid destination device.")
         return None
     srcIPs = DeviceIPs(srcDevice)
     dstIPs = DeviceIPs(dstDevice)
 
-    if srcIPs == None or dstIPs == None:
+    if srcIPs is None or dstIPs is None:
         #we will not be able to find a match.
         return None
     for oneSip in srcIPs:
@@ -455,14 +454,14 @@ def sourceIP(src,dstIP):
     return: an IP address string, or None
     """
     srcDevice=src
-    if not 'hostname' in src:
+    if 'hostname' not in src:
         srcDevice=deviceFromName(src)
-    if srcDevice == None:
+    if srcDevice is None:
         print('Error: passed in an invalid source to function: sourceIP')
         return None
     #Get all the IPs from this device
     allIPs = DeviceIPs(src)
-    if allIPs == None:
+    if allIPs is None:
         return None
 
     #return the IP that has a static route to it (add this later).

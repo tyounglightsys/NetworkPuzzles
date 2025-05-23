@@ -46,9 +46,9 @@ class UI:
         item=None
         try:
             #if it is just a number, use it as an ID
-            test=int(what)
+            int(what)
             item=puzzle.deviceFromID(what)
-        except:
+        except ValueError:
             #if it is not a number, use it as a name
             item=puzzle.deviceFromName(what)
         return item
@@ -63,9 +63,9 @@ class UI:
         item=None
         try:
             #if it is just a number, use it as an ID
-            test=int(what)
+            int(what)
             item=puzzle.linkFromID(what)
-        except:
+        except ValueError:
             #if it is not a number, use it as a name
             item=puzzle.linkFromName(what)
         return item

@@ -6,16 +6,16 @@ def getPacketLocation(packetrec):
     Args: packetrec - a valid packet structure.
     returns: an {x,y} structure showing the center-point of the packet or None
     """
-    if(packetrec == None or not 'packetlocation' in packetrec):
+    if(packetrec is None or 'packetlocation' not in packetrec):
         return None
     #packets are only displayed when they are on links.
     thelink = puzzle.linkFromName(packetrec['packetlocation'])
-    if (thelink == None):
+    if (thelink is None):
         return None #We could not find the link
     #if we get here, we have the link that the packet is on
     sdevice = puzzle.deviceFromID(thelink['SrcNic']['hostid'])
     ddevice = puzzle.deviceFromID(thelink['DstNic']['hostid'])
-    if(sdevice == None or ddevice == None):
+    if(sdevice is None or ddevice is None):
         return None #This should never happen.  But exit gracefully.
     if packetrec['packetDirection'] == 1:
         #set the start of the link as the source

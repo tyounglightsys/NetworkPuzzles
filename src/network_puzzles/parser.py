@@ -3,7 +3,6 @@
 #import puzzle
 import sys
 import re
-from . import ui
 from . import puzzle
 
 def parse(command:str):
@@ -50,19 +49,19 @@ def parse(command:str):
                      sys.exit()
                 case 'ping':
                     if len(items) != 3:
-                        print("invalid ping command: usage: ping source_hostname destination_hostname");
-                        print(" example: ping pc0 pc1");
-                        return None;
-                    shost = puzzle.deviceFromName( items[1] );
-                    dhost = puzzle.deviceFromName( items[2] );
-                    if (shost == None):
-                        print("No such host: " + items[1]);
+                        print("invalid ping command: usage: ping source_hostname destination_hostname")
+                        print(" example: ping pc0 pc1")
+                        return None
+                    shost = puzzle.deviceFromName( items[1] )
+                    dhost = puzzle.deviceFromName( items[2] )
+                    if (shost is None):
+                        print("No such host: " + items[1])
                         return
-                    if (dhost == None):
-                        print("No such host: " + items[2] );
+                    if (dhost is None):
+                        print("No such host: " + items[2] )
                         return
                     #if we get here, we are ready to try to ping.
-                    puzzle.Ping(shost,dhost);
+                    puzzle.Ping(shost,dhost)
                 case 'show' | 'list':
                     #list the hosts.  Or, show information about a specifici host
                     if len(items) == 1:
