@@ -11,6 +11,7 @@ import os
 # define the global network list
 from . import session
 from . import packet
+from . import device
 
 def read_json_file(file_path):
     """
@@ -380,39 +381,6 @@ def itemFromID(what):
         return result
     return None
 
-def DeviceIPs(src, ignoreLoopback=True):
-    """
-    Return a list of all the ip addresses (IP+subnet) the device has.
-    Args: 
-        src:str - the hostname of the device
-        src:device - the device record itself
-        ignoreLoopback:bool=True - whether to ignore the loopback
-    Returns:
-        A list of IP4Interface records (ip+mask)
-    """
-    interfacelist=[]
-    srcDevice=src
-    if 'hostname' not in src:
-        srcDevice=deviceFromName(src)
-    if srcDevice is None:
-        print('Error: passed in an invalid source to function: sourceIP')
-        return None
-    if not isinstance(srcDevice['nic'],list):
-        #If it is not a list, turn it into a list so we can iterate it
-        srcDevice['nic'] = [srcDevice['nic']]
-    for onenic in srcDevice['nic']:
-        #Pull out all the nic interfaces
-        if not isinstance(onenic['interface'],list):
-            #turn it into a list so we can iterate it
-            onenic['interface']=[onenic['interface']]
-        for oneinterface in onenic['interface']:
-            #add it to the list
-            if oneinterface['nicname'] == "lo0" and ignoreLoopback:
-                #skip this interface if we are told to do so
-                continue
-            print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
-            interfacelist.append(ipaddress.IPv4Interface(oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask']))
-    return interfacelist
 
 def destIP(srcDevice,dstDevice):
     """
@@ -440,8 +408,8 @@ def destIP(srcDevice,dstDevice):
     if 'hostname' not in dstDevice:
         print("Error: function destIP: Not a valid destination device.")
         return None
-    srcIPs = DeviceIPs(srcDevice)
-    dstIPs = DeviceIPs(dstDevice)
+    srcIPs = device.DeviceIPs(srcDevice)
+    dstIPs = device.DeviceIPs(dstDevice)
 
     if srcIPs is None or dstIPs is None:
         #we will not be able to find a match.
@@ -473,7 +441,7 @@ def sourceIP(src,dstIP):
         print('Error: passed in an invalid source to function: sourceIP')
         return None
     #Get all the IPs from this device
-    allIPs = DeviceIPs(src)
+    allIPs = device.DeviceIPs(src)
     if allIPs is None:
         return None
 
