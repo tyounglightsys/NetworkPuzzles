@@ -2,26 +2,19 @@ from kivy.app import App
 from kivy.uix.popup import Popup
 
 from . import session
-from .gui_buttons import ActionsButton
 
 
 class AppPopup(Popup):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+        # TODO: This popup automatically generates a GridLayout with 3 child
+        # widgets: BoxLayout, Widget, Label. Better to set the content
+        # explicitly when the popup is instantiated elsewhere.
         self.app = App.get_running_app()
 
 
 class ActionsPopup(AppPopup):
-    def __init__(self, device, actions, **kwargs):
-        super().__init__(**kwargs)
-        self.actions = actions
-        self.device = device
-    
-    def on_open(self):
-        # Add buttons.
-        for callback_data in self.actions:
-            b = ActionsButton(self.device, callback_data, text='test')
-            self.children[0].add_widget(b)
+    pass
 
 
 class ExceptionPopup(AppPopup):

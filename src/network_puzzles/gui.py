@@ -15,6 +15,7 @@ from .gui_popups import PuzzleChooserPopup
 
 
 class NetworkPuzzlesApp(App):
+    # colors
     DARKEST_COLOR = (0.10, 0.10, 0.10, 1)
     DARKER_COLOR = (0.15, 0.15, 0.15, 1)
     DARK_COLOR = (0.20, 0.20, 0.20, 1)
@@ -24,6 +25,12 @@ class NetworkPuzzlesApp(App):
     LIGHTEST_COLOR = (0.98, 0.98, 0.98, 1)
     Window.clearcolor = LIGHTER_COLOR
     Window.size = (1600, 720)  # 20:9 aspect ratio
+
+    # sizes (dp will be applied in KV file)
+    BUTTON_MAX_H = 48
+    BUTTON_FONT_SIZE = 18
+
+    # paths
     IMAGES = Path(__file__).parent / 'resources' / 'images'
 
     def __init__(self, ui, **kwargs):

@@ -4,16 +4,18 @@ from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
 from kivy.graphics import Color
 from kivy.graphics import Line
+from kivy.metrics import dp
 from kivy.properties import ListProperty
 from kivy.properties import StringProperty
 from kivy.uix.button import Button
 from kivy.uix.checkbox import CheckBox
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.widget import Widget
 
 from . import device
 from . import link
-from .gui_buttons import Ping
+from .gui_buttons import CommandButton
 from .gui_popups import ActionsPopup
 from .gui_popups import ExceptionPopup
 
@@ -62,22 +64,42 @@ class ThemedCheckBox(CheckBox):
 class Device(Button):
     def __init__(self, init_data, **kwargs):
         super().__init__(**kwargs)
-        self.actions = []
         self.app = App.get_running_app()
         self.data = init_data
         self.base = device.Device(self.data)
-
+        
+        self.actions = ["Ping other host", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
         self._set_pos()  # sets self.coords and self.pos_hint
         self.size_hint_x = self.data.get('width')
         self.size_hint_y = self.data.get('height')
         self._set_image()
 
+    def callback(self, cmd_string):
+        print(f"call: parser('{cmd_string}')")
+
     def on_press(self):
-        self.actions = [
-            {'text': 'Ping 1.1.1.1', 'func': Ping, 'kwargs': {'src': self, 'dest': '1.1.1.1'}},
-        ]
-        p = ActionsPopup(device=self, actions=self.actions)
-        p.open()
+        self._build_popup().open()
+
+    def _build_popup(self):
+        # Setup the content.
+        content = GridLayout(cols=1, spacing=dp(5))
+        for command in self.actions:
+            content.add_widget(CommandButton(self.callback, command))
+        content.size_hint_y = None
+        content.height = get_layout_height(content)
+        # Setup the Popup.
+        popup = ActionsPopup(content=content, title=self.base.hostname)
+        rootgrid = popup.children[0]
+        box = rootgrid.children[0]
+        grid = box.children[0]
+        grid.size_hint_y = None
+        grid.height = get_layout_height(grid)
+        box.size_hint_y = None
+        box.height = get_layout_height(box)
+        rootgrid.size_hint_y = None
+        rootgrid.height = get_layout_height(rootgrid)
+        popup.height = rootgrid.height + dp(24)  # account for undocumented padding
+        return popup
 
     def _set_image(self):
         img = ''
@@ -151,3 +173,16 @@ class Link(Widget):
         self.start = start_dev.center
         end_dev = self.app.get_device_by_id(self.data.get('DstNic').get('hostid'))
         self.end = end_dev.center
+
+
+def get_layout_height(layout):
+    if isinstance(layout.spacing, int):
+        spacing = layout.spacing
+    else:
+        spacing = layout.spacing[1]
+    h_padding = layout.padding[1] + layout.padding[3]
+    h_widgets = sum(c.height for c in layout.children)
+    h_widgets_padding = sum(c.padding[1] + c.padding[3] for c in layout.children if hasattr(c, 'padding'))
+    h_spacing = spacing * (len(layout.children) - 1)
+    print(f"{layout=}; {h_padding=}; {h_widgets=}; {h_widgets_padding=}; {h_spacing=}")
+    return h_padding + h_widgets + h_widgets_padding + h_spacing
