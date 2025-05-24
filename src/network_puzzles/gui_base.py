@@ -147,7 +147,7 @@ class Device(Button):
         self.background_normal = str(self.app.IMAGES / img)
 
     def _set_pos(self):
-        self.coords = [int(v)/1000 for v in self.data.get('location').split(',')]
+        self.coords = location_to_coords(self.data.get('location'))
         self.pos_hint = {'center': self.coords}
 
 
@@ -184,5 +184,10 @@ def get_layout_height(layout):
     h_widgets = sum(c.height for c in layout.children)
     h_widgets_padding = sum(c.padding[1] + c.padding[3] for c in layout.children if hasattr(c, 'padding'))
     h_spacing = spacing * (len(layout.children) - 1)
-    print(f"{layout=}; {h_padding=}; {h_widgets=}; {h_widgets_padding=}; {h_spacing=}")
+    # print(f"{layout=}; {h_padding=}; {h_widgets=}; {h_widgets_padding=}; {h_spacing=}")
     return h_padding + h_widgets + h_widgets_padding + h_spacing
+
+
+def location_to_coords(location: str):
+    coords = location.split(',')
+    return [int(coords[0])/900, 1 - int(coords[1])/850]
