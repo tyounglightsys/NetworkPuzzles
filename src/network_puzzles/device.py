@@ -48,6 +48,13 @@ def doesVLANs(deviceRec):
             return True
     return False
 
+def isWirelessForwarder(deviceRec):
+    """return true if the device is a wireless device that does forwarding, false if it does not"""
+    match deviceRec['mytype']:
+        case "wrepeater","wap","wbridge","wrouter":
+            return True
+    return False
+
 def deviceCaptions(deviceRec, howmuch:str):
     """
     return a list of strings, giving information about this device.

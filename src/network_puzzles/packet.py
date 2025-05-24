@@ -136,5 +136,22 @@ def cleanupPackets():
                 #We may need to log/track this.  But we simply remove it for now
                 del session.packetlist[index]
                 continue
+            case 'dropped':
+                #packets are dropped when they are politely ignored by a device.  No need to log
+                del session.packetlist[index]
+                continue
 
-            
+def BroadcastMAC():
+    """"return the broadcast MAC address: FFFFFFFFFFFF"""
+    return "FFFFFFFFFFFF"
+
+def isBroadcastMAC(macToCheck:str):
+    """Check to see if the mac address is the broadcast one.  Should be FFFFFFFFFFFF"""
+    if macToCheck == "FFFFFFFFFFFF":
+        return True
+    if macToCheck == "FF:FF:FF:FF:FF:FF":
+        return True
+    if macToCheck == "FF-FF-FF-FF-FF-FF":
+        return True
+    return False
+    

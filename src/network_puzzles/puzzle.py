@@ -7,11 +7,13 @@ import copy
 import random
 import re
 import os
+import time
 
 # define the global network list
 from . import session
 from . import packet
 from . import device
+from . import nic
 
 def read_json_file(file_path):
     """
@@ -141,6 +143,19 @@ def allLinks():
             linklist.append(one)
     return linklist
 
+def getInterfaceFromLinkNicRec(tLinkNicRec):
+    """
+    return the interface that the link connects to
+    Args: 
+    tLinkNicRec:link-Nic-rec.  This should be link['SrcNic'] or link['DstNic']
+    returns: the interface record or None
+    """
+    #a nic rec looks like: { "hostid": "100", "nicid": "102", "hostname": "pc0", "nicname": "eth0" }
+    tNic = nicFromID(tLinkNicRec['nicid'])
+    if tNic is None:
+        return None
+    #If we get here, we have the nic record.
+    return tNic
 
 def maclistFromDevice(src):
     """
@@ -537,6 +552,115 @@ def Ping(src, dest):
         nPacket['packettype']="ping"
         print (nPacket)
         packet.addPacketToPacketlist(nPacket)
+
+def processPackets(killSeconds:int=20):
+    """
+    Loop through all packets, moving them along through the system
+    Args: killseconds - the number of seconds to go before killing the packets.
+    """
+    killMilliseconds = killSeconds * 1000
+    #here we loop through all packets and process them
+    curtime = int(time.time() * 1000)
+    for one in session.packetlist:
+        #figure out where the packet is
+        theLink = linkFromName(one['packetlocation'])
+        if theLink is not None:
+            #the packet is traversing a link
+            one['packetDistance'] += 10 #traverse the link.  If we were smarter, we could do it in different chunks based on the time it takes to redraw
+            if one['packetDistance'] > 100:
+                #We have arrived.  We need to process the arrival!
+                #get interface from link
+                nicrec = theLink['SrcNic']
+                if one['packetDirection'] == 2:
+                    nicrec = theLink['DstNic']
+                tNic = getInterfaceFromLinkNicRec(nicrec)
+                if tNic is None:
+                    #We could not find the record.  This should never happen.  For now, blow up
+                    print ("Bad Link:")
+                    print (theLink)
+                    print ("Direction = " + str(one['packetDirection']))
+                    raise Exception("Could not find the endpoint of the link. ")
+                #We are here.  Call a function on the nic to start the packet entering the device
+                nic.beginIngress(one, tNic)
+
+        #If the packet has been going too long.  Kill it.
+        if curtime - one['starttime'] > killMilliseconds:
+            #over 20 seconds have passed.  Kill the packet
+            one['status'] = 'failed'
+            one['statusmessage'] = "Packet timed out"
+    #When we are done with all the processing, kill any packets that need killing.
+    cleanupPackets()
+
+def cleanupPackets():
+    """After processing packets, remove any "done" ones from the list."""
+    for index in range(len(session.packetlist) - 1, -1, -1): 
+        one = session.packetlist[index]
+        match one['status']:
+            case 'good':
+                continue
+            case 'failed':
+                #We may need to log/track this.  But we simply remove it for now
+                del session.packetlist[index]
+                continue
+            case 'done':
+                #We may need to log/track this.  But we simply remove it for now
+                del session.packetlist[index]
+                continue
+            case 'dropped':
+                #packets are dropped when they are politely ignored by a device.  No need to log
+                del session.packetlist[index]
+                continue
+
+
+def beginIngressOnNIC(packRec, nicRec):
+    """Begin the packet entering a device.  It enters via a nic, and then is processed.
+    Args: 
+        packetRec: a packet record - the packet entering the device
+        nicRec: a network card record - the nic on the device that we are entering.
+    returns: nothing
+    """
+    #Notes from EduNetworkBuilder
+    #Check to see if we have tests that break stuff.
+    # - DeviceNicSprays (nic needs to be replaced)
+    # - Device is frozen (packet is dropped)
+    # - Device is burned (packet is dropped)
+    # - Device is powered off (packet is dropped)
+    #
+    # - Check to see if we are firewalled.  Drop packet if needed
+    # If none of the above...
+    # if the packet is destined for this NIC/interface, then we accept and pass it to the device to see if we should respond
+    # If the packet is a broadcast, check to see if we should respond
+    # - We might both route it and respond to a broadcast (broadcast ping and switch responds)
+    # If we route packets, accept it for routing.
+    # 
+    nictype = nicRec['nictype'][0]
+    #in certain cases we track inbound traffic; remembering where it came from.
+    trackPackets=False
+    theDevice=puzzle.deviceFromName(nicRec['myid']['hostname'])
+    #if it is a port (swicth/hub) or wport (wireless devices)
+    if nictype == "port" or nictype == "wport":
+        trackPackets = True
+    if device.isWirelessForwarder(theDevice) and nictype == "wlan":
+        trackPackets = True
+    if nictype == "port" and theDevice['mytype'] =="wap":
+        trackPackets = True
+    if trackPackets:
+        #We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
+        1 #do nothing for now.  We will come back when we know how we want these stored
+        #here we would store the MAC and tie it to this NIC.
+
+    #If we are entering a WAN port, see if we should be blocked or if it is a return packet
+    if nictype == "wan":
+        1
+        #We do not have the firewall programed in yet.
+    
+    if packRec['destMAC'] == nicRec['Mac'] or packet.isBroadcastMAC( packRec['destMac']) or nictype == "port" or nictype == "wport":
+        #The packet is good, and has reached the computer.  Pass it on to the device
+        1
+        #Since we know the device, beginIngres on the device.
+    else:
+        packet['status'] = "dropped"
+
 
 def doTest():
 
