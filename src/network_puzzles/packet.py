@@ -83,8 +83,12 @@ def packetsNeedProcessing():
     returns true or false"""
     return len(session.packetlist) > 0
 
-def processPackets():
-    """loop through all packets, moving them along through the system"""
+def processPackets(killSeconds:int=20):
+    """
+    Loop through all packets, moving them along through the system
+    Args: killseconds - the number of seconds to go before killing the packets.
+    """
+    killMilliseconds = killSeconds * 1000
     #here we loop through all packets and process them
     curtime = int(time.time() * 1000)
     for one in session.packetlist:
@@ -110,7 +114,7 @@ def processPackets():
                 nic.beginIngress(one, tNic)
 
         #If the packet has been going too long.  Kill it.
-        if curtime - one['starttime'] > 20000:
+        if curtime - one['starttime'] > killMilliseconds:
             #over 20 seconds have passed.  Kill the packet
             one['status'] = 'failed'
             one['statusmessage'] = "Packet timed out"

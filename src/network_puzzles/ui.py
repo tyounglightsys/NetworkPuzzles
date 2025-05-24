@@ -102,7 +102,7 @@ class CLI(UI):
         parser.parse(answer)
         #if we created packets, process them until done.
         while packet.packetsNeedProcessing():
-            packet.processPackets()
+            packet.processPackets(2) #the cli does not need much time to know packets are going to loop forever.
 
     def load_puzzle(self, puzzle, filter:str = None):
         """Load and set up the UI based on the data in the puzzle file."""
