@@ -7,6 +7,7 @@ from kivy.graphics import Line
 from kivy.metrics import dp
 from kivy.properties import ListProperty
 from kivy.properties import StringProperty
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.gridlayout import GridLayout
@@ -15,7 +16,9 @@ from kivy.uix.widget import Widget
 
 from . import device
 from . import link
+from . import parser
 from .gui_buttons import CommandButton
+from .gui_labels import ThemedLabel
 from .gui_popups import ActionsPopup
 from .gui_popups import ExceptionPopup
 
@@ -61,7 +64,7 @@ class ThemedCheckBox(CheckBox):
         self.app.on_checkbox_activate(self)
 
 
-class Device(Button):
+class Device(BoxLayout):
     def __init__(self, init_data, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
@@ -69,13 +72,18 @@ class Device(Button):
         self.base = device.Device(self.data)
         
         self.actions = ["Ping other host", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
+        self.orientation = 'vertical'
+        self.spacing = 0
         self._set_pos()  # sets self.coords and self.pos_hint
-        self.size_hint_x = self.data.get('width')
-        self.size_hint_y = self.data.get('height')
+        self.size_hint = (0.1, 0.2)
+        self.label_hostname = ThemedLabel(text=self.base.hostname, size_hint=[1, 1], halign='center')
+        self.button = Button(size_hint_y=2)
         self._set_image()
+        self.add_widget(self.button)
+        self.add_widget(self.label_hostname)
 
     def callback(self, cmd_string):
-        print(f"call: parser('{cmd_string}')")
+        parser.parse(cmd_string)
 
     def on_press(self):
         self._build_popup().open()
@@ -144,7 +152,7 @@ class Device(Button):
                 img = 'WRouter.png'
             case _:
                 raise TypeError(f"Unhandled device type: {self.data.get('mytype')}")
-        self.background_normal = str(self.app.IMAGES / img)
+        self.button.background_normal = str(self.app.IMAGES / img)
 
     def _set_pos(self):
         self.coords = location_to_coords(self.data.get('location'))
@@ -175,7 +183,7 @@ class Link(Widget):
         self.end = end_dev.center
 
 
-def get_layout_height(layout):
+def get_layout_height(layout) -> None:
     if isinstance(layout.spacing, int):
         spacing = layout.spacing
     else:
@@ -188,6 +196,6 @@ def get_layout_height(layout):
     return h_padding + h_widgets + h_widgets_padding + h_spacing
 
 
-def location_to_coords(location: str):
+def location_to_coords(location: str) -> list:
     coords = location.split(',')
     return [int(coords[0])/900, 1 - int(coords[1])/850]
