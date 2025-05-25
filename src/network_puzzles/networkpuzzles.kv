@@ -14,19 +14,21 @@ ThemedBoxLayout:
             width: self.parent.width
             padding: dp(5)
             AppButton:
-                id: menu
-                text: _("Menu")
-                on_press: app.on_menu()
-            AppButton:
-                text: _("Puzzle")
+                text: "+"
                 on_press: app.on_puzzle_chooser()
             AppButton:
-                id: test
-                text: _("Test")
-                on_press: app._test()
+                text: "[Save]"
+                on_press: app.on_save()
             AppButton:
-                text: "[Error]"
-                on_press: raise Exception
+                text: "\u2b6f"
+                on_press: app.setup_puzzle()
+            AppButton:
+                text: "[Lang]"
+                on_press: app.on_language()
+            AppButton:
+                id: test
+                text: "[Test]"
+                on_press: app._test()
             AppButton:
                 id: help
                 pos_hint: {'right': 1}
@@ -54,28 +56,12 @@ ThemedBoxLayout:
 
 
 <ThemedBoxLayout@BoxLayout>:
-    canvas:
-        Color:
-            rgba: app.LIGHTER_COLOR
-        Rectangle: 
-            pos: self.pos
-            size: self.size
+    padding: dp(5)
+    spacing: dp(3)
 
 <ThemedGridLayout@GridLayout>:
-    canvas:
-        Color:
-            rgba: app.LIGHTER_COLOR
-        Rectangle: 
-            pos: self.pos
-            size: self.size
-
-<PuzzleLayout>:
-    canvas:
-        Color:
-            rgba: app.LIGHTEST_COLOR
-        Rectangle: 
-            pos: (0, 0)
-            size: self.size
+    padding: dp(5)
+    spacing: dp(3)
 
 
 <ThemedButton>:
@@ -96,12 +82,12 @@ ThemedBoxLayout:
             pos: self.pos
             radius: [dp(10)]
 
-<AppButton@ThemedButton>:
+<AppButton>:
     font_size: dp(app.BUTTON_FONT_SIZE - 2)
     size_hint_x: None  # to set explicit width
     width: self.height
 
-<CommandButton@ThemedButton>:
+<CommandButton>:
     size_hint_y: None
     height: dp(app.BUTTON_MAX_H)
 
@@ -109,7 +95,6 @@ ThemedBoxLayout:
 
 
 <ThemedLabel>:
-    #padding: dp(10)
     canvas.before:
         Color:
             rgba: app.LIGHTER_COLOR

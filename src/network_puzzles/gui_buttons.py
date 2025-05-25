@@ -1,7 +1,12 @@
 from kivy.uix.button import Button
 
 
+
 class ThemedButton(Button):
+    pass
+
+
+class AppButton(ThemedButton):
     pass
 
 

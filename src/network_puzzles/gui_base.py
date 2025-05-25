@@ -65,10 +65,17 @@ class ThemedCheckBox(CheckBox):
 
 
 class Device(BoxLayout):
-    def __init__(self, init_data, **kwargs):
+    def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
         self.data = init_data
+        # print(f"{self.data=}")
+        if self.data is None:
+            self._set_uid()
+            self.set_type()
+            self.set_location()
+            self.set_hostname()
+
         self.base = device.Device(self.data)
         
         self.actions = ["Ping other host", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
@@ -88,6 +95,18 @@ class Device(BoxLayout):
 
     def on_press(self):
         self._build_popup().open()
+
+    def set_hostname(self):
+        raise NotImplementedError
+
+    def set_location(self):
+        raise NotImplementedError
+
+    def set_type(self):
+        raise NotImplementedError
+
+    def _set_uid(self):
+        raise NotImplementedError
 
     def _build_popup(self):
         # Setup the content.
@@ -164,10 +183,17 @@ class Link(Widget):
     end = ListProperty(None)
     start = ListProperty(None)
 
-    def __init__(self, init_data, **kwargs):
+    def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
         self.data = init_data
+        # print(f"{self.data=}")
+        if self.data is None:
+            self._set_uid()
+            self.set_link_type()
+            self.set_start_nic()
+            self.set_end_nic()
+
         self.base = link.Link(self.data)
 
         self._set_points()
@@ -176,12 +202,27 @@ class Link(Widget):
         with self.canvas:
             Color(rgba=self.app.DARK_COLOR)
             Line(points=(*self.start, *self.end), width=2)
+
+    def set_end_nic(self):
+        # TODO: Set hostname once DstNic is set as:
+        # "SrcNicHostname_link_DstNicHostname"
+        raise NotImplementedError
     
+    def set_link_type(self):
+        # Set one of: 'broken', 'normal', 'wireless'
+        raise NotImplementedError
+
+    def set_start_nic(self):
+        raise NotImplementedError
+
+    def _set_uid(self):
+        raise NotImplementedError
+
     def _set_points(self):
         start_dev = self.app.get_device_by_id(self.data.get('SrcNic').get('hostid'))
-        self.start = start_dev.center
+        self.start = start_dev.button.center
         end_dev = self.app.get_device_by_id(self.data.get('DstNic').get('hostid'))
-        self.end = end_dev.center
+        self.end = end_dev.button.center
 
 
 def get_layout_height(layout) -> None:

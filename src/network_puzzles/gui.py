@@ -6,9 +6,11 @@ from kivy.uix.relativelayout import RelativeLayout
 from pathlib import Path
 
 from . import messages
+from . import session
 from .gui_base import AppExceptionHandler
 from .gui_base import Device
 from .gui_base import Link
+from .gui_buttons import AppButton
 from .gui_labels import ThemedLabel  # noqa: F401, imported here for KV file access
 from .gui_layouts import SelectableRecycleBoxLayout  # noqa: F401, imported here for KV file access
 from .gui_popups import PuzzleChooserPopup
@@ -47,13 +49,24 @@ class NetworkPuzzlesApp(App):
         self.selected_puzzle = None
         self.ct = 1
 
-    def add_device(self, device_inst):
+    def add_device(self, device_inst=None):
+        # TODO: If device_inst not given, require user to choose device type
+        # on the screen to instantiate a new device.
+        if device_inst is None:
+            device_inst = Device()
+
         self.devices.append(device_inst)
         self.root.ids.layout.add_widget(device_inst)
 
-    def add_link(self, link_inst):
+    def add_link(self, link_inst=None):
+        # TODO: If link_inst not given, require user to tap on start and end
+        # devices on the screen to instantiate a new link.
+        if link_inst is None:
+            link_inst = Link()
+
         self.links.append(link_inst)
-        self.root.ids.layout.add_widget(link_inst)
+        # Add link to z-index = 99 to ensure it's drawn under device.
+        self.root.ids.layout.add_widget(link_inst, 99)
 
     def add_terminal_line(self, line):
         if not line.endswith('\n'):
@@ -62,15 +75,10 @@ class NetworkPuzzlesApp(App):
 
     def clear_puzzle(self):
         """Remove any existing widgets in the puzzle layout."""
-        for device in self.devices:
-            self.remove_device(device)
-        for link in self.links:
-            self.remove_link(link)
         self.devices = []
         self.links = []
         self.selected_puzzle = None
-        # Remove any remaining child widgets from puzzle layout.
-        self.root.ids.layout.clear()
+        self.reset_display()
 
     def get_device_by_id(self, device_id):
         # This returns the gui.Device widget, which is different from
@@ -92,10 +100,20 @@ class NetworkPuzzlesApp(App):
         self.update_puzzle_list(inst.get_popup())
 
     def on_help(self):
-        print('help clicked')
+        raise NotImplementedError
 
-    def on_menu(self):
-        print('menu clicked')
+    def on_language(self):
+        raise NotImplementedError
+
+    def on_new_item(self, inst):
+        # TODO: Open popup to select item type, set its properties, etc.
+        raise NotImplementedError
+
+    def on_save(self):
+        raise NotImplementedError
+
+    def on_start(self):
+        self._add_new_item_button()
 
     def on_puzzle_chooser(self):
         PuzzleChooserPopup().open()
@@ -108,6 +126,14 @@ class NetworkPuzzlesApp(App):
         self.root.ids.layout.remove_widget(link_inst)
         self.links.remove(link_inst)
 
+    def reset_display(self):
+        """Clear display without clearing loaded puzzle data."""
+        self.title = self.app_title
+        # Remove any remaining child widgets from puzzle layout.
+        self.root.ids.layout.clear_widgets()
+        # Replace the "+" button for adding new items.
+        self._add_new_item_button()
+
     def setup_links(self, *args):
         # self.link_data is typically a list of links, but it's occasionally
         # a one-link dict.
@@ -117,16 +143,10 @@ class NetworkPuzzlesApp(App):
             for link in self.link_data:
                 self.add_link(Link(link))
 
-        # Remove and re-add Devices so that they're on top of Links.
-        for device in self.devices:
-            self.remove_device(device)
-            self.add_device(device)
-
-    def setup_puzzle(self, puzzle_data):
-        self.clear_puzzle()
+    def setup_puzzle(self, puzzle_data=None):
+        self.reset_display()
         if puzzle_data is None:
-            print("No puzzle selected.")
-            return
+            puzzle_data = session.puzzle
 
         puzzle_id = puzzle_data.get('uniqueidentifier')
         # Get puzzle text from localized messages, if possible, but fallback to
@@ -153,7 +173,8 @@ class NetworkPuzzlesApp(App):
                 self.add_device(Device(dev))
         
         if self.link_data:
-            # Add links one tick after devices so that devices are positioned first.
+            # Add links one tick after devices so that devices are positioned
+            # first, since links' positions depend on devices' positions.
             Clock.schedule_once(self.setup_links)
 
     def update_puzzle_list(self, popup=None):
@@ -169,14 +190,20 @@ class NetworkPuzzlesApp(App):
         if popup:
             popup.ids.puzzles_view.update_data()
 
+    def _add_new_item_button(self):
+        self.new_item_button = AppButton(
+            text="+",
+            pos_hint={'left': 1, 'top': 1},
+            on_press=self.on_new_item,
+        )
+        self.root.ids.layout.add_widget(self.new_item_button)
+
     def _test(self, *args, **kwargs):
         self.setup_puzzle(self.ui.load_puzzle('5'))
         # raise NotImplementedError
 
 
 class PuzzleLayout(RelativeLayout):
-    def clear(self):
-        for w in self.children:
-            self.remove_widget(w)
+    pass
 
 
