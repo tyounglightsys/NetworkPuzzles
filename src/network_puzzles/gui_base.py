@@ -75,10 +75,11 @@ class Device(BoxLayout):
         self.orientation = 'vertical'
         self.spacing = 0
         self._set_pos()  # sets self.coords and self.pos_hint
-        self.size_hint = (0.1, 0.2)
+        self.size_hint = (0.08, 0.20)
         self.label_hostname = ThemedLabel(text=self.base.hostname, size_hint=[1, 1], halign='center')
         self.button = Button(size_hint_y=2)
         self._set_image()
+        # TODO: Button to cycle through showing hostname and/or IPs?
         self.add_widget(self.button)
         self.add_widget(self.label_hostname)
 
