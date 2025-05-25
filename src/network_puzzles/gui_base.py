@@ -4,35 +4,130 @@ from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
 from kivy.graphics import Color
 from kivy.graphics import Line
-from kivy.properties import BooleanProperty
+from kivy.metrics import dp
 from kivy.properties import ListProperty
 from kivy.properties import StringProperty
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.checkbox import CheckBox
-from kivy.uix.label import Label
-from kivy.uix.popup import Popup
-from kivy.uix.recycleboxlayout import RecycleBoxLayout
+from kivy.uix.gridlayout import GridLayout
 from kivy.uix.recycleview import RecycleView
-from kivy.uix.recycleview.layout import LayoutSelectionBehavior
-from kivy.uix.recycleview.views import RecycleDataViewBehavior
-from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
+
 from . import device
 from . import link
+from . import parser
+from .gui_buttons import CommandButton
+from .gui_labels import ThemedLabel
+from .gui_popups import ActionsPopup
+from .gui_popups import ExceptionPopup
 
 
-class Device(Button):
-    def __init__(self, init_data, **kwargs):
+class AppExceptionHandler(ExceptionHandler):
+    def handle_exception(self, exception):
+        ExceptionPopup(message=traceback.format_exc()).open()
+        # return ExceptionManager.RAISE  # kills app right away
+        return ExceptionManager.PASS
+
+
+class AppRecView(RecycleView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+
+
+class PuzzlesRecView(AppRecView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app.update_puzzle_list()
+        self.data = {}
+        self.update_data()
+    
+    def update_data(self):
+        self.data = [{'text': n} for n in self.app.filtered_puzzlelist]
+
+
+class ThemedCheckBox(CheckBox):
+    name = StringProperty
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = App.get_running_app()
+
+    def get_popup(self):
+        for win in self.get_parent_window().children:
+            # Only Popup widget has 'content' attribute.
+            if hasattr(win, 'content'):
+                return win
+
+    def on_activate(self):
+        self.app.on_checkbox_activate(self)
+
+
+class Device(BoxLayout):
+    def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
         self.data = init_data
-        self.base = device.Device(self.data)
+        # print(f"{self.data=}")
+        if self.data is None:
+            self._set_uid()
+            self.set_type()
+            self.set_location()
+            self.set_hostname()
 
+        self.base = device.Device(self.data)
+        
+        self.actions = ["Ping other host", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
+        self.orientation = 'vertical'
+        self.spacing = 0
         self._set_pos()  # sets self.coords and self.pos_hint
-        self.size_hint_x = self.data.get('width')
-        self.size_hint_y = self.data.get('height')
+        self.size_hint = (0.08, 0.20)
+        self.label_hostname = ThemedLabel(text=self.base.hostname, size_hint=[1, 1], halign='center')
+        self.button = Button(size_hint_y=2)
         self._set_image()
+        # TODO: Button to cycle through showing hostname and/or IPs?
+        self.add_widget(self.button)
+        self.add_widget(self.label_hostname)
+
+    def callback(self, cmd_string):
+        parser.parse(cmd_string)
+
+    def on_press(self):
+        self._build_popup().open()
+
+    def set_hostname(self):
+        raise NotImplementedError
+
+    def set_location(self):
+        raise NotImplementedError
+
+    def set_type(self):
+        raise NotImplementedError
+
+    def _set_uid(self):
+        raise NotImplementedError
+
+    def _build_popup(self):
+        # Setup the content.
+        content = GridLayout(cols=1, spacing=dp(5))
+        for command in self.actions:
+            content.add_widget(CommandButton(self.callback, command))
+        content.size_hint_y = None
+        content.height = get_layout_height(content)
+        # Setup the Popup.
+        popup = ActionsPopup(content=content, title=self.base.hostname)
+        rootgrid = popup.children[0]
+        box = rootgrid.children[0]
+        grid = box.children[0]
+        grid.size_hint_y = None
+        grid.height = get_layout_height(grid)
+        box.size_hint_y = None
+        box.height = get_layout_height(box)
+        rootgrid.size_hint_y = None
+        rootgrid.height = get_layout_height(rootgrid)
+        popup.height = rootgrid.height + dp(24)  # account for undocumented padding
+        return popup
 
     def _set_image(self):
         img = ''
@@ -77,10 +172,10 @@ class Device(Button):
                 img = 'WRouter.png'
             case _:
                 raise TypeError(f"Unhandled device type: {self.data.get('mytype')}")
-        self.background_normal = str(self.app.IMAGES / img)
+        self.button.background_normal = str(self.app.IMAGES / img)
 
     def _set_pos(self):
-        self.coords = [int(v)/1000 for v in self.data.get('location').split(',')]
+        self.coords = location_to_coords(self.data.get('location'))
         self.pos_hint = {'center': self.coords}
 
 
@@ -88,10 +183,17 @@ class Link(Widget):
     end = ListProperty(None)
     start = ListProperty(None)
 
-    def __init__(self, init_data, **kwargs):
+    def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
         self.data = init_data
+        # print(f"{self.data=}")
+        if self.data is None:
+            self._set_uid()
+            self.set_link_type()
+            self.set_start_nic()
+            self.set_end_nic()
+
         self.base = link.Link(self.data)
 
         self._set_points()
@@ -100,118 +202,42 @@ class Link(Widget):
         with self.canvas:
             Color(rgba=self.app.DARK_COLOR)
             Line(points=(*self.start, *self.end), width=2)
+
+    def set_end_nic(self):
+        # TODO: Set hostname once DstNic is set as:
+        # "SrcNicHostname_link_DstNicHostname"
+        raise NotImplementedError
     
+    def set_link_type(self):
+        # Set one of: 'broken', 'normal', 'wireless'
+        raise NotImplementedError
+
+    def set_start_nic(self):
+        raise NotImplementedError
+
+    def _set_uid(self):
+        raise NotImplementedError
+
     def _set_points(self):
         start_dev = self.app.get_device_by_id(self.data.get('SrcNic').get('hostid'))
-        self.start = start_dev.center
+        self.start = start_dev.button.center
         end_dev = self.app.get_device_by_id(self.data.get('DstNic').get('hostid'))
-        self.end = end_dev.center
+        self.end = end_dev.button.center
 
 
-class AppExceptionHandler(ExceptionHandler):
-    def handle_exception(self, exception):
-        ExceptionPopup(message=traceback.format_exc()).open()
-        # return ExceptionManager.RAISE  # kills app right away
-        return ExceptionManager.PASS
+def get_layout_height(layout) -> None:
+    if isinstance(layout.spacing, int):
+        spacing = layout.spacing
+    else:
+        spacing = layout.spacing[1]
+    h_padding = layout.padding[1] + layout.padding[3]
+    h_widgets = sum(c.height for c in layout.children)
+    h_widgets_padding = sum(c.padding[1] + c.padding[3] for c in layout.children if hasattr(c, 'padding'))
+    h_spacing = spacing * (len(layout.children) - 1)
+    # print(f"{layout=}; {h_padding=}; {h_widgets=}; {h_widgets_padding=}; {h_spacing=}")
+    return h_padding + h_widgets + h_widgets_padding + h_spacing
 
 
-class AppPopup(Popup):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-
-class AppRecView(RecycleView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-
-class ExceptionPopup(AppPopup):
-    def __init__(self, message, **kwargs):
-        super().__init__(**kwargs)
-        self.ids.exception.text = message
-
-    def on_dismiss(self):
-        # Don't allow the app to continue running.
-        self.app.stop()
-
-
-class PuzzlesRecView(AppRecView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app.update_puzzle_list()
-        self.data = {}
-        self.update_data()
-    
-    def update_data(self):
-        self.data = [{'text': n} for n in self.app.filtered_puzzlelist]
-
-
-class ThemedLabel(Label):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-
-class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
-    ''' Add selection support to the Label '''
-    index = None
-    selected = BooleanProperty(False)
-    selectable = BooleanProperty(True)
-
-    def refresh_view_attrs(self, rv, index, data):
-        ''' Catch and handle the view changes '''
-        self.index = index
-        return super(SelectableLabel, self).refresh_view_attrs(rv, index, data)
-
-    def on_touch_down(self, touch):
-        ''' Add selection on touch down '''
-        if super(SelectableLabel, self).on_touch_down(touch):
-            return True
-        if self.collide_point(*touch.pos) and self.selectable:
-            return self.parent.select_with_touch(self.index, touch)
-
-    def apply_selection(self, rv, index, is_selected):
-        ''' Respond to the selection of items in the view. '''
-        name = rv.data[index].get('text')
-        self.selected = is_selected
-        if is_selected:
-            self.app.selected_puzzle = name
-
-
-class SelectableRecycleBoxLayout(
-    FocusBehavior,
-    LayoutSelectionBehavior,
-    RecycleBoxLayout
-):
-    ''' Adds selection and focus behaviour to the view. '''
-    pass
-
-
-class TerminalLabel(TextInput):
-    def get_max_row(self, text):
-        max_row = 0
-        max_length = 0
-        for i, line in enumerate(text.split('\n')):
-            if len(line) > max_length:
-                max_row = i
-                max_length = len(line)
-        return max_row
-
-
-class ThemedCheckBox(CheckBox):
-    name = StringProperty
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app = App.get_running_app()
-
-    def get_popup(self):
-        for win in self.get_parent_window().children:
-            # Only Popup widget has 'content' attribute.
-            if hasattr(win, 'content'):
-                return win
-
-    def on_activate(self):
-        self.app.on_checkbox_activate(self)
+def location_to_coords(location: str) -> list:
+    coords = location.split(',')
+    return [int(coords[0])/900, 1 - int(coords[1])/850]

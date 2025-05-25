@@ -2,30 +2,36 @@
 #:import _ network_puzzles._
 
 ThemedBoxLayout:
-    ThemedBoxLayout:
-        size_hint_x: 1/3
+    ThemedBoxLayout:  # left panel
+        size_hint_x: 1/4
         orientation: 'vertical'
+        padding: dp(5)
         ThemedBoxLayout:  # menu buttons group
+            spacing: dp(5)
             size_hint_y: 0.1
-            width: self.width
+            size_hint_max_y: dp(app.BUTTON_MAX_H + 10)  # 10px more for padding
+            size_hint_x: None
+            width: self.parent.width
             padding: dp(5)
             AppButton:
-                id: menu
-                text: _("Menu")
-                on_press: app.on_menu()
-            AppButton:
-                text: _("Puzzle")
+                text: "+"
                 on_press: app.on_puzzle_chooser()
             AppButton:
+                text: "[Save]"
+                on_press: app.on_save()
+            AppButton:
+                text: "\u2b6f"
+                on_press: app.setup_puzzle()
+            AppButton:
+                text: "[Lang]"
+                on_press: app.on_language()
+            AppButton:
                 id: test
-                text: _("Test")
+                text: "[Test]"
                 on_press: app._test()
             AppButton:
-                text: "[Error]"
-                on_press: raise Exception
-            AppButton:
                 id: help
-                pos_hint: {'right': 1, 'x': 1}
+                pos_hint: {'right': 1}
                 text: _("?")
                 on_press: app.on_help()
         HSeparator:
@@ -36,42 +42,37 @@ ThemedBoxLayout:
             border_color: app.DARKEST_COLOR
 
     VSeparator:
-    ThemedBoxLayout:
+    ThemedBoxLayout:  # right panel
         orientation: 'vertical'
-        size_hint_x: 2/3
+        size_hint_x: 3/4
+        padding: dp(3)
         PuzzleLayout:
             id: layout
             size_hint_y: 0.90
         TerminalLabel:
             id: terminal
             size_hint_y: 0.10
-            #text: f"Terminal output...\nline 2...\nline 3...\nline 4...\nline 5...\nline 6..."
             max_lines: 6
 
 
 <ThemedBoxLayout@BoxLayout>:
-    spacing: dp(5)
-    canvas:
-        Color:
-            rgba: app.LIGHTER_COLOR
-        Rectangle: 
-            pos: self.pos
-            size: self.size
+    padding: dp(5)
+    spacing: dp(3)
 
-<PuzzleLayout>:
-    canvas:
-        Color:
-            rgba: app.LIGHTEST_COLOR
-        Rectangle: 
-            pos: self.pos
-            size: self.size
+<ThemedGridLayout@GridLayout>:
+    padding: dp(5)
+    spacing: dp(3)
 
-<ThemedButton@Button>:
+
+<ThemedButton>:
     background_normal: ''  # sets initial background to white
     background_color: (1, 1, 1, 0)  # makes it transparent
     size_hint_y: 1
-    size_hint_max_y: dp(50)
+    #height: dp(app.BUTTON_MAX_H)
+    size_hint_max_y: dp(app.BUTTON_MAX_H)
+    size_hint_min_y: dp(app.BUTTON_MAX_H - 4)
     color: app.DARKEST_COLOR
+    font_size: dp(app.BUTTON_FONT_SIZE)
     bold: True
     canvas.before:
         Color:
@@ -81,16 +82,19 @@ ThemedBoxLayout:
             pos: self.pos
             radius: [dp(10)]
 
-<AppButton@ThemedButton>:
-    size_hint_x: None
+<AppButton>:
+    font_size: dp(app.BUTTON_FONT_SIZE - 2)
+    size_hint_x: None  # to set explicit width
     width: self.height
 
+<CommandButton>:
+    size_hint_y: None
+    height: dp(app.BUTTON_MAX_H)
+
 <PopupButton@ThemedButton>:
-    font_size: dp(18)
 
 
 <ThemedLabel>:
-    #padding: dp(10)
     canvas.before:
         Color:
             rgba: app.LIGHTER_COLOR
@@ -101,7 +105,7 @@ ThemedBoxLayout:
     halign: 'left'
     valign: 'top'
     font_size: sp(16)
-    text_size: self.size
+    text_size: (self.width - dp(10), self.height - dp(10))
 
 <CheckBoxLabel@ThemedLabel>:
     valign: 'center'
@@ -114,18 +118,6 @@ ThemedBoxLayout:
             pos: self.pos
             size: self.size
     valign: 'center'
-
-<TerminalLabelOld@ThemedLabel>:
-    canvas.before:
-        Color:
-            rgba: app.LIGHTEST_COLOR
-        Rectangle:
-            pos: self.pos
-            size: self.size
-    color: app.DARKEST_COLOR
-    font_name: 'RobotoMono-Regular'
-    valign: 'bottom'
-    font_size: sp(12)
 
 <TerminalLabel>:
     background_color: app.LIGHTEST_COLOR
@@ -171,7 +163,7 @@ ThemedBoxLayout:
 
 
 <AppPopup>:
-    title_size: dp(18)
+    title_size: dp(app.BUTTON_FONT_SIZE)
     size_hint: (1/2, 3/4)
 
 <PuzzleChooserPopup>:
@@ -185,7 +177,7 @@ ThemedBoxLayout:
                 pos: self.pos
                 size: self.size
         orientation: 'vertical'
-        padding: [dp(5), dp(5), dp(5), dp(5)]
+        padding: dp(5)
         ThemedBoxLayout:  # top section
             size_hint_y: 0.9
             ThemedBoxLayout:
@@ -239,8 +231,10 @@ ThemedBoxLayout:
                 id: puzzles_view
         HSeparator:
         ThemedBoxLayout:  # bottom buttons
+            padding: dp(5)
+            spacing: dp(5)
             size_hint_y: 0.1
-            size_hint_max_y: dp(50)
+            size_hint_max_y: dp(app.BUTTON_MAX_H)
             PopupButton:
                 text: _("Cancel")
                 on_press: root.on_cancel()
@@ -276,6 +270,13 @@ ThemedBoxLayout:
             size_hint_y: 0.2
             text: _("Quit")
             on_release: app.stop()
+
+<ActionsPopup>
+    size_hint: (1/4, None)
+
+
+<SelectableRecycleBoxLayout>
+    padding: dp(5)
 
 
 <PuzzlesRecView>:
