@@ -10,8 +10,9 @@ from . import session
 from .gui_base import AppExceptionHandler
 from .gui_base import Device
 from .gui_base import Link
-from .gui_buttons import AppButton
+from .gui_buttons import MenuButton
 from .gui_labels import ThemedLabel  # noqa: F401, imported here for KV file access
+from .gui_layouts import InsertMenu
 from .gui_layouts import SelectableRecycleBoxLayout  # noqa: F401, imported here for KV file access
 from .gui_popups import PuzzleChooserPopup
 
@@ -30,7 +31,7 @@ class NetworkPuzzlesApp(App):
 
     # sizes (dp will be applied in KV file)
     BUTTON_MAX_H = 48
-    BUTTON_FONT_SIZE = 18
+    BUTTON_FONT_SIZE = 24
 
     # paths
     IMAGES = Path(__file__).parent / 'resources' / 'images'
@@ -105,8 +106,25 @@ class NetworkPuzzlesApp(App):
     def on_language(self):
         raise NotImplementedError
 
-    def on_new_item(self, inst):
+    def on_new_infra_device(self):
+        raise NotImplementedError
+
+    def on_new_item(self):
         # TODO: Open popup to select item type, set its properties, etc.
+        if not hasattr(self, 'new_item_menu'):
+            self.new_item_menu = InsertMenu(base_button=self.new_item_button)
+        
+        if self.new_item_menu not in self.root.ids.layout.children:
+            self.root.ids.layout.add_widget(self.new_item_menu)
+            self.new_item_menu.open()
+        else:
+            self.new_item_menu.close()
+            self.root.ids.layout.remove_widget(self.new_item_menu)
+
+    def on_new_link(self):
+        raise NotImplementedError
+
+    def on_new_user_device(self):
         raise NotImplementedError
 
     def on_save(self):
@@ -190,11 +208,10 @@ class NetworkPuzzlesApp(App):
         if popup:
             popup.ids.puzzles_view.update_data()
 
-    def _add_new_item_button(self):
-        self.new_item_button = AppButton(
-            text="+",
+    def _add_new_item_button(self, *args):
+        self.new_item_button = MenuButton(
+            props={'text': "+", 'action': 'on_new_item'},
             pos_hint={'left': 1, 'top': 1},
-            on_press=self.on_new_item,
         )
         self.root.ids.layout.add_widget(self.new_item_button)
 

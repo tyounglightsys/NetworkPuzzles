@@ -1,5 +1,6 @@
 #:kivy 2.0
 #:import _ network_puzzles._
+#:import session network_puzzles.session
 
 ThemedBoxLayout:
     ThemedBoxLayout:  # left panel
@@ -16,24 +17,23 @@ ThemedBoxLayout:
             AppButton:
                 text: "+"
                 on_press: app.on_puzzle_chooser()
-            AppButton:
-                text: "[Save]"
+            AppButton:  # save
+                text: "\u2193"
                 on_press: app.on_save()
-            AppButton:
-                text: "\u2b6f"
+            AppButton:  # restart
+                text: "\u21ba"
                 on_press: app.setup_puzzle()
-            AppButton:
-                text: "[Lang]"
+            AppButton:  # lang
+                id: lang
+                text: session.lang
                 on_press: app.on_language()
-            AppButton:
-                id: test
-                text: "[Test]"
-                on_press: app._test()
-            AppButton:
-                id: help
+            AppButton:  # help
                 pos_hint: {'right': 1}
-                text: _("?")
+                text: "?"
                 on_press: app.on_help()
+            AppButton:
+                text: "*"
+                on_press: app._test()
         HSeparator:
         ThemedLabel:  # puzzle information
             id: info
@@ -55,7 +55,7 @@ ThemedBoxLayout:
             max_lines: 6
 
 
-<ThemedBoxLayout@BoxLayout>:
+<ThemedBoxLayout>:
     padding: dp(5)
     spacing: dp(3)
 
@@ -68,10 +68,10 @@ ThemedBoxLayout:
     background_normal: ''  # sets initial background to white
     background_color: (1, 1, 1, 0)  # makes it transparent
     size_hint_y: 1
-    #height: dp(app.BUTTON_MAX_H)
     size_hint_max_y: dp(app.BUTTON_MAX_H)
     size_hint_min_y: dp(app.BUTTON_MAX_H - 4)
     color: app.DARKEST_COLOR
+    font_name: 'DejaVuSans'
     font_size: dp(app.BUTTON_FONT_SIZE)
     bold: True
     canvas.before:
@@ -270,6 +270,11 @@ ThemedBoxLayout:
             size_hint_y: 0.2
             text: _("Quit")
             on_release: app.stop()
+
+<InsertMenu>:
+    size_hint: (None, None)
+    width: dp(5+48+5+48+5)
+    height: dp(58)
 
 <ActionsPopup>
     size_hint: (1/4, None)

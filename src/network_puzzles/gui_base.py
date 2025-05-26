@@ -7,7 +7,6 @@ from kivy.graphics import Line
 from kivy.metrics import dp
 from kivy.properties import ListProperty
 from kivy.properties import StringProperty
-from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.gridlayout import GridLayout
@@ -19,6 +18,7 @@ from . import link
 from . import parser
 from .gui_buttons import CommandButton
 from .gui_labels import ThemedLabel
+from .gui_layouts import ThemedBoxLayout
 from .gui_popups import ActionsPopup
 from .gui_popups import ExceptionPopup
 
@@ -64,7 +64,7 @@ class ThemedCheckBox(CheckBox):
         self.app.on_checkbox_activate(self)
 
 
-class Device(BoxLayout):
+class Device(ThemedBoxLayout):
     def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
