@@ -635,14 +635,14 @@ def beginIngressOnNIC(packRec, nicRec):
     # 
     nictype = nicRec['nictype'][0]
     #in certain cases we track inbound traffic; remembering where it came from.
-    trackPackets=False
-    theDevice=puzzle.deviceFromName(nicRec['myid']['hostname'])
+    trackPackets = False
+    theDevice = deviceFromName(nicRec['myid']['hostname'])
     #if it is a port (swicth/hub) or wport (wireless devices)
     if nictype == "port" or nictype == "wport":
         trackPackets = True
     if device.isWirelessForwarder(theDevice) and nictype == "wlan":
         trackPackets = True
-    if nictype == "port" and theDevice['mytype'] =="wap":
+    if nictype == "port" and theDevice['mytype'] == "wap":
         trackPackets = True
     if trackPackets:
         #We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
@@ -654,7 +654,7 @@ def beginIngressOnNIC(packRec, nicRec):
         1
         #We do not have the firewall programed in yet.
     
-    if packRec['destMAC'] == nicRec['Mac'] or packet.isBroadcastMAC( packRec['destMac']) or nictype == "port" or nictype == "wport":
+    if packRec['destMAC'] == nicRec['Mac'] or packet.isBroadcastMAC(packRec['destMac']) or nictype == "port" or nictype == "wport":
         #The packet is good, and has reached the computer.  Pass it on to the device
         1
         #Since we know the device, beginIngres on the device.
