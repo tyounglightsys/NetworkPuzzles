@@ -1,4 +1,5 @@
 from kivy.app import App
+from kivy.metrics import dp
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
@@ -11,19 +12,19 @@ class ThemedBoxLayout(BoxLayout):
 
 
 class AppMenu(ThemedBoxLayout):
-    def __init__(self, choices=list(), base_button=None, direction='horizontal', **kwargs):
+    def __init__(self, anchor_pos=None, choices=list(), orientation='horizontal', **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
-        self.size_hint: (None, None)
-        self.orientation = direction
-        if direction == 'horizontal':
+        self.size_hint = (None, None)
+        self.orientation = orientation
+        if self.orientation == 'horizontal':
             self.padding[1] = 0
             self.padding[3] = 0
-        elif direction == 'vertical':
+        else:
             self.padding[0] = 0
             self.padding[2] = 0
-        self.base_button = base_button
-        self.direction = direction
+        self.anchor_pos = anchor_pos  # parent_button.pos as (x, y)
+        print(f"{self.anchor_pos=}")
         self.choices = choices
 
     def open(self):
@@ -36,37 +37,29 @@ class AppMenu(ThemedBoxLayout):
         self.clear_widgets()
 
     def _set_pos(self):
-        if self.direction == 'horizontal':
-            x = self.base_button.x + self.width
-            y = self.base_button.y
+        if self.orientation == 'horizontal':
+            # NOTE: The tray's pos is immediately adjacent to the anchor button.
+            x = self.anchor_pos[0] + self.height
+            y = self.anchor_pos[1]
         else:
-            x = self.base_button.x
-            y = self.base_button.y - self.height
+            # NOTE: The tray's pos is offset down from the anchor button by the
+            # tray's height.
+            x = self.anchor_pos[0]
+            y = self.anchor_pos[1] - self.height
         self.pos = (x, y)
     
     def _set_size(self):
         length = len(self.children)
-        if self.direction == 'horizontal':
-            self.width = length*58
-            self.height = 58
+        breadth = dp(self.app.BUTTON_MAX_H + 10)  # 10px more for padding
+        # breadth = dp(self.app.BUTTON_MAX_H)
+        if self.orientation == 'horizontal':
+            self.width = length * breadth
+            self.height = breadth
         else:
-            self.width = 58
-            self.height = length*58
+            self.width = breadth
+            self.height = length * breadth
+        print(f"{self.orientation=}; {self.size=}; {self.padding=}; {self.spacing=}")
 
-
-class InsertMenu(AppMenu):
-    def __init__(self, **kwargs):
-        super().__init__(direction='vertical', **kwargs)
-        self.link_item = MenuButton({'img': 'link.png', 'action': 'on_new_link'})
-        self.infra_item = MenuButton({'img': 'Switch.png', 'action': 'on_new_infra_device'})
-        self.user_item = MenuButton({'img': 'PC.png', 'action': 'on_new_user_device'})
-
-    def open(self):
-        self.add_widget(self.link_item)
-        self.add_widget(self.infra_item)
-        self.add_widget(self.user_item)
-        self._set_size()
-        self._set_pos()
 
 class SelectableRecycleBoxLayout(
     FocusBehavior,

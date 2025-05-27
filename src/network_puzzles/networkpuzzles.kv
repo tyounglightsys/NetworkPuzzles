@@ -86,6 +86,7 @@ ThemedBoxLayout:
     font_size: dp(app.BUTTON_FONT_SIZE - 2)
     size_hint_x: None  # to set explicit width
     width: self.height
+    on_press: self.callback()
 
 <CommandButton>:
     size_hint_y: None

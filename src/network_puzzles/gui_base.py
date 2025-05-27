@@ -23,6 +23,38 @@ from .gui_popups import ActionsPopup
 from .gui_popups import ExceptionPopup
 
 
+NETWORK_ITEMS = {
+    'links': {
+        'link': {'img': 'link.png'},
+    },
+    'devices': {
+        'user': {
+            'cellphone': {'img': 'cellphone.png'},
+            'copier': {'img': 'Copier.png'},
+            'ip_phone': {'img': 'ip_phone.png'},
+            'laptop': {'img': 'Laptop.png'},
+            'microwave': {'img': 'microwave.png'},
+            'pc': {'img': 'PC.png'},
+            'printer': {'img': 'Printer.png'},
+            'tablet': {'img': 'tablet.png'},
+        },
+        'infrastructure': {
+            'firewall': {'img': 'firewall.png'},
+            'fluorescent': {'img': 'fluorescent.png'},
+            'net_hub': {'img': 'Hub.png'},
+            'net_switch': {'img': 'Switch.png'},
+            'router': {'img': 'Router.png'},
+            'server': {'img': 'Server.png'},
+            'tree': {'img': 'tree.png'},
+            'wap': {'img': 'WAP.png'},
+            'wbridge': {'img': 'WBridge.png'},
+            'wrepeater': {'img': 'WRepeater.png'},
+            'wrouter': {'img': 'WRouter.png'},
+        },
+    },
+}
+
+
 class AppExceptionHandler(ExceptionHandler):
     def handle_exception(self, exception):
         ExceptionPopup(message=traceback.format_exc()).open()
@@ -69,7 +101,6 @@ class Device(ThemedBoxLayout):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
         self.data = init_data
-        # print(f"{self.data=}")
         if self.data is None:
             self._set_uid()
             self.set_type()
@@ -130,48 +161,10 @@ class Device(ThemedBoxLayout):
         return popup
 
     def _set_image(self):
-        img = ''
-        match self.data.get('mytype'):
-            case 'net_hub':
-                img = 'Hub.png'
-            case 'net_switch':
-                img = 'Switch.png'
-            case 'pc':
-                img = 'PC.png'
-            case 'laptop':
-                img = 'Laptop.png'
-            case 'router':
-                img = 'Router.png'
-            case 'firewall':
-                img = 'firewall.png'
-            case 'copier':
-                img = 'Copier.png'
-            case 'cellphone':
-                img = 'cellphone.png'
-            case 'fluorescent':
-                img = 'fluorescent.png'
-            case 'ip_phone':
-                img = 'ip_phone.png'
-            case 'microwave':
-                img = 'microwave.png'
-            case 'printer':
-                img = 'Printer.png'
-            case 'server':
-                img = 'Server.png'
-            case 'tablet':
-                img = 'tablet.png'
-            case 'tree':
-                img = 'tree.png'
-            case 'wap':
-                img = 'WAP.png'
-            case 'wbridge':
-                img = 'WBridge.png'
-            case 'wrepeater':
-                img = 'WRepeater.png'
-            case 'wrouter':
-                img = 'WRouter.png'
-            case _:
-                raise TypeError(f"Unhandled device type: {self.data.get('mytype')}")
+        devices = NETWORK_ITEMS.get('devices').get('user') | NETWORK_ITEMS.get('devices').get('infrastructure')
+        img = devices.get(self.data.get('mytype')).get('img')
+        if img is None:
+            raise TypeError(f"Unhandled device type: {self.data.get('mytype')}")
         self.button.background_normal = str(self.app.IMAGES / img)
 
     def _set_pos(self):
@@ -187,7 +180,6 @@ class Link(Widget):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
         self.data = init_data
-        # print(f"{self.data=}")
         if self.data is None:
             self._set_uid()
             self.set_link_type()
@@ -234,7 +226,6 @@ def get_layout_height(layout) -> None:
     h_widgets = sum(c.height for c in layout.children)
     h_widgets_padding = sum(c.padding[1] + c.padding[3] for c in layout.children if hasattr(c, 'padding'))
     h_spacing = spacing * (len(layout.children) - 1)
-    # print(f"{layout=}; {h_padding=}; {h_widgets=}; {h_widgets_padding=}; {h_spacing=}")
     return h_padding + h_widgets + h_widgets_padding + h_spacing
 
 

@@ -10,9 +10,10 @@ from . import session
 from .gui_base import AppExceptionHandler
 from .gui_base import Device
 from .gui_base import Link
+from .gui_base import NETWORK_ITEMS
 from .gui_buttons import MenuButton
 from .gui_labels import ThemedLabel  # noqa: F401, imported here for KV file access
-from .gui_layouts import InsertMenu
+from .gui_layouts import AppMenu
 from .gui_layouts import SelectableRecycleBoxLayout  # noqa: F401, imported here for KV file access
 from .gui_popups import PuzzleChooserPopup
 
@@ -48,6 +49,10 @@ class NetworkPuzzlesApp(App):
         self.filtered_puzzles = []
         self.filters = []
         self.selected_puzzle = None
+
+        self.new_item_menu = None
+        self.new_infra_device_menu = None
+        self.new_user_device_menu = None
         self.ct = 1
 
     def add_device(self, device_inst=None):
@@ -106,26 +111,54 @@ class NetworkPuzzlesApp(App):
     def on_language(self):
         raise NotImplementedError
 
-    def on_new_infra_device(self):
-        raise NotImplementedError
+    def on_new_infra_device(self, inst):
+        # Open "tray" to select from infrastructure devices.
+        devices = NETWORK_ITEMS.get('devices').get('infrastructure')
+        if self.new_infra_device_menu is None:
+            choices = []
+            for choice in devices.values():
+                choice['cb'] = Device
+                choice['orientation'] = 'horizontal'
+                choices.append(choice)
+            self.new_infra_device_menu = AppMenu(
+                anchor_pos=inst.pos,
+                choices=choices,
+            )
+        self._toggle_tray(self.new_infra_device_menu)
 
-    def on_new_item(self):
-        # TODO: Open popup to select item type, set its properties, etc.
-        if not hasattr(self, 'new_item_menu'):
-            self.new_item_menu = InsertMenu(base_button=self.new_item_button)
-        
-        if self.new_item_menu not in self.root.ids.layout.children:
-            self.root.ids.layout.add_widget(self.new_item_menu)
-            self.new_item_menu.open()
-        else:
-            self.new_item_menu.close()
-            self.root.ids.layout.remove_widget(self.new_item_menu)
+    def on_new_item(self, inst):
+        # Open "tray" to select item type, set its properties, etc.
+        if self.new_item_menu is None:
+            choices = [
+                {'img': 'link.png', 'cb': self.add_link},
+                {'img': 'Switch.png', 'cb': self.on_new_infra_device},
+                {'img': 'PC.png', 'cb': self.on_new_user_device},
+            ]
+            self.new_item_menu = AppMenu(
+                anchor_pos=inst.pos,
+                choices=choices,
+                orientation='vertical',
+            )
+        subtrays = [
+            self.new_infra_device_menu,
+            self.new_user_device_menu,
+        ]
+        self._toggle_tray(self.new_item_menu, subtrays=subtrays)
 
-    def on_new_link(self):
-        raise NotImplementedError
-
-    def on_new_user_device(self):
-        raise NotImplementedError
+    def on_new_user_device(self, inst):
+        # Open "tray" to select from user devices.
+        devices = NETWORK_ITEMS.get('devices').get('user')
+        if self.new_user_device_menu is None:
+            choices = []
+            for choice in devices.values():
+                choice['cb'] = Device
+                choice['orientation'] = 'horizontal'
+                choices.append(choice)
+            self.new_user_device_menu = AppMenu(
+                anchor_pos=inst.pos,
+                choices=choices,
+            )
+        self._toggle_tray(self.new_user_device_menu)
 
     def on_save(self):
         raise NotImplementedError
@@ -210,10 +243,31 @@ class NetworkPuzzlesApp(App):
 
     def _add_new_item_button(self, *args):
         self.new_item_button = MenuButton(
-            props={'text': "+", 'action': 'on_new_item'},
+            props={'text': "+", 'cb': self.on_new_item,},
             pos_hint={'left': 1, 'top': 1},
         )
         self.root.ids.layout.add_widget(self.new_item_button)
+
+    def _close_tray(self, tray):
+        tray.close()
+        self.root.ids.layout.remove_widget(tray)
+
+    def _open_tray(self, tray):
+        self.root.ids.layout.add_widget(tray)
+        tray.open()        
+
+    def _toggle_tray(self, tray, subtrays=None):
+        # Open tray, if not open.
+        if tray not in self.root.ids.layout.children:
+            self._open_tray(tray)
+        # Close tray and subtrays if not closed.
+        else:
+            # First make sure submenu trays aren't open.
+            if subtrays:
+                for subtray in subtrays:
+                    if subtray is not None:
+                        self._close_tray(subtray)
+            self._close_tray(tray)
 
     def _test(self, *args, **kwargs):
         self.setup_puzzle(self.ui.load_puzzle('5'))
