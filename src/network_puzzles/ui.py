@@ -29,6 +29,9 @@ class UI:
         session.puzzle = val.get('value')
         return val
 
+    def quit(self):
+        raise NotImplementedError
+
     def run(self):
         """Startup the app when first launched."""
         raise NotImplementedError
@@ -104,6 +107,9 @@ class CLI(UI):
         while packet.packetsNeedProcessing():
             packet.processPackets(2) #the cli does not need much time to know packets are going to loop forever.
 
+    def quit(self):
+        parser.exit_app()
+
     def load_puzzle(self, puzzle, filter:str = None):
         """Load and set up the UI based on the data in the puzzle file."""
         super().load_puzzle(puzzle,filter)
@@ -116,6 +122,9 @@ class GUI(UI):
 
     def console_write(self, line):
         self.app.add_terminal_line(line)
+
+    def quit(self):
+        self.app.stop()
 
     def run(self):
         self.app.run()
