@@ -13,7 +13,7 @@ class AppPopup(Popup):
         self.app = App.get_running_app()
 
 
-class ActionsPopup(AppPopup):
+class CommandsPopup(AppPopup):
     pass
 
 

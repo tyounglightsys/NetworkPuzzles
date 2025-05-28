@@ -19,7 +19,7 @@ from .buttons import CommandButton
 from .buttons import DeviceButton
 from .labels import DeviceLabel
 from .layouts import ThemedBoxLayout
-from .popups import ActionsPopup
+from .popups import CommandsPopup
 from .popups import ExceptionPopup
 
 
@@ -102,10 +102,7 @@ class Device(ThemedBoxLayout):
         self.app = App.get_running_app()
         self.data = init_data
         if self.data is None:
-            self._set_uid()
-            self.set_type()
-            self.set_location()
-            self.set_hostname()
+            self.new()
 
         self.base = device.Device(self.data)
         
@@ -124,8 +121,15 @@ class Device(ThemedBoxLayout):
     def callback(self, cmd_string):
         parser.parse(cmd_string)
 
+    def new(self):
+        raise NotImplementedError
+        self._set_uid()
+        self.set_type()
+        self.set_location()
+        self.set_hostname()
+
     def on_press(self):
-        self._build_popup().open()
+        self._build_commands_popup().open()
 
     def set_hostname(self):
         raise NotImplementedError
@@ -139,7 +143,7 @@ class Device(ThemedBoxLayout):
     def _set_uid(self):
         raise NotImplementedError
 
-    def _build_popup(self):
+    def _build_commands_popup(self):
         # Setup the content.
         content = GridLayout(cols=1, spacing=dp(5))
         for command in self.commands:
@@ -147,7 +151,7 @@ class Device(ThemedBoxLayout):
         content.size_hint_y = None
         content.height = get_layout_height(content)
         # Setup the Popup.
-        popup = ActionsPopup(content=content, title=self.base.hostname)
+        popup = CommandsPopup(content=content, title=self.base.hostname)
         rootgrid = popup.children[0]
         box = rootgrid.children[0]
         grid = box.children[0]
