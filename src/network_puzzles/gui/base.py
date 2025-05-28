@@ -109,13 +109,13 @@ class Device(ThemedBoxLayout):
 
         self.base = device.Device(self.data)
         
-        self.actions = ["Ping other host", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
+        self.commands = ["Ping pc0 router0", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
         self.orientation = 'vertical'
         self.spacing = 0
         self._set_pos()  # sets self.coords and self.pos_hint
         self.size_hint = (0.08, 0.20)
         self.label_hostname = DeviceLabel(text=self.base.hostname)
-        self.button = DeviceButton()
+        self.button = DeviceButton(callback=self.on_press)
         self._set_image()
         # TODO: Button to cycle through showing hostname and/or IPs?
         self.add_widget(self.button)
@@ -142,7 +142,7 @@ class Device(ThemedBoxLayout):
     def _build_popup(self):
         # Setup the content.
         content = GridLayout(cols=1, spacing=dp(5))
-        for command in self.actions:
+        for command in self.commands:
             content.add_widget(CommandButton(self.callback, command))
         content.size_hint_y = None
         content.height = get_layout_height(content)

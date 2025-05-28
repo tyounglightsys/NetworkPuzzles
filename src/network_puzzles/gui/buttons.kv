@@ -31,7 +31,6 @@
     size_hint_y: 2
     size_hint_max_y: None
     size_hint_min_y: None
-    background_color: [*app.LIGHTEST_COLOR[:3], 0.9]  # makes it transparent
     canvas.before:
         Color:
             rgba: app.LIGHT_COLOR if self.state == 'normal' else app.LIGHTER_COLOR
@@ -39,5 +38,7 @@
             size: self.size
             pos: self.pos
             radius: [dp(10)]
+    background_color: [*app.LIGHTEST_COLOR[:3], 0.9]  # makes it transparent
+    on_press: self.callback()
 
 <PopupButton@ThemedButton>:

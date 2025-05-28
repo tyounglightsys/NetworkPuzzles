@@ -21,7 +21,9 @@ class AppButton(ThemedButton):
 
 
 class DeviceButton(ThemedButton):
-    pass
+    def __init__(self, callback, **kwargs):
+        super().__init__(**kwargs)
+        self.callback = callback
 
 
 class MenuButton(AppButton):
