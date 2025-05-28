@@ -44,7 +44,7 @@ def listPuzzlesFromDisk(regex_pattern:str = None):
         justName = re.sub(r"\.json","", one)
         if regex_pattern is None:
             puzzleNames.append(justName)
-        elif re.match(regex_pattern,justName):
+        elif re.match(regex_pattern, justName, re.IGNORECASE):
             puzzleNames.append(justName)
     return puzzleNames
 
@@ -56,7 +56,7 @@ def listPuzzles(regex_pattern:str = None):
         justName=one['EduNetworkBuilder']['Network']['name']
         if regex_pattern is None:
             puzzleNames.append(justName)
-        elif re.match(regex_pattern,justName):
+        elif re.match(regex_pattern, justName, re.IGNORECASE):
             puzzleNames.append(justName)
     return puzzleNames
 
