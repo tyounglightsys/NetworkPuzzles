@@ -1,0 +1,43 @@
+<ThemedButton>:
+    background_normal: ''  # sets initial background to white
+    background_color: [*app.LIGHTEST_COLOR[:3], 0.2]  # makes it transparent
+    size_hint_y: 1
+    size_hint_max_y: dp(app.BUTTON_MAX_H)
+    size_hint_min_y: dp(app.BUTTON_MAX_H - 4)
+    color: app.DARKEST_COLOR
+    font_name: 'DejaVuSans'
+    font_size: dp(app.BUTTON_FONT_SIZE)
+    bold: True
+    canvas.before:
+        Color:
+            rgba: app.LIGHT_COLOR if self.state == 'normal' else app.LIGHTER_COLOR
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [dp(10)]
+
+<AppButton>:
+    size_hint_x: None  # to set explicit width
+    width: self.height
+    background_down: self.background_normal  # use same image when clicked
+    font_size: dp(app.BUTTON_FONT_SIZE - 2)
+    on_press: self.callback()
+
+<CommandButton>:
+    size_hint_y: None
+    height: dp(app.BUTTON_MAX_H)
+
+<DeviceButton>:
+    size_hint_y: 2
+    size_hint_max_y: None
+    size_hint_min_y: None
+    background_color: [*app.LIGHTEST_COLOR[:3], 0.9]  # makes it transparent
+    canvas.before:
+        Color:
+            rgba: app.LIGHT_COLOR if self.state == 'normal' else app.LIGHTER_COLOR
+        RoundedRectangle:
+            size: self.size
+            pos: self.pos
+            radius: [dp(10)]
+
+<PopupButton@ThemedButton>:

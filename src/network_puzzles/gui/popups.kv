@@ -1,0 +1,112 @@
+<AppPopup>:
+    title_size: dp(app.BUTTON_FONT_SIZE)
+    size_hint: (1/2, 3/4)
+
+<PuzzleChooserPopup>:
+    title: _("Load Puzzle")
+    size_hint_x: 1/3
+    ThemedBoxLayout:
+        canvas.before:
+            Color:
+                rgba: app.LIGHTER_COLOR
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        orientation: 'vertical'
+        padding: dp(5)
+        ThemedBoxLayout:  # top section
+            size_hint_y: 0.9
+            ThemedBoxLayout:
+                orientation: 'vertical'
+                CheckBoxLabel:
+                    text: _("Filter the puzzles by level:")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'Level0'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 0")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'Level1'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 1")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'Level2'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 2")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'Level3'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 3")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'Level4'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 4")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'Level5'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 5")
+                ThemedBoxLayout:
+                    FiltersCheckBox:
+                        name: 'Level6'
+                    CheckBoxLabel:
+                        size_hint_x: 0.85
+                        text: _("Level 6")
+            VSeparator:
+            PuzzlesRecView:
+                id: puzzles_view
+        HSeparator:
+        ThemedBoxLayout:  # bottom buttons
+            padding: dp(5)
+            spacing: dp(5)
+            size_hint_y: 0.1
+            size_hint_max_y: dp(app.BUTTON_MAX_H)
+            PopupButton:
+                text: _("Cancel")
+                on_press: root.on_cancel()
+            PopupButton:
+                text: _("Load")
+                on_press: root.on_load()
+        
+
+<ExceptionPopup>:
+    title: _("Error")
+    ThemedBoxLayout:
+        orientation: 'vertical'
+        ScrollView:
+            size_hint_y: 0.8
+            bar_width: dp(5)
+            scroll_type: ['bars', 'content']
+            do_scroll_x: True
+            do_scroll_y: True
+            effect_cls: 'ScrollEffect'
+            TerminalLabel:
+                id: exception
+                padding: dp(3)
+                size_hint_x: None
+                size_hint_y: None
+                height: self.line_height * len(self.text.split('\n'))
+                width: self._get_row_width(self.get_max_row(self.text))
+                text_size: (self.width, None)
+        HSeparator:
+        PopupButton:
+            pos_hint: {"center_x": 0.5}
+            size_hint_x: None
+            size_hint_max_x: None
+            size_hint_y: 0.2
+            text: _("Quit")
+            on_release: app.stop()
+
+
+<ActionsPopup>
+    size_hint: (1/4, None)

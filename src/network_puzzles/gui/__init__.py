@@ -5,17 +5,17 @@ from kivy.core.window import Window
 from kivy.uix.relativelayout import RelativeLayout
 from pathlib import Path
 
-from . import messages
-from . import session
-from .gui_base import AppExceptionHandler
-from .gui_base import Device
-from .gui_base import Link
-from .gui_base import NETWORK_ITEMS
-from .gui_buttons import MenuButton
-from .gui_labels import ThemedLabel  # noqa: F401, imported here for KV file access
-from .gui_layouts import AppMenu
-from .gui_layouts import SelectableRecycleBoxLayout  # noqa: F401, imported here for KV file access
-from .gui_popups import PuzzleChooserPopup
+from .. import messages
+from .. import session
+from .base import AppExceptionHandler
+from .base import Device
+from .base import Link
+from .base import NETWORK_ITEMS
+from .buttons import MenuButton
+from .labels import ThemedLabel  # noqa: F401, imported here for KV file access
+from .layouts import AppMenu
+from .layouts import SelectableRecycleBoxLayout  # noqa: F401, imported here for KV file access
+from .popups import PuzzleChooserPopup
 
 
 class NetworkPuzzlesApp(App):
@@ -35,7 +35,7 @@ class NetworkPuzzlesApp(App):
     BUTTON_FONT_SIZE = 24
 
     # paths
-    IMAGES = Path(__file__).parent / 'resources' / 'images'
+    IMAGES = Path(__file__).parents[1] / 'resources' / 'images'
 
     def __init__(self, ui, **kwargs):
         super().__init__(**kwargs)

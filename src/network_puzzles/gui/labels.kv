@@ -1,0 +1,35 @@
+<ThemedLabel>:
+    canvas.before:
+        Color:
+            rgba: [*app.LIGHTER_COLOR[:3], 0.9]
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    color: app.DARKEST_COLOR
+    halign: 'left'
+    valign: 'top'
+    font_size: sp(16)
+    text_size: (self.width - dp(10), self.height - dp(10))
+
+<CheckBoxLabel@ThemedLabel>:
+    valign: 'center'
+
+<SelectableLabel>:
+    canvas.before:
+        Color:
+            rgba: app.LIGHT_COLOR if self.selected else app.LIGHTEST_COLOR
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    valign: 'center'
+
+<TerminalLabel>:
+    background_color: app.LIGHTEST_COLOR
+    foreground_color: app.DARKEST_COLOR
+    halign: 'left'
+    valign: 'bottom'
+    font_name: 'RobotoMono-Regular'
+    font_size: sp(12)
+    text_size: self.size
+    readonly: True
+    do_wrap: False

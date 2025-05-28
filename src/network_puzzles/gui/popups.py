@@ -1,7 +1,7 @@
 from kivy.app import App
 from kivy.uix.popup import Popup
 
-from . import session
+from .. import session
 
 
 class AppPopup(Popup):

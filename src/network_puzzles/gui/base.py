@@ -12,15 +12,15 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.widget import Widget
 
-from . import device
-from . import link
-from . import parser
-from .gui_buttons import CommandButton
-from .gui_buttons import DeviceButton
-from .gui_labels import ThemedLabel
-from .gui_layouts import ThemedBoxLayout
-from .gui_popups import ActionsPopup
-from .gui_popups import ExceptionPopup
+from .. import device
+from .. import link
+from .. import parser
+from .buttons import CommandButton
+from .buttons import DeviceButton
+from .labels import ThemedLabel
+from .layouts import ThemedBoxLayout
+from .popups import ActionsPopup
+from .popups import ExceptionPopup
 
 
 NETWORK_ITEMS = {

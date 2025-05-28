@@ -1,0 +1,30 @@
+<ThemedCheckBox>:
+    canvas.before:
+        Color:
+            rgba: app.LIGHTER_COLOR
+        Rectangle:
+            pos: self.pos
+            size: self.size
+    color: app.DARKER_COLOR
+    font_size: sp(12)
+    on_active: self.on_activate()
+
+<FiltersCheckBox@ThemedCheckBox>:
+    size_hint_x: 0.15
+
+
+<Separator@Widget>:
+    canvas:
+        Color:
+            rgba: app.MEDIUM_COLOR
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+<HSeparator@Separator>:
+    size_hint_y: None
+    height: dp(1)
+
+<VSeparator@Separator>:
+    size_hint_x: None
+    width: dp(1)

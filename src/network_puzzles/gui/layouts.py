@@ -5,7 +5,7 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 
-from .gui_buttons import MenuButton
+from .buttons import MenuButton
 
 class ThemedBoxLayout(BoxLayout):
     pass
