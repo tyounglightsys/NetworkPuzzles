@@ -7,7 +7,6 @@ from kivy.graphics import Line
 from kivy.metrics import dp
 from kivy.properties import ListProperty
 from kivy.properties import StringProperty
-from kivy.uix.button import Button
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.recycleview import RecycleView
@@ -17,6 +16,7 @@ from . import device
 from . import link
 from . import parser
 from .gui_buttons import CommandButton
+from .gui_buttons import DeviceButton
 from .gui_labels import ThemedLabel
 from .gui_layouts import ThemedBoxLayout
 from .gui_popups import ActionsPopup
@@ -115,7 +115,7 @@ class Device(ThemedBoxLayout):
         self._set_pos()  # sets self.coords and self.pos_hint
         self.size_hint = (0.08, 0.20)
         self.label_hostname = ThemedLabel(text=self.base.hostname, size_hint=[1, 1], halign='center')
-        self.button = Button(size_hint_y=2)
+        self.button = DeviceButton()
         self._set_image()
         # TODO: Button to cycle through showing hostname and/or IPs?
         self.add_widget(self.button)

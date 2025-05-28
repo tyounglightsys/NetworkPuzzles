@@ -20,6 +20,10 @@ class AppButton(ThemedButton):
             self.cb(self, *self.cb_args, **self.cb_kwargs)
 
 
+class DeviceButton(ThemedButton):
+    pass
+
+
 class MenuButton(AppButton):
     def __init__(self, props, **kwargs):
         super().__init__(**kwargs)
