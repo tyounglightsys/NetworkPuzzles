@@ -17,7 +17,7 @@ from .. import link
 from .. import parser
 from .buttons import CommandButton
 from .buttons import DeviceButton
-from .labels import ThemedLabel
+from .labels import DeviceLabel
 from .layouts import ThemedBoxLayout
 from .popups import ActionsPopup
 from .popups import ExceptionPopup
@@ -114,7 +114,7 @@ class Device(ThemedBoxLayout):
         self.spacing = 0
         self._set_pos()  # sets self.coords and self.pos_hint
         self.size_hint = (0.08, 0.20)
-        self.label_hostname = ThemedLabel(text=self.base.hostname, size_hint=[1, 1], halign='center')
+        self.label_hostname = DeviceLabel(text=self.base.hostname)
         self.button = DeviceButton()
         self._set_image()
         # TODO: Button to cycle through showing hostname and/or IPs?

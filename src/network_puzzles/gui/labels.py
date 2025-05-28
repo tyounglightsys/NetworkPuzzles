@@ -22,6 +22,11 @@ class ThemedLabel(Label):
         self.app = App.get_running_app()
 
 
+class DeviceLabel(ThemedLabel):
+    pass
+
+
+
 class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
     """Add selection support to the Label"""
     index = None

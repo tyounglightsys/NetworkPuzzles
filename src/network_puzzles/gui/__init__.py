@@ -12,9 +12,9 @@ from .base import Device
 from .base import Link
 from .base import NETWORK_ITEMS
 from .buttons import MenuButton
-from .labels import ThemedLabel  # noqa: F401, imported here for KV file access
+# from .labels import ThemedLabel  # noqa: F401, imported here for KV file access
 from .layouts import AppMenu
-from .layouts import SelectableRecycleBoxLayout  # noqa: F401, imported here for KV file access
+# from .layouts import SelectableRecycleBoxLayout  # noqa: F401, imported here for KV file access
 from .popups import PuzzleChooserPopup
 
 

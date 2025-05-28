@@ -7,6 +7,7 @@ from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 
 from .buttons import MenuButton
 
+
 class ThemedBoxLayout(BoxLayout):
     pass
 
@@ -24,7 +25,6 @@ class AppMenu(ThemedBoxLayout):
             self.padding[0] = 0
             self.padding[2] = 0
         self.anchor_pos = anchor_pos  # parent_button.pos as (x, y)
-        print(f"{self.anchor_pos=}")
         self.choices = choices
 
     def open(self):
@@ -58,7 +58,6 @@ class AppMenu(ThemedBoxLayout):
         else:
             self.width = breadth
             self.height = length * breadth
-        print(f"{self.orientation=}; {self.size=}; {self.padding=}; {self.spacing=}")
 
 
 class SelectableRecycleBoxLayout(
