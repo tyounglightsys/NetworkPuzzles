@@ -91,13 +91,20 @@ def deviceFromName(what):
     """Return the device, given a name
     Args: what:str the hostname of the device
     returns the device matching the name, or None"""
-    return device.deviceFromName(what)
+    for one in allDevices():
+        if one['hostname'] == what:
+            return one
+    return None
 
 def deviceFromID(what):
     """Return the device, given a name
     Args: what:int the unique id of the device
     returns the device matching the id, or None"""
-    return device.deviceFromID(what)
+    for one in allDevices():
+        print(one['uniqueidentifier'])
+        if one['uniqueidentifier'] == what:
+            return one
+    return None
 
 def linkFromName(what):
     """
