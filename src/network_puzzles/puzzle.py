@@ -133,28 +133,8 @@ def allLinks():
     """
     Return a list that contains all devices in the puzzle.
     """
-    # global puzzle
-    linklist=[]
-    if 'link' not in session.puzzle:
-        session.puzzle['link'] = []
-    for one in session.puzzle['link']:
-        if 'hostname' in one:
-            linklist.append(one)
-    return linklist
+    return device.allLinks()
 
-def getInterfaceFromLinkNicRec(tLinkNicRec):
-    """
-    return the interface that the link connects to
-    Args: 
-    tLinkNicRec:link-Nic-rec.  This should be link['SrcNic'] or link['DstNic']
-    returns: the interface record or None
-    """
-    #a nic rec looks like: { "hostid": "100", "nicid": "102", "hostname": "pc0", "nicname": "eth0" }
-    tNic = nicFromID(tLinkNicRec['nicid'])
-    if tNic is None:
-        return None
-    #If we get here, we have the nic record.
-    return tNic
 
 def maclistFromDevice(src):
     """
@@ -295,11 +275,12 @@ def nicFromName(theDevice,what):
     Returns:
         the network card record from the device or None
         """
-    if isinstance(theDevice, str):
-        theDevice = deviceFromName(theDevice)
-    if theDevice is None:
-        return None
-    return get_item_by_attrib(theDevice.get('nic'), 'nicname', what)
+    # if isinstance(theDevice, str):
+    #     theDevice = deviceFromName(theDevice)
+    # if theDevice is None:
+    #     return None
+    # return get_item_by_attrib(theDevice.get('nic'), 'nicname', what)
+    return device.nicFromName(theDevice,what)
 
 def nicFromID(what):
     """find the network card from the id
@@ -308,11 +289,12 @@ def nicFromID(what):
         Each component on the network has a unique ID.  PCs can change names, so we do not assume host-names are unique.
         Thus, for a network link (ethernet cable, wireless, etc) to know what two devices it is connecting, we use the ID
     """
-    for theDevice in allDevices():
-        item = get_item_by_attrib(theDevice.get('nic'), 'uniqueidentifier', what)
-        if item:
-            return item
-    return None
+    # for theDevice in allDevices():
+    #     item = get_item_by_attrib(theDevice.get('nic'), 'uniqueidentifier', what)
+    #     if item:
+    #         return item
+    # return None
+    return nicFromID(what)
 
 def deviceFromName(what: str) -> dict|None:
     """Return the device, given a name
@@ -334,7 +316,8 @@ def linkFromName(what:str) -> dict|None:
     Args: what:str - the string name of the link
     returns: the link record or None
     """
-    return get_item_by_attrib(allLinks(), 'hostname', what)
+    # return get_item_by_attrib(allLinks(), 'hostname', what)
+    return device.linkFromName(what)
 
 def linkFromDevices(srcDevice, dstDevice):
     """return a link given the two devices at either end
@@ -345,28 +328,7 @@ def linkFromDevices(srcDevice, dstDevice):
         dstDevice:str - the hostname of the device
     Returns: a link record or None
     """
-    srcstr=""
-    dststr=""
-    if isinstance(srcDevice,str):
-        srcstr=srcDevice
-    else:
-        if 'hostname' in srcDevice:
-            srcstr=srcDevice['hostname']
-    if isinstance(dstDevice,str):
-        dststr=dstDevice
-    else:
-        if 'hostname' in dstDevice:
-            dststr=dstDevice['hostname']
-    #Now we should have srcstr and dststr set.  Use them to concoct a link name
-    #The link name looks like: pc0_link_pc1
-    result = linkFromName(srcstr + "_link_" + dststr)
-    if result is not None:
-        return result
-    result = linkFromName(dststr + "_link_" + srcstr)
-    if result is not None:
-        return result
-    #if we get here, we could not find it.  Return none
-    return None
+    return device.linkFromDevices(srcDevice,dstDevice)
 
 def linkFromID(what):
     """
@@ -374,20 +336,12 @@ def linkFromID(what):
     Args: what:int - the unique id of the link
     Returns: the matching link record or None
     """
-    return get_item_by_attrib(allLinks(), 'uniqueidentifier', what)
+    # return get_item_by_attrib(allLinks(), 'uniqueidentifier', what)
+    return device.linkFromID(what)
 
 def itemFromID(what):
     """return the item matching the ID.  Could be a device, a link, or a nic"""
-    result = deviceFromID(what)
-    if result is not None:
-        return result
-    result = linkFromID(what)
-    if result is not None:
-        return result
-    result = nicFromID(what)
-    if result is not None:
-        return result
-    return None
+    return device.itemFromID(what)
 
 
 def destIP(srcDevice,dstDevice):
@@ -492,11 +446,7 @@ def is_ipv4(string):
         """
         return True if the string is a valid IPv4 address.
         """
-        try:
-            ipaddress.IPv4Network(string)
-            return True
-        except ValueError:
-            return False
+        return packet.is_ipv4(string)
 
 def Ping(src, dest):
     """Generate a ping packet, starting at the srcdevice and destined for the destination device
@@ -566,7 +516,7 @@ def processPackets(killSeconds:int=20):
                 nicrec = theLink['SrcNic']
                 if one['packetDirection'] == 2:
                     nicrec = theLink['DstNic']
-                tNic = getInterfaceFromLinkNicRec(nicrec)
+                tNic = device.getInterfaceFromLinkNicRec(nicrec)
                 if tNic is None:
                     #We could not find the record.  This should never happen.  For now, blow up
                     print ("Bad Link:")
@@ -604,55 +554,6 @@ def cleanupPackets():
                 del session.packetlist[index]
                 continue
 
-
-def beginIngressOnNIC(packRec, nicRec):
-    """Begin the packet entering a device.  It enters via a nic, and then is processed.
-    Args: 
-        packetRec: a packet record - the packet entering the device
-        nicRec: a network card record - the nic on the device that we are entering.
-    returns: nothing
-    """
-    #Notes from EduNetworkBuilder
-    #Check to see if we have tests that break stuff.
-    # - DeviceNicSprays (nic needs to be replaced)
-    # - Device is frozen (packet is dropped)
-    # - Device is burned (packet is dropped)
-    # - Device is powered off (packet is dropped)
-    #
-    # - Check to see if we are firewalled.  Drop packet if needed
-    # If none of the above...
-    # if the packet is destined for this NIC/interface, then we accept and pass it to the device to see if we should respond
-    # If the packet is a broadcast, check to see if we should respond
-    # - We might both route it and respond to a broadcast (broadcast ping and switch responds)
-    # If we route packets, accept it for routing.
-    # 
-    nictype = nicRec['nictype'][0]
-    #in certain cases we track inbound traffic; remembering where it came from.
-    trackPackets = False
-    theDevice = deviceFromName(nicRec['myid']['hostname'])
-    #if it is a port (swicth/hub) or wport (wireless devices)
-    if nictype == "port" or nictype == "wport":
-        trackPackets = True
-    if device.isWirelessForwarder(theDevice) and nictype == "wlan":
-        trackPackets = True
-    if nictype == "port" and theDevice['mytype'] == "wap":
-        trackPackets = True
-    if trackPackets:
-        #We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
-        1 #do nothing for now.  We will come back when we know how we want these stored
-        #here we would store the MAC and tie it to this NIC.
-
-    #If we are entering a WAN port, see if we should be blocked or if it is a return packet
-    if nictype == "wan":
-        1
-        #We do not have the firewall programed in yet.
-    
-    if packRec['destMAC'] == nicRec['Mac'] or packet.isBroadcastMAC(packRec['destMac']) or nictype == "port" or nictype == "wport":
-        #The packet is good, and has reached the computer.  Pass it on to the device
-        1
-        #Since we know the device, beginIngres on the device.
-    else:
-        packet['status'] = "dropped"
 
 
 def doTest():

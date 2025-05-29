@@ -1,4 +1,5 @@
 import time
+import ipaddress
 
 from . import puzzle
 from . import session
@@ -140,6 +141,16 @@ def cleanupPackets():
                 #packets are dropped when they are politely ignored by a device.  No need to log
                 del session.packetlist[index]
                 continue
+
+def is_ipv4(string):
+        """
+        return True if the string is a valid IPv4 address.
+        """
+        try:
+            ipaddress.IPv4Network(string)
+            return True
+        except ValueError:
+            return False
 
 def BroadcastMAC():
     """"return the broadcast MAC address: FFFFFFFFFFFF"""
