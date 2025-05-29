@@ -188,10 +188,7 @@ def buildGlobalMACList():
 
 def justIP(ip):
     """return just the IP address as a string, stripping the subnet if there was one"""
-    if not isinstance(ip,str):
-        ip = str(ip) #change it to a string
-    ip = re.sub("/.*","", ip)
-    return ip 
+    return packet.justIP(ip)
 
 
 def globalArpLookup(ip):
@@ -516,7 +513,7 @@ def processPackets(killSeconds:int=20):
                 nicrec = theLink['SrcNic']
                 if one['packetDirection'] == 2:
                     nicrec = theLink['DstNic']
-                tNic = device.getInterfaceFromLinkNicRec(nicrec)
+                tNic = device.getDeviceNicFromLinkNicRec(nicrec)
                 if tNic is None:
                     #We could not find the record.  This should never happen.  For now, blow up
                     print ("Bad Link:")
@@ -524,7 +521,7 @@ def processPackets(killSeconds:int=20):
                     print ("Direction = " + str(one['packetDirection']))
                     raise Exception("Could not find the endpoint of the link. ")
                 #We are here.  Call a function on the nic to start the packet entering the device
-                nic.beginIngress(one, tNic)
+                device.doInputFromLink(one, tNic)
 
         #If the packet has been going too long.  Kill it.
         if curtime - one['starttime'] > killMilliseconds:

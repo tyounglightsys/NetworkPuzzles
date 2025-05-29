@@ -1,10 +1,11 @@
 import time
 import ipaddress
+import re
 
 from . import puzzle
 from . import session
 from . import link
-from . import nic
+from . import device
 
 def getPacketLocation(packetrec):
     """
@@ -48,9 +49,10 @@ def newPacket():
         'VLANID':0, #start on the default vlan
         'health':100, #health.  This will drop as the packet goes too close to things causing interferance
         'sourceIP':"",
-        'destIP':"",
         'sourceMAC':"",
+        'destIP':"",
         'destMAC':"",
+        'tdestIP':"",#If we are going through a router.  Mainly so we know which interface we are supposed to be using
         'status':"good",
         'statusmessage':"",
         'payload':"",
@@ -112,7 +114,7 @@ def processPackets(killSeconds:int=20):
                     print ("Direction = " + str(one['packetDirection']))
                     raise Exception("Could not find the endpoint of the link. ")
                 #We are here.  Call a function on the nic to start the packet entering the device
-                nic.beginIngress(one, tNic)
+                device.beginIngress(one, tNic)
 
         #If the packet has been going too long.  Kill it.
         if curtime - one['starttime'] > killMilliseconds:
@@ -141,6 +143,16 @@ def cleanupPackets():
                 #packets are dropped when they are politely ignored by a device.  No need to log
                 del session.packetlist[index]
                 continue
+def is_ipv6(string):
+        """
+        return True if the string is a valid IPv4 address.
+        """
+        try:
+            ipaddress.IPv6Network(string)
+            return True
+        except ValueError:
+            return False
+
 
 def is_ipv4(string):
         """
@@ -151,6 +163,27 @@ def is_ipv4(string):
             return True
         except ValueError:
             return False
+
+def justIP(ip):
+    """return just the IP address as a string, stripping the subnet if there was one"""
+    if not isinstance(ip,str):
+        ip = str(ip) #change it to a string
+    ip = re.sub("/.*","", ip)
+    return ip 
+
+def isLocal(packetIP:str, interfaceIP:str):
+    """Determine if the packet IP is considered local by the subnet/netmask on the interface IP
+    Args:
+        packetIP:str - a string IP (ipv6/ipv4); just an IP - no subnet
+        interfaceIP:str - an IP/subnet, either iPv4 or ipv6"""
+    t_packetIP = justIP(packetIP)
+    try:
+        ip = ipaddress.ip_address(t_packetIP)
+        network = ipaddress.ip_network(interfaceIP, strict=False) #The interface will have host bits set, so we choose false
+        return ip in network
+    except ValueError:
+        # Handle invalid IP address or subnet format
+        return False
 
 def BroadcastMAC():
     """"return the broadcast MAC address: FFFFFFFFFFFF"""
