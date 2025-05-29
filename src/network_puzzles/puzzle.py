@@ -36,29 +36,32 @@ def read_json_file(file_path):
         print(f"Error: Invalid JSON format in: {file_path}")
         return None
 
-def listPuzzlesFromDisk(regex_pattern:str = None):
-    puzzleNames = []
+def matches_filter(name: str, pattern: str) -> bool:
+    if pattern is None:
+        return True
+    elif re.match(pattern, name, re.IGNORECASE):
+        return True
+
+def filter_items(items: list, pattern: str, json_files: bool = False) -> list:
+    filtered_items = []
+    for item in items:
+        if not json_files:
+            name = item['EduNetworkBuilder']['Network']['name']
+        else:
+            name = re.sub(r"\.json","", item)
+        if matches_filter(name, pattern):
+            filtered_items.append(name)
+    return filtered_items
+
+def listPuzzlesFromDisk(regex_pattern: str = None):
     directory_path="src/network_puzzles/resources/puzzles"
     files = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
-    for one in files:
-        justName = re.sub(r"\.json","", one)
-        if regex_pattern is None:
-            puzzleNames.append(justName)
-        elif re.match(regex_pattern, justName, re.IGNORECASE):
-            puzzleNames.append(justName)
-    return puzzleNames
+    return filter_items(files, regex_pattern, json_files=True)
 
-def listPuzzles(regex_pattern:str = None):
+def listPuzzles(regex_pattern: str = None):
     if len(session.puzzlelist) == 0:
         readPuzzle()
-    puzzleNames = []
-    for one in session.puzzlelist:
-        justName=one['EduNetworkBuilder']['Network']['name']
-        if regex_pattern is None:
-            puzzleNames.append(justName)
-        elif re.match(regex_pattern, justName, re.IGNORECASE):
-            puzzleNames.append(justName)
-    return puzzleNames
+    return filter_items(session.puzzlelist, regex_pattern)
 
 def readPuzzle():
     """Read in the puzzles from the various .json files"""
