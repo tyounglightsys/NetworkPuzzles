@@ -49,6 +49,16 @@ def doesVLANs(deviceRec):
             return True
     return False
 
+def powerOff(deviceRec):
+    """return true if the device is powered off"""
+    try:
+        match deviceRec['poweroff']:
+            case "True":
+                return True
+    except ValueError:
+        return False
+    return False
+
 def isWirelessForwarder(deviceRec):
     """return true if the device is a wireless device that does forwarding, false if it does not"""
     match deviceRec['mytype']:
@@ -87,24 +97,6 @@ def nicFromID(what):
                 return one
     return None
 
-def deviceFromName(what):
-    """Return the device, given a name
-    Args: what:str the hostname of the device
-    returns the device matching the name, or None"""
-    for one in allDevices():
-        if one['hostname'] == what:
-            return one
-    return None
-
-def deviceFromID(what):
-    """Return the device, given a name
-    Args: what:int the unique id of the device
-    returns the device matching the id, or None"""
-    for one in allDevices():
-        print(one['uniqueidentifier'])
-        if one['uniqueidentifier'] == what:
-            return one
-    return None
 
 def linkFromName(what):
     """
@@ -162,7 +154,7 @@ def allLinks():
             linklist.append(one)
     return linklist
 
-def getInterfaceFromLinkNicRec(tLinkNicRec):
+def getDeviceNicFromLinkNicRec(tLinkNicRec):
     """
     return the interface that the link connects to
     Args: 
@@ -328,6 +320,62 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
                 interfacelist.append(oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
     return interfacelist
 
+def interfaceIP(interfaceRec):
+    """pull out the interface IP address for the specified interface.  Put it into a function so we can make it work for IPv4 and IPv6"""
+    return interfaceRec['myip']['ip']+"/" + interfaceRec['myip']['mask']
+
+def findLocalNICInterface(targetIPstring:str, networkCardRec):
+    """Return the network interface record that has an IP address that is local to the IP specified as the target
+    Args: 
+        targetIPstring:str - a string IP address, which we are trying to find a local interface for
+        networCardRec:nicRecord - a netetwork card record, which may contain multiple interfaces
+    returns: the interface record that is local to the target IP, or None"""
+    if networkCardRec is None:
+        return None
+    if networkCardRec['nictype'][0] == 'port':
+        return None #Ports have no IP address
+    #loop through all the interfaces and return any that might be local.
+    if not isinstance(networkCardRec['nic'],list):
+        networkCardRec['nic'] = [ networkCardRec['nic']] #turn it into a list if needed.
+    for oneIF in networkCardRec['nic']:
+        if packet.isLocal(targetIPstring, interfaceIP(oneIF)):
+            return oneIF
+    return None
+
+def findPrimaryNICInterface(networkCardRec):
+    """return the primary nic interface.  Turns out this is always interface 0"""
+    if len(networkCardRec['nictype']) > 0:
+        return networkCardRec['nictype'][0]
+    return None
+
+def doInputFromLink(packRec, nicRec):
+    #figure out what device belongs to the nic
+    thisDevice = deviceFromID(nicRec['myid']['hostid'])
+
+    #Do the simple stuff
+    if powerOff(thisDevice):
+        packRec['status'] = "done"
+        #nothing more to be done
+        return False
+    #If the packet is a DHCP answer, process that here.  To be done later
+    #If the packet is a DHCP request, and this is a DHCP server, process that.  To be done later.
+
+    #Find the network interface.  It might be none if the IP does not match, or if it is a switch/hub device.
+    tInterface = findLocalNICInterface(packRec['tdestIP'], nicRec)
+    #if this is None, try the primary interface.
+    if tInterface is None:
+        tInterface = findPrimaryNICInterface(nicRec)
+    #the interface still might be none if we are a switch/hub port
+    #Verify the interface.  This is mainly to work with SSIDs, VLANs, VPNs, etc.
+    if tInterface is not None:
+        beginIngressOnInterface(packRec, tInterface)
+
+    #the packet status should show dropped or something if we have a problem. 
+    #but for now, pass it onto the NIC
+    beginIngressOnNIC(packRec, nicRec)
+    #The NIC passes it onto the device if needed.  We are done with this.
+
+
 def beginIngressOnNIC(packRec, nicRec):
     """Begin the packet entering a device.  It enters via a nic, and then is processed.
     Args: 
@@ -364,11 +412,12 @@ def beginIngressOnNIC(packRec, nicRec):
         #We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
         1 #do nothing for now.  We will come back when we know how we want these stored
         #here we would store the MAC and tie it to this NIC.
-
+    
     #If we are entering a WAN port, see if we should be blocked or if it is a return packet
     if nictype == "wan":
         1
         #We do not have the firewall programed in yet.
+        #if the packet is a return ping packet, allow it. Otherwise, reject
     
     if packRec['destMAC'] == nicRec['Mac'] or packet.isBroadcastMAC(packRec['destMac']) or nictype == "port" or nictype == "wport":
         #The packet is good, and has reached the computer.  Pass it on to the device
@@ -376,3 +425,13 @@ def beginIngressOnNIC(packRec, nicRec):
         #Since we know the device, beginIngres on the device.
     else:
         packet['status'] = "dropped"
+        return False
+
+def beginIngressOnInterface(packRec, interfaceRec):
+    """Here we would do anything needed to be done with the interface.
+        VLAN
+        SSID
+        Tunnel/VPN
+        """
+    #right now, we let pass it back
+    return True
