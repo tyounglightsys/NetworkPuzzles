@@ -1,7 +1,7 @@
 import ipaddress
 
 from .nic import Nic
-from . import puzzle
+from . import session
 
 class Device:
     #define things by their type for later use in intellisense
@@ -55,6 +55,36 @@ def isWirelessForwarder(deviceRec):
             return True
     return False
 
+def allDevices():
+    """
+    Return a list that contains all devices in the puzzle.
+    """
+    devicelist=[]
+    if 'device' not in session.puzzle:
+        session.puzzle['device'] = []
+    for one in session.puzzle['device']:
+        if 'hostname' in one:
+            devicelist.append(one)
+    return devicelist
+
+def deviceFromName(what):
+    """Return the device, given a name
+    Args: what:str the hostname of the device
+    returns the device matching the name, or None"""
+    for one in allDevices():
+        if one['hostname'] == what:
+            return one
+    return None
+
+def deviceFromID(what):
+    """Return the device, given a name
+    Args: what:int the unique id of the device
+    returns the device matching the id, or None"""
+    for one in allDevices():
+        if one['uniqueidentifier'] == what:
+            return one
+    return None
+
 def deviceCaptions(deviceRec, howmuch:str):
     """
     return a list of strings, giving information about this device.
@@ -93,7 +123,7 @@ def DeviceIPs(src, ignoreLoopback=True):
     interfacelist=[]
     srcDevice=src
     if 'hostname' not in src:
-        srcDevice=puzzle.deviceFromName(src)
+        srcDevice=deviceFromName(src)
     if srcDevice is None:
         print('Error: passed in an invalid source to function: sourceIP')
         return None
@@ -127,7 +157,7 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
     interfacelist=[]
     srcDevice=src
     if 'hostname' not in src:
-        srcDevice=puzzle.deviceFromName(src)
+        srcDevice=deviceFromName(src)
     if srcDevice is None:
         print('Error: passed in an invalid source to function: sourceIP')
         return None

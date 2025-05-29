@@ -122,13 +122,7 @@ def allDevices():
     """
     Return a list that contains all devices in the puzzle.
     """
-    devicelist=[]
-    if 'device' not in session.puzzle:
-        session.puzzle['device'] = []
-    for one in session.puzzle['device']:
-        if 'hostname' in one:
-            devicelist.append(one)
-    return devicelist
+    return device.allDevices()
 
 def allLinks():
     """
@@ -314,19 +308,13 @@ def deviceFromName(what):
     """Return the device, given a name
     Args: what:str the hostname of the device
     returns the device matching the name, or None"""
-    for one in allDevices():
-        if one['hostname'] == what:
-            return one
-    return None
+    return device.deviceFromName(what)
 
 def deviceFromID(what):
     """Return the device, given a name
     Args: what:int the unique id of the device
     returns the device matching the id, or None"""
-    for one in allDevices():
-        if one['uniqueidentifier'] == what:
-            return one
-    return None
+    return device.deviceFromID(what)
 
 def linkFromName(what):
     """
