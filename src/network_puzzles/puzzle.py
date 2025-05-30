@@ -36,29 +36,34 @@ def read_json_file(file_path):
         print(f"Error: Invalid JSON format in: {file_path}")
         return None
 
-def listPuzzlesFromDisk(regex_pattern:str = None):
-    puzzleNames = []
+def matches_filter(name: str, pattern: str|None) -> bool:
+    if pattern is None:
+        return True
+    elif re.match(pattern, name, re.IGNORECASE):
+        return True
+    else:
+        return False
+
+def filter_items(items: list, pattern: str, json_files: bool = False) -> list:
+    filtered_items = []
+    for item in items:
+        if not json_files:
+            name = item['EduNetworkBuilder']['Network']['name']
+        else:
+            name = re.sub(r"\.json","", item)
+        if matches_filter(name, pattern):
+            filtered_items.append(name)
+    return filtered_items
+
+def listPuzzlesFromDisk(regex_pattern: str = None):
     directory_path="src/network_puzzles/resources/puzzles"
     files = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
-    for one in files:
-        justName = re.sub(r"\.json","", one)
-        if regex_pattern is None:
-            puzzleNames.append(justName)
-        elif re.match(regex_pattern, justName, re.IGNORECASE):
-            puzzleNames.append(justName)
-    return puzzleNames
+    return filter_items(files, regex_pattern, json_files=True)
 
-def listPuzzles(regex_pattern:str = None):
+def listPuzzles(regex_pattern: str = None):
     if len(session.puzzlelist) == 0:
         readPuzzle()
-    puzzleNames = []
-    for one in session.puzzlelist:
-        justName=one['EduNetworkBuilder']['Network']['name']
-        if regex_pattern is None:
-            puzzleNames.append(justName)
-        elif re.match(regex_pattern, justName, re.IGNORECASE):
-            puzzleNames.append(justName)
-    return puzzleNames
+    return filter_items(session.puzzlelist, regex_pattern)
 
 def readPuzzle():
     """Read in the puzzles from the various .json files"""
@@ -279,6 +284,14 @@ def arpLookup(srcDevice, ip):
         return tmac
     return None
 
+
+def get_item_by_attrib(items: list, attrib: str, value: str) -> dict|None:
+    # Returns first match; i.e. assumes only one item in list matches given
+    # attribute.
+    for item in items:
+        if item.get(attrib) == value:
+            return item
+
 def nicFromName(theDevice,what):
     """return the network card from the name
     Args:
@@ -292,10 +305,7 @@ def nicFromName(theDevice,what):
         theDevice = deviceFromName(theDevice)
     if theDevice is None:
         return None
-    for one in theDevice['nic']:
-        if one['nicname'] == what:
-            return one
-    return None
+    return get_item_by_attrib(theDevice.get('nic'), 'nicname', what)
 
 def nicFromID(what):
     """find the network card from the id
@@ -305,39 +315,30 @@ def nicFromID(what):
         Thus, for a network link (ethernet cable, wireless, etc) to know what two devices it is connecting, we use the ID
     """
     for theDevice in allDevices():
-        for one in theDevice['nic']:
-            if one['uniqueidentifier'] == what:
-                return one
+        item = get_item_by_attrib(theDevice.get('nic'), 'uniqueidentifier', what)
+        if item:
+            return item
     return None
 
-def deviceFromName(what):
+def deviceFromName(what: str) -> dict|None:
     """Return the device, given a name
     Args: what:str the hostname of the device
     returns the device matching the name, or None"""
-    for one in allDevices():
-        if one['hostname'] == what:
-            return one
-    return None
+    return get_item_by_attrib(allDevices(), 'hostname', what)
 
-def deviceFromID(what):
+def deviceFromID(what: str) -> dict|None:
     """Return the device, given a name
     Args: what:int the unique id of the device
     returns the device matching the id, or None"""
-    for one in allDevices():
-        if one['uniqueidentifier'] == what:
-            return one
-    return None
+    return get_item_by_attrib(allDevices(), 'uniqueidentifier', what)
 
-def linkFromName(what):
+def linkFromName(what:str) -> dict|None:
     """
     Return the link matching the name
     Args: what:str - the string name of the link
     returns: the link record or None
     """
-    for one in allLinks():
-        if one['hostname'] == what:
-            return one
-    return None
+    return get_item_by_attrib(allLinks(), 'hostname', what)
 
 def linkFromDevices(srcDevice, dstDevice):
     """return a link given the two devices at either end
@@ -377,11 +378,7 @@ def linkFromID(what):
     Args: what:int - the unique id of the link
     Returns: the matching link record or None
     """
-    for one in allLinks():
-        print(one['uniqueidentifier'])
-        if one['uniqueidentifier'] == what:
-            return one
-    return None
+    return get_item_by_attrib(allLinks(), 'uniqueidentifier', what)
 
 def itemFromID(what):
     """return the item matching the ID.  Could be a device, a link, or a nic"""
