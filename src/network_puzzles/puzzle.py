@@ -36,11 +36,13 @@ def read_json_file(file_path):
         print(f"Error: Invalid JSON format in: {file_path}")
         return None
 
-def matches_filter(name: str, pattern: str) -> bool:
+def matches_filter(name: str, pattern: str|None) -> bool:
     if pattern is None:
         return True
     elif re.match(pattern, name, re.IGNORECASE):
         return True
+    else:
+        return False
 
 def filter_items(items: list, pattern: str, json_files: bool = False) -> list:
     filtered_items = []

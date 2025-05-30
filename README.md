@@ -39,6 +39,40 @@ Run the GUI app:
 python src/main.py
 ```
 
+Run python unittests (simple output):
+```
+(env) ~/NetworkPuzzles$ ./scripts/run-tests.sh
+....ss........................
+----------------------------------------------------------------------
+Ran 30 tests in 0.054s
+
+OK (skipped=2)
+```
+
+Run python unittests (verbose output):
+```
+(env) ~/NetworkPuzzles$ ./scripts/run-tests.sh -v
+[...]
+test_linkfromname_found (tests.test_puzzle.TestXFromY.test_linkfromname_found) ... Loaded: Level0-HubVsSwitch
+ok
+test_linkfromname_notfound (tests.test_puzzle.TestXFromY.test_linkfromname_notfound) ... Loaded: Level0-HubVsSwitch
+ok
+test_nicfromid_found (tests.test_puzzle.TestXFromY.test_nicfromid_found) ... Loaded: Level0-HubVsSwitch
+ok
+test_nicfromid_notfound (tests.test_puzzle.TestXFromY.test_nicfromid_notfound) ... Loaded: Level0-HubVsSwitch
+ok
+test_nicfromname_found (tests.test_puzzle.TestXFromY.test_nicfromname_found) ... Loaded: Level0-HubVsSwitch
+ok
+test_nicfromname_notfound (tests.test_puzzle.TestXFromY.test_nicfromname_notfound) ... Loaded: Level0-HubVsSwitch
+ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.049s
+
+OK (skipped=2)
+```
+
+
 ## Prerequisites
 
 Ubuntu (more specifically Wayland) requires the installation of the `xsel`
