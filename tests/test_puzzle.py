@@ -4,6 +4,7 @@ from network_puzzles import puzzle
 from network_puzzles import ui
 from pathlib import Path
 
+PUZZLES_DIR = puzzle_file = Path(__file__).parents[1] / 'src' / 'network_puzzles' / 'resources' / 'puzzles'
 
 class TestMatchesFilter(unittest.TestCase):
     def test_match(self):
@@ -41,14 +42,15 @@ class TestFilterItems(unittest.TestCase):
             'puzzle1_dhcp',
             'puzzle2_vlan',
         ]
+        self.puzzle_files = [str(f).replace('.json', '') for f in PUZZLES_DIR.glob('*.json')]
 
-    @unittest.skip('not implemented')
     def test_disk_filter(self):
-        pass
+        dhcp_files = [f for f in self.puzzle_files if 'dhcp' in f.lower()]
+        self.assertEqual(dhcp_files, puzzle.filter_items(self.puzzle_files, '.*DHCP.*', json_files=True))
 
-    @unittest.skip('not implemented')
     def test_dist_nofilter(self):
-        pass
+        
+        self.assertEqual(sorted(self.puzzle_files), sorted(puzzle.filter_items(self.puzzle_files, None, json_files=True)))
 
     def test_memory_filter(self):
         self.assertEqual(self.puzzle_names[:1], puzzle.filter_items(self.puzzles, '.*DHCP.*'))
