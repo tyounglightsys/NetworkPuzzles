@@ -87,7 +87,7 @@ class UI:
 class CLI(UI): 
     def run(self):
         print(self.TITLE)
-        self.load_puzzle("5") #for now, just testing
+        self.load_puzzle("2") #for now, just testing
         try:
             while True:
                 self.prompt()

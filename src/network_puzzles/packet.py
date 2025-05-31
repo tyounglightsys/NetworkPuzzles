@@ -104,9 +104,9 @@ def processPackets(killSeconds:int=20):
                 #We have arrived.  We need to process the arrival!
                 #get interface from link
                 nicrec = theLink['SrcNic']
-                if one['packetDirection'] == 2:
+                if one['packetDirection'] == 1:
                     nicrec = theLink['DstNic']
-                tNic = link.getInterfaceFromLinkNicRec(nicrec)
+                tNic = device.getDeviceNicFromLinkNicRec(nicrec)
                 if tNic is None:
                     #We could not find the record.  This should never happen.  For now, blow up
                     print ("Bad Link:")
@@ -114,7 +114,8 @@ def processPackets(killSeconds:int=20):
                     print ("Direction = " + str(one['packetDirection']))
                     raise Exception("Could not find the endpoint of the link. ")
                 #We are here.  Call a function on the nic to start the packet entering the device
-                device.beginIngress(one, tNic)
+                print ("packet finished " + one['packetlocation'] + " and is moving onto " + tNic['myid']['hostname'])
+                device.beginIngressOnNIC(one, tNic)
 
         #If the packet has been going too long.  Kill it.
         if curtime - one['starttime'] > killMilliseconds:
