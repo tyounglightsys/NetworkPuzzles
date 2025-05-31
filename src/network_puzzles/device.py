@@ -1,4 +1,6 @@
 import ipaddress
+import copy
+import random
 
 from .nic import Nic
 from . import session
@@ -51,6 +53,8 @@ def doesVLANs(deviceRec):
 
 def powerOff(deviceRec):
     """return true if the device is powered off"""
+    if 'poweroff' not in deviceRec:
+        return False
     try:
         match deviceRec['poweroff']:
             case "True":
@@ -141,6 +145,18 @@ def linkFromDevices(srcDevice, dstDevice):
     #if we get here, we could not find it.  Return none
     return None
 
+def linkConnectedToNic(nicRec):
+    """Find a link connected to the specified network card"""
+    if nicRec is None:
+        return None
+    for one in allLinks():
+        if(one['SrcNic']['nicid'] == nicRec['myid']['nicid'] ):
+            return one
+        if(one['DstNic']['nicid'] == nicRec['myid']['nicid'] ):
+            return one
+    #we did not find anything that matched.  Return None
+    return None
+
 def allLinks():
     """
     Return a list that contains all devices in the puzzle.
@@ -167,6 +183,54 @@ def getDeviceNicFromLinkNicRec(tLinkNicRec):
         return None
     #If we get here, we have the nic record.
     return tNic
+
+def routeRecFromDestIP(theDeviceRec,destinationIPString:str):
+    """return a routing record given a destination IP string.  The device record has the route, nic, interface, and gateway"""
+    #go through the device routes.
+    routeRec = {}
+    if  'route' not in theDeviceRec:
+        theDeviceRec['route'] = []
+    if not isinstance(theDeviceRec['route'], list):
+        theDeviceRec['route'] =  [ theDeviceRec['route']] #turn it into a list
+    for oneroute in theDeviceRec['route']:
+        staticroute=ipaddress.ip_network(oneroute['ip' + "/" + oneroute['mask']])
+        if destinationIPString in staticroute:
+            #We found a gateway that we should use.
+            routeRec['gateway'] = oneroute['gateway'] #just the gateway
+            break
+
+    #if not a device route, look through nics
+    if 'gateway' not in routeRec:
+        #We did not find it in the static routes.  Loop through all nics and see if one is local
+        for oneNic in theDeviceRec['nic']:
+            localInterface = findLocalNICInterface(destinationIPString,oneNic)
+            if localInterface is not None:
+                #We found it.  Use it.
+                routeRec['nic'] = oneNic
+                routeRec['interface'] = localInterface
+                break
+
+    #if not a nic, use the default gateway
+    if 'gateway' not in routeRec and 'nic' not in routeRec:
+        #use the device default gateway
+        routeRec['gateway'] = theDeviceRec['gateway']['ip']
+    
+    #if we have a gateway but do not know the nic and interface, find the right one
+    if 'gateway' in routeRec and 'nic' not in routeRec:
+        for oneNic in theDeviceRec['nic']:
+            localInterface = findLocalNICInterface(routeRec['gateway'],oneNic)
+            if localInterface is not None:
+                #We found it.  Use it.
+                routeRec['nic'] = oneNic
+                routeRec['interface'] = localInterface
+                break
+    
+    #We should now have a good routeRec.  gateway might be blank, if it is local
+    #But we should have a nic and interface set
+    if 'interface' not in routeRec:
+        #We could not figure out the route.  return None.
+        return None
+    return routeRec
 
 def linkFromID(what):
     """
@@ -335,9 +399,9 @@ def findLocalNICInterface(targetIPstring:str, networkCardRec):
     if networkCardRec['nictype'][0] == 'port':
         return None #Ports have no IP address
     #loop through all the interfaces and return any that might be local.
-    if not isinstance(networkCardRec['nic'],list):
-        networkCardRec['nic'] = [ networkCardRec['nic']] #turn it into a list if needed.
-    for oneIF in networkCardRec['nic']:
+    if not isinstance(networkCardRec['interface'],list):
+        networkCardRec['interface'] = [ networkCardRec['interface']] #turn it into a list if needed.
+    for oneIF in networkCardRec['interface']:
         if packet.isLocal(targetIPstring, interfaceIP(oneIF)):
             return oneIF
     return None
@@ -372,7 +436,7 @@ def doInputFromLink(packRec, nicRec):
 
     #the packet status should show dropped or something if we have a problem. 
     #but for now, pass it onto the NIC
-    beginIngressOnNIC(packRec, nicRec)
+    return beginIngressOnNIC(packRec, nicRec)
     #The NIC passes it onto the device if needed.  We are done with this.
 
 
@@ -419,12 +483,11 @@ def beginIngressOnNIC(packRec, nicRec):
         #We do not have the firewall programed in yet.
         #if the packet is a return ping packet, allow it. Otherwise, reject
     
-    if packRec['destMAC'] == nicRec['Mac'] or packet.isBroadcastMAC(packRec['destMac']) or nictype == "port" or nictype == "wport":
+    if packRec['destMAC'] == nicRec['Mac'] or packet.isBroadcastMAC(packRec['destMAC']) or nictype == "port" or nictype == "wport":
         #The packet is good, and has reached the computer.  Pass it on to the device
-        1
-        #Since we know the device, beginIngres on the device.
+        return packetEntersDevice(packRec, theDevice, nicRec)
     else:
-        packet['status'] = "dropped"
+        packRec['status'] = "dropped"
         return False
 
 def beginIngressOnInterface(packRec, interfaceRec):
@@ -435,3 +498,78 @@ def beginIngressOnInterface(packRec, interfaceRec):
         """
     #right now, we let pass it back
     return True
+
+def packetEntersDevice(packRec, thisDevice, nicRec):
+    """When a packet enters a device, coming from an interface and network card.  Here we respond to stuff, route, or switch..."""
+    if powerOff(thisDevice):
+        packRec['status'] = "done"
+        #nothing more to be done
+        return False
+    #We would check if it was frozen.  That is a test, not a status.  We do not have that check yet.
+
+    #Deal with DHCP.  If it is an answer, update the device IP address.
+    #If it is a request and this is a DHCP server, serve an IP back.
+
+    #If the packet is destined for here, process that
+    # ping, send ping packet back
+    # ping response, mark it as done
+
+    #If the packet is not done and we forward, forward. Basically, a switch/hub
+    if packRec['status'] != 'done' and forwardsPackets(thisDevice):
+        #We loop through all nics. (minus the one we came in from)
+        for onenic in thisDevice['nic']:
+            #we duplicate the packet and send it out each port-type
+            #find the link connected to the port
+            tlink = linkConnectedToNic(nicRec)
+            if tlink is not None and nicRec['uniqueidentifier'] != onenic['uniqueidentifier']:
+                #We have a network wire connected to the NIC.  Send the packet out
+                #if it is a switch-port, then we check first if we know where the packet goes - undone
+                tpacket = copy.deepcopy(packRec)
+                tpacket['packetlocation'] = tlink['hostname']
+                if tlink['SrcNic']['nicid'] == onenic['SrcNic']['nicid']:
+                    tpacket['packetDirection'] = 1 #Src to Dest
+                else:
+                    tpacket['packetDirection'] = 2 #Dest to Source
+                tpacket['packetDistance'] = 0 #start at the beginning.
+                packet.addPacketToPacketlist(tpacket)
+                print (" Sending packet out a port: " + tpacket['packetlocation']) 
+        #we set this packet as done.
+        packRec['status'] = 'done' #The packet that came in gets killed since it was replicated everywhere else
+    #if the packet is not done and we route, route
+    if packRec['status'] != 'done' and routesPackets(thisDevice):
+        sendPacketOutDevice(packRec,thisDevice)
+
+def AssignMacIfNeeded(nicRec):
+    if 'Mac' not in nicRec:
+        #Most of the network cards do not have this done yet.  We generate a new random one
+        localmac=""
+        for i in range(1,13):
+            localmac=localmac+random.choice("ABCDEF1234567890")
+        nicRec['Mac']=localmac
+
+def sendPacketOutDevice(packRec, theDevice):
+    """Send the packet out of the device."""
+    print("Sending packet out a device: " + theDevice['hostname'])
+    #determine which interface/nic we are exiting out of - routing
+    routeRec = routeRecFromDestIP(theDevice,packRec['destIP'])
+    #set the source MAC address on the packet as from the nic
+    if routeRec is not None:
+        AssignMacIfNeeded(routeRec['nic'])
+        packRec['sourceMAC'] = routeRec['nic']['Mac']
+    #set the destination MAC to be the GW MAC if the destination is not local
+        #this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
+
+    #set the packet location being the link associated with the nic
+    #   Fail if there is no link on the port
+    destlink = linkConnectedToNic(routeRec['nic'])
+    if destlink is not None:
+        packRec['packetlocation'] = destlink['hostname']
+        if destlink['SrcNic']['hostname'] == theDevice['hostname']:
+            packRec['packetDirection'] = 1 #Src to Dest
+        else:
+            packRec['packetDirection'] = 2 #Dest to Source
+        return True
+    #If we get here, it did not work.  No route to host.
+    #right now, we blow up.  We need to deal with this with a bit more grace.  Passing the error back to the user
+    packRec['status'] = 'failed'
+    raise Exception("No Route to host")

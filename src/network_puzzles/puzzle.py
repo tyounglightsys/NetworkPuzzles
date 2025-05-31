@@ -121,7 +121,16 @@ def choosePuzzle(what, filter=None):
             puz = choosePuzzleFromName(what)
     if puz is not None:
         print("Loaded: " + puz['name'])
+        session.puzzle = puz
+        setAllDeviceNICMacs()
     return puz
+
+def setAllDeviceNICMacs():
+    for oneDevice in allDevices():
+        if not isinstance(oneDevice['nic'], list):
+            oneDevice['nic'] = [oneDevice['nic']]
+        for oneNic in oneDevice['nic']:
+            device.AssignMacIfNeeded(oneNic)
 
 def allDevices():
     """
@@ -157,12 +166,7 @@ def maclistFromDevice(src):
         src['nic'] = [src['nic']]
     for onenic in src['nic']:
         #iterate through the list of nics
-        if 'Mac' not in onenic:
-            #Most of the network cards do not have this done yet.  We generate a new random one
-            localmac=""
-            for i in range(1,13):
-                localmac=localmac+random.choice("ABCDEF1234567890")
-            onenic['Mac']=localmac
+        device.AssignMacIfNeeded(onenic)
         if not onenic['nicname'] == 'lo0':
             if not isinstance(onenic['interface'],list):
                 onenic['interface'] = [ onenic['interface']]
@@ -490,6 +494,7 @@ def Ping(src, dest):
         #packet['destMAC'] = #If the IP is local, we use the MAC of the host.  Otherwise it is the MAC of the gateway
         nPacket['destMAC'] = globalArpLookup(dest)
         nPacket['packettype']="ping"
+        device.sendPacketOutDevice(nPacket,src)
         print (nPacket)
         packet.addPacketToPacketlist(nPacket)
 

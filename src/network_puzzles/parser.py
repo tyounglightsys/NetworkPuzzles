@@ -2,6 +2,7 @@
 # Most interaction with the puzzle, making changes or doing actions, will go through this
 import sys
 from . import puzzle
+from . import session
 
 
 def parse(command:str):
@@ -90,6 +91,7 @@ def show_info(args):
     # list the hosts.  Or, show information about a specifici host
     if len(args) == 0:
         # Just the show command.  List all the devices
+        print (session.puzzle['name'])
         devicelist = puzzle.allDevices()
         for one in devicelist:
             print(one['hostname'])
