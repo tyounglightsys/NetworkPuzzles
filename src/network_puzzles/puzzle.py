@@ -155,40 +155,13 @@ def maclistFromDevice(src):
     Returns:
         A list of mac-addresses.  Each MAC is a struct containing at least the ip and mac.
     """
-    maclist=[]
-    if isinstance(src,str):
-        src = deviceFromName(str)
-    if src is None:
-        return None
-    if 'nic' not in src:
-        return None
-    if not isinstance(src['nic'],list):
-        src['nic'] = [src['nic']]
-    for onenic in src['nic']:
-        #iterate through the list of nics
-        device.AssignMacIfNeeded(onenic)
-        if not onenic['nicname'] == 'lo0':
-            if not isinstance(onenic['interface'],list):
-                onenic['interface'] = [ onenic['interface']]
-            for oneinterface in onenic['interface']:
-                onemac = {
-                    'ip':ipaddress.ip_interface(oneinterface['myip']['ip']+"/"+oneinterface['myip']['mask']),
-                    'mac':onenic['Mac']
-                }
-            maclist.append(onemac)
-    return maclist
+    return device.maclistFromDevice(src)
 
 
 def buildGlobalMACList():
     """Build/rebuild the global MAC list.  Should be run when we load a new puzzle, when we change IPs, or add/remove NICs."""
     # global maclist
-    session.maclist = [] #clear it out
-    for onedevice in allDevices():
-        for onemac in maclistFromDevice(onedevice):
-            session.maclist.append(onemac)
-    #print("Built maclist")
-    #print(maclist)
-    return session.maclist
+    device.buildGlobalMACList()
 
 def justIP(ip):
     """return just the IP address as a string, stripping the subnet if there was one"""
@@ -203,18 +176,7 @@ def globalArpLookup(ip):
     Returns:
         The MAC address corresponding to the IP as a string or None.
     """
-    if not isinstance(session.maclist,list):
-        buildGlobalMACList()
-    print("we have maclist")
-    print(session.maclist)
-    if isinstance(ip,str):
-        ip = ipaddress.IPv4Address(ip)
-        print ("globalARP: Converting ip: " + str(ip))
-    for oneMac in session.maclist:
-        print ("globalARP: comparing: " + justIP(oneMac['ip']) + " to " + justIP(ip))
-        if justIP(oneMac['ip']) == justIP(ip):
-            return oneMac['mac']
-    return None
+    return device.globalArpLookup(ip)
 
 def arpLookup(srcDevice, ip):
     """find a mac address, with the source being the specified device
@@ -224,40 +186,7 @@ def arpLookup(srcDevice, ip):
         ip:str the string ip address we are trying to find
         ip:ipaddress the ip address we are trying to find
         """
-    oldsrc=""
-    if srcDevice is None:
-        print("Error: source to arpLookup is None")
-    if isinstance(srcDevice, str):
-        #We need to look the device up
-        oldsrc = srcDevice
-        srcDevice = deviceFromName(srcDevice)
-    if srcDevice is None:
-        print("Error: Unable to find source for arpLookup: " + oldsrc)
-    #If we are here, src should be a valid device
-    if isinstance(ip,str):
-        ip = ipaddress.IPv4Address(ip)
-        print ("ARP: Converting ip: " + justIP(ip))
-    if 'maclist' not in srcDevice:
-        srcDevice['maclist']=[] #make an empty list.  That way we can itterate through it
-    #The maclist on a device should have the port on which the MAC is found.  Particularly on switches. 
-    #Does the device arp list have any records?  If so, use that.
-    for oneMAC in srcDevice['maclist']:
-        #print ("ARP: comparing: " + justIP(oneMAC['ip']) + " to " + justIP(ip))
-        if justIP(oneMAC['ip']) == justIP(ip):
-            print("Found the MAC for IP " + justIP(ip))
-            return oneMAC['mac'] #Return the one in the local arp.
-    #If we cannot find it on the device, look it up from the global list
-    tmac = globalArpLookup(ip)
-    if tmac is not None:
-        #Store the mac address in the local list
-        arp = {
-            'ip':ip,
-            'mac':tmac
-        }
-        srcDevice['maclist'].append(arp)
-        #we asked for the mac address corresponding to the IP.  Return just the MAC
-        return tmac
-    return None
+    return device.arpLookup(srcDevice, ip)
 
 
 def get_item_by_attrib(items: list, attrib: str, value: str) -> dict|None:
@@ -359,33 +288,7 @@ def destIP(srcDevice,dstDevice):
         the string IP address of the nic that is local betwee the two devices, or the IP address on the destination 
         that is connected to its gateway IP.  None if the IP cannot be determined 
     """
-    if srcDevice is None:
-        print("Error: function destIP: None passed in as source.")
-        return None
-    if dstDevice is None:
-        print("Error: function destIP: None passed in as destination.")
-        return None
-    if 'hostname' not in srcDevice:
-        print("Error: function destIP: Not a valid source device.")
-        return None
-    if 'hostname' not in dstDevice:
-        print("Error: function destIP: Not a valid destination device.")
-        return None
-    srcIPs = device.DeviceIPs(srcDevice)
-    dstIPs = device.DeviceIPs(dstDevice)
-
-    if srcIPs is None or dstIPs is None:
-        #we will not be able to find a match.
-        return None
-    for oneSip in srcIPs:
-        for oneDip in dstIPs:
-            #compare each of them to find one that is local
-            if oneSip in oneDip.network:
-                #We found a match.  We are looking for the destination.  So we return that
-                return oneDip
-    #if we get here, we did not find a match
-    #we need to find the IP address that is local to the gateway and use that.
-    return None
+    return device.destIP(srcDevice,dstDevice)
 
 def sourceIP(src,dstIP):
     """
@@ -397,51 +300,7 @@ def sourceIP(src,dstIP):
         destIP:str - connect to this ip.  Eg: "192.168.1.1"
     return: an IP address string, or None
     """
-    srcDevice=src
-    if 'hostname' not in src:
-        srcDevice=deviceFromName(src)
-    if srcDevice is None:
-        print('Error: passed in an invalid source to function: sourceIP')
-        return None
-    #Get all the IPs from this device
-    allIPs = device.DeviceIPs(src)
-    if allIPs is None:
-        return None
-
-    #return the IP that has a static route to it (add this later).
-    if 'route' in srcDevice:
-        if not isinstance(srcDevice['roiute'],list):
-            srcDevice['route'] = [srcDevice['route']]
-        for oneroute in srcDevice['route']:
-            staticroute=ipaddress.ip_network(oneroute['ip' + "/" + oneroute['mask']])
-            if dstIP in staticroute:
-                #We found the route.  But we need to find the IP address that is local to the route
-                print("A static route matched.  Finding the IP for that route")
-                for oneip in allIPs:
-                    #oneip=ipaddress.IPv4Interface
-                    if oneip in staticroute:
-                        print("We found a local interface that worked with the route")
-                        print(oneip.ip)
-                        return oneip
-        
-    #return the IP that is local to the dest IP
-    for oneip in allIPs:
-        #oneip=ipaddress.IPv4Interface
-        if dstIP in oneip.network:
-            print("We found a local network ")
-            print(oneip.ip)
-            return oneip
-    #if we get here, we do not have a nic that is local to the destination.  Return the nic that the GW is on
-    GW = ipaddress.ip_address(srcDevice['gateway']['ip'] + "/" + srcDevice['gateway']['netmask'])
-    for oneip in allIPs:
-        if GW in oneip.ip_network:
-            print("The gateway is the way forward ")
-            print(oneip.ip)
-            return oneip
-
-    #if we do not have a GW, we need to report, "no route to host"
-    print ("no path")
-    return None
+    return device.sourceIP(src,dstIP)
 
 def is_ipv4(string):
         """
@@ -473,7 +332,7 @@ def Ping(src, dest):
     if dest is None:
         print('Error: You must have a destination for ping.  None was passed in.')
         return None
-    if isinstance(dest,str) and not is_ipv4(dest):
+    if isinstance(dest,str) and not packet.is_ipv4(dest):
         #If it is a string, but not a string that is an IP address
         dest = deviceFromName(dest)
     if 'hostname' in dest:

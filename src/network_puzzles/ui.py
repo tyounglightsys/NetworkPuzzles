@@ -101,11 +101,14 @@ class CLI(UI):
 
     def prompt(self):
         """A CLI only function.  Prompt for imput and process it"""
-        answer = input("-> ")
-        parser.parse(answer)
-        #if we created packets, process them until done.
-        while packet.packetsNeedProcessing():
-            packet.processPackets(2) #the cli does not need much time to know packets are going to loop forever.
+        try:
+            answer = input("-> ")
+            parser.parse(answer)
+            #if we created packets, process them until done.
+            while packet.packetsNeedProcessing():
+                packet.processPackets(2) #the cli does not need much time to know packets are going to loop forever.
+        except EOFError:
+            sys.exit()
 
     def quit(self):
         parser.exit_app()
