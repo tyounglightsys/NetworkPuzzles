@@ -33,7 +33,7 @@ class Device:
 def forwardsPackets(deviceRec):
     """return true if the device does packet forwarding (switch/hub/etc), false if it does not"""
     match deviceRec['mytype']:
-        case "net_switch","net_hub","wap","wbridge","wrepeater","wrouter":
+        case "net_switch"|"net_hub"|"wap"|"wbridge"|"wrepeater"|"wrouter":
             return True
     return False
 
@@ -485,6 +485,7 @@ def beginIngressOnNIC(packRec, nicRec):
     
     if packRec['destMAC'] == nicRec['Mac'] or packet.isBroadcastMAC(packRec['destMAC']) or nictype == "port" or nictype == "wport":
         #The packet is good, and has reached the computer.  Pass it on to the device
+        print ("Packet entering device: " + theDevice['hostname'])
         return packetEntersDevice(packRec, theDevice, nicRec)
     else:
         packRec['status'] = "dropped"
@@ -515,8 +516,14 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     # ping response, mark it as done
 
     #If the packet is not done and we forward, forward. Basically, a switch/hub
+    if forwardsPackets(thisDevice):
+        print("we should forward")
+    else:
+        print("this device, " + thisDevice['hostname'] + " " + thisDevice['mytype'] + "does not forward")
+
     if packRec['status'] != 'done' and forwardsPackets(thisDevice):
         #We loop through all nics. (minus the one we came in from)
+        print("We are forwarding.")
         for onenic in thisDevice['nic']:
             #we duplicate the packet and send it out each port-type
             #find the link connected to the port
@@ -526,7 +533,8 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                 #if it is a switch-port, then we check first if we know where the packet goes - undone
                 tpacket = copy.deepcopy(packRec)
                 tpacket['packetlocation'] = tlink['hostname']
-                if tlink['SrcNic']['nicid'] == onenic['SrcNic']['nicid']:
+                tpacket['packetDistance'] = 0 #reset it to the beginning of the next link
+                if tlink['SrcNic']['hostname'] == thisDevice['hostname']:
                     tpacket['packetDirection'] = 1 #Src to Dest
                 else:
                     tpacket['packetDirection'] = 2 #Dest to Source
@@ -537,7 +545,11 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
         packRec['status'] = 'done' #The packet that came in gets killed since it was replicated everywhere else
     #if the packet is not done and we route, route
     if packRec['status'] != 'done' and routesPackets(thisDevice):
+        print("routing")
         sendPacketOutDevice(packRec,thisDevice)
+        return
+    #If we get here, we might have forwarded.  If so, we mark the old packet as done.
+    packRec['status'] = 'done'
 
 def AssignMacIfNeeded(nicRec):
     if 'Mac' not in nicRec:
