@@ -9,10 +9,12 @@
 
 
 ThemedBoxLayout:
+    padding: dp(0)
+    spacing: dp(0)
     ThemedBoxLayout:  # left panel
         size_hint_x: 1/4
         orientation: 'vertical'
-        padding: dp(5)
+        padding: dp(0)
         ThemedBoxLayout:  # menu buttons group
             spacing: dp(5)
             size_hint_y: 0.1
@@ -45,13 +47,13 @@ ThemedBoxLayout:
             id: info
             size_hint_y: 0.72
             border_width: dp(3)
-            border_color: app.DARKEST_COLOR
+            border_color: app.theme.fg3
 
     VSeparator:
     ThemedBoxLayout:  # right panel
         orientation: 'vertical'
         size_hint_x: 3/4
-        padding: dp(3)
+        padding: dp(0)
         PuzzleLayout:
             id: layout
             size_hint_y: 0.90
@@ -63,6 +65,9 @@ ThemedBoxLayout:
 
 <PuzzlesRecView>:
     viewclass: 'SelectableLabel'
+    bar_color: app.theme.detail
+    bar_inactive_color: self.bar_color
+    bar_width: dp(3)
     SelectableRecycleBoxLayout:
         orientation: 'vertical'
         default_size: None, dp(56)

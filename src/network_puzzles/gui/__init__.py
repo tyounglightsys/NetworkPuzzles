@@ -1,3 +1,4 @@
+import platform
 from kivy.app import App
 from kivy.base import ExceptionManager
 from kivy.clock import Clock
@@ -11,6 +12,8 @@ from .base import AppExceptionHandler
 from .base import Device
 from .base import Link
 from .base import NETWORK_ITEMS
+from .base import Theme
+from .base import LightColorTheme
 from .buttons import MenuButton
 # from .labels import ThemedLabel  # noqa: F401, imported here for KV file access
 from .layouts import AppMenu
@@ -19,17 +22,6 @@ from .popups import PuzzleChooserPopup
 
 
 class NetworkPuzzlesApp(App):
-    # colors
-    DARKEST_COLOR = (0.10, 0.10, 0.10, 1)
-    DARKER_COLOR = (0.15, 0.15, 0.15, 1)
-    DARK_COLOR = (0.20, 0.20, 0.20, 1)
-    MEDIUM_COLOR = (0.50, 0.50, 0.50, 1)
-    LIGHT_COLOR = (0.80, 0.80, 0.80, 1)
-    LIGHTER_COLOR = (0.95, 0.95, 0.95, 1)
-    LIGHTEST_COLOR = (0.98, 0.98, 0.98, 1)
-    Window.clearcolor = LIGHTER_COLOR
-    Window.size = (1600, 720)  # 20:9 aspect ratio
-
     # sizes (dp will be applied in KV file)
     BUTTON_MAX_H = 48
     BUTTON_FONT_SIZE = 24
@@ -38,11 +30,17 @@ class NetworkPuzzlesApp(App):
     IMAGES = Path(__file__).parents[1] / 'resources' / 'images'
 
     def __init__(self, ui, **kwargs):
+        # Set window size for desktop systems.
+        if platform.system() not in ['Android', 'iOS']:
+            Window.size = (1600, 720)  # 20:9 aspect ratio
+
         super().__init__(**kwargs)
         ExceptionManager.add_handler(AppExceptionHandler())
         self.ui = ui
         self.app_title = self.ui.TITLE
         self.title = self.app_title
+        self.theme = LightColorTheme
+        Window.clearcolor = self.theme.bg2
 
         self.devices = []
         self.links = []
@@ -270,7 +268,7 @@ class NetworkPuzzlesApp(App):
             self._close_tray(tray)
 
     def _test(self, *args, **kwargs):
-        self.setup_puzzle(self.ui.load_puzzle('5'))
+        self.set_theme(LightColorTheme)
         # raise NotImplementedError
 
 

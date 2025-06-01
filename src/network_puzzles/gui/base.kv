@@ -1,11 +1,11 @@
 <ThemedCheckBox>:
     canvas.before:
         Color:
-            rgba: app.LIGHTER_COLOR
+            rgba: app.theme.bg2
         Rectangle:
             pos: self.pos
             size: self.size
-    color: app.DARKER_COLOR
+    color: app.theme.fg2
     font_size: sp(12)
     on_active: self.on_activate()
 
@@ -16,15 +16,15 @@
 <Separator@Widget>:
     canvas:
         Color:
-            rgba: app.MEDIUM_COLOR
+            rgba: app.theme.detail
         Rectangle:
             pos: self.pos
             size: self.size
 
 <HSeparator@Separator>:
     size_hint_y: None
-    height: dp(1)
+    height: dp(2)
 
 <VSeparator@Separator>:
     size_hint_x: None
-    width: dp(1)
+    width: dp(2)

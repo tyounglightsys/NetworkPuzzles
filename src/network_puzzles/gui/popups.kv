@@ -3,18 +3,21 @@
     size_hint: (1/2, 3/4)
 
 <PuzzleChooserPopup>:
-    title: _("Load Puzzle")
     size_hint_x: 1/3
+    title: _("Load Puzzle")
     ThemedBoxLayout:
+        padding: dp(0)
+        spacing: dp(0)
         canvas.before:
             Color:
-                rgba: app.LIGHTER_COLOR
+                rgba: app.theme.bg2
             Rectangle:
                 pos: self.pos
                 size: self.size
         orientation: 'vertical'
-        padding: dp(5)
         ThemedBoxLayout:  # top section
+            padding: dp(0)
+            spacing: dp(0)
             size_hint_y: 0.9
             ThemedBoxLayout:
                 orientation: 'vertical'

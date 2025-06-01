@@ -1,11 +1,11 @@
 <ThemedLabel>:
     canvas.before:
         Color:
-            rgba: [*app.LIGHTER_COLOR[:3], 0.9]
+            rgba: [*app.theme.bg2[:3], 0.9]
         Rectangle:
             pos: self.pos
             size: self.size
-    color: app.DARKEST_COLOR
+    color: app.theme.fg3
     halign: 'left'
     valign: 'top'
     font_size: sp(16)
@@ -21,15 +21,15 @@
 <SelectableLabel>:
     canvas.before:
         Color:
-            rgba: app.LIGHT_COLOR if self.selected else app.LIGHTEST_COLOR
+            rgba: app.theme.bg1 if self.selected else app.theme.bg3
         Rectangle:
             pos: self.pos
             size: self.size
     valign: 'center'
 
 <TerminalLabel>:
-    background_color: app.LIGHTEST_COLOR
-    foreground_color: app.DARKEST_COLOR
+    background_color: app.theme.bg3
+    foreground_color: app.theme.fg3
     halign: 'left'
     valign: 'bottom'
     font_name: 'RobotoMono-Regular'

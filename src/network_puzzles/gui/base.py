@@ -1,4 +1,5 @@
 import traceback
+from dataclasses import dataclass
 from kivy.app import App
 from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
@@ -11,6 +12,7 @@ from kivy.uix.checkbox import CheckBox
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.widget import Widget
+from typing import Tuple
 
 from .. import device
 from .. import link
@@ -196,7 +198,7 @@ class Link(Widget):
 
         self.background_normal = ''
         with self.canvas:
-            Color(rgba=self.app.DARK_COLOR)
+            Color(rgba=self.app.theme.fg1)
             Line(points=(*self.start, *self.end), width=2)
 
     def set_end_nic(self):
@@ -219,6 +221,40 @@ class Link(Widget):
         self.start = start_dev.button.center
         end_dev = self.app.get_device_by_id(self.data.get('DstNic').get('hostid'))
         self.end = end_dev.button.center
+
+
+@dataclass
+class Theme:
+    name: str
+    fg3: Tuple[float, float, float, float]
+    fg2: Tuple[float, float, float, float]
+    fg1: Tuple[float, float, float, float]
+    neutral: Tuple[float, float, float, float]
+    detail: Tuple[float, float, float, float]
+    bg1: Tuple[float, float, float, float]
+    bg2: Tuple[float, float, float, float]
+    bg3: Tuple[float, float, float, float]
+
+
+@dataclass
+class LightGrayscaleTheme(Theme):
+    name = 'Grayscale, light'
+    fg3 = (0.10, 0.10, 0.10, 1)
+    fg2 = (0.15, 0.15, 0.15, 1)
+    fg1 = (0.20, 0.20, 0.20, 1)
+    neutral = (0.5, 0.5, 0.5, 1)
+    detail = (0.80, 0.80, 0.80, 1)
+    bg1 = (0.80, 0.80, 0.80, 1)
+    bg2 = (0.95, 0.95, 0.95, 1)
+    bg3 = (0.98, 0.98, 0.98, 1)
+
+
+@dataclass
+class LightColorTheme(LightGrayscaleTheme):
+    name = "Color, light"
+    detail = (46/255, 194/255, 126/255, 1)  # separators, etc.; light green
+    #(143/255, 240/255, 164/255, 1)  #8ff0a4 light green
+    bg3 = (204/255, 227/255, 249/255, 1)  # text highlighting; light blue
 
 
 def get_layout_height(layout) -> None:
