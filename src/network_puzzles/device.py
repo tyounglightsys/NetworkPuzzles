@@ -70,7 +70,7 @@ def buildGlobalMACList():
     # global maclist
     session.maclist = [] #clear it out
     for onedevice in allDevices():
-        print ("finding macs for " + onedevice['hostname'])
+        #print ("finding macs for " + onedevice['hostname'])
         for onemac in maclistFromDevice(onedevice):
             session.maclist.append(onemac)
     #print("Built maclist")
@@ -86,17 +86,17 @@ def globalArpLookup(ip):
     Returns:
         The MAC address corresponding to the IP as a string or None.
     """
-    print ("doing global ARP lookup for ")
-    print (ip)
+    #print ("doing global ARP lookup for ")
+    #print (ip)
     #if not isinstance(session.maclist,list):
     buildGlobalMACList()
-    print("we have maclist")
-    print(session.maclist)
+    #print("we have maclist")
+    #print(session.maclist)
     if isinstance(ip,str):
         ip = ipaddress.IPv4Address(ip)
-        print ("globalARP: Converting ip: " + str(ip))
+        #print ("globalARP: Converting ip: " + str(ip))
     for oneMac in session.maclist:
-        print ("globalARP: comparing: " + packet.justIP(oneMac['ip']) + " to " + packet.justIP(ip))
+        #print ("globalARP: comparing: " + packet.justIP(oneMac['ip']) + " to " + packet.justIP(ip))
         if packet.justIP(oneMac['ip']) == packet.justIP(ip):
             return oneMac['mac']
     return None
@@ -263,10 +263,10 @@ def linkConnectedToNic(nicRec):
     """Find a link connected to the specified network card"""
     if nicRec is None:
         return None
-    print("looking for link connecting to nicid: "+ nicRec['myid']['nicid'])
-    print("  Looking at nic: " + nicRec['nicname'])
+    #print("looking for link connecting to nicid: "+ nicRec['myid']['nicid'])
+    #print("  Looking at nic: " + nicRec['nicname'])
     for one in allLinks():
-        print ("   link - " + one['hostname'])
+        #print ("   link - " + one['hostname'])
         if(one['SrcNic']['nicid'] == nicRec['myid']['nicid'] ):
             return one
         if(one['DstNic']['nicid'] == nicRec['myid']['nicid'] ):
@@ -403,6 +403,19 @@ def deviceFromID(what):
     for one in allDevices():
         if one['uniqueidentifier'] == what:
             return one
+    return None
+
+def deviceFromIP(what):
+    """Return the device, given a name
+    Args: what:int the unique id of the device
+    returns the device matching the id, or None"""
+    for oneDevice in allDevices():
+        for oneNic in oneDevice['nic']:
+            if not isinstance(oneNic['interface'],list):
+                oneNic['interface'] = [oneNic['interface']]
+            for oneInterface in oneNic['interface']:
+                if oneInterface['myip']['ip'] == what:
+                    return oneDevice
     return None
 
 
@@ -710,12 +723,12 @@ def beginIngressOnNIC(packRec, nicRec):
     
     if packRec['destMAC'] == nicRec['Mac'] or packet.isBroadcastMAC(packRec['destMAC']) or nictype == "port" or nictype == "wport":
         #The packet is good, and has reached the computer.  Pass it on to the device
-        print ("Packet entering device: " + theDevice['hostname'])
+        #print ("Packet entering device: " + theDevice['hostname'])
         return packetEntersDevice(packRec, theDevice, nicRec)
     else:
-        print("packet did not match.  Dropping")
-        print (packRec)
-        print("  packet dst MAC" + packRec['destMAC'] + " vs this NIC" + nicRec['Mac'])
+        #print("packet did not match.  Dropping")
+        #print (packRec)
+        #print("  packet dst MAC" + packRec['destMAC'] + " vs this NIC" + nicRec['Mac'])
         packRec['status'] = "dropped"
         return False
 
@@ -740,28 +753,42 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     #If it is a request and this is a DHCP server, serve an IP back.
 
     #If the packet is destined for here, process that
-    print("Checking destination.  Looking for " + packet.justIP(packRec['destIP']))
-    print("   Checking against" + str(allIPStrings(thisDevice)))
+    #print("Checking destination.  Looking for " + packet.justIP(packRec['destIP']))
+    #print("   Checking against" + str(allIPStrings(thisDevice)))
     if deviceHasIP(thisDevice, packRec['destIP']):
         packRec['status'] = 'done'
         print ("Packet arrived at destination")
-    # ping, send ping packet back
-    
-    # ping response, mark it as done
+        print ("packet type: -" + packRec['packettype'] + "-") 
+
+        # ping, send ping packet back
+        if packRec['packettype'] == 'ping':
+            dest = deviceFromIP(packet.justIP(str(packRec['sourceIP'])))
+            print("A ping came.  Making a return packet")
+            #print (packet.justIP(str(packRec['sourceIP'])))
+            #print(dest)
+            #we need to generate a ping response
+            nPacket=packetFromTo(thisDevice, dest)
+            nPacket['packetype'] = 'ping-response'
+            sendPacketOutDevice(nPacket,thisDevice)
+            #print (nPacket)
+            packet.addPacketToPacketlist(nPacket)
+            packRec['status'] = 'done'
+            return True
+
+        # ping response, mark it as done
+        if packRec['packetype'] == 'ping-response':
+            print("Woot! We returned with a ping")
+            packRec['status'] = 'done'
+            return True
 
     #If the packet is not done and we forward, forward. Basically, a switch/hub
-    if forwardsPackets(thisDevice):
-        print("we should forward")
-    else:
-        print("this device, " + thisDevice['hostname'] + " " + thisDevice['mytype'] + "does not forward")
-
     if packRec['status'] != 'done' and forwardsPackets(thisDevice):
         #We loop through all nics. (minus the one we came in from)
-        print("We are forwarding.")
+        #print("We are forwarding.")
         for onenic in thisDevice['nic']:
             #we duplicate the packet and send it out each port-type
             #find the link connected to the port
-            print ("Should we send out port: " + onenic['nicname'])
+            #print ("Should we send out port: " + onenic['nicname'])
             tlink = linkConnectedToNic(onenic)
             if tlink is not None and nicRec['uniqueidentifier'] != onenic['uniqueidentifier']:
                 #We have a network wire connected to the NIC.  Send the packet out
@@ -775,13 +802,13 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                     tpacket['packetDirection'] = 2 #Dest to Source
                 tpacket['packetDistance'] = 0 #start at the beginning.
                 packet.addPacketToPacketlist(tpacket)
-                print (" Sending packet out a port: " + tpacket['packetlocation']) 
+                #print (" Sending packet out a port: " + tpacket['packetlocation']) 
         #we set this packet as done.
         packRec['status'] = 'done' #The packet that came in gets killed since it was replicated everywhere else
         return
     #if the packet is not done and we route, route
     if packRec['status'] != 'done' and routesPackets(thisDevice):
-        print("routing")
+        #print("routing")
         sendPacketOutDevice(packRec,thisDevice)
         return
     #If we get here, we might have forwarded.  If so, we mark the old packet as done.
@@ -797,7 +824,7 @@ def AssignMacIfNeeded(nicRec):
 
 def sendPacketOutDevice(packRec, theDevice):
     """Send the packet out of the device."""
-    print("Sending packet out a device: " + theDevice['hostname'])
+    #print("Sending packet out a device: " + theDevice['hostname'])
     #determine which interface/nic we are exiting out of - routing
     routeRec = routeRecFromDestIP(theDevice,packRec['destIP'])
     #set the source MAC address on the packet as from the nic
@@ -822,3 +849,61 @@ def sendPacketOutDevice(packRec, theDevice):
     packRec['status'] = 'failed'
     raise Exception("No Route to host")
 
+def packetFromTo(src, dest):
+    """Generate a packet, starting at the srcdevice and destined for the destination device
+    Args:
+        src:srcDevice (also works with a hostname)
+        dest:dstDevice (also works with a hostname)
+        """
+    #src should be a device, not just a name.  Sanity check.
+    if 'hostname' not in src:
+        #The function is being improperly used. Can we fix it?
+        newsrc = deviceFromName(src)
+        if newsrc is not None:
+            src=newsrc
+        else:
+            #we were unable to fix it.  Complain bitterly
+            print('Error: invalid source passed to packetFromTo.  src must be a device.')
+            return None
+    if src is None:
+        #the function is being improperly used
+        print('Error: pinpacketFromTo function must have a valid device as src.  None was passed in.')
+        return None
+    #dest should be a device, an ip address, or a hostname
+    if dest is None:
+        print('Error: You must have a destination for packetFromTo.  None was passed in.')
+        return None
+    if isinstance(dest,str) and not packet.is_ipv4(dest):
+        #If it is a string, but not a string that is an IP address
+        dest = deviceFromName(dest)
+    if 'hostname' in dest:
+        #If we passed in a device or hostname, convert it to an IP
+        dest = destIP(src,dest)
+    if dest is None:
+        #This means we were unable to figure out the dest.  No such host, or something
+        print('Error: Not a valid target')
+        return None
+    if isinstance(dest,ipaddress.IPv4Address):
+        #This is what we are hoping for.
+        nPacket=packet.newPacket() #make an empty packet
+        nPacket['sourceIP'] = sourceIP(src, dest)
+        #packet['sourceMAC'] = #the MAC address of the above IP
+        nPacket['sourceMAC'] = arpLookup(src,nPacket['sourceIP'])
+        #packet['destIP'] = #figure this out
+        nPacket['destIP'] = dest #this should now be the IP
+        #packet['destMAC'] = #If the IP is local, we use the MAC of the host.  Otherwise it is the MAC of the gateway
+        nPacket['destMAC'] = globalArpLookup(dest)
+        nPacket['packettype']=""
+        return nPacket
+    
+def Ping(src, dest):
+    """Generate a ping packet, starting at the srcdevice and destined for the destination device
+    Args:
+        src:srcDevice (also works with a hostname)
+        dest:dstDevice (also works with a hostname)
+        """
+    nPacket = packetFromTo(src, dest)
+    nPacket['packettype']="ping"
+    sendPacketOutDevice(nPacket,src)
+    #print (nPacket)
+    packet.addPacketToPacketlist(nPacket)

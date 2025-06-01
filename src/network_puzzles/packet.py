@@ -114,7 +114,7 @@ def processPackets(killSeconds:int=20):
                     print ("Direction = " + str(one['packetDirection']))
                     raise Exception("Could not find the endpoint of the link. ")
                 #We are here.  Call a function on the nic to start the packet entering the device
-                print ("packet finished " + one['packetlocation'] + " and is moving onto " + tNic['myid']['hostname'])
+                #print ("packet finished " + one['packetlocation'] + " and is moving onto " + tNic['myid']['hostname'])
                 device.beginIngressOnNIC(one, tNic)
 
         #If the packet has been going too long.  Kill it.

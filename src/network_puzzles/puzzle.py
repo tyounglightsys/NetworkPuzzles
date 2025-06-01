@@ -314,48 +314,7 @@ def Ping(src, dest):
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
         """
-    #src should be a device, not just a name.  Sanity check.
-    if 'hostname' not in src:
-        #The function is being improperly used. Can we fix it?
-        newsrc = deviceFromName(src)
-        if newsrc is not None:
-            src=newsrc
-        else:
-            #we were unable to fix it.  Complain bitterly
-            print('Error: invalid source passed to ping function.  src must be a device.')
-            return None
-    if src is None:
-        #the function is being improperly used
-        print('Error: ping function must have a valid device as src.  None was passed in.')
-        return None
-    #dest should be a device, an ip address, or a hostname
-    if dest is None:
-        print('Error: You must have a destination for ping.  None was passed in.')
-        return None
-    if isinstance(dest,str) and not packet.is_ipv4(dest):
-        #If it is a string, but not a string that is an IP address
-        dest = deviceFromName(dest)
-    if 'hostname' in dest:
-        #If we passed in a device or hostname, convert it to an IP
-        dest = destIP(src,dest)
-    if dest is None:
-        #This means we were unable to figure out the dest.  No such host, or something
-        print('Error: Not a valid ping target')
-        return None
-    if isinstance(dest,ipaddress.IPv4Address):
-        #This is what we are hoping for.
-        nPacket=packet.newPacket() #make an empty packet
-        nPacket['sourceIP'] = sourceIP(src, dest)
-        #packet['sourceMAC'] = #the MAC address of the above IP
-        nPacket['sourceMAC'] = arpLookup(src,nPacket['sourceIP'])
-        #packet['destIP'] = #figure this out
-        nPacket['destIP'] = dest #this should now be the IP
-        #packet['destMAC'] = #If the IP is local, we use the MAC of the host.  Otherwise it is the MAC of the gateway
-        nPacket['destMAC'] = globalArpLookup(dest)
-        nPacket['packettype']="ping"
-        device.sendPacketOutDevice(nPacket,src)
-        print (nPacket)
-        packet.addPacketToPacketlist(nPacket)
+    device.Ping(src, dest)
 
 def processPackets(killSeconds:int=20):
     """
