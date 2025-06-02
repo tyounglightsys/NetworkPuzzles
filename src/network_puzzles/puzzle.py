@@ -139,66 +139,6 @@ def is_ipv4(string):
         """
         return packet.is_ipv4(string)
 
-def processPackets(killSeconds:int=20):
-    """
-    Loop through all packets, moving them along through the system
-    Args: killseconds - the number of seconds to go before killing the packets.
-    """
-    killMilliseconds = killSeconds * 1000
-    #here we loop through all packets and process them
-    curtime = int(time.time() * 1000)
-    for one in session.packetlist:
-        #figure out where the packet is
-        theLink = device.linkFromName(one['packetlocation'])
-        if theLink is not None:
-            #the packet is traversing a link
-            one['packetDistance'] += 10 #traverse the link.  If we were smarter, we could do it in different chunks based on the time it takes to redraw
-            if one['packetDistance'] > 100:
-                #We have arrived.  We need to process the arrival!
-                #get interface from link
-                nicrec = theLink['SrcNic']
-                if one['packetDirection'] == 2:
-                    nicrec = theLink['DstNic']
-                tNic = device.getDeviceNicFromLinkNicRec(nicrec)
-                if tNic is None:
-                    #We could not find the record.  This should never happen.  For now, blow up
-                    print ("Bad Link:")
-                    print (theLink)
-                    print ("Direction = " + str(one['packetDirection']))
-                    raise Exception("Could not find the endpoint of the link. ")
-                #We are here.  Call a function on the nic to start the packet entering the device
-                device.doInputFromLink(one, tNic)
-
-        #If the packet has been going too long.  Kill it.
-        if curtime - one['starttime'] > killMilliseconds:
-            #over 20 seconds have passed.  Kill the packet
-            one['status'] = 'failed'
-            one['statusmessage'] = "Packet timed out"
-    #When we are done with all the processing, kill any packets that need killing.
-    cleanupPackets()
-
-def cleanupPackets():
-    """After processing packets, remove any "done" ones from the list."""
-    for index in range(len(session.packetlist) - 1, -1, -1): 
-        one = session.packetlist[index]
-        match one['status']:
-            case 'good':
-                continue
-            case 'failed':
-                #We may need to log/track this.  But we simply remove it for now
-                del session.packetlist[index]
-                continue
-            case 'done':
-                #We may need to log/track this.  But we simply remove it for now
-                del session.packetlist[index]
-                continue
-            case 'dropped':
-                #packets are dropped when they are politely ignored by a device.  No need to log
-                del session.packetlist[index]
-                continue
-
-
-
 def doTest():
 
     #mynet=choosePuzzlek('Level0-NeedsLink')
