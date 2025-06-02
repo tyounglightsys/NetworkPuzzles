@@ -86,7 +86,7 @@ def packetsNeedProcessing():
     returns true or false"""
     return len(session.packetlist) > 0
 
-def processPackets(killSeconds:int=20):
+def processPackets(killSeconds: int = 20, tick_pct: float = 10):
     """
     Loop through all packets, moving them along through the system
     Args: killseconds - the number of seconds to go before killing the packets.
@@ -95,11 +95,11 @@ def processPackets(killSeconds:int=20):
     #here we loop through all packets and process them
     curtime = int(time.time() * 1000)
     for one in session.packetlist:
-        #figure out where the packet is
+        # figure out where the packet is
         theLink = device.linkFromName(one['packetlocation'])
         if theLink is not None:
             #the packet is traversing a link
-            one['packetDistance'] += 10 #traverse the link.  If we were smarter, we could do it in different chunks based on the time it takes to redraw
+            one['packetDistance'] += tick_pct #traverse the link.  If we were smarter, we could do it in different chunks based on the time it takes to redraw
             if one['packetDistance'] > 100:
                 #We have arrived.  We need to process the arrival!
                 #get interface from link
