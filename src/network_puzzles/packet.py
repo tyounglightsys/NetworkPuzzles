@@ -1,9 +1,11 @@
 import time
+import ipaddress
+import re
 
 from . import puzzle
 from . import session
 from . import link
-from . import nic
+from . import device
 
 def getPacketLocation(packetrec):
     """
@@ -14,12 +16,12 @@ def getPacketLocation(packetrec):
     if(packetrec is None or 'packetlocation' not in packetrec):
         return None
     #packets are only displayed when they are on links.
-    thelink = puzzle.linkFromName(packetrec['packetlocation'])
+    thelink = device.linkFromName(packetrec['packetlocation'])
     if (thelink is None):
         return None #We could not find the link
     #if we get here, we have the link that the packet is on
-    sdevice = puzzle.deviceFromID(thelink['SrcNic']['hostid'])
-    ddevice = puzzle.deviceFromID(thelink['DstNic']['hostid'])
+    sdevice = device.deviceFromID(thelink['SrcNic']['hostid'])
+    ddevice = device.deviceFromID(thelink['DstNic']['hostid'])
     if(sdevice is None or ddevice is None):
         return None #This should never happen.  But exit gracefully.
     if packetrec['packetDirection'] == 1:
@@ -47,9 +49,10 @@ def newPacket():
         'VLANID':0, #start on the default vlan
         'health':100, #health.  This will drop as the packet goes too close to things causing interferance
         'sourceIP':"",
-        'destIP':"",
         'sourceMAC':"",
+        'destIP':"",
         'destMAC':"",
+        'tdestIP':"",#If we are going through a router.  Mainly so we know which interface we are supposed to be using
         'status':"good",
         'statusmessage':"",
         'payload':"",
@@ -93,7 +96,7 @@ def processPackets(killSeconds:int=20):
     curtime = int(time.time() * 1000)
     for one in session.packetlist:
         #figure out where the packet is
-        theLink = puzzle.linkFromName(one['packetlocation'])
+        theLink = device.linkFromName(one['packetlocation'])
         if theLink is not None:
             #the packet is traversing a link
             one['packetDistance'] += 10 #traverse the link.  If we were smarter, we could do it in different chunks based on the time it takes to redraw
@@ -101,9 +104,9 @@ def processPackets(killSeconds:int=20):
                 #We have arrived.  We need to process the arrival!
                 #get interface from link
                 nicrec = theLink['SrcNic']
-                if one['packetDirection'] == 2:
+                if one['packetDirection'] == 1:
                     nicrec = theLink['DstNic']
-                tNic = link.getInterfaceFromLinkNicRec(nicrec)
+                tNic = device.getDeviceNicFromLinkNicRec(nicrec)
                 if tNic is None:
                     #We could not find the record.  This should never happen.  For now, blow up
                     print ("Bad Link:")
@@ -111,7 +114,8 @@ def processPackets(killSeconds:int=20):
                     print ("Direction = " + str(one['packetDirection']))
                     raise Exception("Could not find the endpoint of the link. ")
                 #We are here.  Call a function on the nic to start the packet entering the device
-                nic.beginIngress(one, tNic)
+                #print ("packet finished " + one['packetlocation'] + " and is moving onto " + tNic['myid']['hostname'])
+                device.beginIngressOnNIC(one, tNic)
 
         #If the packet has been going too long.  Kill it.
         if curtime - one['starttime'] > killMilliseconds:
@@ -140,6 +144,47 @@ def cleanupPackets():
                 #packets are dropped when they are politely ignored by a device.  No need to log
                 del session.packetlist[index]
                 continue
+def is_ipv6(string):
+        """
+        return True if the string is a valid IPv4 address.
+        """
+        try:
+            ipaddress.IPv6Network(string)
+            return True
+        except ValueError:
+            return False
+
+
+def is_ipv4(string):
+        """
+        return True if the string is a valid IPv4 address.
+        """
+        try:
+            ipaddress.IPv4Network(string)
+            return True
+        except ValueError:
+            return False
+
+def justIP(ip):
+    """return just the IP address as a string, stripping the subnet if there was one"""
+    if not isinstance(ip,str):
+        ip = str(ip) #change it to a string
+    ip = re.sub("/.*","", ip)
+    return ip 
+
+def isLocal(packetIP:str, interfaceIP:str):
+    """Determine if the packet IP is considered local by the subnet/netmask on the interface IP
+    Args:
+        packetIP:str - a string IP (ipv6/ipv4); just an IP - no subnet
+        interfaceIP:str - an IP/subnet, either iPv4 or ipv6"""
+    t_packetIP = justIP(packetIP)
+    try:
+        ip = ipaddress.ip_address(t_packetIP)
+        network = ipaddress.ip_network(interfaceIP, strict=False) #The interface will have host bits set, so we choose false
+        return ip in network
+    except ValueError:
+        # Handle invalid IP address or subnet format
+        return False
 
 def BroadcastMAC():
     """"return the broadcast MAC address: FFFFFFFFFFFF"""

@@ -1,5 +1,6 @@
 import sys
 
+from . import device
 from . import parser
 from . import puzzle
 from . import session
@@ -51,10 +52,10 @@ class UI:
         try:
             #if it is just a number, use it as an ID
             int(what)
-            item=puzzle.deviceFromID(what)
+            item=device.deviceFromID(what)
         except ValueError:
             #if it is not a number, use it as a name
-            item=puzzle.deviceFromName(what)
+            item=device.deviceFromName(what)
         return item
 
 
@@ -68,26 +69,26 @@ class UI:
         try:
             #if it is just a number, use it as an ID
             int(what)
-            item=puzzle.linkFromID(what)
+            item=device.linkFromID(what)
         except ValueError:
             #if it is not a number, use it as a name
-            item=puzzle.linkFromName(what)
+            item=device.linkFromName(what)
         return item
 
     def allDevices(self):
         """return a list of all the devices - good for iterating"""
-        return puzzle.allDevices()
+        return device.allDevices()
 
     def allLinks(self):
         """return a list of all the links - good for iterating"""
-        return puzzle.allLinks()
+        return device.allLinks()
 
 
 
 class CLI(UI): 
     def run(self):
         print(self.TITLE)
-        self.load_puzzle("5") #for now, just testing
+        self.load_puzzle("2") #for now, just testing
         try:
             while True:
                 self.prompt()
@@ -101,11 +102,14 @@ class CLI(UI):
 
     def prompt(self):
         """A CLI only function.  Prompt for imput and process it"""
-        answer = input("-> ")
-        parser.parse(answer)
-        #if we created packets, process them until done.
-        while packet.packetsNeedProcessing():
-            packet.processPackets(2) #the cli does not need much time to know packets are going to loop forever.
+        try:
+            answer = input("-> ")
+            parser.parse(answer)
+            #if we created packets, process them until done.
+            while packet.packetsNeedProcessing():
+                packet.processPackets(2) #the cli does not need much time to know packets are going to loop forever.
+        except EOFError:
+            sys.exit()
 
     def quit(self):
         parser.exit_app()

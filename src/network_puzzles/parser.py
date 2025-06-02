@@ -1,7 +1,9 @@
 # This file will be the main parser.  We will pass commands to the puzzle through this.
 # Most interaction with the puzzle, making changes or doing actions, will go through this
 import sys
+from . import device
 from . import puzzle
+from . import session
 
 
 def parse(command:str):
@@ -74,8 +76,8 @@ def run_ping(args):
         print("invalid ping command: usage: ping source_hostname destination_hostname")
         print(" example: ping pc0 pc1")
         return
-    shost = puzzle.deviceFromName(args[0])
-    dhost = puzzle.deviceFromName(args[1])
+    shost = device.deviceFromName(args[0])
+    dhost = device.deviceFromName(args[1])
     if shost is None:
         print(f"No such host: {args[0]}")
         return
@@ -83,14 +85,15 @@ def run_ping(args):
         print("No such host: " + args[1] )
         return
     # if we get here, we are ready to try to ping.
-    puzzle.Ping(shost, dhost)
+    device.Ping(shost, dhost)
 
 
 def show_info(args):
     # list the hosts.  Or, show information about a specifici host
     if len(args) == 0:
         # Just the show command.  List all the devices
-        devicelist = puzzle.allDevices()
+        print (session.puzzle['name'])
+        devicelist = device.allDevices()
         for one in devicelist:
             print(one['hostname'])
     if len(args) == 1:
