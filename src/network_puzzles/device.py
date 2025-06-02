@@ -758,7 +758,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             #print(dest)
             #we need to generate a ping response
             nPacket=packetFromTo(thisDevice, dest)
-            nPacket['packetype'] = 'ping-response'
+            nPacket['packettype'] = 'ping-response'
             sendPacketOutDevice(nPacket,thisDevice)
             #print (nPacket)
             packet.addPacketToPacketlist(nPacket)
@@ -766,7 +766,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             return True
 
         # ping response, mark it as done
-        if packRec['packetype'] == 'ping-response':
+        if packRec['packettype'] == 'ping-response':
             print("Woot! We returned with a ping")
             packRec['status'] = 'done'
             return True

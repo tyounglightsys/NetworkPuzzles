@@ -45,7 +45,7 @@ def getPacketLocation(packetrec):
 def newPacket():
     """Returns an empty packet with all the fields."""
     nPacket={
-        'packetype':"",
+        'packettype':"",
         'VLANID':0, #start on the default vlan
         'health':100, #health.  This will drop as the packet goes too close to things causing interferance
         'sourceIP':"",
