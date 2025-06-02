@@ -1,10 +1,8 @@
 #!/usr/bin/python3
 #All the functions needed for reading the EduNetwork Puzzle file
 #And getting information from it
-import ipaddress
 import json
 import copy
-import random
 import re
 import os
 import time
@@ -13,7 +11,6 @@ import time
 from . import session
 from . import packet
 from . import device
-from . import nic
 
 def read_json_file(file_path):
     """
@@ -126,195 +123,21 @@ def choosePuzzle(what, filter=None):
     return puz
 
 def setAllDeviceNICMacs():
-    for oneDevice in allDevices():
+    for oneDevice in device.allDevices():
         if not isinstance(oneDevice['nic'], list):
             oneDevice['nic'] = [oneDevice['nic']]
         for oneNic in oneDevice['nic']:
             device.AssignMacIfNeeded(oneNic)
 
-def allDevices():
-    """
-    Return a list that contains all devices in the puzzle.
-    """
-    return device.allDevices()
-
-def allLinks():
-    """
-    Return a list that contains all devices in the puzzle.
-    """
-    return device.allLinks()
-
-
-def maclistFromDevice(src):
-    """
-    Return a list of all the MAC addresses of all the nics on the device
-    Args:
-        src:str - lookup the source device using the hostname and return all MAC addresses
-        src:device - lookup all the MAC addresses in this device
-
-    Returns:
-        A list of mac-addresses.  Each MAC is a struct containing at least the ip and mac.
-    """
-    return device.maclistFromDevice(src)
-
-
-def buildGlobalMACList():
-    """Build/rebuild the global MAC list.  Should be run when we load a new puzzle, when we change IPs, or add/remove NICs."""
-    # global maclist
-    device.buildGlobalMACList()
-
 def justIP(ip):
     """return just the IP address as a string, stripping the subnet if there was one"""
     return packet.justIP(ip)
-
-
-def globalArpLookup(ip):
-    """Look up an IP address in the global ARP database.
-    Args:
-        ip:str the IP address as a string.
-        ip:ipaddress the IP as an ipaddress
-    Returns:
-        The MAC address corresponding to the IP as a string or None.
-    """
-    return device.globalArpLookup(ip)
-
-def arpLookup(srcDevice, ip):
-    """find a mac address, with the source being the specified device
-    Args:
-        srcDevice:str the hostname of the device we are looking at
-        srcDevice:device the device record we are looking at
-        ip:str the string ip address we are trying to find
-        ip:ipaddress the ip address we are trying to find
-        """
-    return device.arpLookup(srcDevice, ip)
-
-
-def get_item_by_attrib(items: list, attrib: str, value: str) -> dict|None:
-    # Returns first match; i.e. assumes only one item in list matches given
-    # attribute.
-    for item in items:
-        if item.get(attrib) == value:
-            return item
-
-def nicFromName(theDevice,what):
-    """return the network card from the name
-    Args:
-        theDevice:str - the hostname of the device that contains the nic we are looking for
-        theDevice:device - the device containing the nic we are looking for
-        what:str - the network card name we are looking for
-    Returns:
-        the network card record from the device or None
-        """
-    # if isinstance(theDevice, str):
-    #     theDevice = deviceFromName(theDevice)
-    # if theDevice is None:
-    #     return None
-    # return get_item_by_attrib(theDevice.get('nic'), 'nicname', what)
-    return device.nicFromName(theDevice,what)
-
-def nicFromID(what):
-    """find the network card from the id
-    Args: what:int - the device id for the nic you are looking for
-    Notes:
-        Each component on the network has a unique ID.  PCs can change names, so we do not assume host-names are unique.
-        Thus, for a network link (ethernet cable, wireless, etc) to know what two devices it is connecting, we use the ID
-    """
-    # for theDevice in allDevices():
-    #     item = get_item_by_attrib(theDevice.get('nic'), 'uniqueidentifier', what)
-    #     if item:
-    #         return item
-    # return None
-    return device.nicFromID(what)
-
-def deviceFromName(what: str) -> dict|None:
-    """Return the device, given a name
-    Args: what:str the hostname of the device
-    returns the device matching the name, or None"""
-    # return get_item_by_attrib(allDevices(), 'hostname', what)
-    return device.deviceFromName(what)
-
-def deviceFromID(what: str) -> dict|None:
-    """Return the device, given a name
-    Args: what:int the unique id of the device
-    returns the device matching the id, or None"""
-    # return get_item_by_attrib(allDevices(), 'uniqueidentifier', what)
-    return device.deviceFromID(what)
-
-def linkFromName(what:str) -> dict|None:
-    """
-    Return the link matching the name
-    Args: what:str - the string name of the link
-    returns: the link record or None
-    """
-    # return get_item_by_attrib(allLinks(), 'hostname', what)
-    return device.linkFromName(what)
-
-def linkFromDevices(srcDevice, dstDevice):
-    """return a link given the two devices at either end
-    Args:
-        srcDevice:Device - the device itself
-        srcDevice:str - the hostname of the device
-        dstDevice:device - the device itself
-        dstDevice:str - the hostname of the device
-    Returns: a link record or None
-    """
-    return device.linkFromDevices(srcDevice,dstDevice)
-
-def linkFromID(what):
-    """
-    Return the link matching the id
-    Args: what:int - the unique id of the link
-    Returns: the matching link record or None
-    """
-    # return get_item_by_attrib(allLinks(), 'uniqueidentifier', what)
-    return device.linkFromID(what)
-
-def itemFromID(what):
-    """return the item matching the ID.  Could be a device, a link, or a nic"""
-    return device.itemFromID(what)
-
-
-def destIP(srcDevice,dstDevice):
-    """
-    Find the destination IP address of the specified device, if going there from the source device.
-    Many devices have multiple IP addresses.  If the IP is local, we go straight to it.  If it is on
-    a different subnet, we get routed there.  This is a poor-man's DNS.
-    Args:
-        srcDevice:str - the hostname of the source device
-        srcDevice:device - the device record of the source
-        dstDevice:str - the hostname of the destination device
-        dstDevice:device - the device record of the destination
-    Returns:
-        the string IP address of the nic that is local betwee the two devices, or the IP address on the destination 
-        that is connected to its gateway IP.  None if the IP cannot be determined 
-    """
-    return device.destIP(srcDevice,dstDevice)
-
-def sourceIP(src,dstIP):
-    """
-    Find the IP address to use when pinging the destination.  If the address is local, use the local nic.
-    If the address is at a distance, we use the IP address associated with whatever route gets us there.
-    Args:
-        src:str - use the hostname as the source
-        src:device - use src as the source device
-        destIP:str - connect to this ip.  Eg: "192.168.1.1"
-    return: an IP address string, or None
-    """
-    return device.sourceIP(src,dstIP)
 
 def is_ipv4(string):
         """
         return True if the string is a valid IPv4 address.
         """
         return packet.is_ipv4(string)
-
-def Ping(src, dest):
-    """Generate a ping packet, starting at the srcdevice and destined for the destination device
-    Args:
-        src:srcDevice (also works with a hostname)
-        dest:dstDevice (also works with a hostname)
-        """
-    device.Ping(src, dest)
 
 def processPackets(killSeconds:int=20):
     """
@@ -326,7 +149,7 @@ def processPackets(killSeconds:int=20):
     curtime = int(time.time() * 1000)
     for one in session.packetlist:
         #figure out where the packet is
-        theLink = linkFromName(one['packetlocation'])
+        theLink = device.linkFromName(one['packetlocation'])
         if theLink is not None:
             #the packet is traversing a link
             one['packetDistance'] += 10 #traverse the link.  If we were smarter, we could do it in different chunks based on the time it takes to redraw
@@ -381,10 +204,10 @@ def doTest():
     #mynet=choosePuzzlek('Level0-NeedsLink')
     mynet=choosePuzzle(3)
     print (mynet['name'])
-    mydevice=deviceFromID('110');
+    mydevice=device.deviceFromID('110')
     #print(mydevice)
-    #mynic=nicFromName(mydevice,'eth0')
-    mynic=nicFromID('112')
+    #mynic=device.nicFromName(mydevice,'eth0')
+    mynic=device.nicFromID('112')
     #print(mynic)
-    mylink=linkFromID('121')
+    mylink=device.linkFromID('121')
     print(mylink)

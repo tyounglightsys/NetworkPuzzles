@@ -184,6 +184,13 @@ def isWirelessForwarder(deviceRec):
             return True
     return False
 
+def get_item_by_attrib(items: list, attrib: str, value: str) -> dict|None:
+    # Returns first match; i.e. assumes only one item in list matches given
+    # attribute.
+    for item in items:
+        if item.get(attrib) == value:
+            return item
+
 def nicFromName(theDevice,what):
     """return the network card from the name
     Args:
@@ -197,10 +204,7 @@ def nicFromName(theDevice,what):
         theDevice = deviceFromName(theDevice)
     if theDevice is None:
         return None
-    for one in theDevice['nic']:
-        if one['nicname'] == what:
-            return one
-    return None
+    return get_item_by_attrib(theDevice.get('nic'), 'nicname', what)
 
 def nicFromID(what):
     """find the network card from the id
@@ -210,11 +214,10 @@ def nicFromID(what):
         Thus, for a network link (ethernet cable, wireless, etc) to know what two devices it is connecting, we use the ID
     """
     for theDevice in allDevices():
-        for one in theDevice['nic']:
-            if one['uniqueidentifier'] == what:
-                return one
+        item = get_item_by_attrib(theDevice.get('nic'), 'uniqueidentifier', what)
+        if item:
+            return item
     return None
-
 
 def linkFromName(what):
     """
@@ -222,10 +225,7 @@ def linkFromName(what):
     Args: what:str - the string name of the link
     returns: the link record or None
     """
-    for one in allLinks():
-        if one['hostname'] == what:
-            return one
-    return None
+    return get_item_by_attrib(allLinks(), 'hostname', what)
 
 def linkFromDevices(srcDevice, dstDevice):
     """return a link given the two devices at either end
@@ -355,11 +355,7 @@ def linkFromID(what):
     Args: what:int - the unique id of the link
     Returns: the matching link record or None
     """
-    for one in allLinks():
-        # print(one['uniqueidentifier'])
-        if one['uniqueidentifier'] == what:
-            return one
-    return None
+    return get_item_by_attrib(allLinks(), 'uniqueidentifier', what)
 
 def itemFromID(what):
     """return the item matching the ID.  Could be a device, a link, or a nic"""
@@ -391,19 +387,13 @@ def deviceFromName(what):
     """Return the device, given a name
     Args: what:str the hostname of the device
     returns the device matching the name, or None"""
-    for one in allDevices():
-        if one['hostname'] == what:
-            return one
-    return None
+    return get_item_by_attrib(allDevices(), 'hostname', what)
 
 def deviceFromID(what):
     """Return the device, given a name
     Args: what:int the unique id of the device
     returns the device matching the id, or None"""
-    for one in allDevices():
-        if one['uniqueidentifier'] == what:
-            return one
-    return None
+    return get_item_by_attrib(allDevices(), 'uniqueidentifier', what)
 
 def deviceFromIP(what):
     """Return the device, given a name

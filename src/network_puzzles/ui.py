@@ -1,5 +1,6 @@
 import sys
 
+from . import device
 from . import parser
 from . import puzzle
 from . import session
@@ -51,10 +52,10 @@ class UI:
         try:
             #if it is just a number, use it as an ID
             int(what)
-            item=puzzle.deviceFromID(what)
+            item=device.deviceFromID(what)
         except ValueError:
             #if it is not a number, use it as a name
-            item=puzzle.deviceFromName(what)
+            item=device.deviceFromName(what)
         return item
 
 
@@ -68,19 +69,19 @@ class UI:
         try:
             #if it is just a number, use it as an ID
             int(what)
-            item=puzzle.linkFromID(what)
+            item=device.linkFromID(what)
         except ValueError:
             #if it is not a number, use it as a name
-            item=puzzle.linkFromName(what)
+            item=device.linkFromName(what)
         return item
 
     def allDevices(self):
         """return a list of all the devices - good for iterating"""
-        return puzzle.allDevices()
+        return device.allDevices()
 
     def allLinks(self):
         """return a list of all the links - good for iterating"""
-        return puzzle.allLinks()
+        return device.allLinks()
 
 
 
