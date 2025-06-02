@@ -356,7 +356,7 @@ def linkFromID(what):
     Returns: the matching link record or None
     """
     for one in allLinks():
-        print(one['uniqueidentifier'])
+        # print(one['uniqueidentifier'])
         if one['uniqueidentifier'] == what:
             return one
     return None

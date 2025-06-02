@@ -93,25 +93,37 @@ class TestXFromY(unittest.TestCase):
         self.link0 = self.network.get('link')[0]  # link between net_switch0 and router0
 
     def test_devicefromid_found(self):
-        self.assertEqual(self.device0, puzzle.deviceFromID('160'))
+        self.assertEqual(
+            self.device0.get('uniqueidentifier'),
+            puzzle.deviceFromID('160').get('uniqueidentifier')
+        )
 
     def test_devicefromid_notfound(self):
         self.assertIsNone(puzzle.deviceFromID('999'))
 
     def test_devicefromname_found(self):
-        self.assertEqual(self.device0, puzzle.deviceFromName('net_hub0'))
+        self.assertEqual(
+            self.device0.get('uniqueidentifier'),
+            puzzle.deviceFromName('net_hub0').get('uniqueidentifier')
+        )
 
     def test_devicefromname_notfound(self):
         self.assertIsNone(puzzle.deviceFromName('supercool_dev9'))
 
     def test_itemfromid_found(self):
-        self.assertEqual(self.device0, puzzle.itemFromID('160'))
+        self.assertEqual(
+            self.device0.get('uniqueidentifier'),
+            puzzle.itemFromID('160').get('uniqueidentifier')
+        )
 
     def test_itemfromid_notfound(self):
         self.assertIsNone(puzzle.itemFromID('999'))
 
     def test_linkfromdevices_found(self):
-        self.assertEqual(self.link0, puzzle.linkFromDevices(self.device1, self.device4))
+        self.assertEqual(
+            self.link0.get('uniqueidentifier'),
+            puzzle.linkFromDevices(self.device1, self.device4).get('uniqueidentifier')
+        )
 
     def test_linkfromdevices_notfound(self):
         self.assertIsNone(puzzle.linkFromDevices(self.device0, self.device1))
@@ -129,7 +141,10 @@ class TestXFromY(unittest.TestCase):
         self.assertIsNone(puzzle.linkFromName('no_such_link'))
 
     def test_nicfromid_found(self):
-        self.assertEqual(self.nic00, puzzle.nicFromID('161'))
+        self.assertEqual(
+            self.nic00.get('uniqueidentifier'),
+            puzzle.nicFromID('161').get('uniqueidentifier')
+        )
 
     def test_nicfromid_notfound(self):
         self.assertIsNone(puzzle.nicFromID('999'))

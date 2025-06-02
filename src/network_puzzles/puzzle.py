@@ -224,7 +224,7 @@ def nicFromID(what):
     #     if item:
     #         return item
     # return None
-    return nicFromID(what)
+    return device.nicFromID(what)
 
 def deviceFromName(what: str) -> dict|None:
     """Return the device, given a name
