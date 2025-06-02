@@ -1,6 +1,7 @@
 import json
 import unittest
 from network_puzzles import device
+from network_puzzles import session
 from network_puzzles import ui
 from . import PUZZLES_DIR
 
@@ -21,12 +22,19 @@ class TestGetItemByAttrib(unittest.TestCase):
             {'name': 'item1', 'uid': '0'},
             {'name': 'item2', 'uid': '1'},
         ]
+
+        # TODO: Use Mock rather than "real" session.puzzle.
+        self.puzzle_name = 'Level0-HubVsSwitch'
+
+        # Load puzzle via app in to session.puzzle.
+        self.app = ui.CLI()
+        self.app.load_puzzle(self.puzzle_name)  # sets session.puzzle
     
     def test_found(self):
-        self.assertEqual(self.items[0], device.get_item_by_attrib(self.items, 'name', 'item1'))
+        self.assertEqual(self.items[0], session.puzzle._item_by_attrib(self.items, 'name', 'item1'))
 
     def test_notfound(self):
-        self.assertIsNone(device.get_item_by_attrib(self.items, 'uid', '3'))
+        self.assertIsNone(session.puzzle._item_by_attrib(self.items, 'uid', '3'))
 
 
 class TestXFromY(unittest.TestCase):
@@ -51,50 +59,54 @@ class TestXFromY(unittest.TestCase):
     def test_devicefromid_found(self):
         self.assertEqual(
             self.device0.get('uniqueidentifier'),
-            device.deviceFromID('160').get('uniqueidentifier')
+            session.puzzle.device_from_uid('160').get('uniqueidentifier')
         )
 
     def test_devicefromid_notfound(self):
-        self.assertIsNone(device.deviceFromID('999'))
+        self.assertIsNone(session.puzzle.device_from_uid('999'))
 
     def test_devicefromname_found(self):
         self.assertEqual(
             self.device0.get('uniqueidentifier'),
-            device.deviceFromName('net_hub0').get('uniqueidentifier')
+            session.puzzle.device_from_name('net_hub0').get('uniqueidentifier')
         )
 
     def test_devicefromname_notfound(self):
-        self.assertIsNone(device.deviceFromName('supercool_dev9'))
+        self.assertIsNone(session.puzzle.device_from_name('supercool_dev9'))
 
     def test_itemfromid_found(self):
         self.assertEqual(
             self.device0.get('uniqueidentifier'),
-            device.itemFromID('160').get('uniqueidentifier')
+            session.puzzle.item_from_uid('160').get('uniqueidentifier')
         )
 
     def test_itemfromid_notfound(self):
-        self.assertIsNone(device.itemFromID('999'))
+        self.assertIsNone(session.puzzle.item_from_uid('999'))
 
     def test_linkfromdevices_found(self):
         self.assertEqual(
             self.link0.get('uniqueidentifier'),
-            device.linkFromDevices(self.device1, self.device4).get('uniqueidentifier')
+            session.puzzle.link_from_devices(self.device1, self.device4).get('uniqueidentifier')
         )
 
     def test_linkfromdevices_notfound(self):
-        self.assertIsNone(device.linkFromDevices(self.device0, self.device1))
+        self.assertIsNone(session.puzzle.link_from_devices(self.device0, self.device1))
 
     def test_linkfromid_found(self):
-        self.assertEqual(self.link0, device.linkFromID('146'))
+        self.assertEqual(
+            self.link0,
+            session.puzzle.link_from_uid('146'))
 
     def test_linkfromid_notfound(self):
-        self.assertIsNone(device.linkFromID('999'))
+        self.assertIsNone(session.puzzle.link_from_uid('999'))
 
     def test_linkfromname_found(self):
-        self.assertEqual(self.link0, device.linkFromName('net_switch0_link_router0'))
+        self.assertEqual(
+            self.link0,
+            session.puzzle.link_from_name('net_switch0_link_router0'))
 
     def test_linkfromname_notfound(self):
-        self.assertIsNone(device.linkFromName('no_such_link'))
+        self.assertIsNone(session.puzzle.link_from_name('no_such_link'))
 
     def test_nicfromid_found(self):
         self.assertEqual(

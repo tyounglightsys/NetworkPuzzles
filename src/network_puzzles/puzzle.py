@@ -5,7 +5,6 @@ import json
 import copy
 import re
 import os
-import time
 
 # define the global network list
 from . import session
@@ -15,26 +14,88 @@ from . import device
 
 class Puzzle:
     def __init__(self, data):
-        self.data = data
-        self._devices = []
-        self._links = []
-        self._mac_list = []
+        self.json = data
+
+    def all_devices(self):
+        """
+        Return a list that contains all devices in the puzzle.
+        """
+        devices = []
+        for one in self.json.get('device', []):
+            if 'hostname' in one:
+                devices.append(one)
+        return devices
+
+    def all_links(self):
+        """
+        Return a list that contains all links in the puzzle.
+        """
+        links = []
+        for one in self.json.get('link', []):
+            if 'hostname' in one:
+                links.append(one)
+        return links
 
     def arp_lookup(self, ipaddr):
         return device.globalArpLookup(ipaddr)
 
     def device_from_name(self, name):
         # return self._item_by_attrib(self.devices, 'hostname', name)
-        return self._item_by_prop(self.devices, 'hostname', name)
+        return self._item_by_attrib(self.all_devices(), 'hostname', name)
 
     def device_from_uid(self, uid):
-        return self._item_by_attrib(self.devices, 'uniqueidentifier', uid)
+        return self._item_by_attrib(self.all_devices(), 'uniqueidentifier', uid)
+
+    def item_from_uid(self, uid):
+        """Return the item matching the ID.  Could be a device, a link, or a nic"""
+        result = self.device_from_uid(uid)
+        if result is not None:
+            return result
+        result = self.link_from_uid(uid)
+        if result is not None:
+            return result
+        result = device.nicFromID(uid)
+        if result is not None:
+            return result
+        return None
+
+    def link_from_devices(self, srcDevice, dstDevice):
+        """return a link given the two devices at either end
+        Args:
+            srcDevice:Device - the device itself
+            srcDevice:str - the hostname of the device
+            dstDevice:device - the device itself
+            dstDevice:str - the hostname of the device
+        Returns: a link record or None
+        """
+        srcstr=""
+        dststr=""
+        if isinstance(srcDevice, str):
+            srcstr = srcDevice
+        else:
+            if 'hostname' in srcDevice:
+                srcstr = srcDevice.get('hostname')
+        if isinstance(dstDevice, str):
+            dststr = dstDevice
+        else:
+            if 'hostname' in dstDevice:
+                dststr = dstDevice.get('hostname')
+        # Now we should have srcstr and dststr set.  Use them to concoct a link name
+        # The link name looks like: pc0_link_pc1
+        result = session.puzzle.link_from_name(srcstr + "_link_" + dststr)
+        if result is not None:
+            return result
+        result = session.puzzle.link_from_name(dststr + "_link_" + srcstr)
+        if result is not None:
+            return result
+        # if we get here, we could not find it. Return none
+        return None
 
     def link_from_name(self, name):
-        return self._item_by_attrib(self.links, 'hostname', name)
+        return self._item_by_attrib(self.all_links(), 'hostname', name)
 
     def link_from_uid(self, uid):
-        return self._item_by_attrib(self.links, 'uniqueidentifier', uid)
+        return self._item_by_attrib(self.all_links(), 'uniqueidentifier', uid)
 
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict|None:
         # Returns first match; i.e. assumes only one item in list matches given
@@ -42,50 +103,6 @@ class Puzzle:
         for item in items:
             if item.get(attrib) == value:
                 return item
-
-    def _item_by_prop(self, items, prop, value):
-        # Returns first match; i.e. assumes only one item in list matches given
-        # attribute.
-        for item in items:
-            if not hasattr(item, prop):
-                raise AttributeError
-            if item.__dict__.get(prop) == value:
-                return item
-
-    @property
-    def devices(self):
-        """A list of all the devices in the puzzle."""
-        return self._devices
-    
-    @devices.setter
-    def devices(self):
-        self._devices = device.allDevices()
-
-    @property
-    def links(self):
-        """A list of all the links in the puzzle."""
-        return self._links
-
-    @links.setter
-    def links(self):
-        self._links = device.allLinks()
-
-    @property
-    def mac_list(self):
-        """A list of all the MACs in the puzzle."""
-        return self._mac_list
-
-    @mac_list.setter
-    def mac_list(self):
-        """Build/rebuild the global MAC list.  Should be run when we load a new puzzle, when we change IPs, or add/remove NICs."""
-        macs = []
-        # session.maclist = [] #clear it out
-        for onedevice in self.devices:
-            #print ("finding macs for " + onedevice['hostname'])
-            for onemac in device.maclistFromDevice(onedevice):
-                macs.append(onemac)
-        self._macs = macs
-        session.maclist = macs
 
 
 def read_json_file(file_path):
@@ -194,12 +211,12 @@ def choosePuzzle(what, filter=None):
             puz = choosePuzzleFromName(what)
     if puz is not None:
         print("Loaded: " + puz['name'])
-        session.puzzle = puz
+        session.puzzle = Puzzle(puz)
         setAllDeviceNICMacs()
     return puz
 
 def setAllDeviceNICMacs():
-    for oneDevice in device.allDevices():
+    for oneDevice in session.puzzle.all_devices():
         if not isinstance(oneDevice['nic'], list):
             oneDevice['nic'] = [oneDevice['nic']]
         for oneNic in oneDevice['nic']:
@@ -219,11 +236,11 @@ def doTest():
 
     #mynet=choosePuzzlek('Level0-NeedsLink')
     mynet=choosePuzzle(3)
-    print (mynet['name'])
-    mydevice=device.deviceFromID('110')
+    print(mynet['name'])
+    mydevice = session.puzzle.device_from_uid('110')
     #print(mydevice)
     #mynic=device.nicFromName(mydevice,'eth0')
-    mynic=device.nicFromID('112')
+    mynic = device.nicFromID('112')
     #print(mynic)
-    mylink=device.linkFromID('121')
+    mylink = session.puzzle.link_from_uid('121')
     print(mylink)

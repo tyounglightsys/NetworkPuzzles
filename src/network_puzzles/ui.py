@@ -27,9 +27,7 @@ class UI:
             val=parser.parse("load " + puzzle_ref)
         
         # Save selected puzzle to session variable.
-        session.puzzle = val.get('value')
-        session.puzzle_obj = puzzle.Puzzle(val.get('value'))
-        return val
+        session.puzzle = puzzle.Puzzle(val.get('value'))
 
     def quit(self):
         raise NotImplementedError
@@ -43,46 +41,46 @@ class UI:
         Args: filter:str a string, regex filter such as '.*DHCP.'"""
         return puzzle.listPuzzles(filter)
 
-    def getDevice(self,what:str):
+    def getDevice(self, what: str) -> dict|None:
         """Return a device from either a name or ID
         Args: what:str - a string value that is either a hostname 'pc0' or a device id '102'
         Returns: a device record or None
         """
         #try retrieving it from name
-        item=None
+        item = None
         try:
             #if it is just a number, use it as an ID
             int(what)
-            item=device.deviceFromID(what)
+            item = session.puzzle.device_from_uid(what)
         except ValueError:
             #if it is not a number, use it as a name
-            item=device.deviceFromName(what)
+            item = session.puzzle.device_from_name(what)
         return item
 
 
-    def getLink(self,what:str):
+    def getLink(self, what: str) -> dict|None:
         """Return a link from either a name or ID
         Args: what:str - a string value that is either a linkname 'pc0_link_pc1' or a device id '102'
         Returns: a device record or None
         """
         #try retrieving it from name
-        item=None
+        item = None
         try:
             #if it is just a number, use it as an ID
             int(what)
-            item=device.linkFromID(what)
+            item = session.puzzle.device_from_uid(what)
         except ValueError:
             #if it is not a number, use it as a name
-            item=device.linkFromName(what)
+            item = session.puzzle.device_from_name(what)
         return item
 
     def allDevices(self):
         """return a list of all the devices - good for iterating"""
-        return device.allDevices()
+        return session.puzzle.all_devices()
 
     def allLinks(self):
         """return a list of all the links - good for iterating"""
-        return device.allLinks()
+        return session.puzzle.all_links()
 
 
 
@@ -115,31 +113,25 @@ class CLI(UI):
     def quit(self):
         parser.exit_app()
 
-    def load_puzzle(self, puzzle, filter:str = None):
+    def load_puzzle(self, puzzle, filter_str: str = None):
         """Load and set up the UI based on the data in the puzzle file."""
-        super().load_puzzle(puzzle,filter)
+        super().load_puzzle(puzzle, filter_str)
         #do any aftermath.  Probably display the loaded puzzle when we have that functionality
 
 class GUI(UI):
     def __init__(self, kivyapp):
         self.app = kivyapp(ui=self)
-        # self.app.title = self.TITLE  # inferred from App subclass in .gui
 
     def console_write(self, line):
         self.app.add_terminal_line(line)
-
-    def load_puzzle(self, puzzle, filter:str = None):
-        """Load and set up the UI based on the data in the puzzle file."""
-        return super().load_puzzle(puzzle,filter).get('value')
-        #do any aftermath.  Probably display the loaded puzzle when we have that functionality
 
     def parse(self, command: str):
         parser.parse(command)
 
     def process_packets(self, delay):
-        # if we created packets, process them until done.
+        # If we created packets, process them until done.
         if packet.packetsNeedProcessing():
-            packet.processPackets(2, tick_pct=100*delay)
+            packet.processPackets(3, tick_pct=100*delay)
 
     def quit(self):
         self.app.stop()

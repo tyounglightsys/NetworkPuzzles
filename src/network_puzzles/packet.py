@@ -2,9 +2,7 @@ import time
 import ipaddress
 import re
 
-from . import puzzle
 from . import session
-from . import link
 from . import device
 
 def getPacketLocation(packetrec):
@@ -16,12 +14,12 @@ def getPacketLocation(packetrec):
     if(packetrec is None or 'packetlocation' not in packetrec):
         return None
     #packets are only displayed when they are on links.
-    thelink = device.linkFromName(packetrec['packetlocation'])
+    thelink = session.puzzle.link_from_name(packetrec['packetlocation'])
     if (thelink is None):
         return None #We could not find the link
     #if we get here, we have the link that the packet is on
-    sdevice = device.deviceFromID(thelink['SrcNic']['hostid'])
-    ddevice = device.deviceFromID(thelink['DstNic']['hostid'])
+    sdevice = session.puzzle.device_from_uid(thelink['SrcNic']['hostid'])
+    ddevice = session.puzzle.device_from_uid(thelink['DstNic']['hostid'])
     if(sdevice is None or ddevice is None):
         return None #This should never happen.  But exit gracefully.
     if packetrec['packetDirection'] == 1:
@@ -96,7 +94,7 @@ def processPackets(killSeconds: int = 20, tick_pct: float = 10):
     curtime = int(time.time() * 1000)
     for one in session.packetlist:
         # figure out where the packet is
-        theLink = device.linkFromName(one['packetlocation'])
+        theLink = session.puzzle.link_from_name(one['packetlocation'])
         if theLink is not None:
             #the packet is traversing a link
             one['packetDistance'] += tick_pct #traverse the link.  If we were smarter, we could do it in different chunks based on the time it takes to redraw

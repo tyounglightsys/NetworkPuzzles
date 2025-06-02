@@ -200,7 +200,7 @@ class NetworkPuzzlesApp(App):
     def setup_puzzle(self, puzzle_data=None):
         self.reset_display()
         if puzzle_data is None:
-            puzzle_data = session.puzzle
+            puzzle_data = session.puzzle.json
 
         puzzle_id = puzzle_data.get('uniqueidentifier')
         # Get puzzle text from localized messages, if possible, but fallback to
@@ -283,7 +283,7 @@ class NetworkPuzzlesApp(App):
 
         # Add new packet locations to layout.
         for p in session.packetlist:
-            link_data = device.linkFromName(p.get('packetlocation'))
+            link_data = session.puzzle.link_from_name(p.get('packetlocation'))
             link = self.get_widget_by_uid(link_data.get('uniqueidentifier'))
             prog = p.get('packetDistance')
             if p.get('packetDirection') == 2:

@@ -2,9 +2,8 @@ import locale
 
 
 class Session:
-    lang = f"{locale.getlocale()[0][:2]}"
-    maclist = list()
-    puzzlelist = list()
-    puzzle = dict()
-    puzzle_obj = None
-    packetlist = list()
+    lang: str = f"{locale.getlocale()[0][:2]}"
+    maclist: list = list()
+    puzzlelist: list = list()
+    puzzle = None
+    packetlist: list = list()
