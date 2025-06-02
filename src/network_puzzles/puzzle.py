@@ -12,6 +12,82 @@ from . import session
 from . import packet
 from . import device
 
+
+class Puzzle:
+    def __init__(self, data):
+        self.data = data
+        self._devices = []
+        self._links = []
+        self._mac_list = []
+
+    def arp_lookup(self, ipaddr):
+        return device.globalArpLookup(ipaddr)
+
+    def device_from_name(self, name):
+        # return self._item_by_attrib(self.devices, 'hostname', name)
+        return self._item_by_prop(self.devices, 'hostname', name)
+
+    def device_from_uid(self, uid):
+        return self._item_by_attrib(self.devices, 'uniqueidentifier', uid)
+
+    def link_from_name(self, name):
+        return self._item_by_attrib(self.links, 'hostname', name)
+
+    def link_from_uid(self, uid):
+        return self._item_by_attrib(self.links, 'uniqueidentifier', uid)
+
+    def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict|None:
+        # Returns first match; i.e. assumes only one item in list matches given
+        # attribute. It also assumes that 'items' is a list of dicts or json data.
+        for item in items:
+            if item.get(attrib) == value:
+                return item
+
+    def _item_by_prop(self, items, prop, value):
+        # Returns first match; i.e. assumes only one item in list matches given
+        # attribute.
+        for item in items:
+            if not hasattr(item, prop):
+                raise AttributeError
+            if item.__dict__.get(prop) == value:
+                return item
+
+    @property
+    def devices(self):
+        """A list of all the devices in the puzzle."""
+        return self._devices
+    
+    @devices.setter
+    def devices(self):
+        self._devices = device.allDevices()
+
+    @property
+    def links(self):
+        """A list of all the links in the puzzle."""
+        return self._links
+
+    @links.setter
+    def links(self):
+        self._links = device.allLinks()
+
+    @property
+    def mac_list(self):
+        """A list of all the MACs in the puzzle."""
+        return self._mac_list
+
+    @mac_list.setter
+    def mac_list(self):
+        """Build/rebuild the global MAC list.  Should be run when we load a new puzzle, when we change IPs, or add/remove NICs."""
+        macs = []
+        # session.maclist = [] #clear it out
+        for onedevice in self.devices:
+            #print ("finding macs for " + onedevice['hostname'])
+            for onemac in device.maclistFromDevice(onedevice):
+                macs.append(onemac)
+        self._macs = macs
+        session.maclist = macs
+
+
 def read_json_file(file_path):
     """
     Reads a JSON file and returns the data as a Python dictionary.

@@ -13,7 +13,7 @@ class UI:
         """Used to show terminal output to the user."""
         raise NotImplementedError
 
-    def load_puzzle(self, puzzle, filter:str = None):
+    def load_puzzle(self, puzzle_ref, filter:str = None):
         """Set up the UI based on the data in the puzzle file.
         Args: 
             puzzle:str - the name of the puzzle itself
@@ -22,12 +22,13 @@ class UI:
         """
         val = None
         if filter is not None:
-            val=parser.parse("load " + puzzle + " " + filter)
+            val=parser.parse("load " + puzzle_ref + " " + filter)
         else:
-            val=parser.parse("load " + puzzle)
+            val=parser.parse("load " + puzzle_ref)
         
         # Save selected puzzle to session variable.
         session.puzzle = val.get('value')
+        session.puzzle_obj = puzzle.Puzzle(val.get('value'))
         return val
 
     def quit(self):

@@ -6,4 +6,5 @@ class Session:
     maclist = list()
     puzzlelist = list()
     puzzle = dict()
+    puzzle_obj = None
     packetlist = list()
