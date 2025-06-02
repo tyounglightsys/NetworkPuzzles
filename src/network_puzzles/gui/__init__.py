@@ -8,7 +8,6 @@ from pathlib import Path
 
 from .. import messages
 from .. import session
-from .. import device
 from .base import AppExceptionHandler
 from .base import Device
 from .base import Link

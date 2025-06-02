@@ -1,6 +1,5 @@
 import sys
 
-from . import device
 from . import parser
 from . import puzzle
 from . import session
