@@ -127,13 +127,21 @@ class GUI(UI):
     def console_write(self, line):
         self.app.add_terminal_line(line)
 
+    def load_puzzle(self, puzzle, filter:str = None):
+        """Load and set up the UI based on the data in the puzzle file."""
+        return super().load_puzzle(puzzle,filter).get('value')
+        #do any aftermath.  Probably display the loaded puzzle when we have that functionality
+
+    def parse(self, command: str):
+        parser.parse(command)
+
+    def process_packets(self, delay):
+        # if we created packets, process them until done.
+        if packet.packetsNeedProcessing():
+            packet.processPackets(2, tick_pct=100*delay)
+
     def quit(self):
         self.app.stop()
 
     def run(self):
         self.app.run()
-
-    def load_puzzle(self, puzzle, filter:str = None):
-        """Load and set up the UI based on the data in the puzzle file."""
-        return super().load_puzzle(puzzle,filter).get('value')
-        #do any aftermath.  Probably display the loaded puzzle when we have that functionality

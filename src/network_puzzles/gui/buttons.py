@@ -67,3 +67,8 @@ class CommandButton(ThemedButton):
     
     def on_press(self):
         self.cb(self.command)
+        # Find parent Popup and dismiss it.
+        popup = self.parent
+        while not hasattr(popup, 'dismiss'):
+            popup = popup.parent
+        popup.dismiss()

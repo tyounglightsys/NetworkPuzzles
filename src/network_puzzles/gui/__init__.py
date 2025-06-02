@@ -8,11 +8,12 @@ from pathlib import Path
 
 from .. import messages
 from .. import session
+from .. import device
 from .base import AppExceptionHandler
 from .base import Device
 from .base import Link
+from .base import Packet
 from .base import NETWORK_ITEMS
-from .base import Theme
 from .base import LightColorTheme
 from .buttons import MenuButton
 # from .labels import ThemedLabel  # noqa: F401, imported here for KV file access
@@ -52,6 +53,10 @@ class NetworkPuzzlesApp(App):
         self.new_infra_device_menu = None
         self.new_user_device_menu = None
         self.ct = 1
+        self.packet_delay = 0.02  # refresh rate in seconds
+        self.prev_packets = []  # packets to remove from last refresh
+
+        Clock.schedule_interval(self._update_packets, self.packet_delay)
 
     def add_device(self, device_inst=None):
         # TODO: If device_inst not given, require user to choose device type
@@ -84,11 +89,11 @@ class NetworkPuzzlesApp(App):
         self.selected_puzzle = None
         self.reset_display()
 
-    def get_device_by_id(self, device_id):
-        # This returns the gui.Device widget, which is different from
-        # puzzle.deviceFromId, which returns a data dict.
+    def get_widget_by_uid(self, uid):
+        # This returns the gui widget, which is different from
+        # the puzzle JSON object.
         for w in self.root.ids.layout.children:
-            if w.data.get('uniqueidentifier') == device_id:
+            if hasattr(w, 'data') and w.data.get('uniqueidentifier') == uid:
                 return w
 
     def on_checkbox_activate(self, inst):
@@ -267,9 +272,28 @@ class NetworkPuzzlesApp(App):
                         self._close_tray(subtray)
             self._close_tray(tray)
 
+
+    def _update_packets(self, dt):
+        # Update backend packet info.
+        self.ui.process_packets(self.packet_delay)
+
+        # Remove existing packets from layout.
+        while self.prev_packets:
+            self.root.ids.layout.remove_widget(self.prev_packets.pop())
+
+        # Add new packet locations to layout.
+        for p in session.packetlist:
+            link_data = device.linkFromName(p.get('packetlocation'))
+            link = self.get_widget_by_uid(link_data.get('uniqueidentifier'))
+            prog = p.get('packetDistance')
+            if p.get('packetDirection') == 2:
+                prog = 100 - prog
+            packet = Packet(pos=link.get_progress_pos(prog))
+            self.root.ids.layout.add_widget(packet)
+            self.prev_packets.append(packet)
+
     def _test(self, *args, **kwargs):
-        self.set_theme(LightColorTheme)
-        # raise NotImplementedError
+        raise NotImplementedError
 
 
 class PuzzleLayout(RelativeLayout):

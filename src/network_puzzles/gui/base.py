@@ -16,7 +16,6 @@ from typing import Tuple
 
 from .. import device
 from .. import link
-from .. import parser
 from .buttons import CommandButton
 from .buttons import DeviceButton
 from .labels import DeviceLabel
@@ -108,7 +107,7 @@ class Device(ThemedBoxLayout):
 
         self.base = device.Device(self.data)
         
-        self.commands = ["Ping pc0 router0", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
+        self.commands = [f"Ping {self.base.hostname} router0", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
         self.orientation = 'vertical'
         self.spacing = 0
         self._set_pos()  # sets self.coords and self.pos_hint
@@ -121,7 +120,7 @@ class Device(ThemedBoxLayout):
         self.add_widget(self.label_hostname)
 
     def callback(self, cmd_string):
-        parser.parse(cmd_string)
+        self.app.ui.parse(cmd_string)
 
     def new(self):
         raise NotImplementedError
@@ -201,6 +200,11 @@ class Link(Widget):
             Color(rgba=self.app.theme.fg1)
             Line(points=(*self.start, *self.end), width=2)
 
+    def get_progress_pos(self, progress):
+        dx = progress * (self.end[0] - self.start[0]) / 100
+        dy = progress * (self.end[1] - self.start[1]) / 100
+        return (self.start[0] + dx, self.start[1] + dy)
+
     def set_end_nic(self):
         # TODO: Set hostname once DstNic is set as:
         # "SrcNicHostname_link_DstNicHostname"
@@ -217,10 +221,14 @@ class Link(Widget):
         raise NotImplementedError
 
     def _set_points(self):
-        start_dev = self.app.get_device_by_id(self.data.get('SrcNic').get('hostid'))
+        start_dev = self.app.get_widget_by_uid(self.data.get('SrcNic').get('hostid'))
         self.start = start_dev.button.center
-        end_dev = self.app.get_device_by_id(self.data.get('DstNic').get('hostid'))
+        end_dev = self.app.get_widget_by_uid(self.data.get('DstNic').get('hostid'))
         self.end = end_dev.button.center
+
+
+class Packet(Widget):
+    pass
 
 
 @dataclass
