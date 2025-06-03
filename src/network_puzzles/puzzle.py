@@ -114,6 +114,13 @@ class Puzzle:
                 return item
         return None
 
+    def set_all_device_nic_macs(self):
+        for oneDevice in self.all_devices():
+            if not isinstance(oneDevice['nic'], list):
+                oneDevice['nic'] = [oneDevice['nic']]
+            for oneNic in oneDevice['nic']:
+                oneNic = Nic(oneNic).ensure_mac()
+
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict|None:
         # Returns first match; i.e. assumes only one item in list matches given
         # attribute. It also assumes that 'items' is a list of dicts or json data.
@@ -179,7 +186,7 @@ def readPuzzle():
         for one in allfiles:
             #We stripped off the ".json" from the name, so we need to add it back
             file_path = 'src/network_puzzles/resources/puzzles/' + one + ".json"
-            oneentry =read_json_file(file_path)
+            oneentry = read_json_file(file_path)
             oneentry['EduNetworkBuilder']['Network']['name'] = one
             session.puzzlelist.append(oneentry)
             #print("loading: " + one)
@@ -229,15 +236,8 @@ def choosePuzzle(what, filter=None):
     if puz is not None:
         print("Loaded: " + puz['name'])
         session.puzzle = Puzzle(puz)
-        setAllDeviceNICMacs()
+        session.puzzle.set_all_device_nic_macs()
     return puz
-
-def setAllDeviceNICMacs():
-    for oneDevice in session.puzzle.all_devices():
-        if not isinstance(oneDevice['nic'], list):
-            oneDevice['nic'] = [oneDevice['nic']]
-        for oneNic in oneDevice['nic']:
-            oneNic = Nic(oneNic).ensure_mac()
 
 def justIP(ip):
     """return just the IP address as a string, stripping the subnet if there was one"""
