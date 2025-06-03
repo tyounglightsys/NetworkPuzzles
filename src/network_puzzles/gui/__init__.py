@@ -15,9 +15,7 @@ from .base import Packet
 from .base import NETWORK_ITEMS
 from .base import LightColorTheme
 from .buttons import MenuButton
-# from .labels import ThemedLabel  # noqa: F401, imported here for KV file access
 from .layouts import AppMenu
-# from .layouts import SelectableRecycleBoxLayout  # noqa: F401, imported here for KV file access
 from .popups import PuzzleChooserPopup
 
 
@@ -70,7 +68,8 @@ class NetworkPuzzlesApp(App):
         # TODO: If link_inst not given, require user to tap on start and end
         # devices on the screen to instantiate a new link.
         if link_inst is None:
-            link_inst = Link()
+            # link_inst = Link()
+            raise NotImplementedError
 
         self.links.append(link_inst)
         # Add link to z-index = 99 to ensure it's drawn under device.
@@ -92,7 +91,7 @@ class NetworkPuzzlesApp(App):
         # This returns the gui widget, which is different from
         # the puzzle JSON object.
         for w in self.root.ids.layout.children:
-            if hasattr(w, 'data') and w.data.get('uniqueidentifier') == uid:
+            if hasattr(w, 'base') and hasattr(w.base, 'json') and w.base.json.get('uniqueidentifier') == uid:
                 return w
 
     def on_checkbox_activate(self, inst):

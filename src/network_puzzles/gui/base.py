@@ -101,11 +101,7 @@ class Device(ThemedBoxLayout):
     def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
-        self.data = init_data
-        if self.data is None:
-            self.new()
-
-        self.base = device.Device(self.data)
+        self.base = device.Device(init_data)
         
         self.commands = [f"Ping {self.base.hostname} router0", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
         self.orientation = 'vertical'
@@ -167,13 +163,13 @@ class Device(ThemedBoxLayout):
 
     def _set_image(self):
         devices = NETWORK_ITEMS.get('devices').get('user') | NETWORK_ITEMS.get('devices').get('infrastructure')
-        img = devices.get(self.data.get('mytype')).get('img')
+        img = devices.get(self.base.json.get('mytype')).get('img')
         if img is None:
-            raise TypeError(f"Unhandled device type: {self.data.get('mytype')}")
+            raise TypeError(f"Unhandled device type: {self.base.json.get('mytype')}")
         self.button.background_normal = str(self.app.IMAGES / img)
 
     def _set_pos(self):
-        self.coords = location_to_coords(self.data.get('location'))
+        self.coords = location_to_coords(self.base.json.get('location'))
         self.pos_hint = {'center': self.coords}
 
 
@@ -184,14 +180,7 @@ class Link(Widget):
     def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
         self.app = App.get_running_app()
-        self.data = init_data
-        if self.data is None:
-            self._set_uid()
-            self.set_link_type()
-            self.set_start_nic()
-            self.set_end_nic()
-
-        self.base = link.Link(self.data)
+        self.base = link.Link(init_data)
 
         self._set_points()
 
@@ -221,9 +210,9 @@ class Link(Widget):
         raise NotImplementedError
 
     def _set_points(self):
-        start_dev = self.app.get_widget_by_uid(self.data.get('SrcNic').get('hostid'))
+        start_dev = self.app.get_widget_by_uid(self.base.json.get('SrcNic').get('hostid'))
         self.start = start_dev.button.center
-        end_dev = self.app.get_widget_by_uid(self.data.get('DstNic').get('hostid'))
+        end_dev = self.app.get_widget_by_uid(self.base.json.get('DstNic').get('hostid'))
         self.end = end_dev.button.center
 
 

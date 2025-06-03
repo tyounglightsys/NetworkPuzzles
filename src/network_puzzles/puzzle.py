@@ -10,6 +10,7 @@ import os
 from . import session
 from . import packet
 from . import device
+from .nic import Nic
 
 
 class Puzzle:
@@ -40,7 +41,6 @@ class Puzzle:
         return device.globalArpLookup(ipaddr)
 
     def device_from_name(self, name):
-        # return self._item_by_attrib(self.devices, 'hostname', name)
         return self._item_by_attrib(self.all_devices(), 'hostname', name)
 
     def device_from_uid(self, uid):
@@ -54,7 +54,7 @@ class Puzzle:
         result = self.link_from_uid(uid)
         if result is not None:
             return result
-        result = device.nicFromID(uid)
+        result = self.nic_from_uid(uid)
         if result is not None:
             return result
         return None
@@ -96,6 +96,19 @@ class Puzzle:
 
     def link_from_uid(self, uid):
         return self._item_by_attrib(self.all_links(), 'uniqueidentifier', uid)
+
+    def nic_from_uid(self, uid):
+        """find the network card from the id
+        Args: uid: int - the device id for the nic you are looking for
+        Notes:
+            Each component on the network has a unique ID.  PCs can change names, so we do not assume host-names are unique.
+            Thus, for a network link (ethernet cable, wireless, etc) to know what two devices it is connecting, we use the ID
+        """
+        for d in self.all_devices():
+            item = self._item_by_attrib(d.get('nic'), 'uniqueidentifier', uid)
+            if item:
+                return item
+        return None
 
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict|None:
         # Returns first match; i.e. assumes only one item in list matches given
@@ -220,7 +233,7 @@ def setAllDeviceNICMacs():
         if not isinstance(oneDevice['nic'], list):
             oneDevice['nic'] = [oneDevice['nic']]
         for oneNic in oneDevice['nic']:
-            device.AssignMacIfNeeded(oneNic)
+            oneNic = Nic(oneNic).ensure_mac()
 
 def justIP(ip):
     """return just the IP address as a string, stripping the subnet if there was one"""
@@ -240,7 +253,7 @@ def doTest():
     mydevice = session.puzzle.device_from_uid('110')
     #print(mydevice)
     #mynic=device.nicFromName(mydevice,'eth0')
-    mynic = device.nicFromID('112')
+    mynic = session.puzzle.nic_from_uid('112')
     #print(mynic)
     mylink = session.puzzle.link_from_uid('121')
     print(mylink)

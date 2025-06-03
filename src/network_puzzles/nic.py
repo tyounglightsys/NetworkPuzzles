@@ -1,5 +1,5 @@
-import copy
-from .interface import Interface
+import random
+
 
 class Nic:
     nictype: str
@@ -9,17 +9,23 @@ class Nic:
     usesdhcp: str
     
     def __init__(self, nicrec):
-        self.nictype = nicrec.get('nictype')
-        self.nicname = nicrec.get('nicname')
-        self.uniqueidentifier = nicrec.get('uniqueidentifier')
-        self.myid = copy.copy(nicrec.get('myid'))
-        self.usesdhcp = nicrec.get('usesdhcp')
-        self.ssid = nicrec.get('ssid')
-        self.interface = []
+        self.json = nicrec
         #add the interfaces
         if not isinstance(nicrec.get('interface'), list):
             nicrec['interface'] = [nicrec['interface']] #make it a list so we can itterate it
-        for oneinterface in nicrec.get('interface'):
-            tinterface = Interface(oneinterface)
-            self.interface.append(tinterface)
 
+    def ensure_mac(self, data=None):
+        if data is not None:
+            new_data = data
+        else:
+            new_data = self.json
+
+        if 'Mac' not in new_data:
+            #Most of the network cards do not have this done yet.  We generate a new random one
+            localmac=""
+            for i in range(1,13):
+                localmac = localmac + random.choice("ABCDEF1234567890")
+            new_data['Mac'] = localmac
+
+        self.json = new_data
+        return new_data
