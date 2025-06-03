@@ -2,13 +2,9 @@ import random
 
 
 class Nic:
-    nictype: str
-    nicname: str
-    uniqueidentifier: str
-    myid: dict
-    usesdhcp: str
-    
     def __init__(self, nicrec):
+        if not isinstance(nicrec, dict):
+            raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
         self.json = nicrec
         #add the interfaces
         if not isinstance(nicrec.get('interface'), list):

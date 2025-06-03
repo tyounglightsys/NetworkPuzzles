@@ -37,6 +37,18 @@ class TestAllDevicesAndLinks(unittest.TestCase):
         self.assertEqual(len(lines), len(session.puzzle.all_links()))
 
 
+class TestGetDeviceAttribs(unittest.TestCase):
+    def setUp(self):
+        self.data = {
+            'a': 'all',
+            'g': 'good',
+            'hostname': 'test'
+        }
+
+    def test_hostname(self):
+        self.assertEqual(self.data.get('hostname'), device.Device(self.data).hostname)
+
+
 class TestGetItemByAttrib(unittest.TestCase):
     def setUp(self):
         self.items = [

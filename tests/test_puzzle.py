@@ -6,6 +6,20 @@ from network_puzzles import ui
 from . import PUZZLES_DIR
 
 
+class TestPuzzleInit(unittest.TestCase):
+    def setUp(self):
+        self.data = {
+            'a': 'all',
+            'g': 'good',
+            'hostname': 'test'
+        }
+
+    def test_baddata(self):
+        self.assertRaises(ValueError, puzzle.Puzzle, 'fake')
+
+    def test_gooddata(self):
+        self.assertEqual(self.data, puzzle.Puzzle(self.data).json)
+
 class TestMatchesFilter(unittest.TestCase):
     def test_match(self):
         self.assertTrue(puzzle.matches_filter('crazylongname', r'.*name.*'))

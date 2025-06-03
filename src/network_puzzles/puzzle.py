@@ -16,6 +16,8 @@ from .nic import Nic
 class Puzzle:
     """Encapsulates the loaded puzzle's data and functionality."""
     def __init__(self, data):
+        if not isinstance(data, dict):
+            raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
         self.json = data
 
     def all_devices(self):
