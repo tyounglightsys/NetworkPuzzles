@@ -6,13 +6,25 @@ from . import session
 from . import packet
 
 class Device:
-    def __init__(self, devicerec=None):
+    def __init__(self, value=None):
+        self.json = None
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            pass
+        if isinstance(value, int):
+            self.json = session.puzzle.device_from_uid(value)
         # define the varables as specific types so intellisense works nicely with it
-        if devicerec is not None:
-            self.json = devicerec
+        elif isinstance(value, str):
+            # Find device by hostname.
+            self.json = session.puzzle.device_from_name(value)
+        elif isinstance(value, dict):
+            self.json = value
+        else:
+            raise ValueError("Not a valid uniqueidentifier, hostname, or JSON data.")
         self._hostname = None
     
-    def mac_list(self, hostname=None):
+    def mac_list(self):
         """
         Return a list of all the MAC addresses of all the nics on the device
         Args:
@@ -22,8 +34,6 @@ class Device:
             A list of mac-addresses.  Each MAC is a struct containing at least the ip and mac.
         """
         maclist = []
-        if hostname is not None:
-            self.json = session.puzzle.device_from_name(hostname)
         if self.json is None:
             return None
         if 'nic' not in self.json:
@@ -44,7 +54,7 @@ class Device:
                 maclist.append(onemac)
         return maclist
 
-    def nic_from_name(self, nicname, hostname=None):
+    def nic_from_name(self, nicname):
         """return the network card from the name
         Args:
             name: str - the hostname of the device that contains the nic we are looking for
@@ -53,21 +63,30 @@ class Device:
         Returns:
             the network card record from the device or None
             """
-        if isinstance(hostname, str):
-            self.json = session.puzzle.device_from_name(hostname)
         if self.json is None:
             return None
         if 'nic' not in self.json:
             return None
-        return get_item_by_attrib(self.json.get('nic'), 'nicname', nicname)
+        return self._item_by_attrib(self.json.get('nic'), 'nicname', nicname)
 
     @property
     def hostname(self):
-        return self.json.get('hostname', self._hostname)
+        try:
+            hostname = self.json.get('hostname', self._hostname)
+        except AttributeError:  # self.json is None
+            hostname = None
+        return hostname
     
     @hostname.setter
     def hostname(self, name):
         self.json['hostname'] = name
+
+    def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict|None:
+        # Returns first match; i.e. assumes only one item in list matches given
+        # attribute. It also assumes that 'items' is a list of dicts or json data.
+        for item in items:
+            if item.get(attrib) == value:
+                return item
 
 
 def buildGlobalMACList():
@@ -189,13 +208,6 @@ def isWirelessForwarder(deviceRec):
         case "wrepeater"|"wap"|"wbridge"|"wrouter":
             return True
     return False
-
-def get_item_by_attrib(items: list, attrib: str, value: str) -> dict|None:
-    # Returns first match; i.e. assumes only one item in list matches given
-    # attribute.
-    for item in items:
-        if item.get(attrib) == value:
-            return item
 
 def linkConnectedToNic(nicRec):
     """Find a link connected to the specified network card"""

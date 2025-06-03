@@ -78,15 +78,6 @@ class TestXFromY(unittest.TestCase):
         self.device4 = self.network.get('device')[4]  # router0
         self.link0 = self.network.get('link')[0]  # link between net_switch0 and router0
 
-    def test_devicefromid_found(self):
-        self.assertEqual(
-            self.device0.get('uniqueidentifier'),
-            session.puzzle.device_from_uid('160').get('uniqueidentifier')
-        )
-
-    def test_devicefromid_notfound(self):
-        self.assertIsNone(session.puzzle.device_from_uid('999'))
-
     def test_devicefromname_found(self):
         self.assertEqual(
             self.device0.get('uniqueidentifier'),
@@ -96,13 +87,22 @@ class TestXFromY(unittest.TestCase):
     def test_devicefromname_notfound(self):
         self.assertIsNone(session.puzzle.device_from_name('supercool_dev9'))
 
-    def test_itemfromid_found(self):
+    def test_devicefromuid_found(self):
+        self.assertEqual(
+            self.device0.get('uniqueidentifier'),
+            session.puzzle.device_from_uid('160').get('uniqueidentifier')
+        )
+
+    def test_devicefromuid_notfound(self):
+        self.assertIsNone(session.puzzle.device_from_uid('999'))
+
+    def test_itemfromuid_found(self):
         self.assertEqual(
             self.device0.get('uniqueidentifier'),
             session.puzzle.item_from_uid('160').get('uniqueidentifier')
         )
 
-    def test_itemfromid_notfound(self):
+    def test_itemfromuid_notfound(self):
         self.assertIsNone(session.puzzle.item_from_uid('999'))
 
     def test_linkfromdevices_found(self):
@@ -114,12 +114,12 @@ class TestXFromY(unittest.TestCase):
     def test_linkfromdevices_notfound(self):
         self.assertIsNone(session.puzzle.link_from_devices(self.device0, self.device1))
 
-    def test_linkfromid_found(self):
+    def test_linkfromuid_found(self):
         self.assertEqual(
             self.link0,
             session.puzzle.link_from_uid('146'))
 
-    def test_linkfromid_notfound(self):
+    def test_linkfromuid_notfound(self):
         self.assertIsNone(session.puzzle.link_from_uid('999'))
 
     def test_linkfromname_found(self):

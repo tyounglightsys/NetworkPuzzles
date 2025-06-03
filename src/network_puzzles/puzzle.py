@@ -14,6 +14,7 @@ from .nic import Nic
 
 
 class Puzzle:
+    """Encapsulates the loaded puzzle's data and functionality."""
     def __init__(self, data):
         self.json = data
 
@@ -44,6 +45,7 @@ class Puzzle:
         return self._item_by_attrib(self.all_devices(), 'hostname', name)
 
     def device_from_uid(self, uid):
+        uid = str(uid)  # ensure not an integer
         return self._item_by_attrib(self.all_devices(), 'uniqueidentifier', uid)
 
     def item_from_uid(self, uid):
