@@ -1,8 +1,9 @@
-from kivy.app import App
 from kivy.uix.label import Label
 from kivy.properties import BooleanProperty
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.textinput import TextInput
+
+from .. import session
 
 
 class TerminalLabel(TextInput):
@@ -19,7 +20,7 @@ class TerminalLabel(TextInput):
 class ThemedLabel(Label):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app = App.get_running_app()
+        self.app = session.app
 
 
 class DeviceLabel(ThemedLabel):

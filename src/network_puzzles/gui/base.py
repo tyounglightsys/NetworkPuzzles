@@ -1,6 +1,5 @@
 import traceback
 from dataclasses import dataclass
-from kivy.app import App
 from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
 from kivy.graphics import Color
@@ -16,6 +15,7 @@ from typing import Tuple
 
 from .. import device
 from .. import link
+from .. import session
 from .buttons import CommandButton
 from .buttons import DeviceButton
 from .labels import DeviceLabel
@@ -66,7 +66,7 @@ class AppExceptionHandler(ExceptionHandler):
 class AppRecView(RecycleView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app = App.get_running_app()
+        self.app = session.app
 
 
 class PuzzlesRecView(AppRecView):
@@ -85,7 +85,7 @@ class ThemedCheckBox(CheckBox):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app = App.get_running_app()
+        self.app = session.app
 
     def get_popup(self):
         for win in self.get_parent_window().children:
@@ -100,7 +100,7 @@ class ThemedCheckBox(CheckBox):
 class Device(ThemedBoxLayout):
     def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
-        self.app = App.get_running_app()
+        self.app = session.app
         self.base = device.Device(init_data)
         
         self.commands = [f"Ping {self.base.hostname} router0", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
@@ -179,7 +179,7 @@ class Link(Widget):
 
     def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
-        self.app = App.get_running_app()
+        self.app = session.app
         self.base = link.Link(init_data)
 
         self._set_points()

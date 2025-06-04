@@ -1,6 +1,7 @@
-from kivy.app import App
 from kivy.metrics import dp
 from kivy.uix.button import Button
+
+from .. import session
 
 
 class ThemedButton(Button):
@@ -10,7 +11,7 @@ class ThemedButton(Button):
 class AppButton(ThemedButton):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app = App.get_running_app()
+        self.app = session.app
         self.cb = None
         self.cb_args = list()
         self.cb_kwargs = dict()

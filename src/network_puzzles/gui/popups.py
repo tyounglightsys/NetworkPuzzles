@@ -1,4 +1,3 @@
-from kivy.app import App
 from kivy.graphics import Color
 from kivy.graphics import Rectangle
 from kivy.uix.popup import Popup
@@ -12,7 +11,7 @@ class AppPopup(Popup):
         # TODO: This popup automatically generates a GridLayout with 3 child
         # widgets: BoxLayout, Widget, Label. Better to set the content
         # explicitly when the popup is instantiated elsewhere.
-        self.app = App.get_running_app()
+        self.app = session.app
     
     def _update_sep_color(self):
         # Set separator color according to theme.

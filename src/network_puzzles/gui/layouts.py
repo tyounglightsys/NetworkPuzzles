@@ -1,10 +1,10 @@
-from kivy.app import App
 from kivy.metrics import dp
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 
+from .. import session
 from .buttons import MenuButton
 
 
@@ -15,7 +15,7 @@ class ThemedBoxLayout(BoxLayout):
 class AppMenu(ThemedBoxLayout):
     def __init__(self, anchor_pos=None, choices=list(), orientation='horizontal', **kwargs):
         super().__init__(**kwargs)
-        self.app = App.get_running_app()
+        self.app = session.app
         self.size_hint = (None, None)
         self.orientation = orientation
         if self.orientation == 'horizontal':

@@ -28,6 +28,9 @@ class NetworkPuzzlesApp(App):
     IMAGES = Path(__file__).parents[1] / 'resources' / 'images'
 
     def __init__(self, ui, **kwargs):
+        # Set session `app` variable.
+        session.app = self
+
         # Set window size for desktop systems.
         if platform.system() not in ['Android', 'iOS']:
             Window.size = (1600, 720)  # 20:9 aspect ratio
@@ -245,7 +248,7 @@ class NetworkPuzzlesApp(App):
     def _add_new_item_button(self, *args):
         self.new_item_button = MenuButton(
             props={'text': "+", 'cb': self.on_new_item,},
-            pos_hint={'left': 1, 'top': 1},
+            pos_hint={'x': 0.005, 'top': 0.99},
         )
         self.root.ids.layout.add_widget(self.new_item_button)
 
@@ -287,7 +290,7 @@ class NetworkPuzzlesApp(App):
             if p.get('packetDirection') == 2:
                 prog = 100 - prog
             packet = Packet(pos=link.get_progress_pos(prog))
-            self.root.ids.layout.add_widget(packet)
+            self.root.ids.layout.add_widget(packet, 80)
             self.prev_packets.append(packet)
 
     def _test(self, *args, **kwargs):
