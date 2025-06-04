@@ -365,7 +365,7 @@ def sourceIP(src,dstIP):
 
     #return the IP that has a static route to it (add this later).
     if 'route' in srcDevice:
-        if not isinstance(srcDevice['roiute'],list):
+        if not isinstance(srcDevice['route'],list):
             srcDevice['route'] = [srcDevice['route']]
         for oneroute in srcDevice['route']:
             staticroute=ipaddress.ip_network(oneroute['ip' + "/" + oneroute['mask']])

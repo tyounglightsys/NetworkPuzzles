@@ -1,4 +1,3 @@
-from kivy.metrics import dp
 from kivy.uix.button import Button
 
 from .. import session
@@ -54,7 +53,7 @@ class MenuButton(AppButton):
     def _set_size_hint(self):
         if self.props.get('orientation') == 'horizontal':
             self.size_hint = (1, None)  # to set explicit height
-            self.width = dp(self.app.BUTTON_MAX_H)
+            self.width = self.app.BUTTON_MAX_H
             self.height = self.width
 
 

@@ -3,6 +3,8 @@ from kivy.app import App
 from kivy.base import ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.metrics import dp
+from kivy.metrics import sp
 from kivy.uix.relativelayout import RelativeLayout
 from pathlib import Path
 
@@ -20,11 +22,12 @@ from .popups import PuzzleChooserPopup
 
 
 class NetworkPuzzlesApp(App):
-    # sizes (dp will be applied in KV file)
-    BUTTON_MAX_H = 48
-    BUTTON_FONT_SIZE = 24
+    # explicit sizes
+    BUTTON_MAX_H = dp(48)
+    BUTTON_FONT_SIZE = sp(24)
+    PACKET_DIMS = (dp(15), dp(15))
 
-    # paths
+    # file paths
     IMAGES = Path(__file__).parents[1] / 'resources' / 'images'
 
     def __init__(self, ui, **kwargs):
@@ -96,6 +99,13 @@ class NetworkPuzzlesApp(App):
         for w in self.root.ids.layout.children:
             if hasattr(w, 'base') and hasattr(w.base, 'json') and w.base.json.get('uniqueidentifier') == uid:
                 return w
+
+    def last_link_index(self):
+        last_index = 0
+        for w in self.root.ids.layout.children:
+            if w.__class__.__name__ == 'Link':
+                last_index = max([self.root.ids.layout.children.index(w), last_index])
+        return last_index
 
     def on_checkbox_activate(self, inst):
         if inst.state == 'down':
@@ -282,6 +292,9 @@ class NetworkPuzzlesApp(App):
         while self.prev_packets:
             self.root.ids.layout.remove_widget(self.prev_packets.pop())
 
+        # packet draw index needs to be above link lines but below devices.
+        packet_idx = self.last_link_index() - 1
+
         # Add new packet locations to layout.
         for p in session.packetlist:
             link_data = session.puzzle.link_from_name(p.get('packetlocation'))
@@ -289,8 +302,9 @@ class NetworkPuzzlesApp(App):
             prog = p.get('packetDistance')
             if p.get('packetDirection') == 2:
                 prog = 100 - prog
-            packet = Packet(pos=link.get_progress_pos(prog))
-            self.root.ids.layout.add_widget(packet, 80)
+            x, y = link.get_progress_pos(prog)
+            packet = Packet(pos=(x - self.PACKET_DIMS[0] / 2, y - self.PACKET_DIMS[1] / 2))
+            self.root.ids.layout.add_widget(packet, packet_idx)
             self.prev_packets.append(packet)
 
     def _test(self, *args, **kwargs):

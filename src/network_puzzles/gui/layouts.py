@@ -50,8 +50,7 @@ class AppMenu(ThemedBoxLayout):
     
     def _set_size(self):
         length = len(self.children)
-        breadth = dp(self.app.BUTTON_MAX_H + 10)  # 10px more for padding
-        # breadth = dp(self.app.BUTTON_MAX_H)
+        breadth = self.app.BUTTON_MAX_H + dp(10)  # 10px more for padding
         if self.orientation == 'horizontal':
             self.width = length * breadth
             self.height = breadth
