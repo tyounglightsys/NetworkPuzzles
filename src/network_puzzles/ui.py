@@ -8,6 +8,9 @@ from . import packet
 class UI:
     TITLE = 'NetworkPuzzles'
 
+    def __init__(self):
+        self.parser = parser.Parser()
+
     def console_write(self, line):
         """Used to show terminal output to the user."""
         raise NotImplementedError
@@ -21,9 +24,9 @@ class UI:
         """
         val = None
         if filter is not None:
-            val=parser.parse("load " + puzzle_ref + " " + filter)
+            val=self.parser.parse("load " + puzzle_ref + " " + filter)
         else:
-            val=parser.parse("load " + puzzle_ref)
+            val=self.parser.parse("load " + puzzle_ref)
         
         # Save selected puzzle to session variable.
         session.puzzle = puzzle.Puzzle(val.get('value'))
@@ -83,7 +86,10 @@ class UI:
 
 
 
-class CLI(UI): 
+class CLI(UI):
+    def __init__(self):
+        self.parser = parser.Parser(self)
+
     def run(self):
         print(self.TITLE)
         self.load_puzzle("2") #for now, just testing
@@ -102,7 +108,7 @@ class CLI(UI):
         """A CLI only function.  Prompt for imput and process it"""
         try:
             answer = input("-> ")
-            parser.parse(answer)
+            self.parser.parse(answer)
             #if we created packets, process them until done.
             while packet.packetsNeedProcessing():
                 packet.processPackets(2) #the cli does not need much time to know packets are going to loop forever.
@@ -110,7 +116,7 @@ class CLI(UI):
             sys.exit()
 
     def quit(self):
-        parser.exit_app()
+        self.parser.parse.exit_app()
 
     def load_puzzle(self, puzzle, filter_str: str = None):
         """Load and set up the UI based on the data in the puzzle file."""
@@ -120,12 +126,13 @@ class CLI(UI):
 class GUI(UI):
     def __init__(self, kivyapp):
         self.app = kivyapp(ui=self)
+        self.parser = parser.Parser(self)
 
     def console_write(self, line):
         self.app.add_terminal_line(line)
 
     def parse(self, command: str):
-        parser.parse(command)
+        self.parser.parse(command)
 
     def process_packets(self, delay):
         # If we created packets, process them until done.
