@@ -76,8 +76,9 @@ def run_ping(args):
         print("invalid ping command: usage: ping source_hostname destination_hostname")
         print(" example: ping pc0 pc1")
         return
-    shost = device.deviceFromName(args[0])
-    dhost = device.deviceFromName(args[1])
+
+    shost = session.puzzle.device_from_name(args[0])
+    dhost = session.puzzle.device_from_name(args[1])
     if shost is None:
         print(f"No such host: {args[0]}")
         return
@@ -92,8 +93,8 @@ def show_info(args):
     # list the hosts.  Or, show information about a specifici host
     if len(args) == 0:
         # Just the show command.  List all the devices
-        print (session.puzzle['name'])
-        devicelist = device.allDevices()
+        print(session.puzzle.json.get('name'))
+        devicelist = session.puzzle.all_devices()
         for one in devicelist:
             print(one['hostname'])
     if len(args) == 1:

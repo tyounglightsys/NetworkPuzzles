@@ -1,77 +1,102 @@
 import ipaddress
 import copy
-import random
 
 from .nic import Nic
 from . import session
 from . import packet
 
 class Device:
-    #define things by their type for later use in intellisense
-    hostname: str
-    size: int #a size.  100 or something like that
-    uniqueidentifier: str
-    location: str #This should be a point, x,y
+    def __init__(self, value=None):
+        self.json = None
+        try:
+            value = int(value)
+        except (TypeError, ValueError):
+            pass
+        if isinstance(value, int):
+            self.json = session.puzzle.device_from_uid(value)
+        # define the varables as specific types so intellisense works nicely with it
+        elif isinstance(value, str):
+            # Find device by hostname.
+            self.json = session.puzzle.device_from_name(value)
+        elif isinstance(value, dict):
+            self.json = value
+        else:
+            raise ValueError("Not a valid uniqueidentifier, hostname, or JSON data.")
+        self._hostname = None
+    
+    def mac_list(self):
+        """
+        Return a list of all the MAC addresses of all the nics on the device
+        Args:
+            name: str - define the device using the given hostname
 
-    def __init__(self, devicerec):
-        #define the varables as specific types so intellisense works nicely with it
-        self.hostname = devicerec['hostname']
-        self.size = int(devicerec['size'])
-        self.uniqueidentifier = devicerec['uniqueidentifier']
-        self.location = devicerec['location']
-        self.mtype = devicerec['mytype']
-        self.isdns = devicerec['isdns']
-        self.isdhcp = devicerec['isdhcp']
-        self.nic = []
-        if not isinstance(devicerec['nic'], list):
-            devicerec['nic'] = [ devicerec['nic'] ] #turn it into a list if it was not one before
-        for onenic in devicerec['nic']:
-            #loop through them and add them separately
-            tnic = Nic(onenic)
-            self.nic.append(tnic)
+        Returns:
+            A list of mac-addresses.  Each MAC is a struct containing at least the ip and mac.
+        """
+        maclist = []
+        if self.json is None:
+            return None
+        if 'nic' not in self.json:
+            return None
+        if not isinstance(self.json.get('nic'), list):
+            self.json['nic'] = [self.json.get('nic')]
+        for onenic in self.json.get('nic'):
+            # iterate through the list of nics
+            onenic = Nic(onenic).ensure_mac()
+            if not onenic.get('nicname') == 'lo0':
+                if not isinstance(onenic.get('interface'), list):
+                    onenic['interface'] = [onenic.get('interface')]
+                for oneinterface in onenic.get('interface'):
+                    onemac = {
+                        'ip': ipaddress.ip_interface(oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask']),
+                        'mac': onenic['Mac'],
+                    }
+                maclist.append(onemac)
+        return maclist
 
+    def nic_from_name(self, nicname):
+        """return the network card from the name
+        Args:
+            name: str - the hostname of the device that contains the nic we are looking for
+            theDevice:device - the device containing the nic we are looking for
+            what:str - the network card name we are looking for
+        Returns:
+            the network card record from the device or None
+            """
+        if self.json is None:
+            return None
+        if 'nic' not in self.json:
+            return None
+        return self._item_by_attrib(self.json.get('nic'), 'nicname', nicname)
 
-def maclistFromDevice(src):
-    """
-    Return a list of all the MAC addresses of all the nics on the device
-    Args:
-        src:str - lookup the source device using the hostname and return all MAC addresses
-        src:device - lookup all the MAC addresses in this device
+    @property
+    def hostname(self):
+        try:
+            hostname = self.json.get('hostname', self._hostname)
+        except AttributeError:  # self.json is None
+            hostname = None
+        return hostname
+    
+    @hostname.setter
+    def hostname(self, name):
+        self.json['hostname'] = name
 
-    Returns:
-        A list of mac-addresses.  Each MAC is a struct containing at least the ip and mac.
-    """
-    maclist=[]
-    if isinstance(src,str):
-        src = deviceFromName(str)
-    if src is None:
-        return None
-    if 'nic' not in src:
-        return None
-    if not isinstance(src['nic'],list):
-        src['nic'] = [src['nic']]
-    for onenic in src['nic']:
-        #iterate through the list of nics
-        AssignMacIfNeeded(onenic)
-        if not onenic['nicname'] == 'lo0':
-            if not isinstance(onenic['interface'],list):
-                onenic['interface'] = [ onenic['interface']]
-            for oneinterface in onenic['interface']:
-                onemac = {
-                    'ip':ipaddress.ip_interface(oneinterface['myip']['ip']+"/"+oneinterface['myip']['mask']),
-                    'mac':onenic['Mac']
-                }
-            maclist.append(onemac)
-    return maclist
+    def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict|None:
+        # Returns first match; i.e. assumes only one item in list matches given
+        # attribute. It also assumes that 'items' is a list of dicts or json data.
+        for item in items:
+            if item.get(attrib) == value:
+                return item
 
 
 def buildGlobalMACList():
     """Build/rebuild the global MAC list.  Should be run when we load a new puzzle, when we change IPs, or add/remove NICs."""
     # global maclist
     session.maclist = [] #clear it out
-    for onedevice in allDevices():
+    for onedevice in session.puzzle.all_devices():
         #print ("finding macs for " + onedevice['hostname'])
-        for onemac in maclistFromDevice(onedevice):
+        # for onemac in maclistFromDevice(onedevice):
+        for onemac in Device(onedevice).mac_list():
             session.maclist.append(onemac)
     #print("Built maclist")
     #print(maclist)
@@ -115,7 +140,7 @@ def arpLookup(srcDevice, ip):
     if isinstance(srcDevice, str):
         #We need to look the device up
         oldsrc = srcDevice
-        srcDevice = deviceFromName(srcDevice)
+        srcDevice = session.puzzle.device_from_name(srcDevice)
     if srcDevice is None:
         print("Error: Unable to find source for arpLookup: " + oldsrc)
     #If we are here, src should be a valid device
@@ -184,88 +209,13 @@ def isWirelessForwarder(deviceRec):
             return True
     return False
 
-def get_item_by_attrib(items: list, attrib: str, value: str) -> dict|None:
-    # Returns first match; i.e. assumes only one item in list matches given
-    # attribute.
-    for item in items:
-        if item.get(attrib) == value:
-            return item
-
-def nicFromName(theDevice,what):
-    """return the network card from the name
-    Args:
-        theDevice:str - the hostname of the device that contains the nic we are looking for
-        theDevice:device - the device containing the nic we are looking for
-        what:str - the network card name we are looking for
-    Returns:
-        the network card record from the device or None
-        """
-    if isinstance(theDevice, str):
-        theDevice = deviceFromName(theDevice)
-    if theDevice is None:
-        return None
-    return get_item_by_attrib(theDevice.get('nic'), 'nicname', what)
-
-def nicFromID(what):
-    """find the network card from the id
-    Args: what:int - the device id for the nic you are looking for
-    Notes:
-        Each component on the network has a unique ID.  PCs can change names, so we do not assume host-names are unique.
-        Thus, for a network link (ethernet cable, wireless, etc) to know what two devices it is connecting, we use the ID
-    """
-    for theDevice in allDevices():
-        item = get_item_by_attrib(theDevice.get('nic'), 'uniqueidentifier', what)
-        if item:
-            return item
-    return None
-
-def linkFromName(what):
-    """
-    Return the link matching the name
-    Args: what:str - the string name of the link
-    returns: the link record or None
-    """
-    return get_item_by_attrib(allLinks(), 'hostname', what)
-
-def linkFromDevices(srcDevice, dstDevice):
-    """return a link given the two devices at either end
-    Args:
-        srcDevice:Device - the device itself
-        srcDevice:str - the hostname of the device
-        dstDevice:device - the device itself
-        dstDevice:str - the hostname of the device
-    Returns: a link record or None
-    """
-    srcstr=""
-    dststr=""
-    if isinstance(srcDevice,str):
-        srcstr=srcDevice
-    else:
-        if 'hostname' in srcDevice:
-            srcstr=srcDevice['hostname']
-    if isinstance(dstDevice,str):
-        dststr=dstDevice
-    else:
-        if 'hostname' in dstDevice:
-            dststr=dstDevice['hostname']
-    #Now we should have srcstr and dststr set.  Use them to concoct a link name
-    #The link name looks like: pc0_link_pc1
-    result = linkFromName(srcstr + "_link_" + dststr)
-    if result is not None:
-        return result
-    result = linkFromName(dststr + "_link_" + srcstr)
-    if result is not None:
-        return result
-    #if we get here, we could not find it.  Return none
-    return None
-
 def linkConnectedToNic(nicRec):
     """Find a link connected to the specified network card"""
     if nicRec is None:
         return None
     #print("looking for link connecting to nicid: "+ nicRec['myid']['nicid'])
     #print("  Looking at nic: " + nicRec['nicname'])
-    for one in allLinks():
+    for one in session.puzzle.all_links():
         #print ("   link - " + one['hostname'])
         if(one['SrcNic']['nicid'] == nicRec['myid']['nicid'] ):
             return one
@@ -273,19 +223,6 @@ def linkConnectedToNic(nicRec):
             return one
     #we did not find anything that matched.  Return None
     return None
-
-def allLinks():
-    """
-    Return a list that contains all devices in the puzzle.
-    """
-    # global puzzle
-    linklist=[]
-    if 'link' not in session.puzzle:
-        session.puzzle['link'] = []
-    for one in session.puzzle['link']:
-        if 'hostname' in one:
-            linklist.append(one)
-    return linklist
 
 def getDeviceNicFromLinkNicRec(tLinkNicRec):
     """
@@ -295,7 +232,7 @@ def getDeviceNicFromLinkNicRec(tLinkNicRec):
     returns: the interface record or None
     """
     #a nic rec looks like: { "hostid": "100", "nicid": "102", "hostname": "pc0", "nicname": "eth0" }
-    tNic = nicFromID(tLinkNicRec['nicid'])
+    tNic = session.puzzle.nic_from_uid(tLinkNicRec['nicid'])
     if tNic is None:
         return None
     #If we get here, we have the nic record.
@@ -349,57 +286,11 @@ def routeRecFromDestIP(theDeviceRec,destinationIPString:str):
         return None
     return routeRec
 
-def linkFromID(what):
-    """
-    Return the link matching the id
-    Args: what:int - the unique id of the link
-    Returns: the matching link record or None
-    """
-    return get_item_by_attrib(allLinks(), 'uniqueidentifier', what)
-
-def itemFromID(what):
-    """return the item matching the ID.  Could be a device, a link, or a nic"""
-    result = deviceFromID(what)
-    if result is not None:
-        return result
-    result = linkFromID(what)
-    if result is not None:
-        return result
-    result = nicFromID(what)
-    if result is not None:
-        return result
-    return None
-
-
-def allDevices():
-    """
-    Return a list that contains all devices in the puzzle.
-    """
-    devicelist=[]
-    if 'device' not in session.puzzle:
-        session.puzzle['device'] = []
-    for one in session.puzzle['device']:
-        if 'hostname' in one:
-            devicelist.append(one)
-    return devicelist
-
-def deviceFromName(what):
-    """Return the device, given a name
-    Args: what:str the hostname of the device
-    returns the device matching the name, or None"""
-    return get_item_by_attrib(allDevices(), 'hostname', what)
-
-def deviceFromID(what):
-    """Return the device, given a name
-    Args: what:int the unique id of the device
-    returns the device matching the id, or None"""
-    return get_item_by_attrib(allDevices(), 'uniqueidentifier', what)
-
 def deviceFromIP(what):
     """Return the device, given a name
     Args: what:int the unique id of the device
     returns the device matching the id, or None"""
-    for oneDevice in allDevices():
+    for oneDevice in session.puzzle.all_devices():
         for oneNic in oneDevice['nic']:
             if not isinstance(oneNic['interface'],list):
                 oneNic['interface'] = [oneNic['interface']]
@@ -463,7 +354,7 @@ def sourceIP(src,dstIP):
     """
     srcDevice=src
     if 'hostname' not in src:
-        srcDevice=deviceFromName(src)
+        srcDevice = session.puzzle.device_from_name(src)
     if srcDevice is None:
         print('Error: passed in an invalid source to function: sourceIP')
         return None
@@ -545,7 +436,7 @@ def DeviceIPs(src, ignoreLoopback=True):
     interfacelist=[]
     srcDevice=src
     if 'hostname' not in src:
-        srcDevice=deviceFromName(src)
+        srcDevice = session.puzzle.device_from_name(src)
     if srcDevice is None:
         print('Error: passed in an invalid source to function: sourceIP')
         return None
@@ -579,7 +470,7 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
     interfacelist=[]
     srcDevice=src
     if 'hostname' not in src:
-        srcDevice=deviceFromName(src)
+        srcDevice = session.puzzle.device_from_name(src)
     if srcDevice is None:
         print('Error: passed in an invalid source to function: sourceIP')
         return None
@@ -642,7 +533,7 @@ def findPrimaryNICInterface(networkCardRec):
 
 def doInputFromLink(packRec, nicRec):
     #figure out what device belongs to the nic
-    thisDevice = deviceFromID(nicRec['myid']['hostid'])
+    thisDevice = session.puzzle.device_from_uid(nicRec['myid']['hostid'])
 
     #Do the simple stuff
     if powerOff(thisDevice):
@@ -692,7 +583,7 @@ def beginIngressOnNIC(packRec, nicRec):
     nictype = nicRec['nictype'][0]
     #in certain cases we track inbound traffic; remembering where it came from.
     trackPackets = False
-    theDevice = deviceFromName(nicRec['myid']['hostname'])
+    theDevice = session.puzzle.device_from_name(nicRec.get('myid').get('hostname'))
     #if it is a port (swicth/hub) or wport (wireless devices)
     if nictype == "port" or nictype == "wport":
         trackPackets = True
@@ -804,13 +695,13 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     #If we get here, we might have forwarded.  If so, we mark the old packet as done.
     packRec['status'] = 'done'
 
-def AssignMacIfNeeded(nicRec):
-    if 'Mac' not in nicRec:
-        #Most of the network cards do not have this done yet.  We generate a new random one
-        localmac=""
-        for i in range(1,13):
-            localmac=localmac+random.choice("ABCDEF1234567890")
-        nicRec['Mac']=localmac
+# def AssignMacIfNeeded(nicRec):
+#     if 'Mac' not in nicRec:
+#         #Most of the network cards do not have this done yet.  We generate a new random one
+#         localmac=""
+#         for i in range(1,13):
+#             localmac=localmac+random.choice("ABCDEF1234567890")
+#         nicRec['Mac']=localmac
 
 def sendPacketOutDevice(packRec, theDevice):
     """Send the packet out of the device."""
@@ -819,7 +710,7 @@ def sendPacketOutDevice(packRec, theDevice):
     routeRec = routeRecFromDestIP(theDevice,packRec['destIP'])
     #set the source MAC address on the packet as from the nic
     if routeRec is not None:
-        AssignMacIfNeeded(routeRec['nic'])
+        routeRec['nic'] = Nic(routeRec['nic']).ensure_mac()
         packRec['sourceMAC'] = routeRec['nic']['Mac']
     #set the destination MAC to be the GW MAC if the destination is not local
         #this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
@@ -847,8 +738,8 @@ def packetFromTo(src, dest):
         """
     #src should be a device, not just a name.  Sanity check.
     if 'hostname' not in src:
-        #The function is being improperly used. Can we fix it?
-        newsrc = deviceFromName(src)
+        # The function is being improperly used. Can we fix it?
+        newsrc = session.puzzle.device_from_name(src)
         if newsrc is not None:
             src=newsrc
         else:
@@ -865,7 +756,7 @@ def packetFromTo(src, dest):
         return None
     if isinstance(dest,str) and not packet.is_ipv4(dest):
         #If it is a string, but not a string that is an IP address
-        dest = deviceFromName(dest)
+        dest = session.puzzle.device_from_name(dest)
     if 'hostname' in dest:
         #If we passed in a device or hostname, convert it to an IP
         dest = destIP(src,dest)
