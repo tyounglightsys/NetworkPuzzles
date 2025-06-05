@@ -60,7 +60,7 @@ class Parser:
             cmd = items[0].lower()
             args = items[1:]
             match cmd:
-                case 'help':
+                case 'help'|'?':
                     self.printhelp()
                 case 'puzzles' | 'search':
                     return self.get_puzzles(cmd, args)
