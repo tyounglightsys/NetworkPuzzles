@@ -464,6 +464,7 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
         src:str - the hostname of the device
         src:device - the device record itself
         ignoreLoopback:bool=True - whether to ignore the loopback
+        appendInterfacNames:bool=False Add the interface names to the string - used for showing the status
     Returns:
         A list of strings (ip+mask)
     """
@@ -788,3 +789,20 @@ def Ping(src, dest):
     sendPacketOutDevice(nPacket,src)
     #print (nPacket)
     packet.addPacketToPacketlist(nPacket)
+
+
+#Net Tests
+#def ListTests
+#def deviceIsLocked
+#def nicIsLocked
+#def markAsCompleted
+# The tests are:
+#NetTestType { NeedsLocalIPTo, NeedsDefaultGW, NeedsLinkToDevice, NeedsRouteToNet,
+#        NeedsUntaggedVLAN, NeedsTaggedVLAN, NeedsForbiddenVLAN,
+#        SuccessfullyPings, SuccessfullyPingsAgain, SuccessfullyArps, SuccessfullyDHCPs, HelpRequest, ReadContextHelp, FailedPing,
+#        DHCPServerEnabled, SuccessfullyTraceroutes, SuccessfullyPingsWithoutLoop,
+#        LockAll, LockIP, LockRoute, LockNic, LockDHCP, LockGateway, LockLocation,
+#        LockVLANsOnHost, LockNicVLAN, LockInterfaceVLAN, LockVLANNames,
+#        DeviceIsFrozen, DeviceBlowsUpWithPower, DeviceNeedsUPS, DeviceNICSprays,
+#    }
+#nettest structure: shost, dhost, thetest
