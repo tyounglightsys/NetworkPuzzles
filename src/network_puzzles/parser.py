@@ -4,6 +4,7 @@ import sys
 from . import device
 from . import puzzle
 from . import session
+from . import packet
 
 
 class Parser:
@@ -69,6 +70,8 @@ class Parser:
                     self.run_ping(args)
                 case 'show' | 'list':
                     self.show_info(args)
+                case 'set':
+                    self.setvalue(args)
                 case _:
                     self.print(f"unknown: {command}")
         else:
@@ -103,6 +106,34 @@ class Parser:
                 self.print(one['hostname'])
         if len(args) == 1:
             self.print("Not done yet")
+
+    def setvalue(self,args):
+        #set a value on a device.
+        #right now, we have something like: set pc0 poweroff true
+        if len(args) == 3:
+            chosendevice = session.puzzle.device_from_name(args[0])
+            if chosendevice is not None:
+                match args[1].lower():
+                    case 'power'|'poweroff':
+                        if args[2].lower() == "off":
+                            chosendevice['poweroff'] = 'True'
+                        else:
+                            chosendevice['poweroff']= 'False'
+                        self.print(f"Defining {args[0]} 'poweroff' to {chosendevice['poweroff']}")
+                    case 'dhcp'|'isdhcp':
+                        if args[2].lower() == "yes":
+                            chosendevice['isdhcp'] = 'True'
+                        else:
+                            chosendevice['isdhcp']= 'False'
+                        self.print(f"Defining {args[0]} 'isdhcp' to {chosendevice['isdhcp']}")
+                    case 'gateway'|'gw':
+                        #we really need to do some type checking.  It should be a valid ipv4 or ipv6 address
+                        if packet.is_ipv4(args[2]) or packet.is_ipv6(args[2]):
+                            chosendevice['gateway']['ip']= args[2]
+                            self.print(f"Setting {args[0]} gateway: {chosendevice['gateway']['ip']}")
+                        else:
+                            self.print(f"invalid address: {args[2]}")
+
 
 # def parse(command:str):
 #     # We will make this a lot more interesting later.  For now, just do a very simple thing
