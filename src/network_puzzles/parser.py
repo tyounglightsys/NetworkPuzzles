@@ -102,10 +102,37 @@ class Parser:
             # Just the show command.  List all the devices
             self.print(session.puzzle.json.get('name'))
             devicelist = session.puzzle.all_devices()
+            if len(devicelist) > 0:
+                self.print("----devices----")
             for one in devicelist:
                 self.print(one['hostname'])
+            linklist=session.puzzle.all_links()
+            if len(linklist) > 0:
+                self.print("----links----")
+            for one in linklist:
+                self.print(one['hostname'])
         if len(args) == 1:
-            self.print("Not done yet")
+            thedevice = session.puzzle.device_from_name(args[0])
+            if thedevice is not None:
+                #we have a valid device.  Show information about the device
+                self.print("----Device----")
+                self.print(f"hostname: {thedevice['hostname']}")    
+                self.print(f"gateway: {thedevice['gateway']['ip']}")
+                for onestring in device.allIPStrings(thedevice,True,True):
+                    self.print(onestring)
+                return
+            thedevice = session.puzzle.link_from_name(args[0])
+            if thedevice is not None:
+                #we have a valid link.  Show information about the link
+                self.print("----Link----")
+                self.print(f"name: {thedevice['hostname']}")
+                self.print(f"type: {thedevice['linktype']}")
+                self.print(f"source: {thedevice['SrcNic']['hostname']} - {thedevice['SrcNic']['nicname']}")
+                self.print(f"dest: {thedevice['DstNic']['hostname']} - {thedevice['DstNic']['nicname']}")
+                return
+            self.print(f"No such host {args[0]}")
+
+
 
     def setvalue(self,args):
         #set a value on a device.
