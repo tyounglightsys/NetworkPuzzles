@@ -127,6 +127,19 @@ class Puzzle:
         for item in items:
             if item.get(attrib) == value:
                 return item
+            
+    def deleteItem(self, itemToDelete:str):
+        itemlist = self.json['device']
+        for i in range(len(itemlist) - 1, -1, -1):
+            if(itemlist[i]['hostname'] == itemToDelete):
+                del itemlist[i]
+                return True
+        itemlist = self.json['link']
+        for i in range(len(itemlist) - 1, -1, -1):
+            if(itemlist[i]['hostname'] == itemToDelete):
+                del itemlist[i]
+                return True
+        return False
 
 
 def read_json_file(file_path):

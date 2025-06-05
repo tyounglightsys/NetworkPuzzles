@@ -64,6 +64,8 @@ class Parser:
                     return self.get_puzzles(cmd, args)
                 case 'load' | 'open':
                     return self.open_puzzle(cmd, args)
+                case 'delete':
+                    return self.delete_item(args)
                 case 'exit' | 'quit' | 'stop':
                     self.exit_app()
                 case 'ping':
@@ -96,6 +98,23 @@ class Parser:
         self.print(f"PING {args[1]} from {args[0]}")
         device.Ping(shost, dhost)
     
+    def delete_item(self, args):
+        if len(args) == 0:
+            self.print("invalid delete command: usage: delete item")
+            self.print(" example: delete pc0")
+            self.print(" example: delete pc0_link_net_switch0")
+            return False
+        target_device = session.puzzle.device_from_name(args[0])
+        if target_device is None:
+            target_device = session.puzzle.link_from_name(args[0])
+        if target_device is None:
+            self.print(f"Cannot delete: No such item {args[0]}")
+            return False
+        #check to see if we are able to delete.  Is it locked?
+        #We will need to check for that later after the tests are done.
+        self.print(f"Deleting {args[0]}")
+        session.puzzle.deleteItem(args[0])
+
     def show_info(self, args):
         # list the hosts.  Or, show information about a specifici host
         if len(args) == 0:
