@@ -116,7 +116,9 @@ class Parser:
             if thedevice is not None:
                 #we have a valid device.  Show information about the device
                 self.print("----Device----")
-                self.print(f"hostname: {thedevice['hostname']}")    
+                self.print(f"hostname: {thedevice['hostname']}")
+                if 'poweroff' in thedevice and thedevice['poweroff'].lower() == 'true':
+                    self.print(f"poweroff: {thedevice['poweroff']}")
                 self.print(f"gateway: {thedevice['gateway']['ip']}")
                 for onestring in device.allIPStrings(thedevice,True,True):
                     self.print(onestring)

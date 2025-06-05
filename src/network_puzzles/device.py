@@ -483,6 +483,9 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
         if not isinstance(onenic['interface'],list):
             #turn it into a list so we can iterate it
             onenic['interface']=[onenic['interface']]
+        if onenic['nictype'][0] == "port" or onenic['nictype'][0] == "wport":
+                #skip this interface if we are told to do so
+                continue
         for oneinterface in onenic['interface']:
             #add it to the list
             if oneinterface['nicname'] == "lo0" and ignoreLoopback:
