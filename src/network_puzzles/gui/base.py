@@ -103,7 +103,10 @@ class Device(ThemedBoxLayout):
         self.app = session.app
         self.base = device.Device(init_data)
         
-        self.commands = [f"Ping {self.base.hostname} router0", "Power on/off", f"Replace {self.base.hostname}", "Add UPS"]
+        self.commands = [
+            f"Ping {self.base.hostname} router0",
+            f"Set {self.base.hostname} power off",
+        ]
         self.orientation = 'vertical'
         self.spacing = 0
         self._set_pos()  # sets self.coords and self.pos_hint
