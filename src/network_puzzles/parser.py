@@ -85,6 +85,7 @@ class Parser:
     def printhelp(self):
         self.print("--- CLI Help ---")
         self.print("delete [item] - delete a device or link")
+        self.print("help - show this page")
         self.print("load - load a puzzle.  Example: load 1 | load Level0_Ping")
         self.print("quit - exit the cli")
         self.print("search [info] - list the puzzles matching the info.  Example: search DHCP | search 1")
