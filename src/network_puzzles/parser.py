@@ -60,6 +60,8 @@ class Parser:
             cmd = items[0].lower()
             args = items[1:]
             match cmd:
+                case 'help':
+                    self.printhelp()
                 case 'puzzles' | 'search':
                     return self.get_puzzles(cmd, args)
                 case 'load' | 'open':
@@ -79,6 +81,17 @@ class Parser:
         else:
             # If command is empty, do nothing. The prompt will just be reshown.
             pass
+
+    def printhelp(self):
+        self.print("--- CLI Help ---")
+        self.print("delete [item] - delete a device or link")
+        self.print("load - load a puzzle.  Example: load 1 | load Level0_Ping")
+        self.print("quit - exit the cli")
+        self.print("search [info] - list the puzzles matching the info.  Example: search DHCP | search 1")
+        self.print("set - change a value.  Example: set pc0 gateway | set pc0 dhcp true")
+        self.print("show [item] - show information about an item.  Example: show | show pc0")
+        self.print("ping [host1] [host2] - ping from one host to the other.  Example: ping pc0 pc1")
+
 
     def run_ping(self, args):
         if len(args) != 2:
