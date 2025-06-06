@@ -5,6 +5,7 @@ import json
 import copy
 import re
 import os
+from packaging.version import Version
 
 # define the global network list
 from . import session
@@ -36,6 +37,9 @@ class Puzzle:
         """
         links = []
         for one in self.json.get('link', []):
+            # Some link attribs are single-link dicts. Convert if necessary.
+            if not isinstance(one, dict):
+                one = self.json.get('link')
             if 'hostname' in one:
                 links.append(one)
         return links
@@ -203,7 +207,7 @@ def readPuzzle():
             oneentry['EduNetworkBuilder']['Network']['name'] = one
             session.puzzlelist.append(oneentry)
             #print("loading: " + one)
-        session.puzzlelist.sort(key = lambda x: (float(x['EduNetworkBuilder']['Network']['level']), float(x['EduNetworkBuilder']['Network']['sortorder']) ))
+        session.puzzlelist.sort(key = lambda x: (Version(x['EduNetworkBuilder']['Network']['level']), Version(x['EduNetworkBuilder']['Network']['sortorder']) ))
 
 def choosePuzzleFromName(what:str):
     """

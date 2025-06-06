@@ -15,6 +15,7 @@ classifiers = [
 ]
 dependencies = [
     "kivy",
+    "packaging",
 ]
 dynamic = ["readme", "version"]
 

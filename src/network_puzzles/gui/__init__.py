@@ -213,10 +213,11 @@ class NetworkPuzzlesApp(App):
         if puzzle_data is None:
             puzzle_data = session.puzzle.json
 
-        puzzle_id = puzzle_data.get('uniqueidentifier')
+        # Combine level & sortorder to get unique message ID.
+        puzzle_msg_id = f"{puzzle_data.get('level')}.{puzzle_data.get('sortorder')}"
         # Get puzzle text from localized messages, if possible, but fallback to
         # English text in JSON data.
-        puzzle_messages = messages.puzzles.get(puzzle_id)
+        puzzle_messages = messages.puzzles.get(puzzle_msg_id)
         if puzzle_messages:
             title = puzzle_messages.get('title')
             message = puzzle_messages.get('message')

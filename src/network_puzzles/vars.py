@@ -9,7 +9,7 @@ class Session:
     def __init__(self):
         self.app = None
         self.locale = locale.getlocale()[0]
-        self.lang: str = f"{self.locale[:2]}"
+        self.lang: str = self.locale[:2]
         self.maclist: list = list()
         self.puzzlelist: list = list()
         self.puzzle = None

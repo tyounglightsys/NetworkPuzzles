@@ -6,6 +6,22 @@ from network_puzzles import ui
 from . import PUZZLES_DIR
 
 
+class TestPuzzleAllLinks(unittest.TestCase):
+    def test_alldevices(self):
+        for puz in session.puzzlelist:
+            p = puzzle.Puzzle(puz)
+            devs = p.all_devices()
+            for dev in devs:
+                self.assertIsInstance(dev, dict)
+
+    def test_alllinks(self):
+        for puz in session.puzzlelist:
+            p = puzzle.Puzzle(puz)
+            links = p.all_links()
+            for link in links:
+                self.assertIsInstance(link, dict)
+
+
 class TestPuzzleInit(unittest.TestCase):
     def setUp(self):
         self.data = {
