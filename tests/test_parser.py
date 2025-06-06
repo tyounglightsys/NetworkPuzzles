@@ -3,6 +3,9 @@ import unittest
 
 
 class TestParse(unittest.TestCase):
+    def setUp(self):
+        self.parser = parser.Parser()
+
     def test_command_invalid(self):
         cmds = [
             'help',
@@ -10,10 +13,10 @@ class TestParse(unittest.TestCase):
             '',
         ]
         for cmd in cmds:
-            self.assertIsNone(parser.parse(cmd))
+            self.assertIsNone(self.parser.parse(cmd))
 
     def test_search_caseinsensitive(self):
-        self.assertEqual(parser.parse('search dhcp'), parser.parse('search DHCP'))
+        self.assertEqual(self.parser.parse('search dhcp'), self.parser.parse('search DHCP'))
 
     def test_search_valid(self):
         cmds = [
@@ -23,7 +26,7 @@ class TestParse(unittest.TestCase):
             'puzzles',
         ]
         for cmd in cmds:
-            r = parser.parse(cmd)
+            r = self.parser.parse(cmd)
             self.assertIsInstance(r, dict)
             self.assertTrue(len(r.get('value')) > 0)
             self.assertTrue(r.get('command') in ['puzzles', 'search'])
@@ -34,4 +37,4 @@ class TestParse(unittest.TestCase):
             'puzzles 999'
         ]
         for cmd in cmds:
-            self.assertEqual(0, len(parser.parse(cmd).get('value')))
+            self.assertEqual(0, len(self.parser.parse(cmd).get('value')))

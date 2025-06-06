@@ -8,12 +8,8 @@ from . import packet
 
 
 class Parser:
-    def __init__(self, ui=None):
-        self.ui = ui
-        if self.ui is None:
-            self.print = print
-        else:
-            self.print = self.ui.console_write
+    def __init__(self):
+        pass
 
     def get_puzzles(self, cmd, args):
         # We want to list all the items.
@@ -36,7 +32,7 @@ class Parser:
         pzs = puzzle.listPuzzles(pattern)
         val = pzs
         for a in pzs:
-            self.print(a)
+            session.print(a)
         return {'command': cmd, 'value': val}
 
     def exit_app(self, code=0):
@@ -49,7 +45,7 @@ class Parser:
         elif len(args) == 2:
             val = puzzle.choosePuzzle(args[0], args[1])
         else:
-            self.print("loading: ")
+            print("loading: ")
         return {'command': cmd, 'value': val}
 
     def parse(self, command: str):
@@ -77,7 +73,7 @@ class Parser:
                 case 'set':
                     self.setvalue(args)
                 case _:
-                    self.print(f"unknown: {command}")
+                    session.print(f"unknown: {command}")
         else:
             # If command is empty, do nothing. The prompt will just be reshown.
             pass
@@ -96,78 +92,78 @@ class Parser:
 
     def run_ping(self, args):
         if len(args) != 2:
-            self.print("invalid ping command: usage: ping source_hostname destination_hostname")
-            self.print(" example: ping pc0 pc1")
+            session.print("invalid ping command: usage: ping source_hostname destination_hostname")
+            session.print(" example: ping pc0 pc1")
             return
 
         shost = session.puzzle.device_from_name(args[0])
         dhost = session.puzzle.device_from_name(args[1])
         if shost is None:
-            self.print(f"No such host: {args[0]}")
+            session.print(f"No such host: {args[0]}")
             return
         if dhost is None:
-            self.print("No such host: " + args[1] )
+            session.print("No such host: " + args[1] )
             return
         # if we get here, we are ready to try to ping.
-        self.print(f"PING {args[1]} from {args[0]}")
+        session.print(f"PING {args[1]} from {args[0]}")
         device.Ping(shost, dhost)
     
     def delete_item(self, args):
         if len(args) == 0:
-            self.print("invalid delete command: usage: delete item")
-            self.print(" example: delete pc0")
-            self.print(" example: delete pc0_link_net_switch0")
+            session.print("invalid delete command: usage: delete item")
+            session.print(" example: delete pc0")
+            session.print(" example: delete pc0_link_net_switch0")
             return False
         target_device = session.puzzle.device_from_name(args[0])
         if target_device is None:
             target_device = session.puzzle.link_from_name(args[0])
         if target_device is None:
-            self.print(f"Cannot delete: No such item {args[0]}")
+            session.print(f"Cannot delete: No such item {args[0]}")
             return False
         #check to see if we are able to delete.  Is it locked?
         #We will need to check for that later after the tests are done.
-        self.print(f"Deleting {args[0]}")
+        session.print(f"Deleting {args[0]}")
         session.puzzle.deleteItem(args[0])
 
     def show_info(self, args):
         # list the hosts.  Or, show information about a specifici host
         if len(args) == 0:
             # Just the show command.  List all the devices
-            self.print(session.puzzle.json.get('name'))
+            session.print(session.puzzle.json.get('name'))
             devicelist = session.puzzle.all_devices()
             if len(devicelist) > 0:
-                self.print("----devices----")
+                session.print("----devices----")
             for one in devicelist:
-                self.print(one['hostname'])
+                session.print(one['hostname'])
             linklist=session.puzzle.all_links()
             if len(linklist) > 0:
-                self.print("----links----")
+                session.print("----links----")
             for one in linklist:
-                self.print(one['hostname'])
+                session.print(one['hostname'])
         if len(args) == 1:
             thedevice = session.puzzle.device_from_name(args[0])
             if thedevice is not None:
                 #we have a valid device.  Show information about the device
-                self.print("----Device----")
-                self.print(f"hostname: {thedevice['hostname']}")
+                session.print("----Device----")
+                session.print(f"hostname: {thedevice['hostname']}")
                 if 'poweroff' in thedevice and thedevice['poweroff'].lower() == 'true':
-                    self.print(f"poweroff: {thedevice['poweroff']}")
+                    session.print(f"poweroff: {thedevice['poweroff']}")
                 if 'isdhcp' in thedevice and thedevice['isdhcp'].lower() == 'true':
-                    self.print(f"DHCP server: {thedevice['isdhcp']}")
-                self.print(f"gateway: {thedevice['gateway']['ip']}")
+                    session.print(f"DHCP server: {thedevice['isdhcp']}")
+                session.print(f"gateway: {thedevice['gateway']['ip']}")
                 for onestring in device.allIPStrings(thedevice,True,True):
-                    self.print(onestring)
+                    session.print(onestring)
                 return
             thedevice = session.puzzle.link_from_name(args[0])
             if thedevice is not None:
                 #we have a valid link.  Show information about the link
-                self.print("----Link----")
-                self.print(f"name: {thedevice['hostname']}")
-                self.print(f"type: {thedevice['linktype']}")
-                self.print(f"source: {thedevice['SrcNic']['hostname']} - {thedevice['SrcNic']['nicname']}")
-                self.print(f"dest: {thedevice['DstNic']['hostname']} - {thedevice['DstNic']['nicname']}")
+                session.print("----Link----")
+                session.print(f"name: {thedevice['hostname']}")
+                session.print(f"type: {thedevice['linktype']}")
+                session.print(f"source: {thedevice['SrcNic']['hostname']} - {thedevice['SrcNic']['nicname']}")
+                session.print(f"dest: {thedevice['DstNic']['hostname']} - {thedevice['DstNic']['nicname']}")
                 return
-            self.print(f"No such host {args[0]}")
+            session.print(f"No such host {args[0]}")
 
 
 
@@ -183,17 +179,17 @@ class Parser:
                             chosendevice['poweroff'] = 'True'
                         else:
                             chosendevice['poweroff']= 'False'
-                        self.print(f"Defining {args[0]} 'poweroff' to {chosendevice['poweroff']}")
+                        session.print(f"Defining {args[0]} 'poweroff' to {chosendevice['poweroff']}")
                     case 'dhcp'|'isdhcp':
                         if args[2].lower() == "yes":
                             chosendevice['isdhcp'] = 'True'
                         else:
                             chosendevice['isdhcp']= 'False'
-                        self.print(f"Defining {args[0]} 'isdhcp' to {chosendevice['isdhcp']}")
+                        session.print(f"Defining {args[0]} 'isdhcp' to {chosendevice['isdhcp']}")
                     case 'gateway'|'gw':
                         #we really need to do some type checking.  It should be a valid ipv4 or ipv6 address
                         if packet.is_ipv4(args[2]) or packet.is_ipv6(args[2]):
                             chosendevice['gateway']['ip']= args[2]
-                            self.print(f"Setting {args[0]} gateway: {chosendevice['gateway']['ip']}")
+                            session.print(f"Setting {args[0]} gateway: {chosendevice['gateway']['ip']}")
                         else:
-                            self.print(f"invalid address: {args[2]}")
+                            session.print(f"invalid address: {args[2]}")
