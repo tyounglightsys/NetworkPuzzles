@@ -79,15 +79,15 @@ class Parser:
             pass
 
     def printhelp(self):
-        self.print("--- CLI Help ---")
-        self.print("delete [item] - delete a device or link")
-        self.print("help - show this page")
-        self.print("load - load a puzzle.  Example: load 1 | load Level0_Ping")
-        self.print("quit - exit the cli")
-        self.print("search [info] - list the puzzles matching the info.  Example: search DHCP | search 1")
-        self.print("set - change a value.  Example: set pc0 gateway | set pc0 dhcp true")
-        self.print("show [item] - show information about an item.  Example: show | show pc0")
-        self.print("ping [host1] [host2] - ping from one host to the other.  Example: ping pc0 pc1")
+        session.print("--- CLI Help ---")
+        session.print("delete [item] - delete a device or link")
+        session.print("help - show this page")
+        session.print("load - load a puzzle.  Example: load 1 | load Level0_Ping")
+        session.print("quit - exit the cli")
+        session.print("search [info] - list the puzzles matching the info.  Example: search DHCP | search 1")
+        session.print("set - change a value.  Example: set pc0 gateway | set pc0 dhcp true")
+        session.print("show [item] - show information about an item.  Example: show | show pc0")
+        session.print("ping [host1] [host2] - ping from one host to the other.  Example: ping pc0 pc1")
 
 
     def run_ping(self, args):
