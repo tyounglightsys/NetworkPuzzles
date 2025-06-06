@@ -93,6 +93,7 @@ class Parser:
 
     def printhelp(self):
         session.print("--- CLI Help ---")
+        session.print("create link source destination - create a link between two devices.  example: create link pc0 net_switch0")
         session.print("delete [item] - delete a device or link")
         session.print("help - show this page")
         session.print("load - load a puzzle.  Example: load 1 | load Level0_Ping")
