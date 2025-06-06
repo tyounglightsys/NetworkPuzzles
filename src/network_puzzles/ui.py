@@ -5,6 +5,7 @@ from . import puzzle
 from . import session
 from . import packet
 
+
 class UI:
     TITLE = 'NetworkPuzzles'
 
@@ -88,7 +89,8 @@ class UI:
 
 class CLI(UI):
     def __init__(self):
-        self.parser = parser.Parser(self)
+        self.parser = parser.Parser()
+        session.print = self.console_write
 
     def run(self):
         print(self.TITLE)
@@ -126,7 +128,8 @@ class CLI(UI):
 class GUI(UI):
     def __init__(self, kivyapp):
         self.app = kivyapp(ui=self)
-        self.parser = parser.Parser(self)
+        self.parser = parser.Parser()
+        session.print = self.console_write
 
     def console_write(self, line):
         self.app.add_terminal_line(line)

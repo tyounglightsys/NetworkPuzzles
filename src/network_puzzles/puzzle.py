@@ -247,7 +247,7 @@ def choosePuzzle(what, filter=None):
         except Exception:
             puz = choosePuzzleFromName(what)
     if puz is not None:
-        print("Loaded: " + puz['name'])
+        session.print("Loaded: " + puz['name'])
         session.puzzle = Puzzle(puz)
         session.puzzle.set_all_device_nic_macs()
     return puz
