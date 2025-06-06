@@ -56,6 +56,8 @@ class Parser:
             cmd = items[0].lower()
             args = items[1:]
             match cmd:
+                case 'create':
+                    self.create_something(args)
                 case 'help'|'?':
                     self.printhelp()
                 case 'puzzles' | 'search':
@@ -77,6 +79,17 @@ class Parser:
         else:
             # If command is empty, do nothing. The prompt will just be reshown.
             pass
+
+    def create_something(self,args):
+        if len(args) == 0:
+            session.print("You must specify something to print")
+            session.print("create link source_hostname [sourcenic] dest_hostname [destnic]")
+            session.print("create device devicetype x,y")
+            session.print("where devicetype is one of the known devices: pc, laptop, router, switch, firewall, etc.")
+            return None
+        item = args.pop(0).lower()
+        if item == 'link':
+            session.puzzle.createLink(args)
 
     def printhelp(self):
         session.print("--- CLI Help ---")

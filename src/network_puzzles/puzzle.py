@@ -117,6 +117,24 @@ class Puzzle:
             if item:
                 return item
         return None
+    
+    def firstFreeNic(self, deviceRec):
+        """find the first unused network card
+        Args: deviceRec: the device record
+        returns: the first port, eth or whatnot that is not attached to something.  None if no port can be found
+        """
+        for onenic in deviceRec.get('nic'):
+            if onenic.get('nictype')[0] == 'lo':
+                continue #skip loopback devices
+            if onenic.get('nictype')[0] == 'management_interface':
+                continue #skip management_interface devices
+            match onenic.get('nictype')[0]:
+                case 'port' | 'wport' | 'eth' | 'wan' | 'wlan':
+                    tlink = device.linkConnectedToNic(onenic)
+                    if tlink is None:
+                        return onenic
+            #if the nic type is not one of those, then do not give it as an option.
+        return None
 
     def set_all_device_nic_macs(self):
         for oneDevice in self.all_devices():
@@ -144,6 +162,87 @@ class Puzzle:
                 del itemlist[i]
                 return True
         return False
+    
+    def issueUniqueIdentifier(self):
+        availableval = self.json.get('uniqueidentifier')
+        nextval = str(int(availableval) + 1)
+        self.json['uniqueidentifier'] = nextval
+        return availableval
+    
+    def createLink(self, args, linktype='normal'):
+        #we should have a source device, and an optional src nic, and a dest device and an optional dest nic
+        if(len(args) == 0):
+            session.print("Error.  You must pass arguments to createLink")
+        #the first item must be a hostname for the first device
+        sdevicename = args.pop(0)
+        sdevice = session.puzzle.device_from_name(sdevicename)
+        if sdevice is None:
+            session.print(f"Error: no such device: {sdevicename}")
+            return
+        #The second item might be a nic name, or the second device.
+        snicname = args[0]
+        snic = device.Device(sdevice).nic_from_name(snicname)
+        if snic is None:
+            snicname=""
+            if session.puzzle.device_from_name(args[0]) is None:
+                #the nic failed to match, and it was not a valid host.
+                if len(args) > 1:
+                    #we are not sure if it is a devicename or a port.
+                    session.print(f"Could not match: {args[0]}")
+                    return
+
+        else:
+            args.pop(0) #get rid of it. if it is none, we use the arg as the dest hostname
+        ddevicename = args.pop(0)
+        ddevice = session.puzzle.device_from_name(ddevicename)
+        if ddevice is None:
+            session.print(f"Error no such device {ddevicename}")
+            return
+        dnicname=""
+        dnic=None
+        if(len(args) > 0):
+            dnic = device.Device(ddevice).nic_from_name(args[0])
+            if dnic is not None:
+                dnicname = args[0]
+            else:
+                session.print(f"Could not find nic: {args[0]}")
+                return
+        #If the snic and dnics are not set, find an available one.
+        if snic is None:
+            snic = self.firstFreeNic(sdevice)
+            if snic is not None:
+                snicname = snic.get('nicname')
+        if dnic is None:
+            dnic = self.firstFreeNic(ddevice)
+            if dnic is not None:
+                dnicname = dnic.get('nicname')
+        #print(f"trying to make a link from {sdevicename} {snicname} to {ddevicename} {dnicname}")
+        existinglink = self.link_from_devices(sdevice, ddevice)
+        if existinglink is not None:
+            session.print(f"Link already exists: {existinglink['hostname']}")
+            return
+        #verify the port types match
+        ismatch=False
+        snictype = snic.get('nictype')[0]
+        dnictype = dnic.get('nictype')[0]
+        if (snictype == 'wlan' or snictype == 'wport') and (dnictype == 'wlan' or dnictype == 'wport'):
+            ismatch=True
+        if (snictype == 'port' or snictype == 'eth' or snictype == 'wan') and (dnictype == 'port' or dnictype == 'eth' or dnictype == 'wan'):
+            ismatch=True
+        #if we get here, we should have all the pieces.
+        if ismatch:
+            newlink = {}
+            newlink['hostname'] = sdevicename + "_link_" + ddevicename
+            newlink['linktype'] = linktype #should be "normal", "broken", or "wireless"
+            newlink['uniqueidentifier'] = session.puzzle.issueUniqueIdentifier()
+            newlink['SrcNic'] = copy.copy(snic.get('myid'))
+            newlink['DstNic'] = copy.copy(dnic.get('myid'))
+            if not isinstance(self.json['link'], list):
+                self.json['link'] = [ self.json['link']]
+            self.json['link'].append(newlink)
+        else:
+            session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
+
 
 
 def read_json_file(file_path):

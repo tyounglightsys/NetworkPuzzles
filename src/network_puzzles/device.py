@@ -732,7 +732,7 @@ def sendPacketOutDevice(packRec, theDevice):
     #If we get here, it did not work.  No route to host.
     #right now, we blow up.  We need to deal with this with a bit more grace.  Passing the error back to the user
     packRec['status'] = 'failed'
-    raise Exception("No Route to host")
+    session.print("No route to host")
 
 def packetFromTo(src, dest):
     """Generate a packet, starting at the srcdevice and destined for the destination device
@@ -752,7 +752,7 @@ def packetFromTo(src, dest):
             return None
     if src is None:
         #the function is being improperly used
-        print('Error: pinpacketFromTo function must have a valid device as src.  None was passed in.')
+        print('Error: packetFromTo function must have a valid device as src.  None was passed in.')
         return None
     #dest should be a device, an ip address, or a hostname
     if dest is None:
