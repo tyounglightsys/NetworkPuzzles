@@ -103,11 +103,12 @@ class Device(ThemedBoxLayout):
         super().__init__(**kwargs)
         self.app = session.app
         self.base = device.Device(init_data)
-        
+                    
         self.commands = [
             f"Ping {self.base.hostname} router0",
             f"Set {self.base.hostname} power off",
         ]
+        self.commands.extend(device.commands_from_tests(self.base.hostname))
         self.orientation = 'vertical'
         self.spacing = 0
         self._set_pos()  # sets self.coords and self.pos_hint

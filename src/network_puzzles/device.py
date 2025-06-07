@@ -823,12 +823,16 @@ def Ping(src, dest):
 #    }
 #nettest structure: shost, dhost, thetest
 
-def all_tests():
+def all_tests(JustForHost=None):
     toreturn=list()
     if not isinstance(session.puzzle.json.get('nettest'),list):
         session.puzzle.json['nettest'] = [ session.puzzle.json['nettest'] ]
     for onetest in session.puzzle.json.get('nettest'):
-        toreturn.append(onetest)
+        if JustForHost is None:
+            toreturn.append(onetest)
+        else:
+            if onetest.get('shost') == JustForHost:
+                toreturn.append(onetest)
     return toreturn
 
 def device_is_critical(devicename):
@@ -872,4 +876,21 @@ def mark_test_as_completed(shost,dhost,whattocheck,message):
                 onetest['message'] = message
                 print(f"Debug: Marking as done: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')}")
 
-    
+def commands_from_tests(JustForHost=None):
+    toreturn = list()
+    for onetest in all_tests(JustForHost):
+        #print(f"checking test: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')} - {onetest.get('completed',False)}")
+        if onetest.get('completed',False):
+            continue
+        #We are looking at the tests corresponding to the host in question:
+        #NeedsLocalIPTo, NeedsDefaultGW, NeedsLinkToDevice, NeedsRouteToNet,
+        #NeedsUntaggedVLAN, NeedsTaggedVLAN, NeedsForbiddenVLAN,
+        #SuccessfullyPings, SuccessfullyPingsAgain, SuccessfullyArps, SuccessfullyDHCPs, HelpRequest, ReadContextHelp, FailedPing,
+        #DHCPServerEnabled, SuccessfullyTraceroutes, SuccessfullyPingsWithoutLoop,
+        #LockAll, LockIP, LockRoute, LockNic, LockDHCP, LockGateway, LockLocation,
+        #LockVLANsOnHost, LockNicVLAN, LockInterfaceVLAN, LockVLANNames,
+        #DeviceIsFrozen, DeviceBlowsUpWithPower, DeviceNeedsUPS, DeviceNICSprays,
+        match onetest.get('thetest'):
+            case 'SuccessfullyPings'|'SuccessfullyPingsAgain':
+                toreturn.append(f"ping {onetest.get('shost')} {onetest.get('dhost')}")
+    return toreturn
