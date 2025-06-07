@@ -328,6 +328,7 @@ def destIP(srcDevice,dstDevice):
         return None
     srcIPs = DeviceIPs(srcDevice)
     dstIPs = DeviceIPs(dstDevice)
+    #print(f"we have IPs: src {len(srcIPs)} dst {len(dstIPs)}")
 
     if srcIPs is None or dstIPs is None:
         #we will not be able to find a match.
@@ -339,6 +340,10 @@ def destIP(srcDevice,dstDevice):
                 #We found a match.  We are looking for the destination.  So we return that
                 return oneDip
     #if we get here, we did not find a match
+    for oneDip in dstIPs:
+        #compare each of them to find one that is local
+        if ipaddress.IPv4Interface(dstDevice.get('gateway')['ip']) in oneDip.network:
+            return oneDip
     #we need to find the IP address that is local to the gateway and use that.
     return None
 
@@ -387,15 +392,16 @@ def sourceIP(src,dstIP):
             print(oneip.ip)
             return oneip
     #if we get here, we do not have a nic that is local to the destination.  Return the nic that the GW is on
-    GW = ipaddress.ip_address(srcDevice['gateway']['ip'] + "/" + srcDevice['gateway']['netmask'])
+    tmpval=f"{srcDevice['gateway']['ip']}/{srcDevice['gateway']['mask']}"
+    GW = ipaddress.IPv4Interface(tmpval)
     for oneip in allIPs:
-        if GW in oneip.ip_network:
+        if GW in oneip.network:
             print("The gateway is the way forward ")
             print(oneip.ip)
             return oneip
 
     #if we do not have a GW, we need to report, "no route to host"
-    print ("no path")
+    session.print("No route to host")
     return None
 
 def deviceCaptions(deviceRec, howmuch:str):
@@ -664,6 +670,11 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
         if packRec['packettype'] == 'ping-response':
             print("Woot! We returned with a ping")
             packRec['status'] = 'done'
+            pingdest = deviceFromIP(packet.justIP(packRec.get('sourceIP')))
+            print(f"sourceip is {packet.justIP(packRec.get('sourceIP'))}")
+            print(f"dest host is {pingdest.get('hostname')}")
+            if pingdest is not None:
+                mark_test_as_completed(thisDevice.get('hostname'),pingdest.get('hostname'),'SuccessfullyPings',f"Successfully pinged from {thisDevice.get('hostname')} to {pingdest.get('hostname')}")
             return True
 
     #If the packet is not done and we forward, forward. Basically, a switch/hub
@@ -760,8 +771,10 @@ def packetFromTo(src, dest):
         return None
     if isinstance(dest,str) and not packet.is_ipv4(dest):
         #If it is a string, but not a string that is an IP address
+        #print("using dest as a hostname")
         dest = session.puzzle.device_from_name(dest)
     if 'hostname' in dest:
+        #print ("getting destination IP from a device")
         #If we passed in a device or hostname, convert it to an IP
         dest = destIP(src,dest)
     if dest is None:
@@ -814,7 +827,7 @@ def all_tests():
     toreturn=list()
     if not isinstance(session.puzzle.json.get('nettest'),list):
         session.puzzle.json['nettest'] = [ session.puzzle.json['nettest'] ]
-    for onetest in session.puzzle.json.get['nettest']:
+    for onetest in session.puzzle.json.get('nettest'):
         toreturn.append(onetest)
     return toreturn
 
@@ -857,5 +870,6 @@ def mark_test_as_completed(shost,dhost,whattocheck,message):
                 onetest['completed'] = True
                 onetest['acknowledged'] = False
                 onetest['message'] = message
+                print(f"Debug: Marking as done: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')}")
 
     
