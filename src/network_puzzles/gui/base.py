@@ -10,6 +10,7 @@ from kivy.properties import StringProperty
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.recycleview import RecycleView
+from kivy.uix.slider import Slider
 from kivy.uix.widget import Widget
 from typing import Tuple
 
@@ -221,6 +222,13 @@ class Link(Widget):
 
 class Packet(Widget):
     pass
+
+
+class HelpSlider(Slider):
+    pass
+    # def __init__(self, **kwargs):
+    #     super().__init__(**kwargs)
+    #     print(self.children)
 
 
 @dataclass

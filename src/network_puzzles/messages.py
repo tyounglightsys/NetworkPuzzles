@@ -1,16 +1,76 @@
 from . import _
 
 puzzles = {
-    "0.10.1": {
-        'title': _("Bad Power Supply"),
-        'message': _("Occasionally a piece of hardware will break, This often happens after long periods of use, though sometimes after just sitting around unused.\n\nThis puzzle makes it look a little worse than it usually would look.  Go ahead and turn on the switch.  After that, right-click and replace it.\n\nThings that have been replaced will need to have their settings put back.  So make sure to give the new switch a good IP and gateway."),
+    "0.0": {
+        'title': _("Learn how help works"),
+        'message': _("To learn how this program works, first we will acquaint you with the 'Help.'  Most of the puzzles you do, you will want to do with as little help as possible.  But, there is help when you need it.  For this puzzle, click one of the four help-levels (round buttons) on the right.  Then mouse-over the PC and see the messages.  When you have moused-over for all the buttons (and pressed the ? box), this puzzle will be completed.")
+    },
+    "0.1": {
+        "title": _("Ping Test"),
+        "message": _("Right-click PC0 and ping laptop0 and laptop1.  You can put either the IP address or host-name of the device you are trying to ping in the box that pops up asking you for an IP."),
+    },
+    "0.1.1": {
+        'title': _("Plug in network"),
+        'message': _("Plug in the network to the computer that needs it.  Click on the link icon (the line) and drag the pointer from the switch to the computer.  When you release the mouse button, the link window will pop up.  Choose the ports you want to connect, and you should be finished."),
+    },
+    "0.2": {
+        'title': _("No Switch"),
+        'message': _("There is no switch.  Add one and link the devices to it.  Click on the switch and add it to the network (make sure you add a switch and not a hub).  Then, drag links from the switch to the computers, choosing the ports to connect."),
+    },
+    "0.2.5": {
+        "title": _("Power It On"),
+        "message": _("The switch is powered off.  Right-click it and power it on.  Then, ping the laptop to make sure things work."),
+    },
+    "0.3": {
+        "title": _("DHCP Request"),
+        "message": _("Tell the PC to do a DHCP request.  Right-click on the PC to see the menu, or do it from the 'All' menu."),
+    },
+    "0.3.1": {
+        'title': _("IP Puzzle"),
+        'message': _("pc0 needs an IP that is local to the other two computers.  Double-click PC0, double-click the IP-Address (0.0.0.0) and put a good IP address there."),
     },
     "0.3.4": {
         'title': _("Network Loop"),
         'message': _("This puzzle shows you what happens when you create a network loop.  A loop is made when you have your switches connected to themselves or to another one that is connected back to the first one.  Ping from pc0 to pc1 to see what happens.  You do not need to fix the problem, but right-clicking one of the switches and removing one of the offending links would do it."),
     },
-    "0.3.5.1": {
+    "0.3.5": {
         'title': _("Network Loop 2"),
         'message': _("Managed Switches can use Spanning Tree, which intelligently figures out the least distance path to a point.  It is made so you can have network loops and survive.  Try pinging pc1 twice from pc0.  The first time, some packets are lost.  But the second time the packet goes where it should."),
     },
+    "0.3.6": {
+        'title': _("Frozen!"),
+        'message': _("Every once in a while a piece of hardware will freeze up and needs to be rebooted.  \n\nTry pinging laptop1 from PC0 and see how the packet fails.  It does not get past the switch.\n\nRight-click the switch and power it off, then power it back on.  Now try pinging laptop1."),
+    },
+    "0.4": {
+        'title': _("Switch vs Hub"),
+        'message': _("This puzzle shows the difference between a hub and a switch.\nHave each of the servers ping the computers on the same lan as themselves, and have those computers ping the server.  \nThe switch learns which device is attached to it and only sends the packet to that computer, while the hub sends the packet to every device on the subnet."),
+    },
+    "0.5": {
+        'title': _("Where did I put that?"),
+        'message': _("Your boss bought a switch and plugged it into your network, but did not tell you where he put it.  Now he wants you to find it.\nWhat do you do when you know where something is, but not exactly?  You go to the device you know it is plugged into and follow the wire.\nTo solve this, drag the switch around, and then find the other end of the wire and \"drag\" on the empty spot to \"find\" it.  Then, change the IP address of the missing switch."),
+    },
+    "0.6": {
+        'title': _("Broken Link"),
+        'message': _("This shows what happens if there is a broken network wire in your network.  Ping laptop1 and see where the packet dies.  Open one of the devices connected to that link and you will see that, even though the device has a link connected to it, it does not have a \"connection light\" saying it is connected.  (The connection-light is the * at the end of the eth name).  You can also edit the network card to see if it thinks it is connected.  Remove the broken network wire by right-clicking one of the devices at either end and removing the link.  Then add the link again.  A successful ping tells you if you got it working."),
+    },
+    "0.6.5": {
+        'title': _("Packet Corruption"),
+        'message': _("Network wires that run too close to electrical wires or fluorescent lights can cause packet corruption.  Move the light out of the way if the packet get corrupted."),
+    },
+    "0.6.6": {
+        'title': _("Packet Corruption2"),
+        'message': _("Packets can be partially corrupted by lights.  Look at how the packet goes the first time.  Move the light out of the way just a little bit and it should work fine.")
+    },
+    "0.7": {
+        "title": _("Traceroute"),
+        "message": _("A traceroute tests the path from one computer to the other.  Every routing device along the path will respond (but switches do not).  \nThis is done by adding a TTL (Time to Live) number on every packet.  Each device that routes packets will subtract one from the TTL.  When the TTL reaches zero, the devices will send a response back.  Traceroute catches these responses and uses it to determine what each step is along the path.\nHave server0 traceroute to server1"),
+    },
+    "0.10.1": {
+        'title': _("Bad Power Supply"),
+        'message': _("Occasionally a piece of hardware will break, This often happens after long periods of use, though sometimes after just sitting around unused.\n\nThis puzzle makes it look a little worse than it usually would look.  Go ahead and turn on the switch.  After that, right-click and replace it.\n\nThings that have been replaced will need to have their settings put back.  So make sure to give the new switch a good IP and gateway."),
+    },
+    "0.10.2": {
+        'title': _("Bad Power - Needs UPS"),
+        'message': _("Occasionally the electricity in a building, or in a city, has problems.  Usually, in these cases, a device will function for a while and then break on you.  To make the puzzle go faster, however, we have it break immediately.\n\nThis puzzle makes it look a little worse than it usually would look.  Go ahead and turn on the switch.  After that, right-click and replace it.  If you turn it on again, it will continue to break until you add a UPS to it.  After that, it will be fine.  Luckily for you, you do not need to pay for the devices you keep replacing!\n\nThings that have been replaced will need to have their settings put back.  So make sure to give the new switch a good IP and gateway."),
+    }
 }
