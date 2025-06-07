@@ -229,7 +229,7 @@ class Puzzle:
         if dnic is None:
             dnic = self.firstFreeNic(ddevice)
             if dnic is not None:
-                dnicname = dnic.get('nicname')
+                dnicname = dnic.get('nicname') #this was mainly for debugging
         #print(f"trying to make a link from {sdevicename} {snicname} to {ddevicename} {dnicname}")
         existinglink = self.link_from_devices(sdevice, ddevice)
         if existinglink is not None:
@@ -382,15 +382,3 @@ def is_ipv4(string):
         """
         return packet.is_ipv4(string)
 
-def doTest():
-
-    #mynet=choosePuzzlek('Level0-NeedsLink')
-    mynet=choosePuzzle(3)
-    print(mynet['name'])
-    mydevice = session.puzzle.device_from_uid('110')
-    #print(mydevice)
-    #mynic=device.nicFromName(mydevice,'eth0')
-    mynic = session.puzzle.nic_from_uid('112')
-    #print(mynic)
-    mylink = session.puzzle.link_from_uid('121')
-    print(mylink)
