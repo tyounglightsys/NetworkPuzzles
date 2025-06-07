@@ -40,6 +40,9 @@ class Puzzle:
             # Some link attribs are single-link dicts. Convert if necessary.
             if not isinstance(one, dict):
                 one = self.json.get('link')
+                if 'hostname' in one:
+                    links.append(one)
+                    break  # stop iterating through dict keys
             if 'hostname' in one:
                 links.append(one)
         return links
@@ -173,6 +176,7 @@ class Puzzle:
         #we should have a source device, and an optional src nic, and a dest device and an optional dest nic
         if(len(args) == 0):
             session.print("Error.  You must pass arguments to createLink")
+            return
         #the first item must be a hostname for the first device
         sdevicename = args.pop(0)
         sdevice = session.puzzle.device_from_name(sdevicename)

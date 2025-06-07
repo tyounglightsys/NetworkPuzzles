@@ -10,7 +10,7 @@ from . import PUZZLES_DIR
 class TestAllDevicesAndLinks(unittest.TestCase):
     def setUp(self):
         # TODO: Use Mock rather than "real" session.puzzle.
-        self.puzzle_name = 'Level0-HubVsSwitch'
+        self.puzzle_name = 'Level0_HubVsSwitch'
 
         # Load puzzle via app in to session.puzzle.
         self.app = ui.CLI()
@@ -57,7 +57,7 @@ class TestGetItemByAttrib(unittest.TestCase):
         ]
 
         # TODO: Use Mock rather than "real" session.puzzle.
-        self.puzzle_name = 'Level0-HubVsSwitch'
+        self.puzzle_name = 'Level0_HubVsSwitch'
 
         # Load puzzle via app in to session.puzzle.
         self.app = ui.CLI()
@@ -72,7 +72,7 @@ class TestGetItemByAttrib(unittest.TestCase):
 
 class TestXFromY(unittest.TestCase):
     def setUp(self):
-        self.puzzle_name = 'Level0-HubVsSwitch'
+        self.puzzle_name = 'Level0_HubVsSwitch'
 
         # Load puzzle data separately via json.load.
         puzzle_file = PUZZLES_DIR / f'{self.puzzle_name}.json'

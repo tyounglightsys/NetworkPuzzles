@@ -6,7 +6,32 @@ from network_puzzles import ui
 from . import PUZZLES_DIR
 
 
-class TestPuzzleAllLinks(unittest.TestCase):
+class TestCreateItems(unittest.TestCase):
+    def setUp(self):
+        self.puzzle_name = 'Level0_NeedsLink'
+
+        # Load puzzle via app into session.puzzle.
+        self.app = ui.CLI()
+        self.app.load_puzzle(self.puzzle_name)  # sets session.puzzle
+
+    def test_createlink_exists(self):
+        # FIXME: The method always returns None. The only way to verify
+        # correct execution for an error situation is to check the stdout.
+        self.assertIsNone(session.puzzle.createLink(['pc1', 'net_switch0']))
+
+    def test_createlink_good(self):
+        prev_ct = len(session.puzzle.all_links())
+        session.puzzle.createLink(['pc0', 'net_switch0'])
+        ct = len(session.puzzle.all_links())
+        self.assertEqual(prev_ct + 1, ct)
+
+    def test_createlink_noargs(self):
+        # FIXME: The method always returns None. The only way to verify
+        # correct execution for an error situation is to check the stdout.
+        self.assertIsNone(session.puzzle.createLink([]))
+
+
+class TestListItems(unittest.TestCase):
     def test_alldevices(self):
         for puz in session.puzzlelist:
             p = puzzle.Puzzle(puz)
@@ -22,7 +47,7 @@ class TestPuzzleAllLinks(unittest.TestCase):
                 self.assertIsInstance(link, dict)
 
 
-class TestPuzzleInit(unittest.TestCase):
+class TestInit(unittest.TestCase):
     def setUp(self):
         self.data = {
             'a': 'all',
@@ -91,9 +116,9 @@ class TestFilterItems(unittest.TestCase):
 
 class TestXFromY(unittest.TestCase):
     def setUp(self):
-        self.puzzle_name = 'Level0-HubVsSwitch'
+        self.puzzle_name = 'Level0_HubVsSwitch'
 
-        # Load puzzle via app in to session.puzzle.
+        # Load puzzle via app into session.puzzle.
         self.app = ui.CLI()
         self.app.load_puzzle(self.puzzle_name)  # sets session.puzzle
 
