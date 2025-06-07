@@ -25,27 +25,30 @@ class Puzzle:
         """
         Return a list that contains all devices in the puzzle.
         """
-        devices = []
-        for one in self.json.get('device', []):
-            if 'hostname' in one:
-                devices.append(one)
-        return devices
+        return self._get_items('device')
 
     def all_links(self):
         """
         Return a list that contains all links in the puzzle.
         """
-        links = []
-        for one in self.json.get('link', []):
-            # Some link attribs are single-link dicts. Convert if necessary.
-            if not isinstance(one, dict):
-                one = self.json.get('link')
-                if 'hostname' in one:
-                    links.append(one)
-                    break  # stop iterating through dict keys
-            if 'hostname' in one:
-                links.append(one)
-        return links
+        return self._get_items('link')
+
+    def _get_items(self, item_type: str):
+        """
+        Return a list of the given item_type ('link' or 'device').
+        """
+        items = []
+        only_one_item = False
+        for item in self.json.get(item_type, []):
+            # Some item attribs are single-item dicts. Convert if necessary.
+            if not isinstance(item, dict):
+                only_one_item = True
+                item = self.json.get(item_type)
+            if 'hostname' in item:
+                items.append(item)
+            if only_one_item:
+                break  # stop iterating through dict keys
+        return items
 
     def arp_lookup(self, ipaddr):
         return device.globalArpLookup(ipaddr)

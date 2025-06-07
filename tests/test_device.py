@@ -1,40 +1,9 @@
 import json
-import re
 import unittest
 from network_puzzles import device
 from network_puzzles import session
 from network_puzzles import ui
 from . import PUZZLES_DIR
-
-
-class TestAllDevicesAndLinks(unittest.TestCase):
-    def setUp(self):
-        # TODO: Use Mock rather than "real" session.puzzle.
-        self.puzzle_name = 'Level0_HubVsSwitch'
-
-        # Load puzzle via app in to session.puzzle.
-        self.app = ui.CLI()
-        self.app.load_puzzle(self.puzzle_name)  # sets session.puzzle
-        with (PUZZLES_DIR / f"{self.puzzle_name}.json").open() as f:
-            self.puzzle_lines = f.readlines()
-
-    def test_alldevices(self):
-        lines = []
-        for line in self.puzzle_lines:
-            r = re.search(r'^\s{10}"hostname.*', line)
-            if r:
-                if 'link' not in line:  # remove hostnames with "link"
-                    lines.append(line)
-        self.assertEqual(len(lines), len(session.puzzle.all_devices()))
-
-    def test_alllinks(self):
-        lines = []
-        for line in self.puzzle_lines:
-            r = re.search(r'^\s{10}"hostname.*', line)
-            if r:
-                if 'link' in line:  # remove hostnames without "link"
-                    lines.append(line)
-        self.assertEqual(len(lines), len(session.puzzle.all_links()))
 
 
 class TestGetDeviceAttribs(unittest.TestCase):

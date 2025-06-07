@@ -1,4 +1,5 @@
 import json
+import re
 import unittest
 from network_puzzles import puzzle
 from network_puzzles import session
@@ -31,10 +32,42 @@ class TestCreateItems(unittest.TestCase):
         self.assertIsNone(session.puzzle.createLink([]))
 
 
-class TestListItems(unittest.TestCase):
+class TestListItemsJson(unittest.TestCase):
+    """Ensure items found match items in original JSON file."""
+    def setUp(self):
+        self.puzzle_name = 'Level0_HubVsSwitch'
+
+        # Load puzzle via app in to session.puzzle.
+        ui.CLI().load_puzzle(self.puzzle_name)  # sets session.puzzle
+        with (PUZZLES_DIR / f"{self.puzzle_name}.json").open() as f:
+            self.puzzle_lines = f.readlines()
+
+    def test_alldevices(self):
+        lines = []
+        for line in self.puzzle_lines:
+            r = re.search(r'^\s{10}"hostname.*', line)
+            if r:
+                if 'link' not in line:  # remove hostnames with "link"
+                    lines.append(line)
+        self.assertEqual(len(lines), len(session.puzzle.all_devices()))
+
+    def test_alllinks(self):
+        lines = []
+        for line in self.puzzle_lines:
+            r = re.search(r'^\s{10}"hostname.*', line)
+            if r:
+                if 'link' in line:  # remove hostnames without "link"
+                    lines.append(line)
+        self.assertEqual(len(lines), len(session.puzzle.all_links()))
+
+class TestListItemsTypes(unittest.TestCase):
+    """Ensure every item in every puzzle has the correct type."""
+    def setUp(self):
+        ui.CLI()  # populate session variables
+
     def test_alldevices(self):
         for puz in session.puzzlelist:
-            p = puzzle.Puzzle(puz)
+            p = puzzle.Puzzle(puz.get('EduNetworkBuilder').get('Network'))
             devs = p.all_devices()
             for dev in devs:
                 self.assertIsInstance(dev, dict)
