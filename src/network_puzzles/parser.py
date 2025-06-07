@@ -100,7 +100,7 @@ class Parser:
         session.print("quit - exit the cli")
         session.print("search [info] - list the puzzles matching the info.  Example: search DHCP | search 1")
         session.print("set - change a value.  Example: set pc0 gateway | set pc0 dhcp true")
-        session.print("show [item] - show information about an item.  Example: show | show pc0")
+        session.print("show [item] - show information about an item.  Example: show | show pc0 | show tests")
         session.print("ping [host1] [host2] - ping from one host to the other.  Example: ping pc0 pc1")
 
 
@@ -177,6 +177,11 @@ class Parser:
                 session.print(f"source: {thedevice['SrcNic']['hostname']} - {thedevice['SrcNic']['nicname']}")
                 session.print(f"dest: {thedevice['DstNic']['hostname']} - {thedevice['DstNic']['nicname']}")
                 return
+            if args[0].lower() == 'tests':
+                session.print("--Tests--")
+                for onetest in device.all_tests():
+                    session.print(f"source: {onetest.get('shost')} test: {onetest.get('thetest')}  dest: {onetest.get('dhost')} status: {onetest.get('completed','False')}")
+                    return
             session.print(f"No such host {args[0]}")
 
 
