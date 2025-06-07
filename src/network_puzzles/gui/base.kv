@@ -37,3 +37,21 @@
 <VSeparator@Separator>:
     size_hint_x: None
     width: dp(2)
+
+
+<HelpSlider>
+    id: help_slider
+    orientation: 'horizontal'
+    canvas.after:
+        Color:
+            rgba: app.theme.detail
+        Ellipse:
+            pos: (root.value_pos[0] - dp(18), root.center_y - dp(18))
+            size: (dp(36), dp(36))
+    cursor_image: ''
+    cursor_size: (0, 0)
+    value_track: True
+    value_track_color: app.theme.detail
+    min: 1
+    max: 4
+    step: 1
