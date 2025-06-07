@@ -880,7 +880,7 @@ def mark_test_as_completed(shost,dhost,whattocheck,message):
                 onetest['completed'] = True
                 onetest['acknowledged'] = False
                 onetest['message'] = message
-                print(f"Debug: Marking as done: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')}")
+                #print(f"Debug: Marking as done: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')}")
 
 def commands_from_tests(JustForHost=None):
     toreturn = list()

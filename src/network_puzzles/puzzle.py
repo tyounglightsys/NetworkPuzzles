@@ -255,12 +255,17 @@ class Puzzle:
                 self.json['link'] = [ self.json['link']]
             self.json['link'].append(newlink)
             session.print(f"Created link: {newlink['hostname']}")
-            device.mark_test_as_completed(sdevicename,ddevicename,"NeedsLinkToDevice",None)
-            device.mark_test_as_completed(ddevicename,sdevicename,"NeedsLinkToDevice",None)
+            device.mark_test_as_completed(sdevicename,ddevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {sdevicename}")
+            device.mark_test_as_completed(ddevicename,sdevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {sdevicename}")
         else:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
 
-
+    def is_puzzle_done(self):
+        """Report back to see if all the tests have been completed."""
+        for onetest in device.all_tests():
+            if not onetest.get('completed', False):
+                return False
+        return True
 
 def read_json_file(file_path):
     """

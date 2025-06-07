@@ -4,6 +4,7 @@ from . import parser
 from . import puzzle
 from . import session
 from . import packet
+from . import device
 
 
 class UI:
@@ -85,7 +86,8 @@ class UI:
         """return a list of all the links - good for iterating"""
         return session.puzzle.all_links()
 
-
+    def acknowledge_any_tests():
+        raise NotImplementedError
 
 class CLI(UI):
     def __init__(self):
@@ -112,10 +114,29 @@ class CLI(UI):
             answer = input("-> ")
             self.parser.parse(answer)
             #if we created packets, process them until done.
+            count = 0
             while packet.packetsNeedProcessing():
+                count = count + 1
+                if (count > 5):
+                    self.acknowledge_any_tests()
+                    count=0
                 packet.processPackets(2) #the cli does not need much time to know packets are going to loop forever.
+            self.acknowledge_any_tests()
+            if not session.puzzle.json.get('completed',False):
+                if session.puzzle.is_puzzle_done():
+                    session.print("Congratulations. You solved the whole puzzle!")
+                    self.parser.parse("show tests")
+                    session.puzzle.json['completed'] = True
         except EOFError:
             sys.exit()
+
+    def acknowledge_any_tests(self):
+        for onetest in device.all_tests():
+            if onetest.get('completed',False) and not onetest.get('acknowledged',False):
+                #we have something completed, but not acknowledged
+                if onetest.get('message', "") != "":
+                    session.print(onetest.get('message', ""))
+                    onetest['acknowledged'] = True
 
     def quit(self):
         self.parser.parse.exit_app()
