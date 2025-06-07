@@ -254,6 +254,9 @@ class Puzzle:
             if not isinstance(self.json['link'], list):
                 self.json['link'] = [ self.json['link']]
             self.json['link'].append(newlink)
+            session.print(f"Created link: {newlink['hostname']}")
+            device.mark_test_as_completed(sdevicename,ddevicename,"NeedsLinkToDevice",None)
+            device.mark_test_as_completed(ddevicename,sdevicename,"NeedsLinkToDevice",None)
         else:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
 
