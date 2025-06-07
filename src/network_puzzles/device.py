@@ -794,11 +794,11 @@ def Ping(src, dest):
     packet.addPacketToPacketlist(nPacket)
 
 
+##############
 #Net Tests
-#def ListTests
-#def deviceIsLocked
-#def nicIsLocked
-#def markAsCompleted
+#def all_tests
+#def device_is_locked
+#def mark_as_completed
 # The tests are:
 #NetTestType { NeedsLocalIPTo, NeedsDefaultGW, NeedsLinkToDevice, NeedsRouteToNet,
 #        NeedsUntaggedVLAN, NeedsTaggedVLAN, NeedsForbiddenVLAN,
@@ -809,3 +809,53 @@ def Ping(src, dest):
 #        DeviceIsFrozen, DeviceBlowsUpWithPower, DeviceNeedsUPS, DeviceNICSprays,
 #    }
 #nettest structure: shost, dhost, thetest
+
+def all_tests():
+    toreturn=list()
+    if not isinstance(session.puzzle.json.get('nettest'),list):
+        session.puzzle.json['nettest'] = [ session.puzzle.json['nettest'] ]
+    for onetest in session.puzzle.json.get['nettest']:
+        toreturn.append(onetest)
+    return toreturn
+
+def device_is_critical(devicename):
+    """return true if the device name is the shost or dhost of a test"""
+    for onetest in all_tests():
+        if onetest.get('shost') == devicename:
+            return True
+        if onetest.get('dhost') == devicename:
+            return True
+    return False
+
+def item_is_locked(shost,dhost,whattocheck):
+    for onetest in all_tests():
+        if onetest.get('shost') == shost:
+            thetest = onetest.get('thetest')
+            if thetest == "LockAll":
+                return True
+            if thetest == whattocheck and whattocheck == 'LockVlanNames':
+                return True
+            if thetest == whattocheck and whattocheck == 'LockVLANsOnHost':
+                return True
+            if thetest == whattocheck and onetest.get('dhost') == dhost:
+                #if the source (hostname) and dest (, ping_desthostname, nic, etc) also match.
+                return True
+    return False
+
+def has_test_been_completed(shost,dhost,whattocheck):
+    for onetest in all_tests():
+        if onetest.get('shost') == shost and onetest.get('dhost') == dhost and onetest.get('thetest') == whattocheck:
+            #the test matches, return true only if 'completed' is set to true
+            return onetest.get('completed', False)
+    return False
+
+def mark_test_as_completed(shost,dhost,whattocheck,message):
+    for onetest in all_tests():
+        if onetest.get('shost') == shost and onetest.get('dhost') == dhost and onetest.get('thetest') == whattocheck:
+            #if the test has never been completed
+            if not onetest.get('completed', False):
+                onetest['completed'] = True
+                onetest['acknowledged'] = False
+                onetest['message'] = message
+
+    
