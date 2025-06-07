@@ -160,11 +160,18 @@ class Puzzle:
         itemlist = self.json['device']
         for i in range(len(itemlist) - 1, -1, -1):
             if(itemlist[i]['hostname'] == itemToDelete):
+                #We need to find any links connected to this device and delete them
+                for onenic in device.Device(itemlist[i]).all_nics():
+                    onelink = device.linkConnectedToNic(onenic)
+                    if onelink is not None:
+                        self.deleteItem(onelink.get('hostname'))
+                session.print(f"Deleting: {itemToDelete}")
                 del itemlist[i]
                 return True
         itemlist = self.json['link']
         for i in range(len(itemlist) - 1, -1, -1):
             if(itemlist[i]['hostname'] == itemToDelete):
+                session.print(f"Deleting: {itemToDelete}")
                 del itemlist[i]
                 return True
         return False

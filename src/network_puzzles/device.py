@@ -68,6 +68,12 @@ class Device:
         if 'nic' not in self.json:
             return None
         return self._item_by_attrib(self.json.get('nic'), 'nicname', nicname)
+    
+    def all_nics(self):
+        if not isinstance(self.json.get('nic'),list):
+            self.json['nic'] = [ self.json['nic']]
+        return self.json.get('nic')
+        
 
     @property
     def hostname(self):
