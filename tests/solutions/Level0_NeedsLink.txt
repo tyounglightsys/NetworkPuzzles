@@ -1,0 +1,4 @@
+load Level0_NeedsLink
+show
+show tests
+create link pc0 net_switch0 port6
