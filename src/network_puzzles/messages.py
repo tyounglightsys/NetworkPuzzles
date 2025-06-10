@@ -119,30 +119,30 @@ puzzles = {
     },
     "1.21": {
         "title": _("Practice1"),
-        "message": _(""),
+        "message": "",
     },
     "1.22": {
         "title": _("Practice2"),
-        "message": _(""),
+        "message": "",
     },
     "1.23": {
         "title": _("Practice3"),
-        "message": _(""),
+        "message": "",
     },
     "1.24": {
         "title": _("Practice4"),
-        "message": _(""),
+        "message": "",
     },
     "1.25": {
         "title": _("Practice5"),
-        "message": _(""),
+        "message": "",
     },
     "1.26": {
         "title": _("Practice6"),
-        "message": _(""),
+        "message": "",
     },
     "1.27": {
         "title": _("Practice7"),
-        "message": _(""),
+        "message": "",
     },
 }

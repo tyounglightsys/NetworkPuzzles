@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-05-18 18:45+0100\n"
+"POT-Creation-Date: 2025-06-10 17:34+0100\n"
 "PO-Revision-Date: 2025-05-18 16:52+0100\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -17,31 +17,214 @@ msgstr ""
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: networkpuzzles.kv:15
-msgid "Menu"
-msgstr ""
-
-#: networkpuzzles.kv:19
-msgid "Test"
-msgstr ""
-
-#: networkpuzzles.kv:24
-msgid "?"
-msgstr ""
-
-#: networkpuzzles.kv:111
-msgid "Error"
-msgstr ""
-
-#: networkpuzzles.kv:136
-msgid "Quit"
-msgstr ""
-
 #: messages.py:5
-msgid "Bad Power Supply"
+msgid "Learn how help works"
 msgstr ""
 
 #: messages.py:6
+msgid ""
+"To learn how this program works, first we will acquaint you with the "
+"'Help.'  Most of the puzzles you do, you will want to do with as little help "
+"as possible.  But, there is help when you need it.  For this puzzle, click "
+"one of the four help-levels (round buttons) on the right.  Then mouse-over "
+"the PC and see the messages.  When you have moused-over for all the buttons "
+"(and pressed the ? box), this puzzle will be completed."
+msgstr ""
+
+#: messages.py:9
+msgid "Ping Test"
+msgstr ""
+
+#: messages.py:10
+msgid ""
+"Right-click PC0 and ping laptop0 and laptop1.  You can put either the IP "
+"address or host-name of the device you are trying to ping in the box that "
+"pops up asking you for an IP."
+msgstr ""
+
+#: messages.py:13
+msgid "Plug in network"
+msgstr ""
+
+#: messages.py:14
+msgid ""
+"Plug in the network to the computer that needs it.  Click on the link icon "
+"(the line) and drag the pointer from the switch to the computer.  When you "
+"release the mouse button, the link window will pop up.  Choose the ports you "
+"want to connect, and you should be finished."
+msgstr ""
+
+#: messages.py:17
+msgid "No Switch"
+msgstr ""
+
+#: messages.py:18
+msgid ""
+"There is no switch.  Add one and link the devices to it.  Click on the "
+"switch and add it to the network (make sure you add a switch and not a "
+"hub).  Then, drag links from the switch to the computers, choosing the ports "
+"to connect."
+msgstr ""
+
+#: messages.py:21
+msgid "Power It On"
+msgstr ""
+
+#: messages.py:22
+msgid ""
+"The switch is powered off.  Right-click it and power it on.  Then, ping the "
+"laptop to make sure things work."
+msgstr ""
+
+#: messages.py:25
+msgid "DHCP Request"
+msgstr ""
+
+#: messages.py:26
+msgid ""
+"Tell the PC to do a DHCP request.  Right-click on the PC to see the menu, or "
+"do it from the 'All' menu."
+msgstr ""
+
+#: messages.py:29
+msgid "IP Puzzle"
+msgstr ""
+
+#: messages.py:30
+msgid ""
+"pc0 needs an IP that is local to the other two computers.  Double-click PC0, "
+"double-click the IP-Address (0.0.0.0) and put a good IP address there."
+msgstr ""
+
+#: messages.py:33
+msgid "Network Loop"
+msgstr ""
+
+#: messages.py:34
+msgid ""
+"This puzzle shows you what happens when you create a network loop.  A loop "
+"is made when you have your switches connected to themselves or to another "
+"one that is connected back to the first one.  Ping from pc0 to pc1 to see "
+"what happens.  You do not need to fix the problem, but right-clicking one of "
+"the switches and removing one of the offending links would do it."
+msgstr ""
+
+#: messages.py:37
+msgid "Network Loop 2"
+msgstr ""
+
+#: messages.py:38
+msgid ""
+"Managed Switches can use Spanning Tree, which intelligently figures out the "
+"least distance path to a point.  It is made so you can have network loops "
+"and survive.  Try pinging pc1 twice from pc0.  The first time, some packets "
+"are lost.  But the second time the packet goes where it should."
+msgstr ""
+
+#: messages.py:41
+msgid "Frozen!"
+msgstr ""
+
+#: messages.py:42
+msgid ""
+"Every once in a while a piece of hardware will freeze up and needs to be "
+"rebooted.  \n"
+"\n"
+"Try pinging laptop1 from PC0 and see how the packet fails.  It does not get "
+"past the switch.\n"
+"\n"
+"Right-click the switch and power it off, then power it back on.  Now try "
+"pinging laptop1."
+msgstr ""
+
+#: messages.py:45
+msgid "Switch vs Hub"
+msgstr ""
+
+#: messages.py:46
+msgid ""
+"This puzzle shows the difference between a hub and a switch.\n"
+"Have each of the servers ping the computers on the same lan as themselves, "
+"and have those computers ping the server.  \n"
+"The switch learns which device is attached to it and only sends the packet "
+"to that computer, while the hub sends the packet to every device on the "
+"subnet."
+msgstr ""
+
+#: messages.py:49
+msgid "Where did I put that?"
+msgstr ""
+
+#: messages.py:50
+msgid ""
+"Your boss bought a switch and plugged it into your network, but did not tell "
+"you where he put it.  Now he wants you to find it.\n"
+"What do you do when you know where something is, but not exactly?  You go to "
+"the device you know it is plugged into and follow the wire.\n"
+"To solve this, drag the switch around, and then find the other end of the "
+"wire and \"drag\" on the empty spot to \"find\" it.  Then, change the IP "
+"address of the missing switch."
+msgstr ""
+
+#: messages.py:53
+msgid "Broken Link"
+msgstr ""
+
+#: messages.py:54
+msgid ""
+"This shows what happens if there is a broken network wire in your network.  "
+"Ping laptop1 and see where the packet dies.  Open one of the devices "
+"connected to that link and you will see that, even though the device has a "
+"link connected to it, it does not have a \"connection light\" saying it is "
+"connected.  (The connection-light is the * at the end of the eth name).  You "
+"can also edit the network card to see if it thinks it is connected.  Remove "
+"the broken network wire by right-clicking one of the devices at either end "
+"and removing the link.  Then add the link again.  A successful ping tells "
+"you if you got it working."
+msgstr ""
+
+#: messages.py:57
+msgid "Packet Corruption"
+msgstr ""
+
+#: messages.py:58
+msgid ""
+"Network wires that run too close to electrical wires or fluorescent lights "
+"can cause packet corruption.  Move the light out of the way if the packet "
+"get corrupted."
+msgstr ""
+
+#: messages.py:61
+msgid "Packet Corruption2"
+msgstr ""
+
+#: messages.py:62
+msgid ""
+"Packets can be partially corrupted by lights.  Look at how the packet goes "
+"the first time.  Move the light out of the way just a little bit and it "
+"should work fine."
+msgstr ""
+
+#: messages.py:65
+msgid "Traceroute"
+msgstr ""
+
+#: messages.py:66
+msgid ""
+"A traceroute tests the path from one computer to the other.  Every routing "
+"device along the path will respond (but switches do not).  \n"
+"This is done by adding a TTL (Time to Live) number on every packet.  Each "
+"device that routes packets will subtract one from the TTL.  When the TTL "
+"reaches zero, the devices will send a response back.  Traceroute catches "
+"these responses and uses it to determine what each step is along the path.\n"
+"Have server0 traceroute to server1"
+msgstr ""
+
+#: messages.py:69
+msgid "Bad Power Supply"
+msgstr ""
+
+#: messages.py:70
 msgid ""
 "Occasionally a piece of hardware will break, This often happens after long "
 "periods of use, though sometimes after just sitting around unused.\n"
@@ -53,27 +236,251 @@ msgid ""
 "So make sure to give the new switch a good IP and gateway."
 msgstr ""
 
-#: messages.py:9
-msgid "Network Loop"
+#: messages.py:73
+msgid "Bad Power - Needs UPS"
 msgstr ""
 
-#: messages.py:10
+#: messages.py:74
 msgid ""
-"This puzzle shows you what happens when you create a network loop.  A loop "
-"is made when you have your switches connected to themselves or to another "
-"one that is connected back to the first one.  Ping from pc0 to pc1 to see "
-"what happens.  You do not need to fix the problem, but right-clicking one of "
-"the switches and removing one of the offending links would do it."
+"Occasionally the electricity in a building, or in a city, has problems.  "
+"Usually, in these cases, a device will function for a while and then break "
+"on you.  To make the puzzle go faster, however, we have it break "
+"immediately.\n"
+"\n"
+"This puzzle makes it look a little worse than it usually would look.  Go "
+"ahead and turn on the switch.  After that, right-click and replace it.  If "
+"you turn it on again, it will continue to break until you add a UPS to it.  "
+"After that, it will be fine.  Luckily for you, you do not need to pay for "
+"the devices you keep replacing!\n"
+"\n"
+"Things that have been replaced will need to have their settings put back.  "
+"So make sure to give the new switch a good IP and gateway."
 msgstr ""
 
-#: messages.py:13
-msgid "Network Loop 2"
+#: messages.py:77
+msgid "Bad IP"
 msgstr ""
 
-#: messages.py:14
+#: messages.py:78
 msgid ""
-"Managed Switches can use Spanning Tree, which intelligently figures out the "
-"least distance path to a point.  It is made so you can have network loops "
-"and survive.  Try pinging pc1 twice from pc0.  The first time, some packets "
-"are lost.  But the second time the packet goes where it should."
+"PC0 cannot ping one of the other computers.  Figure out which one, and "
+"change the IP address of that computer so it works."
+msgstr ""
+
+#: messages.py:81
+msgid "Bad DHCP"
+msgstr ""
+
+#: messages.py:82
+msgid ""
+"The Server is giving out bad DHCP.  Edit the DHCP settings to tell it to "
+"give correct DHCP.  (You do this by selecting 'DHCP' from the device-editing "
+"screen) Then do a DHCP request on all the PCs."
+msgstr ""
+
+#: messages.py:85
+msgid "Gateway Puzzle"
+msgstr ""
+
+#: messages.py:86
+msgid ""
+"The items on one network cannot ping the items on the other network "
+"(separated by the router).  Figure why and fix it.  All computers and "
+"switches need fixing, but the router is OK."
+msgstr ""
+
+#: messages.py:89
+msgid "Duplicate IPs"
+msgstr ""
+
+#: messages.py:90
+msgid "Get the PCs so they are happy"
+msgstr ""
+
+#: messages.py:93
+msgid "Two Subnets, Shared Network"
+msgstr ""
+
+#: messages.py:94
+msgid ""
+"This network has two different subnets using the same switch.  Ping from the "
+"different PCs to machines on the other network.\n"
+"This is a two-part network; you will see this same network again in the next "
+"puzzle, but using one router instead of two.  We will use these concepts "
+"later on, when we are dealing with security."
+msgstr ""
+
+#: messages.py:97
+msgid "Two Subnets, Shared Network2"
+msgstr ""
+
+#: messages.py:98
+msgid ""
+"This network has two different subnets using the same switch.  The router "
+"has two interfaces (IP addresses, both on eth0). One network card functions "
+"like two.  Ping from the different PCs to machines on the other network.\n"
+"This is the same network as the previous one, except it uses one router "
+"instead of two.  We will be using this concept later on when we talk about "
+"security.  The reason we will use it, is that we may want to have different "
+"groups of people on a network (maybe students, faculty, and guests), and we "
+"want to have different security levels for each group.  By having student "
+"traffic need to go through one router before it gets to the staff network, "
+"we can set up firewall rules to block students from accessing faculty data.  "
+"But, that is for a later puzzle."
+msgstr ""
+
+#: messages.py:101
+msgid "Adding Devices"
+msgstr ""
+
+#: messages.py:102
+msgid ""
+"This puzzle has three tasks to it:\n"
+"1) Give the switch an IP address\n"
+"2) Add an IP-Phone to the network, linking it to the switch, and then do a "
+"DHCP request for it.\n"
+"3) Ping the switch from the IP-Phone"
+msgstr ""
+
+#: messages.py:105
+msgid "Add DHCP Server"
+msgstr ""
+
+#: messages.py:106
+msgid ""
+"These IP-Phones cannot have a static IP.  You must add a server on the "
+"192.168.1.0 network and configure the DHCP server.  Give an IP to the phone, "
+"so the phone can ping the PCs on the other side of the network"
+msgstr ""
+
+#: messages.py:109
+msgid "Bad Gateway"
+msgstr ""
+
+#: messages.py:110
+msgid ""
+"Computers can only communicate with other computers that are local to them.  "
+"Gateways must have an IP address that is local to the client.  Ping pc0 from "
+"pc1 and see if you can spot the error."
+msgstr ""
+
+#: messages.py:113
+msgid "Duplicate MAC addresses"
+msgstr ""
+
+#: messages.py:114
+msgid ""
+"This puzzle shows you what happens when there are duplicate MAC addresses.  "
+"This rarely happens, but it used to happen more often than should be "
+"statistically probable.  Cheap network card vendors used to make batches of "
+"cards with the same MAC address, and occasionally someone would  buy two of "
+"them.  The best solution is to replace one of the NICs that has the "
+"duplicate MAC address.  Ping both pc0 and pc1 from pc2."
+msgstr ""
+
+#: messages.py:117
+msgid "Bad Netmask"
+msgstr ""
+
+#: messages.py:118
+msgid ""
+"One of the subnets has a poorly crafted subnet.  There are two ways to "
+"represent subnets.  The \"dot-decimal\" notation (255.255.255.0) and CIDR "
+"(/24). \n"
+"\n"
+"Here, we are using a subnet of 255.255.255.129.  The 129, in binary, is "
+"10000001.  That trailing 1 is the problem.  It basically puts the odd "
+"numbers in one subnet and the even numbers in the other subnet.  While it is "
+"possible to get networks to function with a terrible subnet mask like this, "
+"do not do it.  Use numbers that are properly represented by CIDR notation.  "
+"Basically, in binary, you want a bunch of 1s, followed by 0s.  (111000), not "
+"1s and 0s intermingled.  (10101).  CIDR (/25) represents the number of 1s, "
+"and the rest are 0.\n"
+"\n"
+"To solve this puzzle, find the IP Addresses that have the /? and change the "
+"subnet to something that works.  Then, try pinging."
+msgstr ""
+
+#: messages.py:121
+msgid "Practice1"
+msgstr ""
+
+#: messages.py:125
+msgid "Practice2"
+msgstr ""
+
+#: messages.py:129
+msgid "Practice3"
+msgstr ""
+
+#: messages.py:133
+msgid "Practice4"
+msgstr ""
+
+#: messages.py:137
+msgid "Practice5"
+msgstr ""
+
+#: messages.py:141
+msgid "Practice6"
+msgstr ""
+
+#: messages.py:145
+msgid "Practice7"
+msgstr ""
+
+#: networkpuzzles.kv:51
+msgid "Help level:"
+msgstr ""
+
+#: popups.kv:7
+msgid "Load Puzzle"
+msgstr ""
+
+#: popups.kv:25
+msgid "Filter the puzzles by level:"
+msgstr ""
+
+#: popups.kv:31
+msgid "Level 0"
+msgstr ""
+
+#: popups.kv:37
+msgid "Level 1"
+msgstr ""
+
+#: popups.kv:43
+msgid "Level 2"
+msgstr ""
+
+#: popups.kv:49
+msgid "Level 3"
+msgstr ""
+
+#: popups.kv:55
+msgid "Level 4"
+msgstr ""
+
+#: popups.kv:61
+msgid "Level 5"
+msgstr ""
+
+#: popups.kv:67
+msgid "Level 6"
+msgstr ""
+
+#: popups.kv:78
+msgid "Cancel"
+msgstr ""
+
+#: popups.kv:81
+msgid "Load"
+msgstr ""
+
+#: popups.kv:86
+msgid "Error"
+msgstr ""
+
+#: popups.kv:110
+msgid "Quit"
 msgstr ""

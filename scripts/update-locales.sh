@@ -3,6 +3,7 @@
 scripts_dir="$(dirname "$0")"
 repo_dir="$(dirname "$scripts_dir")"
 pkg_dir="${repo_dir}/src/network_puzzles"
+gui_dir="${pkg_dir}/gui"
 locale_dir="${pkg_dir}/resources/locale"
 messages_temp="${pkg_dir}/resources/locale/messages.pot"
 
@@ -12,7 +13,19 @@ usage(){
 }
 
 if [[ $1 == po ]]; then
-    xgettext -L python -o "$messages_temp" -D "${pkg_dir}" networkpuzzles.kv gui.py messages.py
+    xgettext -L python -o "$messages_temp" -D "$pkg_dir" messages.py -D "$gui_dir" \
+        __init__.py \
+        base.kv \
+        base.py \
+        buttons.kv \
+        buttons.py \
+        labels.kv \
+        labels.py \
+        layouts.kv \
+        layouts.py \
+        networkpuzzles.kv \
+        popups.kv \
+        popups.py
     for lang in "en" "fr"; do
         msgmerge --update --no-fuzzy-matching --backup=off "${locale_dir}/${lang}.po" "$messages_temp"
     done
