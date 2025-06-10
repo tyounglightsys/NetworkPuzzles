@@ -72,5 +72,77 @@ puzzles = {
     "0.10.2": {
         'title': _("Bad Power - Needs UPS"),
         'message': _("Occasionally the electricity in a building, or in a city, has problems.  Usually, in these cases, a device will function for a while and then break on you.  To make the puzzle go faster, however, we have it break immediately.\n\nThis puzzle makes it look a little worse than it usually would look.  Go ahead and turn on the switch.  After that, right-click and replace it.  If you turn it on again, it will continue to break until you add a UPS to it.  After that, it will be fine.  Luckily for you, you do not need to pay for the devices you keep replacing!\n\nThings that have been replaced will need to have their settings put back.  So make sure to give the new switch a good IP and gateway."),
-    }
+    },
+    "1.1": {
+        "title": _("Bad IP"),
+        "message": _("PC0 cannot ping one of the other computers.  Figure out which one, and change the IP address of that computer so it works."),
+    },
+    "1.2": {
+        "title": _("Bad DHCP"),
+        "message": _("The Server is giving out bad DHCP.  Edit the DHCP settings to tell it to give correct DHCP.  (You do this by selecting 'DHCP' from the device-editing screen) Then do a DHCP request on all the PCs."),
+    },
+    "1.3": {
+        "title": _("Gateway Puzzle"),
+        "message": _("The items on one network cannot ping the items on the other network (separated by the router).  Figure why and fix it.  All computers and switches need fixing, but the router is OK."),
+    },
+    "1.4": {
+        "title": _("Duplicate IPs"),
+        "message": _("Get the PCs so they are happy"),
+    },
+    "1.4.1": {
+        "title": _("Two Subnets, Shared Network"),
+        "message": _("This network has two different subnets using the same switch.  Ping from the different PCs to machines on the other network.\nThis is a two-part network; you will see this same network again in the next puzzle, but using one router instead of two.  We will use these concepts later on, when we are dealing with security."),
+    },
+    "1.4.2": {
+        "title": _("Two Subnets, Shared Network2"),
+        "message": _("This network has two different subnets using the same switch.  The router has two interfaces (IP addresses, both on eth0). One network card functions like two.  Ping from the different PCs to machines on the other network.\nThis is the same network as the previous one, except it uses one router instead of two.  We will be using this concept later on when we talk about security.  The reason we will use it, is that we may want to have different groups of people on a network (maybe students, faculty, and guests), and we want to have different security levels for each group.  By having student traffic need to go through one router before it gets to the staff network, we can set up firewall rules to block students from accessing faculty data.  But, that is for a later puzzle."),
+    },
+    "1.4.3": {
+        "title": _("Adding Devices"),
+        "message": _("This puzzle has three tasks to it:\n1) Give the switch an IP address\n2) Add an IP-Phone to the network, linking it to the switch, and then do a DHCP request for it.\n3) Ping the switch from the IP-Phone"),
+    },
+    "1.5": {
+        "title": _("Add DHCP Server"),
+        "message": _("These IP-Phones cannot have a static IP.  You must add a server on the 192.168.1.0 network and configure the DHCP server.  Give an IP to the phone, so the phone can ping the PCs on the other side of the network"),
+    },
+    "1.6": {
+        "title": _("Bad Gateway"),
+        "message": _("Computers can only communicate with other computers that are local to them.  Gateways must have an IP address that is local to the client.  Ping pc0 from pc1 and see if you can spot the error."),
+    },
+    "1.7": {
+        "title": _("Duplicate MAC addresses"),
+        "message": _("This puzzle shows you what happens when there are duplicate MAC addresses.  This rarely happens, but it used to happen more often than should be statistically probable.  Cheap network card vendors used to make batches of cards with the same MAC address, and occasionally someone would  buy two of them.  The best solution is to replace one of the NICs that has the duplicate MAC address.  Ping both pc0 and pc1 from pc2."),
+    },
+    "1.9.7": {
+        "title": _("Bad Netmask"),
+        "message": _("One of the subnets has a poorly crafted subnet.  There are two ways to represent subnets.  The \"dot-decimal\" notation (255.255.255.0) and CIDR (/24). \n\nHere, we are using a subnet of 255.255.255.129.  The 129, in binary, is 10000001.  That trailing 1 is the problem.  It basically puts the odd numbers in one subnet and the even numbers in the other subnet.  While it is possible to get networks to function with a terrible subnet mask like this, do not do it.  Use numbers that are properly represented by CIDR notation.  Basically, in binary, you want a bunch of 1s, followed by 0s.  (111000), not 1s and 0s intermingled.  (10101).  CIDR (/25) represents the number of 1s, and the rest are 0.\n\nTo solve this puzzle, find the IP Addresses that have the /? and change the subnet to something that works.  Then, try pinging."),
+    },
+    "1.21": {
+        "title": _("Practice1"),
+        "message": _(""),
+    },
+    "1.22": {
+        "title": _("Practice2"),
+        "message": _(""),
+    },
+    "1.23": {
+        "title": _("Practice3"),
+        "message": _(""),
+    },
+    "1.24": {
+        "title": _("Practice4"),
+        "message": _(""),
+    },
+    "1.25": {
+        "title": _("Practice5"),
+        "message": _(""),
+    },
+    "1.26": {
+        "title": _("Practice6"),
+        "message": _(""),
+    },
+    "1.27": {
+        "title": _("Practice7"),
+        "message": _(""),
+    },
 }
