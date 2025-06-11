@@ -52,6 +52,16 @@ class LinkPopup(AppPopup):
         self.link.edit()
         self.dismiss()
 
+
+class PingHostPopup(AppPopup):
+    def on_cancel(self):
+        self.dismiss()
+
+    def on_okay(self, text):
+        self.app.ui.parse(f"ping {self.title.split()[-1]} {text}")
+        self.dismiss()
+
+
 class PuzzleChooserPopup(AppPopup):
     def on_cancel(self):
         self.dismiss()

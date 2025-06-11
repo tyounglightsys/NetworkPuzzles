@@ -14,6 +14,7 @@ from kivy.uix.slider import Slider
 from kivy.uix.widget import Widget
 from typing import Tuple
 
+from .. import _
 from .. import device
 from .. import link
 from .. import session
@@ -24,6 +25,7 @@ from .layouts import ThemedBoxLayout
 from .popups import CommandsPopup
 from .popups import ExceptionPopup
 from .popups import LinkPopup
+from .popups import PingHostPopup
 
 
 NETWORK_ITEMS = {
@@ -104,12 +106,9 @@ class Device(ThemedBoxLayout):
         super().__init__(**kwargs)
         self.app = session.app
         self.base = device.Device(init_data)
-                    
-        self.commands = [
-            f"Ping {self.base.hostname} router0",
-            f"Set {self.base.hostname} power off",
-        ]
-        self.commands.extend(device.commands_from_tests(self.base.hostname))
+
+        self.commands = device.commands_from_tests(self.hostname)
+        self.commands.append(_("Ping [host]"))
         self.orientation = 'vertical'
         self.spacing = 0
         self._set_pos()  # sets self.coords and self.pos_hint
@@ -154,7 +153,11 @@ class Device(ThemedBoxLayout):
         # Setup the content.
         content = GridLayout(cols=1, spacing=dp(5))
         for command in self.commands:
-            content.add_widget(CommandButton(self.callback, command))
+            if command == _("Ping [host]"):
+                cb = PingHostPopup(title=f"{_("Ping [host] from")} {self.hostname}").open
+            else:
+                cb = self.callback
+            content.add_widget(CommandButton(cb, command))
         content.size_hint_y = None
         content.height = get_layout_height(content)
         # Setup the Popup.
