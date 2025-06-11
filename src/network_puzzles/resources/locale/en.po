@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-10 17:34+0100\n"
+"POT-Creation-Date: 2025-06-11 17:32+0100\n"
 "PO-Revision-Date: 2025-05-18 16:52+0100\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -429,6 +429,10 @@ msgstr ""
 msgid "Practice7"
 msgstr ""
 
+#: base.py:111 base.py:156
+msgid "Ping [host]"
+msgstr ""
+
 #: networkpuzzles.kv:51
 msgid "Help level:"
 msgstr ""
@@ -469,7 +473,7 @@ msgstr ""
 msgid "Level 6"
 msgstr ""
 
-#: popups.kv:78
+#: popups.kv:78 popups.kv:140
 msgid "Cancel"
 msgstr ""
 
@@ -483,4 +487,20 @@ msgstr ""
 
 #: popups.kv:110
 msgid "Quit"
+msgstr ""
+
+#: popups.kv:123
+msgid "Delete"
+msgstr ""
+
+#: popups.kv:126
+msgid "Edit"
+msgstr ""
+
+#: popups.kv:136
+msgid "hostname or IP"
+msgstr ""
+
+#: popups.kv:143
+msgid "Okay"
 msgstr ""

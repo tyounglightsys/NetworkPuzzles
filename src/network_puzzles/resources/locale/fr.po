@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-10 17:34+0100\n"
+"POT-Creation-Date: 2025-06-11 17:32+0100\n"
 "PO-Revision-Date: 2025-05-18 16:52+0100\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -19,7 +19,7 @@ msgstr ""
 
 #: messages.py:5
 msgid "Learn how help works"
-msgstr ""
+msgstr "Apprendre le functionnement d'aide"
 
 #: messages.py:6
 msgid ""
@@ -33,7 +33,7 @@ msgstr ""
 
 #: messages.py:9
 msgid "Ping Test"
-msgstr ""
+msgstr "Teste de ping"
 
 #: messages.py:10
 msgid ""
@@ -44,7 +44,7 @@ msgstr ""
 
 #: messages.py:13
 msgid "Plug in network"
-msgstr ""
+msgstr "Connecter au réseau"
 
 #: messages.py:14
 msgid ""
@@ -218,7 +218,7 @@ msgstr ""
 
 #: messages.py:65
 msgid "Traceroute"
-msgstr ""
+msgstr "Traceroute"
 
 #: messages.py:66
 msgid ""
@@ -440,53 +440,57 @@ msgstr ""
 msgid "Practice7"
 msgstr ""
 
+#: base.py:111 base.py:156
+msgid "Ping [host]"
+msgstr "Ping [hôte]"
+
 #: networkpuzzles.kv:51
 msgid "Help level:"
-msgstr ""
+msgstr "Niveau d'aide :"
 
 #: popups.kv:7
 msgid "Load Puzzle"
-msgstr ""
+msgstr "Charger le puzzle"
 
 #: popups.kv:25
 msgid "Filter the puzzles by level:"
-msgstr ""
+msgstr "Filtrer les puzzles par niveau :"
 
 #: popups.kv:31
 msgid "Level 0"
-msgstr ""
+msgstr "Niveau 0"
 
 #: popups.kv:37
 msgid "Level 1"
-msgstr ""
+msgstr "Niveau 1"
 
 #: popups.kv:43
 msgid "Level 2"
-msgstr ""
+msgstr "Niveau 2"
 
 #: popups.kv:49
 msgid "Level 3"
-msgstr ""
+msgstr "Niveau 3"
 
 #: popups.kv:55
 msgid "Level 4"
-msgstr ""
+msgstr "Niveau 4"
 
 #: popups.kv:61
 msgid "Level 5"
-msgstr ""
+msgstr "Niveau 5"
 
 #: popups.kv:67
 msgid "Level 6"
-msgstr ""
+msgstr "Niveau 6"
 
-#: popups.kv:78
+#: popups.kv:78 popups.kv:140
 msgid "Cancel"
-msgstr ""
+msgstr "Annuler"
 
 #: popups.kv:81
 msgid "Load"
-msgstr ""
+msgstr "Charger"
 
 #: popups.kv:86
 msgid "Error"
@@ -495,6 +499,22 @@ msgstr "Erreur"
 #: popups.kv:110
 msgid "Quit"
 msgstr "Quitter"
+
+#: popups.kv:123
+msgid "Delete"
+msgstr "Supprimer"
+
+#: popups.kv:126
+msgid "Edit"
+msgstr "Modifier"
+
+#: popups.kv:136
+msgid "hostname or IP"
+msgstr "nom d'hôte ou adresse IP"
+
+#: popups.kv:143
+msgid "Okay"
+msgstr "Okay"
 
 #~ msgid "Menu"
 #~ msgstr "Menu"
