@@ -1,9 +1,9 @@
 <AppPopup>:
     title_size: dp(app.BUTTON_FONT_SIZE)
-    size_hint: (1/2, 3/4)
+    size_hint: (1/2, 1/2)
 
 <PuzzleChooserPopup>:
-    size_hint_x: 1/3
+    size_hint: (1/3, 3/4)
     title: _("Load Puzzle")
     ThemedBoxLayout:
         padding: dp(0)
@@ -116,3 +116,12 @@
 
 <LinkPopup>
     size_hint_x: 0.25
+    ThemedBoxLayout:
+        orientation: 'vertical'
+        size_hint_y: None
+        PopupButton:
+            text: _("Delete")
+            on_press: root.delete()
+        PopupButton:
+            text: _("Edit")
+            on_press: root.edit()

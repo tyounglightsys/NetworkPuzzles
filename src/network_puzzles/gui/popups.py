@@ -43,7 +43,14 @@ class LinkPopup(AppPopup):
         super().__init__(**kwargs)
         self.link = widget
         self.title = self.link.base.json.get('hostname', '<hostname>')
+    
+    def delete(self):
+        self.app.remove_link(self.link)
+        self.dismiss()
 
+    def edit(self):
+        self.link.edit()
+        self.dismiss()
 
 class PuzzleChooserPopup(AppPopup):
     def on_cancel(self):

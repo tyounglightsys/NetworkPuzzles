@@ -121,6 +121,10 @@ class Device(ThemedBoxLayout):
         self.add_widget(self.button)
         self.add_widget(self.label_hostname)
 
+    @property
+    def hostname(self):
+        return self.base.json.get('hostname')
+
     def callback(self, cmd_string):
         self.app.ui.parse(cmd_string)
 
@@ -195,6 +199,14 @@ class Link(Widget):
         with self.canvas:
             Color(rgba=self.app.theme.fg1)
             Line(points=(*self.start, *self.end), width=2)
+
+    @property
+    def hostname(self):
+        return self.base.json.get('hostname')
+
+    def edit(self):
+        # TODO: Add Edit Link Popup.
+        raise NotImplementedError
 
     def get_progress_pos(self, progress):
         dx = progress * (self.end[0] - self.start[0]) / 100
