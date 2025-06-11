@@ -73,8 +73,7 @@ class NetworkPuzzlesApp(App):
     def add_link(self, link_inst=None):
         # TODO: If link_inst not given, require user to tap on start and end
         # devices on the screen to instantiate a new link.
-        if link_inst is None:
-            # link_inst = Link()
+        if not isinstance(link_inst, Link) and isinstance(link_inst, MenuButton):
             raise NotImplementedError
 
         self.links.append(link_inst)
