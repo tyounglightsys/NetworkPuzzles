@@ -158,10 +158,10 @@ class GUI(UI):
     def parse(self, command: str):
         self.parser.parse(command)
 
-    def process_packets(self, delay):
+    def process_packets(self, tick_pct):
         # If we created packets, process them until done.
         if packet.packetsNeedProcessing():
-            packet.processPackets(3, tick_pct=100*delay)
+            packet.processPackets(3, tick_pct=tick_pct)
 
     def quit(self):
         self.app.stop()

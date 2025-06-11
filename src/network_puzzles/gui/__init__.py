@@ -55,11 +55,14 @@ class NetworkPuzzlesApp(App):
         self.new_item_menu = None
         self.new_infra_device_menu = None
         self.new_user_device_menu = None
-        self.ct = 1
-        self.packet_delay = 0.02  # refresh rate in seconds
+        # NOTE: Time for packet to traverse each link is:
+        #   self.packet_tick_delay * 100 / self.packet_progress_rate
+        # However, there's also a tick limit of ~0.017 Hz for kivy.
+        self.packet_tick_delay = 0.01  # packet pos refresh rate in seconds
+        self.packet_progress_rate = 2.5  # % of link traveled each tick
         self.prev_packets = []  # packets to remove from last refresh
 
-        Clock.schedule_interval(self._update_packets, self.packet_delay)
+        Clock.schedule_interval(self._update_packets, self.packet_tick_delay)
 
     def add_device(self, device_inst=None):
         # TODO: If device_inst not given, require user to choose device type
@@ -99,16 +102,15 @@ class NetworkPuzzlesApp(App):
             if hasattr(w, 'base') and hasattr(w.base, 'json') and w.base.json.get('uniqueidentifier') == uid:
                 return w
 
-    def last_link_index(self):
-        last_index = 0
+    def first_link_index(self):
+        first_index = 999
         for w in self.root.ids.layout.children:
             if w.__class__.__name__ == 'Link':
-                last_index = max([self.root.ids.layout.children.index(w), last_index])
-        return last_index
+                first_index = min([self.root.ids.layout.children.index(w), first_index])
+        return first_index
 
     def on_checkbox_activate(self, inst):
         if inst.state == 'down':
-            print(f"{inst.name} is checked")
             self.filters.append(inst.name)
         elif inst.state == 'normal':
             self.filters.remove(inst.name)
@@ -286,23 +288,24 @@ class NetworkPuzzlesApp(App):
 
     def _update_packets(self, dt):
         # Update backend packet info.
-        self.ui.process_packets(self.packet_delay)
+        self.ui.process_packets(self.packet_progress_rate)
 
         # Remove existing packets from layout.
         while self.prev_packets:
             self.root.ids.layout.remove_widget(self.prev_packets.pop())
 
-        # packet draw index needs to be above link lines but below devices.
-        packet_idx = self.last_link_index() - 1
+        # packet draw index needs to be above link lines but below devices,
+        # which means it needs to be equal to the lowest link index.
+        packet_idx = self.first_link_index()
 
         # Add new packet locations to layout.
         for p in session.packetlist:
             link_data = session.puzzle.link_from_name(p.get('packetlocation'))
             link = self.get_widget_by_uid(link_data.get('uniqueidentifier'))
-            prog = p.get('packetDistance')
+            progress = p.get('packetDistance')
             if p.get('packetDirection') == 2:
-                prog = 100 - prog
-            x, y = link.get_progress_pos(prog)
+                progress = 100 - progress
+            x, y = link.get_progress_pos(progress)
             packet = Packet(pos=(x - self.PACKET_DIMS[0] / 2, y - self.PACKET_DIMS[1] / 2))
             self.root.ids.layout.add_widget(packet, packet_idx)
             self.prev_packets.append(packet)
