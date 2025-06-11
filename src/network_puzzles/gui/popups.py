@@ -38,6 +38,13 @@ class ExceptionPopup(AppPopup):
         self.app.stop()
 
 
+class LinkPopup(AppPopup):
+    def __init__(self, widget, **kwargs):
+        super().__init__(**kwargs)
+        self.link = widget
+        self.title = self.link.base.json.get('hostname', '<hostname>')
+
+
 class PuzzleChooserPopup(AppPopup):
     def on_cancel(self):
         self.dismiss()

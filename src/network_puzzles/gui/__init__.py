@@ -78,7 +78,7 @@ class NetworkPuzzlesApp(App):
             raise NotImplementedError
 
         self.links.append(link_inst)
-        # Add link to z-index = 99 to ensure it's drawn under device.
+        # Add link to z-index = 99 to ensure it's drawn under devices.
         self.root.ids.layout.add_widget(link_inst, 99)
 
     def add_terminal_line(self, line):

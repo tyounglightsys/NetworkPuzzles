@@ -23,6 +23,7 @@ from .labels import DeviceLabel
 from .layouts import ThemedBoxLayout
 from .popups import CommandsPopup
 from .popups import ExceptionPopup
+from .popups import LinkPopup
 
 
 NETWORK_ITEMS = {
@@ -188,6 +189,7 @@ class Link(Widget):
         self.base = link.Link(init_data)
 
         self._set_points()
+        self._set_size_and_pos()
 
         self.background_normal = ''
         with self.canvas:
@@ -198,6 +200,11 @@ class Link(Widget):
         dx = progress * (self.end[0] - self.start[0]) / 100
         dy = progress * (self.end[1] - self.start[1]) / 100
         return (self.start[0] + dx, self.start[1] + dy)
+
+    def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            LinkPopup(self).open()
+            return True
 
     def set_end_nic(self):
         # TODO: Set hostname once DstNic is set as:
@@ -219,6 +226,21 @@ class Link(Widget):
         self.start = start_dev.button.center
         end_dev = self.app.get_widget_by_uid(self.base.json.get('DstNic').get('hostid'))
         self.end = end_dev.button.center
+    
+    def _set_size_and_pos(self):
+        # Set pos.
+        self.x = min([self.start[0], self.end[0]])
+        self.y = min([self.start[1], self.end[1]])
+        # Set size.
+        self.size_hint = (None, None)
+        w = self.start[0] - self.end[0]
+        if w < 0:
+            w = -1 * w
+        self.width = w
+        h = self.start[1] - self.end[1]
+        if h < 0:
+            h = -1 * h
+        self.height = h
 
 
 class Packet(Widget):
