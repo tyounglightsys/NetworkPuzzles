@@ -181,7 +181,15 @@ class Parser:
                 session.print("--Tests--")
                 for onetest in device.all_tests():
                     session.print(f"source: {onetest.get('shost')} test: {onetest.get('thetest')}  dest: {onetest.get('dhost')} status: {onetest.get('completed','False')}")
-                    return
+                return
+            if args[0].lower() == 'puzzle':
+                session.print("----Puzzle----")
+                session.print(session.puzzle.json.get('name'))
+                session.print(session.puzzle.json.get('en_title'))
+                session.print(session.puzzle.json.get('en_message'))
+                self.show_info([])
+                self.show_info(["tests"])
+                return
             session.print(f"No such host {args[0]}")
 
 
