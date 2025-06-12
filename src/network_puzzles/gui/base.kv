@@ -39,8 +39,17 @@
     width: dp(2)
 
 
+<HelpHighlight>
+    size_hint: (None, None)
+    canvas.before:
+        Color:
+            rgba: (1, 0, 0, 0.5)
+        RoundedRectangle:
+            pos: (self.x - dp(5), self.y - dp(5))
+            size: (self.width + dp(10), self.height + dp(10))
+            radius: [dp(10)]
+
 <HelpSlider>
-    id: help_slider
     orientation: 'horizontal'
     canvas.after:
         Color:
@@ -52,6 +61,6 @@
     cursor_size: (0, 0)
     value_track: True
     value_track_color: app.theme.detail
-    min: 1
-    max: 4
+    min: 0
+    max: 3
     step: 1

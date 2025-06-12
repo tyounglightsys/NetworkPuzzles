@@ -33,9 +33,12 @@ class Puzzle:
         """
         return self._get_items('link')
 
+    def all_tests(self):
+        return self._get_items('nettest')
+
     def _get_items(self, item_type: str):
         """
-        Return a list of the given item_type ('link' or 'device').
+        Return a list of the given item_type ('link', 'device', 'nettest').
         """
         items = []
         only_one_item = False
@@ -44,8 +47,12 @@ class Puzzle:
             if not isinstance(item, dict):
                 only_one_item = True
                 item = self.json.get(item_type)
-            if 'hostname' in item:
-                items.append(item)
+            match item_type:
+                case 'link'|'device':
+                    if 'hostname' in item:
+                        items.append(item)
+                case 'nettest':
+                    items.append(item)
             if only_one_item:
                 break  # stop iterating through dict keys
         return items

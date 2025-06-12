@@ -12,6 +12,8 @@ from .. import messages
 from .. import session
 from .base import AppExceptionHandler
 from .base import Device
+from .base import HelpHighlight
+from .base import HelpLevel
 from .base import Link
 from .base import Packet
 from .base import NETWORK_ITEMS
@@ -229,7 +231,7 @@ class NetworkPuzzlesApp(App):
         self.title += f": {title}"
         self.root.ids.info.text = message
         self.device_data = puzzle_data.get('device')
-        self.link_data = puzzle_data.get('link')
+        self.link_data = puzzle_data.get('link', [])
 
         # self.device_data is typically a list of devices, but it's occasionally
         # a one-device dict.
@@ -239,10 +241,25 @@ class NetworkPuzzlesApp(App):
             for dev in self.device_data:
                 self.add_device(Device(dev))
         
-        if self.link_data:
-            # Add links one tick after devices so that devices are positioned
-            # first, since links' positions depend on devices' positions.
-            Clock.schedule_once(self.setup_links)
+        # Some setup needs to be done one tick after devices, because their
+        # positions depends on the devices' positions.
+        Clock.schedule_once(self.update_help)
+        Clock.schedule_once(self.setup_links)
+
+    def update_help(self, inst=None, value=None):
+        if value is None:
+            value = self.root.ids.help_slider.value
+        if session.puzzle:
+            match value:
+                case HelpLevel.NONE:
+                    print("No help.")
+                case HelpLevel.SHOW:
+                    print("Highlight relevant devices.")
+                case HelpLevel.SOME:
+                    print("Provide some descriptive help.")
+                case HelpLevel.FULL:
+                    print("Provide full descriptive help.")
+        self._help_highlight_devices(value)
 
     def update_puzzle_list(self, popup=None):
         # TODO: At the moment self.filter is a list that can include 0 or more
@@ -267,6 +284,28 @@ class NetworkPuzzlesApp(App):
     def _close_tray(self, tray):
         tray.close()
         self.root.ids.layout.remove_widget(tray)
+
+    def _help_highlight_devices(self, help_level):
+        """
+        Always runs when help level is initialized or changed.
+        """
+        # Clear existing highlights.
+        for c in self.root.ids.layout.children:
+            if isinstance(c, HelpHighlight):
+                self.root.ids.layout.remove_widget(c)
+        # Add any required highlights.
+        if help_level > 0:
+            # TODO: This only highlights layout devices. We still need to work
+            # in highligting of other on-screen elements.
+            for n in set(t.get('shost') for t in session.puzzle.all_tests()):
+                d = session.puzzle.device_from_name(n)
+                if d is None:
+                    print(f"Ignoring highlight of non-device \"{n}\"")
+                    continue
+                uid = session.puzzle.device_from_name(n).get('uniqueidentifier')
+                w = self.get_widget_by_uid(uid)
+                idx = self.root.ids.layout.children.index(w) + 1
+                self.root.ids.layout.add_widget(HelpHighlight(center=w.children[1].center), idx)
 
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)

@@ -262,11 +262,24 @@ class Packet(Widget):
     pass
 
 
-class HelpSlider(Slider):
+class HelpHighlight(Widget):
     pass
-    # def __init__(self, **kwargs):
-    #     super().__init__(**kwargs)
-    #     print(self.children)
+
+
+class HelpSlider(Slider):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = session.app
+        self.value = HelpLevel.FULL
+        self.bind(value=self.app.update_help)
+
+
+@dataclass
+class HelpLevel:
+    NONE = 0
+    SHOW = 1
+    SOME = 2
+    FULL = 3
 
 
 @dataclass
