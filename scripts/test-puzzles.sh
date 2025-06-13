@@ -1,11 +1,14 @@
 #!/bin/bash
 
+errorcount=0
+
 function test_one_file {
     filename=$1
     echo -n "testing $filename: "
     result=$(cat $filename | python -m src.network_puzzles | grep -i Congratulations)
     if [ -z "$result" ]; then
         echo "Failed"
+        errorcount=$((errorcount + 1))
     else
         echo "OK"
     fi
@@ -30,3 +33,4 @@ else
         done
     done
 fi
+return $errorcount
