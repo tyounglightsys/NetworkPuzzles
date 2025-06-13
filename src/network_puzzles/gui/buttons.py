@@ -1,3 +1,4 @@
+from kivy.clock import Clock
 from kivy.uix.button import Button
 
 from .. import session
@@ -21,10 +22,25 @@ class AppButton(ThemedButton):
 
 
 class DeviceButton(ThemedButton):
-    def __init__(self, callback, **kwargs):
-        super().__init__(**kwargs)
-        self.callback = callback
+    LONG_PRESS_THRESHOLD = 0.4
 
+    def __init__(self, on_press, on_long_press, **kwargs):
+        super().__init__(**kwargs)
+        self.long_press = None
+        self._on_press = on_press
+        self._on_long_press = on_long_press
+    
+    def on_press(self):
+        # Schedule long-press callback into the future.
+        self.long_press = Clock.schedule_once(self._on_long_press, self.LONG_PRESS_THRESHOLD)
+
+    def on_release(self):
+        # If long-press callback hasn't run, cancel it and run the short-press
+        # callback. Here ".is_triggered" means "scheduled but not yet run". It
+        # resets to 0 or False after the event is processed.
+        if not self.long_press or self.long_press.is_triggered:
+            self.long_press.cancel()
+            self._on_press()
 
 class MenuButton(AppButton):
     def __init__(self, props, **kwargs):

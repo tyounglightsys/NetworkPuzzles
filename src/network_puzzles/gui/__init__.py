@@ -307,6 +307,9 @@ class NetworkPuzzlesApp(App):
                 idx = self.root.ids.layout.children.index(w) + 1
                 self.root.ids.layout.add_widget(HelpHighlight(center=w.children[1].center), idx)
 
+    def _help_update_tooltips(self):
+        pass
+
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)
         tray.open()        

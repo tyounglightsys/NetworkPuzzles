@@ -2,6 +2,8 @@ import traceback
 from dataclasses import dataclass
 from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
+from kivy.clock import Clock
+from kivy.core.window import Window
 from kivy.graphics import Color
 from kivy.graphics import Line
 from kivy.metrics import dp
@@ -21,6 +23,7 @@ from .. import session
 from .buttons import CommandButton
 from .buttons import DeviceButton
 from .labels import DeviceLabel
+from .labels import HelpToolTip
 from .layouts import ThemedBoxLayout
 from .popups import CommandsPopup
 from .popups import ExceptionPopup
@@ -104,6 +107,7 @@ class ThemedCheckBox(CheckBox):
 class Device(ThemedBoxLayout):
     def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
+        Window.bind(mouse_pos=self.on_mouse_pos)
         self.app = session.app
         self.base = device.Device(init_data)
 
@@ -114,11 +118,13 @@ class Device(ThemedBoxLayout):
         self._set_pos()  # sets self.coords and self.pos_hint
         self.size_hint = (0.08, 0.20)
         self.label_hostname = DeviceLabel(text=self.base.hostname)
-        self.button = DeviceButton(callback=self.on_press)
+        self.button = DeviceButton(on_press=self.on_press, on_long_press=self.on_long_press)
         self._set_image()
         # TODO: Button to cycle through showing hostname and/or IPs?
         self.add_widget(self.button)
         self.add_widget(self.label_hostname)
+        self.help_text = "<Not yet implemented>"
+        self.tooltip = HelpToolTip(text=self.help_text)
 
     @property
     def hostname(self):
@@ -133,6 +139,26 @@ class Device(ThemedBoxLayout):
         self.set_type()
         self.set_location()
         self.set_hostname()
+
+    def on_mouse_pos(self, *args):
+        if not self.get_root_window():
+            return
+        pos = self.app.root.ids.layout.to_widget(*args[1])
+        self.tooltip.center = pos
+        Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event 
+        self.close_tooltip() # close if it's opened
+        if self.collide_point(*pos):
+            Clock.schedule_once(self.open_tooltip, 1)
+
+    def close_tooltip(self, *args):
+        self.app.root.ids.layout.remove_widget(self.tooltip)
+
+    def open_tooltip(self, *args):
+        if self.tooltip not in self.app.root.ids.layout.children:
+            self.app.root.ids.layout.add_widget(self.tooltip)
+
+    def on_long_press(self, *args):
+        self.open_tooltip()
 
     def on_press(self):
         self._build_commands_popup().open()

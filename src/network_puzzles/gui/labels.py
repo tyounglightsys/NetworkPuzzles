@@ -23,9 +23,12 @@ class ThemedLabel(Label):
         self.app = session.app
 
 
-class DeviceLabel(ThemedLabel):
+class HelpToolTip(ThemedLabel):
     pass
 
+
+class DeviceLabel(ThemedLabel):
+    pass
 
 
 class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
