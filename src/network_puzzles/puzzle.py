@@ -167,6 +167,10 @@ class Puzzle:
         itemlist = self.json['device']
         for i in range(len(itemlist) - 1, -1, -1):
             if(itemlist[i]['hostname'] == itemToDelete):
+                #can we delete it?
+                if device.device_is_critical(itemlist[i]['hostname']):
+                    session.print(f"Cannot delete {itemlist[i]['hostname']}.  The puzzle has it locked.")
+                    return False
                 #We need to find any links connected to this device and delete them
                 for onenic in device.Device(itemlist[i]).all_nics():
                     onelink = device.linkConnectedToNic(onenic)
