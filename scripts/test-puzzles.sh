@@ -8,9 +8,10 @@ function test_one_file {
     result=$(cat $filename | python -m src.network_puzzles | grep -i Congratulations)
     if [ -z "$result" ]; then
         echo "Failed"
-        errorcount=$((errorcount + 1))
+        return 1
     else
         echo "OK"
+        return 0
     fi
 }
 
@@ -20,8 +21,11 @@ function expand_file {
 }
 
 if [ $# -eq 0 ]; then
-    ls tests/solutions/* | while read filename; do
+    #ls tests/solutions/* | while read filename; do
+    for filename in tests/solutions/*; do
         test_one_file $filename
+        myerror=$?
+        errorcount=$(( $errorcount + $myerror))
     done
 else
     #we have some command-line parameters.  Hopefully they are puzzle names
@@ -30,7 +34,9 @@ else
         shift
         for onefile in $grabfiles; do
             test_one_file $onefile
+            myerror=$?
+            errorcount=$(( $errorcount + $myerror))
         done
     done
 fi
-return $errorcount
+exit $errorcount
