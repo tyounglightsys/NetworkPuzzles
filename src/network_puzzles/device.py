@@ -614,9 +614,9 @@ def beginIngressOnNIC(packRec, nicRec):
     
     #If we are entering a WAN port, see if we should be blocked or if it is a return packet
     if nictype == "wan":
-        1
+        pass
         #We do not have the firewall programed in yet.
-        #if the packet is a return ping packet, allow it. Otherwise, reject
+        #if the packet is a return ping packet, allow it. Otherwise, reject    
     
     if packRec['destMAC'] == nicRec['Mac'] or packet.isBroadcastMAC(packRec['destMAC']) or nictype == "port" or nictype == "wport":
         #The packet is good, and has reached the computer.  Pass it on to the device
@@ -655,7 +655,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     if deviceHasIP(thisDevice, packRec['destIP']):
         packRec['status'] = 'done'
         print ("Packet arrived at destination")
-        print ("packet type: -" + packRec['packettype'] + "-") 
+#        print ("packet type: -" + packRec['packettype'] + "-") 
 
         # ping, send ping packet back
         if packRec['packettype'] == 'ping':
@@ -728,6 +728,7 @@ def sendPacketOutDevice(packRec, theDevice):
     """Send the packet out of the device."""
     #print("Sending packet out a device: " + theDevice['hostname'])
     #determine which interface/nic we are exiting out of - routing
+    packRec['packetDistance'] = 0 # always reset this
     routeRec = routeRecFromDestIP(theDevice,packRec['destIP'])
     #set the source MAC address on the packet as from the nic
     if routeRec is not None:
@@ -735,6 +736,12 @@ def sendPacketOutDevice(packRec, theDevice):
         packRec['sourceMAC'] = routeRec['nic']['Mac']
     #set the destination MAC to be the GW MAC if the destination is not local
         #this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
+    if routeRec.get('gateway') is not None:
+        #We are going out the gateway.  Find the ARP for that
+        packRec['destMAC'] = globalArpLookup(routeRec.get('gateway'))
+    else:
+        #We are on a local link.  Set the destmac to be the mac of our destination computer
+        packRec['destMAC'] = globalArpLookup(packRec.get('destIP'))
 
     #set the packet location being the link associated with the nic
     #   Fail if there is no link on the port
