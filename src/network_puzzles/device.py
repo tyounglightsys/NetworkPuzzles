@@ -253,7 +253,9 @@ def routeRecFromDestIP(theDeviceRec,destinationIPString:str):
     if not isinstance(theDeviceRec['route'], list):
         theDeviceRec['route'] =  [ theDeviceRec['route']] #turn it into a list
     for oneroute in theDeviceRec['route']:
-        staticroute=ipaddress.ip_network(oneroute['ip' + "/" + oneroute['mask']])
+        tstring = oneroute['ip'] + "/" + oneroute['mask']
+        print(f" the string is {tstring}")
+        staticroute=ipaddress.ip_network(oneroute['ip'] + "/" + oneroute['mask'], strict=False)
         if destinationIPString in staticroute:
             #We found a gateway that we should use.
             routeRec['gateway'] = oneroute['gateway'] #just the gateway
@@ -730,22 +732,24 @@ def sendPacketOutDevice(packRec, theDevice):
     #determine which interface/nic we are exiting out of - routing
     packRec['packetDistance'] = 0 # always reset this
     routeRec = routeRecFromDestIP(theDevice,packRec['destIP'])
+    destlink = None
     #set the source MAC address on the packet as from the nic
     if routeRec is not None:
         routeRec['nic'] = Nic(routeRec['nic']).ensure_mac()
         packRec['sourceMAC'] = routeRec['nic']['Mac']
     #set the destination MAC to be the GW MAC if the destination is not local
         #this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
-    if routeRec.get('gateway') is not None:
-        #We are going out the gateway.  Find the ARP for that
-        packRec['destMAC'] = globalArpLookup(routeRec.get('gateway'))
-    else:
-        #We are on a local link.  Set the destmac to be the mac of our destination computer
-        packRec['destMAC'] = globalArpLookup(packRec.get('destIP'))
+        if routeRec.get('gateway') is not None:
+            #We are going out the gateway.  Find the ARP for that
+            packRec['destMAC'] = globalArpLookup(routeRec.get('gateway'))
+        else:
+            #We are on a local link.  Set the destmac to be the mac of our destination computer
+            packRec['destMAC'] = globalArpLookup(packRec.get('destIP'))
 
-    #set the packet location being the link associated with the nic
-    #   Fail if there is no link on the port
-    destlink = linkConnectedToNic(routeRec['nic'])
+        #set the packet location being the link associated with the nic
+        #   Fail if there is no link on the port
+        destlink = linkConnectedToNic(routeRec['nic'])
+
     if destlink is not None:
         packRec['packetlocation'] = destlink['hostname']
         if destlink['SrcNic']['hostname'] == theDevice['hostname']:
