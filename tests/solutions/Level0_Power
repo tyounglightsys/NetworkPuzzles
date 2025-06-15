@@ -1,0 +1,3 @@
+load Level0_Power
+set net_switch0 poweroff False
+ping pc0 laptop1
