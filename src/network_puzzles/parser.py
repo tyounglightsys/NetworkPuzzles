@@ -82,7 +82,7 @@ class Parser:
 
     def create_something(self,args):
         if len(args) == 0:
-            session.print("You must specify something to print")
+            session.print("You must specify something to create")
             session.print("create link source_hostname [sourcenic] dest_hostname [destnic]")
             session.print("create device devicetype x,y")
             session.print("where devicetype is one of the known devices: pc, laptop, router, switch, firewall, etc.")
