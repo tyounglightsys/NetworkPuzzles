@@ -404,8 +404,8 @@ def sourceIP(src,dstIP):
     GW = ipaddress.IPv4Interface(tmpval)
     for oneip in allIPs:
         if GW in oneip.network:
-            print("The gateway is the way forward ")
-            print(oneip.ip)
+            #print("The gateway is the way forward ")
+            #print(oneip.ip)
             return oneip
 
     #if we do not have a GW, we need to report, "no route to host"

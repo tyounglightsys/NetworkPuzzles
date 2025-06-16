@@ -98,6 +98,9 @@ def processPackets(killSeconds: int = 20, tick_pct: float = 10):
         if theLink is not None:
             #the packet is traversing a link
             one['packetDistance'] += tick_pct #traverse the link.  If we were smarter, we could do it in different chunks based on the time it takes to redraw
+            if one['packetDistance'] > 50 and theLink.get('linktype') == 'broken':
+                #The link is broken.  The packet gets killed
+                one['status'] = 'done' #the packet dies silently
             if one['packetDistance'] > 100:
                 #We have arrived.  We need to process the arrival!
                 #get interface from link
