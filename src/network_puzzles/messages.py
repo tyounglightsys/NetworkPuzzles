@@ -3,7 +3,7 @@ from . import _
 puzzles = {
     "0.0": {
         "title": _("Learn how help works"),
-        "info": _("To learn how this program works, first we will acquaint you with the 'Help.'  Most of the puzzles you do, you will want to do with as little help as possible.  But, there is help when you need it.  For this puzzle, click one of the four help-levels (round buttons) on the right.  Then mouse-over the PC and see the messages.  When you have moused-over for all the buttons (and pressed the ? box), this puzzle will be completed.")
+        "info": _("To learn how this program works, first we will acquaint you with the 'Help.'  Most of the puzzles you do, you will want to do with as little help as possible.  But, there is help when you need it.  For this puzzle, click one of the four help-levels (round buttons) on the right.  Then mouse-over the PC and see the messages.  When you have moused-over for all the buttons (and pressed the ? box), this puzzle will be completed."),
     },
     "0.1": {
         "title": _("Ping Test"),
@@ -144,5 +144,176 @@ puzzles = {
     "1.27": {
         "title": _("Practice7"),
         "info": "",
+    },
+}
+
+# ref:
+# - https://git.solidcharity.com/timy/EduNetworkBuilder/src/branch/master/EduNetworkBuilder/NetTest.cs
+# - https://git.solidcharity.com/timy/EduNetworkBuilder/src/branch/master/EduNetworkBuilder/Resources/languages/edustrings.resx
+nettests = {
+    "DeviceBlowsUpWithPower": {
+        "basic": _("has a problem"),
+        "hints": _("hardware problem"),
+        "full": _("bad power supply"),
+    },
+    "DeviceIsFrozen": {
+        "basic": _("has a problem"),
+        "hints": _("device is frozen"),
+        "full": _("reboot the device"),
+    },
+    "DeviceNeedsUPS": {
+        "basic": _("has a problem"),
+        "hints": _("is plugged into bad power"),
+        "full": _("needs a UPS"),
+    },
+    "DeviceNICSprays": {
+        "basic": _("has a problem"),
+        "hints": _("network card sprays net when used"),
+        "full": _("network card sprays net when used"),
+    },
+    "DHCPServerEnabled": {
+        "basic": _("has a problem"),
+        "hints": _("needs change to DHCP server:"),
+        "full": _("DHCP server enabled ="),
+    },
+    "FailedPing": {
+        "basic": _("has a problem"),
+        "hints": _("should fail to ping a specific host"),
+        "full": _("needs to try to ping (and fail):"),
+    },
+    "HelpRequest": {
+        "basic": _("has a problem"),
+        "hints": _("get mouse-over help"),
+        "full": _("get mouse-over help of level:"),
+    },
+    "LockAll": {
+        "basic": _("has a problem"),
+        "hints": _("is locked"),
+        "full": _("is locked:"),
+    },
+    "LockDHCP": {
+        "basic": _("has a problem"),
+        "hints": _("has locked DHCP"),
+        "full": _("has locked DHCP:"),
+    },
+    "LockGateway": {
+        "basic": _("has a problem"),
+        "hints": _("has locked gateway"),
+        "full": _("has locked gateway:"),
+    },
+    "LockInterfaceVLAN": {
+        "basic": _("has a problem"),
+        "hints": _("the VLAN on an interface is locked"),
+        "full": _("the VLAN on an interface is locked:"),
+    },
+    "LockIP": {
+        "basic": _("has a problem"),
+        "hints": _("has locked IP"),
+        "full": _("has locked IP:"),
+    },
+    "LockLocation": {
+        "basic": _("has a problem"),
+        "hints": _("device cannot be moved"),
+        "full": _("device cannot be moved:"),
+    },
+    "LockNic": {
+        "basic": _("has a problem"),
+        "hints": _("has locked NIC"),
+        "full": _("has locked NIC:"),
+    },
+    "LockNicVLAN": {
+        "basic": _("has a problem"),
+        "hints": _("the VLAN on a NIC is locked"),
+        "full": _("the VLAN on a NIC is locked:"),
+    },
+    "LockRoute": {
+        "basic": _("has a problem"),
+        "hints": _("has locked route"),
+        "full": _("has locked route:"),
+    },
+    "LockVLANNames": {
+        "basic": _("has a problem"),
+        "hints": _("VLAN names and IDs are locked"),
+        "full": _("VLAN names and IDs are locked:"),
+    },
+    "LockVLANsOnHost": {
+        "basic": _("has a problem"),
+        "hints": _("a VLAN is locked"),
+        "full": _("a VLAN is locked:"),
+    },
+    "NeedsDefaultGW": {
+        "basic": _("has a problem"),
+        "hints": _("needs the gateway set"),
+        "full": _("needs the gateway set to:"),
+    },
+    "NeedsForbiddenVLAN": {
+        "basic": _("has a problem"),
+        "hints": _("the interface needs a forbidden VLAN"),
+        "full": _("the interface needs a forbidden VLAN:"),
+    },
+    "NeedsLinkToDevice": {
+        "basic": _("has a problem"),
+        "hints": _("needs to be connected to the network"),
+        "full": _("needs a link to host:"),
+    },
+    "NeedsLocalIPTo": {
+        "basic": _("has a problem"),
+        "hints": _("needs a local IP"),
+        "full": _("needs an IP local to host:"),
+    },
+    "NeedsPingToHost": {
+        "basic": _("has a problem"),
+        "hints": _("cannot ping"),
+        "full": _("cannot ping host:"),
+    },
+    "NeedsRouteToNet": {
+        "basic": _("has a problem"),
+        "hints": _("needs a route set"),
+        "full": _("needs a route to network:"),
+    },
+    "NeedsTaggedVLAN": {
+        "basic": _("has a problem"),
+        "hints": _("the interface needs a tagged VLAN"),
+        "full": _("the interface needs a tagged VLAN:"),
+    },
+    "NeedsUntaggedVLAN": {
+        "basic": _("has a problem"),
+        "hints": _("the interface needs an untagged VLAN"),
+        "full": _("the interface needs an untagged VLAN:"),
+    },
+    "ReadContextHelp": {
+        "basic": _("has a problem"),
+        "hints": _("read context help for:"),
+        "full": _("read context help for:"),
+    },
+    "SuccessfullyArps": {
+        "basic": _("has a problem"),
+        "hints": _("needs to find ARP from some device"),
+        "full": _("needs to find ARP from:"),
+    },
+    "SuccessfullyDHCPs": {
+        "basic": _("has a problem"),
+        "hints": _("needs a DHCP IP address"),
+        "full": _("needs a DHCP IP address from server:"),
+    },
+    "SuccessfullyPings": {
+        "basic": _("has a problem"),
+        "hints": _("must ping a host"),
+        "full": _("must ping:"),
+    },
+    "SuccessfullyPingsAgain": {
+        "basic": _("has a problem"),
+        "hints": _("must ping a host"),
+        "full": _("must ping:"),
+    },
+    "SuccessfullyPingsWithoutLoop": {
+        "basic": _("has a problem"),
+        "hints": _("must ping a host"),
+        "full": _("must ping:"),
+    },
+    "SuccessfullyTraceroutes": {
+        "basic": _("has a problem"),
+        "hints": _("needs to traceroute"),
+        "full": _("needs to traceroute to:"),
     },
 }
