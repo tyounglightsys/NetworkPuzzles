@@ -310,8 +310,8 @@ class HelpSlider(Slider):
 @dataclass
 class HelpLevel:
     NONE = 0
-    SHOW = 1
-    SOME = 2
+    BASIC = 1
+    HINTS = 2
     FULL = 3
 
 

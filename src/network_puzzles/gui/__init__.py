@@ -14,7 +14,6 @@ from .. import session
 from .base import AppExceptionHandler
 from .base import Device
 from .base import HelpHighlight
-from .base import HelpLevel
 from .base import Link
 from .base import Packet
 from .base import NETWORK_ITEMS
@@ -253,15 +252,6 @@ class NetworkPuzzlesApp(App):
         if value is None:
             value = self.root.ids.help_slider.value
         if session.puzzle:
-            match value:
-                case HelpLevel.NONE:
-                    print("No help.")
-                case HelpLevel.SHOW:
-                    print("Highlight relevant devices.")
-                case HelpLevel.SOME:
-                    print("Provide some descriptive help.")
-                case HelpLevel.FULL:
-                    print("Provide full descriptive help.")
             self._help_highlight_devices(value)
             self._help_update_tooltips(value)
 
