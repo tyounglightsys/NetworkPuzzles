@@ -113,10 +113,7 @@ class Device(ThemedBoxLayout):
 
         self.commands = device.commands_from_tests(self.hostname)
         self.commands.append(_("Ping [host]"))
-        self.orientation = 'vertical'
-        self.spacing = 0
         self._set_pos()  # sets self.coords and self.pos_hint
-        self.size_hint = (0.08, 0.20)
         self.label_hostname = DeviceLabel(text=self.base.hostname)
         self.button = DeviceButton(on_press=self.on_press, on_long_press=self.on_long_press)
         self._set_image()

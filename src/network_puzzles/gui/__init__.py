@@ -48,6 +48,7 @@ class NetworkPuzzlesApp(App):
         self.title = self.app_title
         self.theme = LightColorTheme
         Window.clearcolor = self.theme.bg2
+        Window.bind(on_resize=self.setup_puzzle)
 
         self.devices = []
         self.links = []
@@ -211,9 +212,11 @@ class NetworkPuzzlesApp(App):
             for link in self.link_data:
                 self.add_link(Link(link))
 
-    def setup_puzzle(self, puzzle_data=None):
+    def setup_puzzle(self, *args, puzzle_data=None):
         self.reset_display()
         if puzzle_data is None:
+            if not session.puzzle:
+                return
             puzzle_data = session.puzzle.json
 
         # Combine level & sortorder to get unique message ID.
