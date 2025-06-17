@@ -67,6 +67,15 @@ class Puzzle:
         uid = str(uid)  # ensure not an integer
         return self._item_by_attrib(self.all_devices(), 'uniqueidentifier', uid)
 
+    def device_is_critical(self, name):
+        test_devices = set()
+        for t in self.all_tests():
+            for h in ('shost', 'dhost'):
+                host = t.get(h)
+                if host:
+                    test_devices.add(host)
+        return name in test_devices
+
     def item_from_uid(self, uid):
         """Return the item matching the ID.  Could be a device, a link, or a nic"""
         result = self.device_from_uid(uid)
