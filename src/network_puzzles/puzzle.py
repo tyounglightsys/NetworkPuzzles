@@ -266,8 +266,8 @@ class Puzzle:
                 self.json['link'] = [ self.json['link']]
             self.json['link'].append(newlink)
             session.print(f"Created link: {newlink['hostname']}")
-            device.mark_test_as_completed(sdevicename,ddevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {sdevicename}")
-            device.mark_test_as_completed(ddevicename,sdevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {sdevicename}")
+            device.mark_test_as_completed(sdevicename,ddevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {ddevicename}")
+            device.mark_test_as_completed(ddevicename,sdevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {ddevicename}")
         else:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
 
