@@ -1,0 +1,3 @@
+load Level0_BrokenLink
+replace router0_link_laptop1
+ping pc0 laptop1

@@ -74,6 +74,8 @@ class Parser:
                     self.exit_app()
                 case 'ping':
                     self.run_ping(args)
+                case 'replace':
+                    self.replace_something(args)
                 case 'show' | 'list':
                     self.show_info(args)
                 case 'set':
@@ -94,6 +96,21 @@ class Parser:
         item = args.pop(0).lower()
         if item == 'link':
             session.puzzle.createLink(args)
+
+    def replace_something(self,args):
+        if len(args) == 0:
+            session.print("You must specify something to replace")
+            return None
+        if len(args) == 1:
+            item=session.puzzle.link_from_name(args[0])
+            if item is not None:
+                #we have a link.  We can replace one of these
+                session.puzzle.deleteItem(item.get('hostname'))
+                linktype = item.get('linktype')
+                if linktype == 'broken':
+                    linktype = 'normal' #we replace broken links
+                session.puzzle.createLink([item['SrcNic']['hostname'], item['SrcNic']['nicname'],item['DstNic']['hostname'], item['DstNic']['nicname']],linktype)
+            #else, it is either a device, or something that does not exist
 
     def printhelp(self):
         session.print("--- CLI Help ---")
