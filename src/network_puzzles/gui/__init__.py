@@ -271,7 +271,7 @@ class NetworkPuzzlesApp(App):
             pfilter = f"{self.filters[0]}"
         elif isinstance(self.filters, str):
             pfilter = self.filters
-        self.filtered_puzzlelist = sorted(self.ui.getAllPuzzleNames(pfilter))
+        self.filtered_puzzlelist = self.ui.getAllPuzzleNames(pfilter)
         if popup:
             popup.ids.puzzles_view.update_data()
 

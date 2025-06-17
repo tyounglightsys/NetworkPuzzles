@@ -316,6 +316,9 @@ def matches_filter(name: str, pattern: str|None) -> bool:
     else:
         return False
 
+def sort_session_puzzles():
+    session.puzzlelist.sort(key=lambda x: (Version(x['EduNetworkBuilder']['Network']['level']), Version(x['EduNetworkBuilder']['Network']['sortorder'])))
+
 def filter_items(items: list, pattern: str, json_files: bool = False) -> list:
     filtered_items = []
     for item in items:
@@ -335,6 +338,7 @@ def listPuzzlesFromDisk(regex_pattern: str = None):
 def listPuzzles(regex_pattern: str = None):
     if len(session.puzzlelist) == 0:
         readPuzzle()
+    sort_session_puzzles()
     return filter_items(session.puzzlelist, regex_pattern)
 
 def readPuzzle():
@@ -348,7 +352,7 @@ def readPuzzle():
             oneentry['EduNetworkBuilder']['Network']['name'] = one
             session.puzzlelist.append(oneentry)
             #print("loading: " + one)
-        session.puzzlelist.sort(key = lambda x: (Version(x['EduNetworkBuilder']['Network']['level']), Version(x['EduNetworkBuilder']['Network']['sortorder']) ))
+        sort_session_puzzles()
 
 def choosePuzzleFromName(what:str):
     """
