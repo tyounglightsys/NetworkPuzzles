@@ -223,13 +223,13 @@ class NetworkPuzzlesApp(App):
         puzzle_messages = messages.puzzles.get(puzzle_msg_id)
         if puzzle_messages:
             title = puzzle_messages.get('title')
-            message = puzzle_messages.get('message')
+            info = puzzle_messages.get('info')
         else:
             title = puzzle_data.get('en_title', '<no title>')
-            message = puzzle_data.get('en_message', '<no message>')
+            info = puzzle_data.get('en_message', '<no message>')
         
         self.title += f": {title}"
-        self.root.ids.info.text = message
+        self.root.ids.info.text = info
         self.device_data = puzzle_data.get('device')
         self.link_data = puzzle_data.get('link', [])
 
