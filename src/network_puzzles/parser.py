@@ -48,9 +48,11 @@ class Parser:
             print("loading: ")
         return {'command': cmd, 'value': val}
 
-    def parse(self, command: str):
+    def parse(self, command: str, fromuser=True):
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         items = command.split() # break at all whitespace
+        if fromuser:
+            session.history.append(command) #add commands to the history
         if len(items) > 0:
             # we have stuff. Process it
             cmd = items[0].lower()
@@ -60,6 +62,8 @@ class Parser:
                     self.create_something(args)
                 case 'help'|'?':
                     self.printhelp()
+                case 'history':
+                    self.show_info(['history'])
                 case 'puzzles' | 'search':
                     return self.get_puzzles(cmd, args)
                 case 'load' | 'open':
@@ -96,11 +100,12 @@ class Parser:
         session.print("create link source destination - create a link between two devices.  example: create link pc0 net_switch0")
         session.print("delete [item] - delete a device or link")
         session.print("help - show this page")
+        session.print("history - see the commands you typed this session")
         session.print("load - load a puzzle.  Example: load 1 | load Level0_Ping")
         session.print("quit - exit the cli")
         session.print("search [info] - list the puzzles matching the info.  Example: search DHCP | search 1")
         session.print("set - change a value.  Example: set pc0 gateway | set pc0 dhcp true")
-        session.print("show [item] - show information about an item.  Example: show | show pc0 | show tests")
+        session.print("show [item] - show information about an item.  Example: show | show pc0 | show tests | show history")
         session.print("ping [host1] [host2] - ping from one host to the other.  Example: ping pc0 pc1")
 
 
@@ -189,6 +194,10 @@ class Parser:
                 session.print(session.puzzle.json.get('en_message'))
                 self.show_info([])
                 self.show_info(["tests"])
+                return
+            if args[0].lower() == 'history':
+                for oneline in session.history:
+                    session.print(oneline)
                 return
             session.print(f"No such host {args[0]}")
 

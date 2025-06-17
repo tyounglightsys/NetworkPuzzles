@@ -26,9 +26,9 @@ class UI:
         """
         val = None
         if filter is not None:
-            val=self.parser.parse("load " + puzzle_ref + " " + filter)
+            val=self.parser.parse("load " + puzzle_ref + " " + filter, False)
         else:
-            val=self.parser.parse("load " + puzzle_ref)
+            val=self.parser.parse("load " + puzzle_ref, False)
         
         # Save selected puzzle to session variable.
         session.puzzle = puzzle.Puzzle(val.get('value'))
@@ -112,7 +112,7 @@ class CLI(UI):
         """A CLI only function.  Prompt for imput and process it"""
         try:
             answer = input("-> ")
-            self.parser.parse(answer)
+            self.parser.parse(answer, True)
             #if we created packets, process them until done.
             count = 0
             while packet.packetsNeedProcessing():
@@ -125,7 +125,7 @@ class CLI(UI):
             if not session.puzzle.json.get('completed',False):
                 if session.puzzle.is_puzzle_done():
                     session.print("Congratulations. You solved the whole puzzle!")
-                    self.parser.parse("show tests")
+                    self.parser.parse("show tests",False)
                     session.puzzle.json['completed'] = True
         except EOFError:
             sys.exit()

@@ -14,6 +14,7 @@ class Session:
         self.puzzlelist: list = list()
         self.puzzle = None
         self.packetlist: list = list()
+        self.history = list()
     
     def print(self, message):
             print("<default print method>")
