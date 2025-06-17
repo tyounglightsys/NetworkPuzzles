@@ -223,8 +223,9 @@ class Parser:
     def setvalue(self,args):
         #set a value on a device.
         #right now, we have something like: set pc0 poweroff true
-        if len(args) == 3:
+        if len(args) > 1:
             chosendevice = session.puzzle.device_from_name(args[0])
+        if len(args) == 3:
             if chosendevice is not None:
                 match args[1].lower():
                     case 'power'|'poweroff':
@@ -246,3 +247,11 @@ class Parser:
                             session.print(f"Setting {args[0]} gateway: {chosendevice['gateway']['ip']}")
                         else:
                             session.print(f"invalid address: {args[2]}")
+        if len(args) == 2:
+            if chosendevice is not None:
+                print("fewer args")
+                match args[1].lower():
+                    case 'poweroff':
+                        self.setvalue([args[0],'poweroff','off'])
+                    case 'poweron':
+                        self.setvalue([args[0],'poweroff','on'])
