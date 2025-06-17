@@ -9,6 +9,7 @@ from kivy.uix.relativelayout import RelativeLayout
 from pathlib import Path
 
 from .. import messages
+from .. import nettests
 from .. import session
 from .base import AppExceptionHandler
 from .base import Device
@@ -97,19 +98,18 @@ class NetworkPuzzlesApp(App):
         self.selected_puzzle = None
         self.reset_display()
 
-    def get_widget_by_uid(self, uid):
-        # This returns the gui widget, which is different from
-        # the puzzle JSON object.
-        for w in self.root.ids.layout.children:
-            if hasattr(w, 'base') and hasattr(w.base, 'json') and w.base.json.get('uniqueidentifier') == uid:
-                return w
-
     def first_link_index(self):
         first_index = 999
         for w in self.root.ids.layout.children:
             if w.__class__.__name__ == 'Link':
                 first_index = min([self.root.ids.layout.children.index(w), first_index])
         return first_index
+
+    def get_widget_by_hostname(self, hostname):
+        return self._get_widget_by_prop('hostname', hostname)
+
+    def get_widget_by_uid(self, uid):
+        return self._get_widget_by_prop('uid', uid)
 
     def on_checkbox_activate(self, inst):
         if inst.state == 'down':
@@ -223,13 +223,13 @@ class NetworkPuzzlesApp(App):
         puzzle_messages = messages.puzzles.get(puzzle_msg_id)
         if puzzle_messages:
             title = puzzle_messages.get('title')
-            message = puzzle_messages.get('message')
+            info = puzzle_messages.get('info')
         else:
             title = puzzle_data.get('en_title', '<no title>')
-            message = puzzle_data.get('en_message', '<no message>')
+            info = puzzle_data.get('en_message', '<no message>')
         
         self.title += f": {title}"
-        self.root.ids.info.text = message
+        self.root.ids.info.text = info
         self.device_data = puzzle_data.get('device')
         self.link_data = puzzle_data.get('link', [])
 
@@ -259,7 +259,8 @@ class NetworkPuzzlesApp(App):
                     print("Provide some descriptive help.")
                 case HelpLevel.FULL:
                     print("Provide full descriptive help.")
-        self._help_highlight_devices(value)
+            self._help_highlight_devices(value)
+            self._help_update_tooltips(value)
 
     def update_puzzle_list(self, popup=None):
         # TODO: At the moment self.filter is a list that can include 0 or more
@@ -285,6 +286,11 @@ class NetworkPuzzlesApp(App):
         tray.close()
         self.root.ids.layout.remove_widget(tray)
 
+    def _get_widget_by_prop(self, prop, value):
+        for w in self.root.ids.layout.children:
+            if hasattr(w, prop) and getattr(w, prop) == value:
+                return w
+
     def _help_highlight_devices(self, help_level):
         """
         Always runs when help level is initialized or changed.
@@ -307,8 +313,11 @@ class NetworkPuzzlesApp(App):
                 idx = self.root.ids.layout.children.index(w) + 1
                 self.root.ids.layout.add_widget(HelpHighlight(center=w.children[1].center), idx)
 
-    def _help_update_tooltips(self):
-        pass
+    def _help_update_tooltips(self, help_level):
+        for test_data in session.puzzle.all_tests():
+            nettest = nettests.NetTest(test_data)
+            device = self.get_widget_by_hostname(nettest.shost)
+            device.set_help_text(nettest.get_help_text(help_level))
 
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)

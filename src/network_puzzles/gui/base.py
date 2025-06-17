@@ -123,12 +123,21 @@ class Device(ThemedBoxLayout):
         # TODO: Button to cycle through showing hostname and/or IPs?
         self.add_widget(self.button)
         self.add_widget(self.label_hostname)
-        self.help_text = "<Not yet implemented>"
-        self.tooltip = HelpToolTip(text=self.help_text)
+        self.tooltip = HelpToolTip()
 
     @property
     def hostname(self):
-        return self.base.json.get('hostname')
+        if hasattr(self, 'base') and hasattr(self.base, 'json'):
+            return self.base.json.get('hostname')
+        else:
+            return None
+
+    @property
+    def uid(self):
+        if hasattr(self, 'base') and hasattr(self.base, 'json'):
+            return self.base.json.get('uniqueidentifier')
+        else:
+            return None
 
     def callback(self, cmd_string):
         self.app.ui.parse(cmd_string)
@@ -163,17 +172,8 @@ class Device(ThemedBoxLayout):
     def on_press(self):
         self._build_commands_popup().open()
 
-    def set_hostname(self):
-        raise NotImplementedError
-
-    def set_location(self):
-        raise NotImplementedError
-
-    def set_type(self):
-        raise NotImplementedError
-
-    def _set_uid(self):
-        raise NotImplementedError
+    def set_help_text(self, text):
+        self.tooltip.text = text
 
     def _build_commands_popup(self):
         # Setup the content.
@@ -231,7 +231,17 @@ class Link(Widget):
 
     @property
     def hostname(self):
-        return self.base.json.get('hostname')
+        if hasattr(self, 'base') and hasattr(self.base, 'json'):
+            return self.base.json.get('hostname')
+        else:
+            return None
+
+    @property
+    def uid(self):
+        if hasattr(self, 'base') and hasattr(self.base, 'json'):
+            return self.base.json.get('uniqueidentifier')
+        else:
+            return None
 
     def edit(self):
         # TODO: Add Edit Link Popup.

@@ -14,6 +14,34 @@ class TestGetDeviceAttribs(unittest.TestCase):
             'hostname': 'test'
         }
 
+        # TODO: Use Mock rather than "real" session.puzzle.
+        self.puzzle_name = 'Level0_HubVsSwitch'
+        self.hostname = 'pc0'
+
+        # Load puzzle data separately via json.load.
+        puzzle_file = PUZZLES_DIR / f'{self.puzzle_name}.json'
+        with puzzle_file.open() as f:
+            self.puzzle = json.load(f)  # gets independent puzzle data from file
+        self.network = self.puzzle.get('EduNetworkBuilder').get('Network')
+        self.device_json = None
+        devices = self.network.get('device')
+        for d in devices:
+            if d.get('hostname') == self.hostname:
+                self.device_json = d
+
+        # Load puzzle via app in to session.puzzle.
+        self.app = ui.CLI()
+        self.app.load_puzzle(self.puzzle_name)  # sets session.puzzle
+        self.device = device.Device(self.hostname)
+
+    def test_allnics(self):
+        self.assertEqual(len(self.device.all_nics()), len(self.device_json.get('nic')))
+
+    def test_alltests(self):
+        puzzle_tests = self.network.get('nettest')
+        device_tests = [t for t in puzzle_tests if t.get('shost') == self.hostname]
+        self.assertEqual(len(self.device.all_tests()), len(device_tests))
+
     def test_hostname(self):
         self.assertEqual(self.data.get('hostname'), device.Device(self.data).hostname)
 

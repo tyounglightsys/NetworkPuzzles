@@ -39,26 +39,38 @@ class TestListItemsJson(unittest.TestCase):
 
         # Load puzzle via app in to session.puzzle.
         ui.CLI().load_puzzle(self.puzzle_name)  # sets session.puzzle
-        with (PUZZLES_DIR / f"{self.puzzle_name}.json").open() as f:
-            self.puzzle_lines = f.readlines()
+
+        # Load puzzle data separately via json.load.
+        puzzle_file = PUZZLES_DIR / f'{self.puzzle_name}.json'
+        with puzzle_file.open() as f:
+            self.puzzle = json.load(f)  # gets independent puzzle data from file
+        self.network = self.puzzle.get('EduNetworkBuilder').get('Network')
 
     def test_alldevices(self):
-        lines = []
-        for line in self.puzzle_lines:
-            r = re.search(r'^\s{10}"hostname.*', line)
-            if r:
-                if 'link' not in line:  # remove hostnames with "link"
-                    lines.append(line)
-        self.assertEqual(len(lines), len(session.puzzle.all_devices()))
+        devices = self.network.get('device')
+        self.assertEqual(len(devices), len(session.puzzle.all_devices()))
 
     def test_alllinks(self):
-        lines = []
-        for line in self.puzzle_lines:
-            r = re.search(r'^\s{10}"hostname.*', line)
-            if r:
-                if 'link' in line:  # remove hostnames without "link"
-                    lines.append(line)
-        self.assertEqual(len(lines), len(session.puzzle.all_links()))
+        links = self.network.get('link')
+        self.assertEqual(len(links), len(session.puzzle.all_links()))
+
+    def test_alltests(self):
+        tests = self.network.get('nettest')
+        self.assertEqual(len(tests), len(session.puzzle.all_tests()))
+
+    def test_deviceiscritical_false(self):
+        self.assertFalse(session.puzzle.device_is_critical('net_hub0'))
+
+    def test_deviceiscritical_true(self):
+        test_devices = set()
+        for test in self.network.get('nettest'):
+            for host in ('shost', 'dhost'):
+                hostname = test.get(host)
+                if hostname:
+                    test_devices.add(hostname)
+        for d in test_devices:
+            self.assertTrue(session.puzzle.device_is_critical(d))
+
 
 class TestListItemsTypes(unittest.TestCase):
     """Ensure every item in every puzzle has the correct type."""

@@ -73,7 +73,13 @@ class Device:
         if not isinstance(self.json.get('nic'),list):
             self.json['nic'] = [ self.json['nic']]
         return self.json.get('nic')
-        
+
+    def all_tests(self):
+        tests = []
+        for t in session.puzzle.all_tests():
+            if t.get('shost') == self.hostname:
+                tests.append(t)
+        return tests
 
     @property
     def hostname(self):
