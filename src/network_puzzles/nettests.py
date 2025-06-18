@@ -21,7 +21,7 @@ class NetTest:
         key = self._get_help_level_key(help_level)
         helps = messages.nettests.get(self.name)
         if helps:
-            text = helps.get(key)
+            text = helps.get(key, '')
             if text.endswith(':'):
                 text += f" {self._get_help_extra_text()}"
         else:
