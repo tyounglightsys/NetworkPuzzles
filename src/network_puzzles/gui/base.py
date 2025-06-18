@@ -128,6 +128,35 @@ class Device(ThemedBoxLayout):
             return self.base.json.get('hostname')
         else:
             return None
+    @property
+    def nics(self):
+        if hasattr(self, 'base') and hasattr(self.base, 'json'):
+            return self.base.json.get('nic')
+        else:
+            return list()
+
+    @property
+    def tooltip_text(self):
+        return self.tooltip.text
+    
+    @tooltip_text.setter
+    def tooltip_text(self, text):
+        # Add hostname.
+        t = self.hostname
+        # Add IP addresses and netmasks.
+        for nic in self.nics:
+            for iface in nic.get('interface', []):
+                ip = iface.get('myip', {})
+                ipaddr = ip.get('ip', '0.0.0.0')
+                if ipaddr != '0.0.0.0':
+                    t += f"\n{ipaddr}/{ip.get('mask')}"
+        # Add help text.
+        if text:
+            t += f"\n{text}"
+        self.tooltip.text = t
+        self.tooltip.texture_update()
+        self.tooltip.size = self.tooltip.texture_size
+        self.tooltip.text_size = (None, None)
 
     @property
     def uid(self):
@@ -168,9 +197,6 @@ class Device(ThemedBoxLayout):
 
     def on_press(self):
         self._build_commands_popup().open()
-
-    def set_help_text(self, text):
-        self.tooltip.text = text
 
     def _build_commands_popup(self):
         # Setup the content.

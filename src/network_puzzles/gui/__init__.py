@@ -319,10 +319,21 @@ class NetworkPuzzlesApp(App):
                 self.root.ids.layout.add_widget(HelpHighlight(center=w.children[1].center), idx)
 
     def _help_update_tooltips(self, help_level):
+        # List devices and help_texts.
+        devices = {d.hostname: '' for d in self.devices}
         for test_data in session.puzzle.all_tests():
             nettest = nettests.NetTest(test_data)
-            device = self.get_widget_by_hostname(nettest.shost)
-            device.set_help_text(nettest.get_help_text(help_level))
+            device = nettest.shost
+            help_text = nettest.get_help_text(help_level)
+            if not devices.get(device):
+                devices[device] = help_text
+            else:
+                devices[device] += f"\n{help_text}"
+
+        # Apply each device's help_text.
+        for device, help_text in devices.items():
+            d = self.get_widget_by_hostname(device)
+            d.tooltip_text = help_text
 
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)
@@ -367,7 +378,9 @@ class NetworkPuzzlesApp(App):
             self.prev_packets.append(packet)
 
     def _test(self, *args, **kwargs):
-        raise NotImplementedError
+        # raise NotImplementedError
+        for d in self.devices:
+            print(f"{d.nics=}")
 
 
 class PuzzleLayout(RelativeLayout):
