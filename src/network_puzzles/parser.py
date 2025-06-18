@@ -201,7 +201,7 @@ class Parser:
                 return
             if args[0].lower() == 'tests':
                 session.print("--Tests--")
-                for onetest in device.all_tests():
+                for onetest in session.puzzle.all_tests():
                     session.print(f"source: {onetest.get('shost')} test: {onetest.get('thetest')}  dest: {onetest.get('dhost')} status: {onetest.get('completed','False')}")
                 return
             if args[0].lower() == 'puzzle':

@@ -131,7 +131,7 @@ class CLI(UI):
             sys.exit()
 
     def acknowledge_any_tests(self):
-        for onetest in device.all_tests():
+        for onetest in session.puzzle.all_tests():
             if onetest.get('completed',False) and not onetest.get('acknowledged',False):
                 #we have something completed, but not acknowledged
                 if onetest.get('message', "") != "":

@@ -16,20 +16,17 @@ class TestCreateItems(unittest.TestCase):
         self.app.load_puzzle(self.puzzle_name)  # sets session.puzzle
 
     def test_createlink_exists(self):
-        # FIXME: The method always returns None. The only way to verify
-        # correct execution for an error situation is to check the stdout.
-        self.assertIsNone(session.puzzle.createLink(['pc1', 'net_switch0']))
+        self.assertFalse(session.puzzle.createLink(['pc1', 'net_switch0']))
 
     def test_createlink_good(self):
         prev_ct = len(session.puzzle.all_links())
-        session.puzzle.createLink(['pc0', 'net_switch0'])
+        result = session.puzzle.createLink(['pc0', 'net_switch0'])
         ct = len(session.puzzle.all_links())
+        self.assertTrue(result)
         self.assertEqual(prev_ct + 1, ct)
 
     def test_createlink_noargs(self):
-        # FIXME: The method always returns None. The only way to verify
-        # correct execution for an error situation is to check the stdout.
-        self.assertIsNone(session.puzzle.createLink([]))
+        self.assertFalse(session.puzzle.createLink([]))
 
 
 class TestListItemsJson(unittest.TestCase):
@@ -157,6 +154,28 @@ class TestFilterItems(unittest.TestCase):
 
     def test_memory_nofilter(self):
         self.assertEqual(self.puzzle_names, puzzle.filter_items(self.puzzles, None))
+
+
+class TestPuzzleClass(unittest.TestCase):
+    def setUp(self):
+        self.puzzle_name = 'Level0_NeedsLink'
+
+        # Load puzzle via app into session.puzzle.
+        self.app = ui.CLI()
+        self.app.load_puzzle(self.puzzle_name)  # sets session.puzzle
+
+    def test_deleteitem_locked(self):
+        self.assertFalse(session.puzzle.deleteItem('pc0'))
+
+    def test_deleteitem_success(self):
+        self.assertTrue(session.puzzle.deleteItem('pc1'))
+
+    def test_ispuzzledone_false(self):
+        self.assertFalse(session.puzzle.is_puzzle_done())
+    
+    def test_ispuzzledone_true(self):
+        session.puzzle.createLink(['pc0', 'net_switch0'])
+        self.assertTrue(session.puzzle.is_puzzle_done())
 
 
 class TestXFromY(unittest.TestCase):

@@ -33,8 +33,15 @@ class Puzzle:
         """
         return self._get_items('link')
 
-    def all_tests(self):
-        return self._get_items('nettest')
+    def all_tests(self, hostname=None):
+        tests = []
+        for test in self._get_items('nettest'):
+            if hostname is None:
+                tests.append(test)
+            else:
+                if test.get('shost') == hostname:
+                    tests.append(test)
+        return tests
 
     def _get_items(self, item_type: str):
         """
@@ -69,9 +76,9 @@ class Puzzle:
 
     def device_is_critical(self, name):
         test_devices = set()
-        for t in self.all_tests():
+        for test in self.all_tests():
             for h in ('shost', 'dhost'):
-                host = t.get(h)
+                host = test.get(h)
                 if host:
                     test_devices.add(host)
         return name in test_devices
@@ -177,7 +184,7 @@ class Puzzle:
         for i in range(len(itemlist) - 1, -1, -1):
             if(itemlist[i]['hostname'] == itemToDelete):
                 #can we delete it?
-                if device.device_is_critical(itemlist[i]['hostname']):
+                if session.puzzle.device_is_critical(itemlist[i]['hostname']):
                     session.print(f"Cannot delete {itemlist[i]['hostname']}.  The puzzle has it locked.")
                     return False
                 #We need to find any links connected to this device and delete them
@@ -189,6 +196,8 @@ class Puzzle:
                 del itemlist[i]
                 return True
         itemlist = self.json['link']
+        if isinstance(itemlist, dict):
+            itemlist = [itemlist]
         for i in range(len(itemlist) - 1, -1, -1):
             if(itemlist[i]['hostname'] == itemToDelete):
                 session.print(f"Deleting: {itemToDelete}")
@@ -202,17 +211,18 @@ class Puzzle:
         self.json['uniqueidentifier'] = nextval
         return availableval
     
-    def createLink(self, args, linktype='normal'):
+    def createLink(self, args, linktype='normal') -> bool:
+        """returns False on error, True if successful, None if unhandled"""
         #we should have a source device, and an optional src nic, and a dest device and an optional dest nic
         if(len(args) == 0):
             session.print("Error.  You must pass arguments to createLink")
-            return
+            return False
         #the first item must be a hostname for the first device
         sdevicename = args.pop(0)
         sdevice = session.puzzle.device_from_name(sdevicename)
         if sdevice is None:
             session.print(f"Error: no such device: {sdevicename}")
-            return
+            return False
         #The second item might be a nic name, or the second device.
         snicname = args[0]
         snic = device.Device(sdevice).nic_from_name(snicname)
@@ -223,7 +233,7 @@ class Puzzle:
                 if len(args) > 1:
                     #we are not sure if it is a devicename or a port.
                     session.print(f"Could not match: {args[0]}")
-                    return
+                    return False
 
         else:
             args.pop(0) #get rid of it. if it is none, we use the arg as the dest hostname
@@ -231,7 +241,7 @@ class Puzzle:
         ddevice = session.puzzle.device_from_name(ddevicename)
         if ddevice is None:
             session.print(f"Error no such device {ddevicename}")
-            return
+            return False
         dnicname=""
         dnic=None
         if(len(args) > 0):
@@ -240,7 +250,7 @@ class Puzzle:
                 dnicname = args[0]
             else:
                 session.print(f"Could not find nic: {args[0]}")
-                return
+                return False
         #If the snic and dnics are not set, find an available one.
         if snic is None:
             snic = self.firstFreeNic(sdevice)
@@ -254,7 +264,7 @@ class Puzzle:
         existinglink = self.link_from_devices(sdevice, ddevice)
         if existinglink is not None:
             session.print(f"Link already exists: {existinglink['hostname']}")
-            return
+            return False
         #verify the port types match
         ismatch=False
         snictype = snic.get('nictype')[0]
@@ -277,12 +287,14 @@ class Puzzle:
             session.print(f"Created link: {newlink['hostname']}")
             device.mark_test_as_completed(sdevicename,ddevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {ddevicename}")
             device.mark_test_as_completed(ddevicename,sdevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {ddevicename}")
+            return True
         else:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
+            return False
 
     def is_puzzle_done(self):
         """Report back to see if all the tests have been completed."""
-        for onetest in device.all_tests():
+        for onetest in self.all_tests():
             if not onetest.get('completed', False):
                 return False
         return True
