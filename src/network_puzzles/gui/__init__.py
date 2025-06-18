@@ -36,7 +36,7 @@ class NetworkPuzzlesApp(App):
         # Set session `app` variable.
         session.app = self
 
-        # Set window size for desktop systems.
+        # Set initial window size for desktop systems.
         if platform.system() not in ['Android', 'iOS']:
             Window.size = (1600, 720)  # 20:9 aspect ratio
 
@@ -47,10 +47,9 @@ class NetworkPuzzlesApp(App):
         self.title = self.app_title
         self.theme = LightColorTheme
         Window.clearcolor = self.theme.bg2
+        # Re-add puzzle widgets on resize.
         Window.bind(on_resize=self.setup_puzzle)
 
-        self.devices = []
-        self.links = []
         self.filtered_puzzles = []
         self.filters = []
         self.selected_puzzle = None
@@ -67,13 +66,20 @@ class NetworkPuzzlesApp(App):
 
         Clock.schedule_interval(self._update_packets, self.packet_tick_delay)
 
+    @property
+    def devices(self):
+        return self._get_widgets_by_class_name('Device')
+
+    @property
+    def links(self):
+        return self._get_widgets_by_class_name('Link')
+
     def add_device(self, device_inst=None):
         # TODO: If device_inst not given, require user to choose device type
         # on the screen to instantiate a new device.
         if device_inst is None:
             device_inst = Device()
 
-        self.devices.append(device_inst)
         self.root.ids.layout.add_widget(device_inst)
 
     def add_link(self, link_inst=None):
@@ -82,7 +88,7 @@ class NetworkPuzzlesApp(App):
         if not isinstance(link_inst, Link) and isinstance(link_inst, MenuButton):
             raise NotImplementedError
 
-        self.links.append(link_inst)
+        # self.links.append(link_inst)
         # Add link to z-index = 99 to ensure it's drawn under devices.
         self.root.ids.layout.add_widget(link_inst, 99)
 
@@ -93,8 +99,6 @@ class NetworkPuzzlesApp(App):
 
     def clear_puzzle(self):
         """Remove any existing widgets in the puzzle layout."""
-        self.devices = []
-        self.links = []
         self.selected_puzzle = None
         self.reset_display()
 
@@ -182,17 +186,18 @@ class NetworkPuzzlesApp(App):
 
     def on_start(self):
         self._add_new_item_button()
+        # Open puzzle chooser if no puzzle is defined.
+        if not session.puzzle:
+            Clock.schedule_once(self.on_puzzle_chooser)
 
-    def on_puzzle_chooser(self):
+    def on_puzzle_chooser(self, *args):
         PuzzleChooserPopup().open()
 
     def remove_device(self, device_inst):
         self.root.ids.layout.remove_widget(device_inst)
-        self.devices.remove(device_inst)
 
     def remove_link(self, link_inst):
         self.root.ids.layout.remove_widget(link_inst)
-        self.links.remove(link_inst)
 
     def reset_display(self):
         """Clear display without clearing loaded puzzle data."""
@@ -283,6 +288,13 @@ class NetworkPuzzlesApp(App):
         for w in self.root.ids.layout.children:
             if hasattr(w, prop) and getattr(w, prop) == value:
                 return w
+
+    def _get_widgets_by_class_name(self, name):
+        widgets = []
+        for w in self.root.ids.layout.children:
+            if w.__class__.__name__ == name:
+                widgets.append(w)
+        return widgets
 
     def _help_highlight_devices(self, help_level):
         """
