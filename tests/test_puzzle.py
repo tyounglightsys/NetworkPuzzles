@@ -1,5 +1,4 @@
 import json
-import re
 import unittest
 from network_puzzles import puzzle
 from network_puzzles import session

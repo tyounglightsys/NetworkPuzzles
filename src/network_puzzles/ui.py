@@ -4,7 +4,6 @@ from . import parser
 from . import puzzle
 from . import session
 from . import packet
-from . import device
 
 
 class UI:
@@ -12,6 +11,14 @@ class UI:
 
     def __init__(self):
         self.parser = parser.Parser()
+
+    @property
+    def packetlist(self):
+        return session.packetlist
+
+    @property
+    def puzzle(self):
+        return session.puzzle
 
     def console_write(self, line):
         """Used to show terminal output to the user."""
@@ -45,7 +52,7 @@ class UI:
         Args: filter:str a string, regex filter such as '.*DHCP.'"""
         return puzzle.listPuzzles(filter)
 
-    def getDevice(self, what: str) -> dict|None:
+    def get_device(self, what: str) -> dict|None:
         """Return a device from either a name or ID
         Args: what:str - a string value that is either a hostname 'pc0' or a device id '102'
         Returns: a device record or None
@@ -62,7 +69,7 @@ class UI:
         return item
 
 
-    def getLink(self, what: str) -> dict|None:
+    def get_link(self, what: str) -> dict|None:
         """Return a link from either a name or ID
         Args: what:str - a string value that is either a linkname 'pc0_link_pc1' or a device id '102'
         Returns: a device record or None
@@ -72,19 +79,23 @@ class UI:
         try:
             #if it is just a number, use it as an ID
             int(what)
-            item = session.puzzle.device_from_uid(what)
+            item = session.puzzle.link_from_uid(what)
         except ValueError:
             #if it is not a number, use it as a name
-            item = session.puzzle.device_from_name(what)
+            item = session.puzzle.link_from_name(what)
         return item
 
-    def allDevices(self):
+    def all_devices(self):
         """return a list of all the devices - good for iterating"""
         return session.puzzle.all_devices()
 
-    def allLinks(self):
+    def all_links(self):
         """return a list of all the links - good for iterating"""
         return session.puzzle.all_links()
+
+    def all_tests(self):
+        """return a list of all tests in the current puzzle"""
+        return session.puzzle.all_tests()
 
     def acknowledge_any_tests():
         raise NotImplementedError

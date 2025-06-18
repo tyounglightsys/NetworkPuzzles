@@ -71,5 +71,5 @@ class PuzzleChooserPopup(AppPopup):
 
     def on_load(self):
         self.app.ui.load_puzzle(self.app.selected_puzzle)
-        self.app.setup_puzzle(session.puzzle.json)
+        self.app.setup_puzzle(self.app.ui.puzzle.json)
         self.dismiss()

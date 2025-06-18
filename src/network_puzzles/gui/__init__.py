@@ -187,7 +187,7 @@ class NetworkPuzzlesApp(App):
     def on_start(self):
         self._add_new_item_button()
         # Open puzzle chooser if no puzzle is defined.
-        if not session.puzzle:
+        if not self.ui.puzzle:
             Clock.schedule_once(self.on_puzzle_chooser)
 
     def on_puzzle_chooser(self, *args):
@@ -219,9 +219,9 @@ class NetworkPuzzlesApp(App):
     def setup_puzzle(self, *args, puzzle_data=None):
         self.reset_display()
         if puzzle_data is None:
-            if not session.puzzle:
+            if not self.ui.puzzle:
                 return
-            puzzle_data = session.puzzle.json
+            puzzle_data = self.ui.puzzle.json
 
         # Combine level & sortorder to get unique message ID.
         puzzle_msg_id = f"{puzzle_data.get('level')}.{puzzle_data.get('sortorder')}"
@@ -256,7 +256,7 @@ class NetworkPuzzlesApp(App):
     def update_help(self, inst=None, value=None):
         if value is None:
             value = self.root.ids.help_slider.value
-        if session.puzzle:
+        if self.ui.puzzle:
             self._help_highlight_devices(value)
             self._help_update_tooltips(value)
 
@@ -308,20 +308,19 @@ class NetworkPuzzlesApp(App):
         if help_level > 0:
             # TODO: This only highlights layout devices. We still need to work
             # in highligting of other on-screen elements.
-            for n in set(t.get('shost') for t in session.puzzle.all_tests()):
-                d = session.puzzle.device_from_name(n)
+            for n in set(t.get('shost') for t in self.ui.all_tests()):
+                d = self.ui.get_device(n)
                 if d is None:
                     print(f"Ignoring highlight of non-device \"{n}\"")
                     continue
-                uid = session.puzzle.device_from_name(n).get('uniqueidentifier')
-                w = self.get_widget_by_uid(uid)
+                w = self.get_widget_by_hostname(n)
                 idx = self.root.ids.layout.children.index(w) + 1
                 self.root.ids.layout.add_widget(HelpHighlight(center=w.children[1].center), idx)
 
     def _help_update_tooltips(self, help_level):
         # List devices and help_texts.
         devices = {d.hostname: '' for d in self.devices}
-        for test_data in session.puzzle.all_tests():
+        for test_data in self.ui.all_tests():
             nettest = nettests.NetTest(test_data)
             device = nettest.shost
             help_text = nettest.get_help_text(help_level)
@@ -366,8 +365,8 @@ class NetworkPuzzlesApp(App):
         packet_idx = self.first_link_index()
 
         # Add new packet locations to layout.
-        for p in session.packetlist:
-            link_data = session.puzzle.link_from_name(p.get('packetlocation'))
+        for p in self.ui.packetlist:
+            link_data = self.ui.get_link(p.get('packetlocation'))
             link = self.get_widget_by_uid(link_data.get('uniqueidentifier'))
             progress = p.get('packetDistance')
             if p.get('packetDirection') == 2:
