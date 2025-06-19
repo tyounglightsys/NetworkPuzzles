@@ -92,7 +92,7 @@ class Parser:
             session.print("create link source_hostname [sourcenic] dest_hostname [destnic]")
             session.print("create device devicetype x,y")
             session.print("where devicetype is one of the known devices: pc, laptop, router, switch, firewall, etc.")
-            return None
+            return False
         item = args.pop(0).lower()
         if item == 'link':
             session.puzzle.createLink(args)
@@ -100,7 +100,7 @@ class Parser:
     def replace_something(self,args):
         if len(args) == 0:
             session.print("You must specify something to replace")
-            return None
+            return False
         if len(args) == 1:
             item=session.puzzle.link_from_name(args[0])
             if item is not None:
