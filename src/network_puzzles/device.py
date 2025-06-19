@@ -36,7 +36,8 @@ class Device:
 
     @property
     def uid(self):
-        return self.json.get('uniqueidentifier')
+        if isinstance(self.json, dict):
+            return self.json.get('uniqueidentifier')
 
     def mac_list(self):
         """

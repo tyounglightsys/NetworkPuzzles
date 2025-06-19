@@ -124,14 +124,13 @@ class Device(ThemedBoxLayout):
 
     @property
     def hostname(self):
-        if hasattr(self, 'base') and hasattr(self.base, 'json'):
-            return self.base.json.get('hostname')
-        else:
-            return None
+        if self.base:
+            return self.base.hostname
+
     @property
     def nics(self):
-        if hasattr(self, 'base') and hasattr(self.base, 'json'):
-            return self.base.json.get('nic')
+        if self.base:
+            return self.base.all_nics()
         else:
             return list()
 
@@ -160,10 +159,8 @@ class Device(ThemedBoxLayout):
 
     @property
     def uid(self):
-        if hasattr(self, 'base') and hasattr(self.base, 'json'):
-            return self.base.json.get('uniqueidentifier')
-        else:
-            return None
+        if self.base:
+            return self.base.uid
 
     def callback(self, cmd_string):
         self.app.ui.parse(cmd_string)
