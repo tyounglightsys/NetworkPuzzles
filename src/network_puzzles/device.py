@@ -688,7 +688,12 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             print(f"sourceip is {packet.justIP(packRec.get('sourceIP'))}")
             print(f"dest host is {pingdest.get('hostname')}")
             if pingdest is not None:
-                mark_test_as_completed(thisDevice.get('hostname'),pingdest.get('hostname'),'SuccessfullyPings',f"Successfully pinged from {thisDevice.get('hostname')} to {pingdest.get('hostname')}")
+                mark_test_as_completed(
+                    thisDevice.get('hostname'),
+                    pingdest.get('hostname'),
+                    'SuccessfullyPings',
+                    f"Successfully pinged from {thisDevice.get('hostname')} to {pingdest.get('hostname')}"
+                )
             return True
 
     #If the packet is not done and we forward, forward. Basically, a switch/hub
@@ -854,53 +859,18 @@ def device_is_critical(devicename):
     """This is a convenience function."""
     return session.puzzle.device_is_critical(devicename)
 
-def item_is_locked(shost,dhost,whattocheck):
-    for onetest in session.puzzle.all_tests():
-        if onetest.get('shost') == shost:
-            thetest = onetest.get('thetest')
-            if thetest == "LockAll":
-                return True
-            if thetest == whattocheck and whattocheck == 'LockVlanNames':
-                return True
-            if thetest == whattocheck and whattocheck == 'LockVLANsOnHost':
-                return True
-            if thetest == whattocheck and onetest.get('dhost') == dhost:
-                #if the source (hostname) and dest (, ping_desthostname, nic, etc) also match.
-                return True
-    return False
+def item_is_locked(shost, dhost, whattocheck):
+    """This is a convenience function."""
+    return session.puzzle.item_is_locked(shost, dhost, whattocheck)
 
-def has_test_been_completed(shost,dhost,whattocheck):
-    for onetest in session.puzzle.all_tests():
-        if onetest.get('shost') == shost and onetest.get('dhost') == dhost and onetest.get('thetest') == whattocheck:
-            #the test matches, return true only if 'completed' is set to true
-            return onetest.get('completed', False)
-    return False
+def has_test_been_completed(shost, dhost, whattocheck):
+    """This is a convenience function."""
+    return session.puzzle.has_test_been_completed(shost, dhost, whattocheck)
 
-def mark_test_as_completed(shost,dhost,whattocheck,message):
-    for onetest in session.puzzle.all_tests():
-        if onetest.get('shost') == shost and onetest.get('dhost') == dhost and onetest.get('thetest') == whattocheck:
-            #if the test has never been completed
-            if not onetest.get('completed', False):
-                onetest['completed'] = True
-                onetest['acknowledged'] = False
-                onetest['message'] = message
-                #print(f"Debug: Marking as done: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')}")
+def mark_test_as_completed(shost, dhost, whattocheck, message):
+    """This is a convenience function."""
+    return session.puzzle.mark_test_as_completed(shost, dhost, whattocheck, message)
 
 def commands_from_tests(JustForHost=None):
-    toreturn = list()
-    for onetest in session.puzzle.all_tests(JustForHost):
-        #print(f"checking test: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')} - {onetest.get('completed',False)}")
-        if onetest.get('completed',False):
-            continue
-        #We are looking at the tests corresponding to the host in question:
-        #NeedsLocalIPTo, NeedsDefaultGW, NeedsLinkToDevice, NeedsRouteToNet,
-        #NeedsUntaggedVLAN, NeedsTaggedVLAN, NeedsForbiddenVLAN,
-        #SuccessfullyPings, SuccessfullyPingsAgain, SuccessfullyArps, SuccessfullyDHCPs, HelpRequest, ReadContextHelp, FailedPing,
-        #DHCPServerEnabled, SuccessfullyTraceroutes, SuccessfullyPingsWithoutLoop,
-        #LockAll, LockIP, LockRoute, LockNic, LockDHCP, LockGateway, LockLocation,
-        #LockVLANsOnHost, LockNicVLAN, LockInterfaceVLAN, LockVLANNames,
-        #DeviceIsFrozen, DeviceBlowsUpWithPower, DeviceNeedsUPS, DeviceNICSprays,
-        match onetest.get('thetest'):
-            case 'SuccessfullyPings'|'SuccessfullyPingsAgain':
-                toreturn.append(f"ping {onetest.get('shost')} {onetest.get('dhost')}")
-    return toreturn
+    """This is a convenience function."""
+    return session.puzzle.commands_from_tests(JustForHost)

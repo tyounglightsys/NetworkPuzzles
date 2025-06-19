@@ -43,6 +43,32 @@ class Puzzle:
                     tests.append(test)
         return tests
 
+    def commands_from_tests(self, hostname=None):
+        commands = list()
+        for test in self.all_tests(hostname):
+            #print(f"checking test: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')} - {onetest.get('completed',False)}")
+            if test.get('completed', False):
+                continue
+            #We are looking at the tests corresponding to the host in question:
+            #NeedsLocalIPTo, NeedsDefaultGW, NeedsLinkToDevice, NeedsRouteToNet,
+            #NeedsUntaggedVLAN, NeedsTaggedVLAN, NeedsForbiddenVLAN,
+            #SuccessfullyPings, SuccessfullyPingsAgain, SuccessfullyArps, SuccessfullyDHCPs, HelpRequest, ReadContextHelp, FailedPing,
+            #DHCPServerEnabled, SuccessfullyTraceroutes, SuccessfullyPingsWithoutLoop,
+            #LockAll, LockIP, LockRoute, LockNic, LockDHCP, LockGateway, LockLocation,
+            #LockVLANsOnHost, LockNicVLAN, LockInterfaceVLAN, LockVLANNames,
+            #DeviceIsFrozen, DeviceBlowsUpWithPower, DeviceNeedsUPS, DeviceNICSprays,
+            match test.get('thetest'):
+                case 'NeedsLinkToDevice':
+                    # Could be an existing link to be replaced or a missing link
+                    # to be created.
+                    # FIXME: Just adding both commands for now.
+                    link = f"{test.get('shost')}_link_{test.get('dhost')}"
+                    commands.append(f"replace {link}")
+                    commands.append(f"create {link}")
+                case 'SuccessfullyPings'|'SuccessfullyPingsAgain':
+                    commands.append(f"ping {test.get('shost')} {test.get('dhost')}")
+        return commands
+
     def _get_items(self, item_type: str):
         """
         Return a list of the given item_type ('link', 'device', 'nettest').
@@ -83,6 +109,13 @@ class Puzzle:
                     test_devices.add(host)
         return name in test_devices
 
+    def has_test_been_completed(self, shost, dhost, whattocheck):
+        for test in self.all_tests():
+            if test.get('shost') == shost and test.get('dhost') == dhost and test.get('thetest') == whattocheck:
+                #the test matches, return true only if 'completed' is set to true
+                return test.get('completed', False)
+        return False
+
     def item_from_uid(self, uid):
         """Return the item matching the ID.  Could be a device, a link, or a nic"""
         result = self.device_from_uid(uid)
@@ -95,6 +128,20 @@ class Puzzle:
         if result is not None:
             return result
         return None
+
+    def item_is_locked(self, shost, dhost, whattocheck):
+        for test in self.all_tests(shost):
+            thetest = test.get('thetest')
+            if thetest == "LockAll":
+                return True
+            if thetest == whattocheck and whattocheck == 'LockVlanNames':
+                return True
+            if thetest == whattocheck and whattocheck == 'LockVLANsOnHost':
+                return True
+            if thetest == whattocheck and test.get('dhost') == dhost:
+                #if the source (hostname) and dest (, ping_desthostname, nic, etc) also match.
+                return True
+        return False
 
     def link_from_devices(self, srcDevice, dstDevice):
         """return a link given the two devices at either end
@@ -133,6 +180,17 @@ class Puzzle:
 
     def link_from_uid(self, uid):
         return self._item_by_attrib(self.all_links(), 'uniqueidentifier', uid)
+
+    def mark_test_as_completed(self, shost, dhost, whattocheck, message):
+        for onetest in self.all_tests():
+            if onetest.get('shost') == shost and onetest.get('dhost') == dhost and onetest.get('thetest') == whattocheck:
+                #if the test has never been completed
+                if not onetest.get('completed', False):
+                    onetest['completed'] = True
+                    onetest['acknowledged'] = False
+                    onetest['message'] = message
+                    #print(f"Debug: Marking as done: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')}")
+                return True # no need to continue looping through other tests
 
     def nic_from_uid(self, uid):
         """find the network card from the id
