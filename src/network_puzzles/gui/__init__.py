@@ -65,6 +65,7 @@ class NetworkPuzzlesApp(App):
         self.prev_packets = []  # packets to remove from last refresh
 
         Clock.schedule_interval(self._update_packets, self.packet_tick_delay)
+        Clock.schedule_interval(self.check_puzzle, 0.1)  # every 1/10th sec
 
     @property
     def devices(self):
@@ -73,6 +74,12 @@ class NetworkPuzzlesApp(App):
     @property
     def links(self):
         return self._get_widgets_by_class_name('Link')
+
+    def check_puzzle(self, *args):
+        """Checked at regular interval during kivy app loop."""
+        if self.ui.is_puzzle_done():
+            # TODO: Handle puzzle complete (popup?).
+            self.ui.console_write("<-- TODO: Handle puzzle complete -->")
 
     def add_device(self, device_inst=None):
         # TODO: If device_inst not given, require user to choose device type

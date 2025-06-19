@@ -166,6 +166,28 @@ class GUI(UI):
     def console_write(self, line):
         self.app.add_terminal_line(line)
 
+    def is_puzzle_done(self, *args) -> bool|None:
+        """
+        Determine if puzzle has been solved.
+        
+        Return None if no puzzle is active, or True|False according to active
+        puzzle's solved state.
+        """
+        if self.puzzle:
+            # First check if completed tests have been acknowledged.
+            self.acknowledge_any_tests()
+            # Check if puzzle is complete.
+            if not session.puzzle.json.get('completed'):
+                if session.puzzle.is_puzzle_done():
+                    session.print("Congratulations. You solved the whole puzzle!")
+                    # self.parser.parse("show tests", False)
+                    session.puzzle.json['completed'] = True
+                    return True
+                else:
+                    return False
+        else:
+            return None
+
     def parse(self, command: str):
         self.parser.parse(command)
 
@@ -179,3 +201,11 @@ class GUI(UI):
 
     def run(self):
         self.app.run()
+
+    def acknowledge_any_tests(self):
+        for test in session.puzzle.all_tests():
+            if test.get('completed', False) and not test.get('acknowledged', False):
+                # we have something completed, but not acknowledged
+                if test.get('message') is not None:
+                    session.print(test.get('message', ""))
+                    test['acknowledged'] = True

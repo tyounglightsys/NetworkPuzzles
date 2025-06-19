@@ -405,7 +405,7 @@ def sourceIP(src,dstIP):
     for oneip in allIPs:
         #oneip=ipaddress.IPv4Interface
         if dstIP in oneip.network:
-            session.print("We found a local network ")
+            print("We found a local network ")
             print(oneip.ip)
             return oneip
     #if we get here, we do not have a nic that is local to the destination.  Return the nic that the GW is on

@@ -124,12 +124,14 @@ class Device(ThemedBoxLayout):
 
     @property
     def hostname(self):
-        if self.base:
+        # NOTE: @properties seem to be evaluated during super(), which is before
+        # self.base is defined.
+        if hasattr(self, 'base') and self.base:
             return self.base.hostname
 
     @property
     def nics(self):
-        if self.base:
+        if hasattr(self, 'base') and self.base:
             return self.base.all_nics()
         else:
             return list()
@@ -159,7 +161,7 @@ class Device(ThemedBoxLayout):
 
     @property
     def uid(self):
-        if self.base:
+        if hasattr(self, 'base') and self.base:
             return self.base.uid
 
     def callback(self, cmd_string):
