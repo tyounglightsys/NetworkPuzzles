@@ -86,7 +86,7 @@ class Parser:
             # If command is empty, do nothing. The prompt will just be reshown.
             pass
 
-    def create_something(self,args):
+    def create_something(self, args):
         if len(args) == 0:
             session.print("You must specify something to create")
             session.print("create link source_hostname [sourcenic] dest_hostname [destnic]")
