@@ -22,8 +22,22 @@ class Device:
             self.json = value
         else:
             raise ValueError("Not a valid uniqueidentifier, hostname, or JSON data.")
-        self._hostname = None
+
+    @property
+    def hostname(self):
+        if isinstance(self.json, dict):
+            return self.json.get('hostname')
     
+    @hostname.setter
+    def hostname(self, name):
+        if self.json is None:
+            self.json = {}
+        self.json['hostname'] = name
+
+    @property
+    def uid(self):
+        return self.json.get('uniqueidentifier')
+
     def mac_list(self):
         """
         Return a list of all the MAC addresses of all the nics on the device
@@ -80,18 +94,6 @@ class Device:
             if t.get('shost') == self.hostname:
                 tests.append(t)
         return tests
-
-    @property
-    def hostname(self):
-        try:
-            hostname = self.json.get('hostname', self._hostname)
-        except AttributeError:  # self.json is None
-            hostname = None
-        return hostname
-    
-    @hostname.setter
-    def hostname(self, name):
-        self.json['hostname'] = name
 
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict|None:
         # Returns first match; i.e. assumes only one item in list matches given
