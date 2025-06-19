@@ -80,8 +80,8 @@ class Puzzle:
                     # to be created.
                     # FIXME: Just adding both commands for now.
                     link = f"{test.get('shost')}_link_{test.get('dhost')}"
-                    commands.append(f"replace {link}")
-                    commands.append(f"create {link}")
+                    commands.append(f"replace {test.get('shost')}_link_{test.get('dhost')}")
+                    commands.append(f"create link {test.get('shost')} {test.get('dhost')}")
                 case 'SuccessfullyPings'|'SuccessfullyPingsAgain':
                     commands.append(f"ping {test.get('shost')} {test.get('dhost')}")
         return commands
@@ -362,6 +362,8 @@ class Puzzle:
             session.print(f"Created link: {newlink['hostname']}")
             device.mark_test_as_completed(sdevicename,ddevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {ddevicename}")
             device.mark_test_as_completed(ddevicename,sdevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {ddevicename}")
+            # Additional call for special UI handling.
+            session.ui.create_link(newlink)
             return True
         else:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")

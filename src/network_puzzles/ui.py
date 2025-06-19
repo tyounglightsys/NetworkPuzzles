@@ -11,6 +11,7 @@ class UI:
 
     def __init__(self):
         self.parser = parser.Parser()
+        session.ui = self
 
     @property
     def packetlist(self):
@@ -97,6 +98,9 @@ class UI:
         """return a list of all tests in the current puzzle"""
         return session.puzzle.all_tests()
 
+    def create_link(self, link_data):
+        raise NotImplementedError
+
     def acknowledge_any_tests():
         raise NotImplementedError
 
@@ -104,6 +108,7 @@ class CLI(UI):
     def __init__(self):
         self.parser = parser.Parser()
         session.print = self.console_write
+        session.ui = self
 
     def run(self):
         print(self.TITLE)
@@ -141,6 +146,9 @@ class CLI(UI):
         except EOFError:
             sys.exit()
 
+    def create_link(self, link_data):
+        pass
+
     def acknowledge_any_tests(self):
         for onetest in session.puzzle.all_tests():
             if onetest.get('completed',False) and not onetest.get('acknowledged',False):
@@ -162,6 +170,7 @@ class GUI(UI):
         self.app = kivyapp(ui=self)
         self.parser = parser.Parser()
         session.print = self.console_write
+        session.ui = self
 
     def console_write(self, line):
         self.app.add_terminal_line(line)
@@ -201,6 +210,9 @@ class GUI(UI):
 
     def run(self):
         self.app.run()
+
+    def create_link(self, link_data):
+        session.print("TODO: Create GUI link widget.")
 
     def acknowledge_any_tests(self):
         for test in session.puzzle.all_tests():
