@@ -17,5 +17,5 @@ class Session:
         self.history = list()
     
     def print(self, message):
-            print("<default print method>")
-            print(message)
+        print("<default print method>")
+        print(message)
