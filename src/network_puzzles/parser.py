@@ -59,7 +59,7 @@ class Parser:
             args = items[1:]
             match cmd:
                 case 'create':
-                    self.create_something(args)
+                    return self.create_something(args)
                 case 'help'|'?':
                     self.printhelp()
                 case 'history':
@@ -73,13 +73,13 @@ class Parser:
                 case 'exit' | 'quit' | 'stop':
                     self.exit_app()
                 case 'ping':
-                    self.run_ping(args)
+                    return self.run_ping(args)
                 case 'replace':
-                    self.replace_something(args)
+                    return self.replace_something(args)
                 case 'show' | 'list':
                     self.show_info(args)
                 case 'set':
-                    self.setvalue(args)
+                    return self.setvalue(args)
                 case _:
                     session.print(f"unknown: {command}")
         else:
@@ -95,21 +95,22 @@ class Parser:
             return False
         item = args.pop(0).lower()
         if item == 'link':
-            session.puzzle.createLink(args)
+            return session.puzzle.createLink(args)
 
     def replace_something(self,args):
         if len(args) == 0:
             session.print("You must specify something to replace")
             return False
         if len(args) == 1:
-            item=session.puzzle.link_from_name(args[0])
+            item = session.puzzle.link_from_name(args[0])
             if item is not None:
                 #we have a link.  We can replace one of these
                 session.puzzle.deleteItem(item.get('hostname'))
                 linktype = item.get('linktype')
                 if linktype == 'broken':
                     linktype = 'normal' #we replace broken links
-                session.puzzle.createLink([item['SrcNic']['hostname'], item['SrcNic']['nicname'],item['DstNic']['hostname'], item['DstNic']['nicname']],linktype)
+                session.puzzle.createLink([item['SrcNic']['hostname'], item['SrcNic']['nicname'], item['DstNic']['hostname'], item['DstNic']['nicname']], linktype)
+                return True
             #else, it is either a device, or something that does not exist
 
     def printhelp(self):
@@ -130,19 +131,22 @@ class Parser:
         if len(args) != 2:
             session.print("invalid ping command: usage: ping source_hostname destination_hostname")
             session.print(" example: ping pc0 pc1")
-            return
+            return False
 
         shost = session.puzzle.device_from_name(args[0])
         dhost = session.puzzle.device_from_name(args[1])
         if shost is None:
             session.print(f"No such host: {args[0]}")
-            return
+            return False
         if dhost is None:
             session.print("No such host: " + args[1] )
-            return
+            return False
         # if we get here, we are ready to try to ping.
         session.print(f"PING {args[1]} from {args[0]}")
         device.Ping(shost, dhost)
+        # FIXME: This only shows that the ping command was successfully
+        # initiated, not that it was itself successful.
+        return True
     
     def delete_item(self, args):
         if len(args) == 0:
@@ -159,7 +163,7 @@ class Parser:
         #check to see if we are able to delete.  Is it locked?
         #We will need to check for that later after the tests are done.
         session.print(f"Deleting {args[0]}")
-        session.puzzle.deleteItem(args[0])
+        return session.puzzle.deleteItem(args[0])
 
     def show_info(self, args):
         # list the hosts.  Or, show information about a specifici host
@@ -217,8 +221,6 @@ class Parser:
                     session.print(oneline)
                 return
             session.print(f"No such host {args[0]}")
-
-
 
     def setvalue(self,args):
         #set a value on a device.
