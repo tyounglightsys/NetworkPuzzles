@@ -223,11 +223,9 @@ class NetworkPuzzlesApp(App):
                 return
             puzzle_data = self.ui.puzzle.json
 
-        # Combine level & sortorder to get unique message ID.
-        puzzle_msg_id = f"{puzzle_data.get('level')}.{puzzle_data.get('sortorder')}"
         # Get puzzle text from localized messages, if possible, but fallback to
         # English text in JSON data.
-        puzzle_messages = messages.puzzles.get(puzzle_msg_id)
+        puzzle_messages = messages.puzzles.get(self.ui.puzzle.uid)
         if puzzle_messages:
             title = puzzle_messages.get('title')
             info = puzzle_messages.get('info')
@@ -237,6 +235,7 @@ class NetworkPuzzlesApp(App):
         
         self.title += f": {title}"
         self.root.ids.info.text = info
+        self.root.ids.help_slider.value = self.ui.puzzle.default_help_level
         self.device_data = puzzle_data.get('device')
         self.link_data = puzzle_data.get('link', [])
 
@@ -332,7 +331,8 @@ class NetworkPuzzlesApp(App):
         # Apply each device's help_text.
         for device, help_text in devices.items():
             d = self.get_widget_by_hostname(device)
-            d.tooltip_text = help_text
+            if hasattr(d, 'tooltip_text'):
+                d.tooltip_text = help_text
 
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)

@@ -21,6 +21,23 @@ class Puzzle:
             raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
         self.json = data
 
+    @property
+    def default_help_level(self):
+        match self.json.get('startinghelplevel', 'full'):
+            case "none":
+                help_level = 0
+            case "basic":
+                help_level = 1
+            case "hints":
+                help_level = 2
+            case "full":
+                help_level = 3
+        return help_level
+
+    @property
+    def uid(self):
+        return f"{self.json.get('level')}.{self.json.get('sortorder')}"
+
     def all_devices(self):
         """
         Return a list that contains all devices in the puzzle.
