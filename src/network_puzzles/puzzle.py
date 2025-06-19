@@ -363,7 +363,6 @@ class Puzzle:
             device.mark_test_as_completed(sdevicename,ddevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {ddevicename}")
             device.mark_test_as_completed(ddevicename,sdevicename,"NeedsLinkToDevice",f"Solved: Create link between {sdevicename} and {ddevicename}")
             # Additional call for special UI handling.
-            print("Creating new UI link...")
             session.ui.create_link(newlink)
             return True
         else:
