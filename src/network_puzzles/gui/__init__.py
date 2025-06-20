@@ -191,17 +191,25 @@ class NetworkPuzzlesApp(App):
             )
         self._toggle_tray(self.new_user_device_menu)
 
+    def on_puzzle_chooser(self, *args):
+        PuzzleChooserPopup().open()
+
+    def on_redo(self):
+        raise NotImplementedError
+
     def on_save(self):
         raise NotImplementedError
 
     def on_start(self):
+        # Make widget adjustments.
+        Clock.schedule_once(self._set_left_panel_width)  # buttons must update first
         self._add_new_item_button()
         # Open puzzle chooser if no puzzle is defined.
         if not self.ui.puzzle:
             Clock.schedule_once(self.on_puzzle_chooser)
 
-    def on_puzzle_chooser(self, *args):
-        PuzzleChooserPopup().open()
+    def on_undo(self):
+        raise NotImplementedError
 
     def remove_item(self, item):
         """Remove widget from layout by widget or item JSON data."""
@@ -289,6 +297,7 @@ class NetworkPuzzlesApp(App):
             popup.ids.puzzles_view.update_data()
 
     def _add_new_item_button(self, *args):
+        # TODO: Add button to cycle through showing hostname and/or IPs?
         self.new_item_button = MenuButton(
             props={'text': "+", 'cb': self.on_new_item,},
             pos_hint={'x': 0.005, 'top': 0.99},
@@ -353,6 +362,19 @@ class NetworkPuzzlesApp(App):
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)
         tray.open()        
+
+    def _set_left_panel_width(self, *args):
+        menu = self.root.ids.menu_area
+        menu_buttons = menu.children
+        self.root.ids.left_panel.width = sum(
+            [
+                menu_buttons[0].width * len(menu_buttons),
+                menu.padding[0],
+                menu.padding[2],
+                menu.spacing * (len(menu_buttons) - 1),
+            ]
+        )
+        print(f"{self.root.ids.left_panel.width=}")
 
     def _toggle_tray(self, tray, subtrays=None):
         # Open tray, if not open.

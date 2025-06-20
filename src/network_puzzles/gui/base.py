@@ -117,7 +117,6 @@ class Device(ThemedBoxLayout):
         self.label_hostname = DeviceLabel(text=self.base.hostname)
         self.button = DeviceButton(on_press=self.on_press, on_long_press=self.on_long_press)
         self._set_image()
-        # TODO: Button to cycle through showing hostname and/or IPs?
         self.add_widget(self.button)
         self.add_widget(self.label_hostname)
         self.tooltip = HelpToolTip()

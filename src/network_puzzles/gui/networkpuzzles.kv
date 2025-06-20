@@ -12,10 +12,13 @@ ThemedBoxLayout:
     padding: dp(0)
     spacing: dp(0)
     ThemedBoxLayout:  # left panel
-        size_hint_x: 1/4
+        id: left_panel
+        size_hint_x: None
         orientation: 'vertical'
+        #width: self.children[0].width
         padding: dp(0)
         ThemedBoxLayout:  # menu buttons group
+            id: menu_area
             spacing: dp(5)
             size_hint_y: 0.1
             size_hint_max_y: dp(app.BUTTON_MAX_H + 10)  # 10px more for padding
@@ -31,6 +34,12 @@ ThemedBoxLayout:
             AppButton:  # restart
                 text: "\u21ba"
                 on_press: app.setup_puzzle()
+            AppButton:  # undo
+                text: "\u2190"
+                on_press: print("undo")
+            AppButton:  # redo
+                text: "\u2192"
+                on_press: print("redo")
             AppButton:  # lang
                 id: lang
                 text: session.lang
@@ -39,9 +48,6 @@ ThemedBoxLayout:
                 pos_hint: {'right': 1}
                 text: "?"
                 on_press: app.on_help()
-            AppButton:
-                text: "*"
-                on_press: app._test()
         HSeparator:
         ThemedBoxLayout:
             size_hint_y: 0.05
