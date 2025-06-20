@@ -77,11 +77,18 @@ class Puzzle:
             match test.get('thetest'):
                 case 'NeedsLinkToDevice':
                     # Could be an existing link to be replaced or a missing link
-                    # to be created.
-                    # FIXME: Just adding both commands for now.
-                    link = f"{test.get('shost')}_link_{test.get('dhost')}"
-                    commands.append(f"replace {test.get('shost')}_link_{test.get('dhost')}")
-                    commands.append(f"create link {test.get('shost')} {test.get('dhost')}")
+                    # to be created. Plus, the link name could be in reverse order.
+                    link_name = f"{test.get('shost')}_link_{test.get('dhost')}"
+                    link = self.link_from_name(link_name)
+                    if not link:
+                        # Reverse the link hostname and try again.
+                        link_name = f"{test.get('dhost')}_link_{test.get('shost')}"
+                        link = self.link_from_name(link_name)
+                    if link in self.all_links():
+                        # Link exists, include option to replace it.
+                        commands.append(f"replace {link_name}")
+                    else:
+                        commands.append(f"create link {test.get('shost')} {test.get('dhost')}")
                 case 'SuccessfullyPings'|'SuccessfullyPingsAgain':
                     commands.append(f"ping {test.get('shost')} {test.get('dhost')}")
         return commands
@@ -276,6 +283,8 @@ class Puzzle:
         for i in range(len(itemlist) - 1, -1, -1):
             if(itemlist[i]['hostname'] == itemToDelete):
                 session.print(f"Deleting: {itemToDelete}")
+                # Additional call for special UI handling.
+                session.ui.delete_item(itemlist[i])
                 del itemlist[i]
                 return True
         return False

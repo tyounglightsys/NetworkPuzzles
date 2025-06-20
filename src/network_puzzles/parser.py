@@ -97,7 +97,7 @@ class Parser:
         if item == 'link':
             return session.puzzle.createLink(args)
 
-    def replace_something(self,args):
+    def replace_something(self, args):
         if len(args) == 0:
             session.print("You must specify something to replace")
             return False
@@ -109,7 +109,15 @@ class Parser:
                 linktype = item.get('linktype')
                 if linktype == 'broken':
                     linktype = 'normal' #we replace broken links
-                session.puzzle.createLink([item['SrcNic']['hostname'], item['SrcNic']['nicname'], item['DstNic']['hostname'], item['DstNic']['nicname']], linktype)
+                session.puzzle.createLink(
+                    [
+                        item['SrcNic']['hostname'],
+                        item['SrcNic']['nicname'],
+                        item['DstNic']['hostname'],
+                        item['DstNic']['nicname']
+                    ],
+                    linktype
+                )
                 return True
             #else, it is either a device, or something that does not exist
 

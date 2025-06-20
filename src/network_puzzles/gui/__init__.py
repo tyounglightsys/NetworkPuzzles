@@ -89,15 +89,18 @@ class NetworkPuzzlesApp(App):
 
         self.root.ids.layout.add_widget(device_inst)
 
-    def add_link(self, link_inst=None):
+    def add_link(self, link=None):
         # TODO: If link_inst not given, require user to tap on start and end
         # devices on the screen to instantiate a new link.
-        if not isinstance(link_inst, Link) and isinstance(link_inst, MenuButton):
-            raise NotImplementedError
+        if not isinstance(link, Link):
+            if isinstance(link, dict):
+                link = Link(link)
+            elif isinstance(link, MenuButton):
+                raise NotImplementedError
 
         # self.links.append(link_inst)
         # Add link to z-index = 99 to ensure it's drawn under devices.
-        self.root.ids.layout.add_widget(link_inst, 99)
+        self.root.ids.layout.add_widget(link, 99)
 
     def add_terminal_line(self, line):
         if not line.endswith('\n'):
@@ -200,11 +203,17 @@ class NetworkPuzzlesApp(App):
     def on_puzzle_chooser(self, *args):
         PuzzleChooserPopup().open()
 
-    def remove_device(self, device_inst):
-        self.root.ids.layout.remove_widget(device_inst)
-
-    def remove_link(self, link_inst):
-        self.root.ids.layout.remove_widget(link_inst)
+    def remove_item(self, item):
+        """Remove widget from layout by widget or item JSON data."""
+        widget = None
+        if isinstance(item, Link) or isinstance(item, Device):
+            widget = item
+        elif isinstance(item, dict):
+            widget = self.get_widget_by_hostname(item.get('hostname'))
+        else:
+            raise TypeError(f"{type(item)=}")
+        if widget:
+            self.root.ids.layout.remove_widget(widget)
 
     def reset_display(self):
         """Clear display without clearing loaded puzzle data."""

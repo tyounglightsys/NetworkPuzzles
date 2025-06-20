@@ -45,7 +45,7 @@ class LinkPopup(AppPopup):
         self.title = self.link.base.json.get('hostname', '<hostname>')
     
     def delete(self):
-        self.app.remove_link(self.link)
+        self.app.remove_item(self.link)
         self.dismiss()
 
     def edit(self):

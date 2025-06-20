@@ -99,7 +99,13 @@ class UI:
         return session.puzzle.all_tests()
 
     def create_link(self, link_data):
-        raise NotImplementedError
+        pass
+
+    def delete_item(self, item_data):
+        pass
+
+    def replace_link(self, link_data):
+        pass
 
     def acknowledge_any_tests():
         raise NotImplementedError
@@ -145,9 +151,6 @@ class CLI(UI):
                     session.puzzle.json['completed'] = True
         except EOFError:
             sys.exit()
-
-    def create_link(self, link_data):
-        pass
 
     def acknowledge_any_tests(self):
         for onetest in session.puzzle.all_tests():
@@ -212,7 +215,14 @@ class GUI(UI):
         self.app.run()
 
     def create_link(self, link_data):
-        session.print("TODO: Create GUI link widget.")
+        self.app.add_link(link_data)
+
+    def delete_item(self, item_data):
+        self.app.remove_item(item_data)
+    
+    def replace_link(self, link_data):
+        self.delete_item(link_data)
+        self.create_link(link_data)
 
     def acknowledge_any_tests(self):
         for test in session.puzzle.all_tests():
