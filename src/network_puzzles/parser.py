@@ -96,6 +96,8 @@ class Parser:
         item = args.pop(0).lower()
         if item == 'link':
             return session.puzzle.createLink(args)
+        elif item == 'device':
+            return session.puzzle.createDevice(args)
 
     def replace_something(self, args):
         if len(args) == 0:
@@ -119,7 +121,12 @@ class Parser:
                     linktype
                 )
                 return True
-            #else, it is either a device, or something that does not exist
+            item = session.puzzle.device_from_name(args[0])
+            if item is not None:
+                # We have a device. We can replace one of these.
+                raise NotImplementedError
+            else:  # it is something that does not exist
+                raise ValueError(f"Not a valid item: {args[0]}")
 
     def printhelp(self):
         session.print("--- CLI Help ---")

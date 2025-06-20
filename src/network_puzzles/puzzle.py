@@ -295,6 +295,9 @@ class Puzzle:
         self.json['uniqueidentifier'] = nextval
         return availableval
     
+    def createDevice(self, args):
+        raise NotImplementedError
+
     def createLink(self, args, linktype='normal') -> bool:
         """returns False on error, True if successful, None if unhandled"""
         #we should have a source device, and an optional src nic, and a dest device and an optional dest nic
