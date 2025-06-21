@@ -250,6 +250,8 @@ class Parser:
                             chosendevice['poweroff'] = 'True'
                         else:
                             chosendevice['poweroff']= 'False'
+                        # Additional call for special UI handling.
+                        session.ui.update_power_status(args[0])
                         session.print(f"Defining {args[0]} 'poweroff' to {chosendevice['poweroff']}")
                     case 'dhcp'|'isdhcp':
                         if args[2].lower() == "yes":

@@ -5,6 +5,7 @@ from kivy.base import ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.graphics import Color
+from kivy.graphics import Ellipse
 from kivy.graphics import Line
 from kivy.metrics import dp
 from kivy.properties import ListProperty
@@ -111,15 +112,18 @@ class Device(ThemedBoxLayout):
         self.app = session.app
         self.base = device.Device(init_data)
 
-        self.commands = device.commands_from_tests(self.hostname)
-        self.commands.append(_("Ping [host]"))
-        self._set_pos()  # sets self.coords and self.pos_hint
+        self.commands =[_("Ping [host]")]
+        self.commands.extend(session.puzzle.commands_from_tests(self.hostname))
+        self.commands.extend(self.base.get_nontest_commands())
+        self._set_pos()  # sets self.rel_pos and self.pos_hint
         self.label_hostname = DeviceLabel(text=self.base.hostname)
         self.button = DeviceButton(on_press=self.on_press, on_long_press=self.on_long_press)
         self._set_image()
         self.add_widget(self.button)
         self.add_widget(self.label_hostname)
         self.tooltip = HelpToolTip()
+        # Updates that rely on Device's pos already being set.
+        Clock.schedule_once(self.set_power_status)
 
     @property
     def hostname(self):
@@ -195,6 +199,16 @@ class Device(ThemedBoxLayout):
 
     def on_press(self):
         self._build_commands_popup().open()
+    
+    def set_power_status(self, *args):
+        print(f"{self.hostname=}; {self.base.powered_on=}")
+        if self.base.powered_on:
+            self.canvas.after.clear()
+        else:
+            pos = (self.button.x + self.button.width - dp(15), self.button.y + dp(5))
+            with self.canvas.after:
+                Color(rgb=(1, 0, 0))
+                Ellipse(pos=pos, size=(dp(8), dp(8)))
 
     def _build_commands_popup(self):
         # Setup the content.
@@ -229,8 +243,8 @@ class Device(ThemedBoxLayout):
         self.button.background_normal = str(self.app.IMAGES / img)
 
     def _set_pos(self):
-        self.coords = location_to_coords(self.base.json.get('location'))
-        self.pos_hint = {'center': self.coords}
+        self.rel_pos = location_to_pos_hint(self.base.json.get('location'))
+        self.pos_hint = {'center': self.rel_pos}
 
 
 class Link(Widget):
@@ -385,6 +399,6 @@ def get_layout_height(layout) -> None:
     return h_padding + h_widgets + h_widgets_padding + h_spacing
 
 
-def location_to_coords(location: str) -> list:
+def location_to_pos_hint(location: str) -> list:
     coords = location.split(',')
     return [int(coords[0])/900, 1 - int(coords[1])/850]

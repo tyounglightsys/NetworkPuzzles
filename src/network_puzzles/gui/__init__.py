@@ -374,7 +374,6 @@ class NetworkPuzzlesApp(App):
                 menu.spacing * (len(menu_buttons) - 1),
             ]
         )
-        print(f"{self.root.ids.left_panel.width=}")
 
     def _toggle_tray(self, tray, subtrays=None):
         # Open tray, if not open.

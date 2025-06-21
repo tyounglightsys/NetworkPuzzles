@@ -175,8 +175,22 @@ class GUI(UI):
         session.print = self.console_write
         session.ui = self
 
+    def acknowledge_any_tests(self):
+        for test in session.puzzle.all_tests():
+            if test.get('completed', False) and not test.get('acknowledged', False):
+                # we have something completed, but not acknowledged
+                if test.get('message') is not None:
+                    session.print(test.get('message', ""))
+                    test['acknowledged'] = True
+
     def console_write(self, line):
         self.app.add_terminal_line(line)
+
+    def create_link(self, link_data):
+        self.app.add_link(link_data)
+
+    def delete_item(self, item_data):
+        self.app.remove_item(item_data)
 
     def is_puzzle_done(self, *args) -> bool|None:
         """
@@ -211,23 +225,15 @@ class GUI(UI):
     def quit(self):
         self.app.stop()
 
-    def run(self):
-        self.app.run()
-
-    def create_link(self, link_data):
-        self.app.add_link(link_data)
-
-    def delete_item(self, item_data):
-        self.app.remove_item(item_data)
-    
     def replace_link(self, link_data):
         self.delete_item(link_data)
         self.create_link(link_data)
 
-    def acknowledge_any_tests(self):
-        for test in session.puzzle.all_tests():
-            if test.get('completed', False) and not test.get('acknowledged', False):
-                # we have something completed, but not acknowledged
-                if test.get('message') is not None:
-                    session.print(test.get('message', ""))
-                    test['acknowledged'] = True
+    def run(self):
+        self.app.run()
+
+    def update_power_status(self, hostname):
+        device = self.app.get_widget_by_hostname(hostname)
+        print(f"{device=}")
+        if device:
+            device.set_power_status()
