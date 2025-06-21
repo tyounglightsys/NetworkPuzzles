@@ -212,6 +212,14 @@ def doesVLANs(deviceRec):
             return True
     return False
 
+def servesDHCP(deviceRec):
+    """return true if the device can serve dhcp, false if it can not"""
+    match deviceRec['mytype']:
+        case "firewall"|"wrouter":
+            return True
+    return False
+
+
 def powerOff(deviceRec):
     """return true if the device is powered off"""
     if 'poweroff' not in deviceRec:

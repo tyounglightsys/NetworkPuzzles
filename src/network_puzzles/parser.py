@@ -287,23 +287,37 @@ class Parser:
             if chosendevice is not None:
                 match args[1].lower():
                     case 'power'|'poweroff':
+                        pastvalue='on'
+                        if chosendevice['poweroff'] == 'True':
+                            pastvalue = 'off'
                         if args[2].lower() == "off":
+                            session.add_undo_entry("set power off", f"set power {pastvalue}")
                             chosendevice['poweroff'] = 'True'
                         else:
+                            session.add_undo_entry("set power on", f"set power {pastvalue}")
                             chosendevice['poweroff']= 'False'
                         # Additional call for special UI handling.
                         session.ui.update_power_status(args[0])
                         session.print(f"Defining {args[0]} 'poweroff' to {chosendevice['poweroff']}")
                     case 'dhcp'|'isdhcp':
-                        if args[2].lower() == "yes":
+                        pastvalue='false'
+                        if not device.servesDHCP(chosendevice):
+                            session.print(f"{chosendevice.get('hostname')} can not be a dhcp server")
+                            return False
+                        if chosendevice['isdhcp'] == 'True':
+                            pastvalue = 'true'
+                        if args[2].lower() == "yes" or args[2].lower() == "true":
                             chosendevice['isdhcp'] = 'True'
+                            session.add_undo_entry(f"set {chosendevice['hostname']} isdhcp true", f"set {chosendevice['hostname']} isdhcp {pastvalue}")
                         else:
                             chosendevice['isdhcp']= 'False'
+                            session.add_undo_entry(f"set {chosendevice['hostname']} isdhcp false", f"set {chosendevice['hostname']} isdhcp {pastvalue}")
                         session.print(f"Defining {args[0]} 'isdhcp' to {chosendevice['isdhcp']}")
                     case 'gateway'|'gw':
                         #we really need to do some type checking.  It should be a valid ipv4 or ipv6 address
                         if packet.is_ipv4(args[2]) or packet.is_ipv6(args[2]):
-                            chosendevice['gateway']['ip']= args[2]
+                            session.add_undo_entry(f"set {chosendevice['hostname']} gateway {args[2]}", f"set {chosendevice['hostname']} gateway {chosendevice['gateway']['ip']}")
+                            chosendevice['gateway']['ip']= args[2]                            
                             session.print(f"Setting {args[0]} gateway: {chosendevice['gateway']['ip']}")
                         else:
                             session.print(f"invalid address: {args[2]}")
