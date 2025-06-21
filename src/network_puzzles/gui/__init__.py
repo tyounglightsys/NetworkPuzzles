@@ -202,7 +202,7 @@ class NetworkPuzzlesApp(App):
 
     def on_start(self):
         # Make widget adjustments.
-        Clock.schedule_once(self._set_left_panel_width)  # buttons must update first
+        Clock.schedule_once(self._set_left_panel_width)  # buttons must update before panel
         self._add_new_item_button()
         # Open puzzle chooser if no puzzle is defined.
         if not self.ui.puzzle:
@@ -299,7 +299,7 @@ class NetworkPuzzlesApp(App):
     def _add_new_item_button(self, *args):
         # TODO: Add button to cycle through showing hostname and/or IPs?
         self.new_item_button = MenuButton(
-            props={'text': "+", 'cb': self.on_new_item,},
+            props={'text': "+", 'cb': self.on_new_item, 'info': "add new item"},
             pos_hint={'x': 0.005, 'top': 0.99},
         )
         self.root.ids.layout.add_widget(self.new_item_button)
@@ -356,21 +356,24 @@ class NetworkPuzzlesApp(App):
         # Apply each device's help_text.
         for device, help_text in devices.items():
             d = self.get_widget_by_hostname(device)
-            if hasattr(d, 'tooltip_text'):
-                d.tooltip_text = help_text
+            if hasattr(d, 'button'):
+                # if hasattr(d, 'tooltip_text'):
+                info = d._extra_tooltip_text()
+                if help_text:
+                    info += f"\n{help_text}"
+                d.button.info = info
 
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)
         tray.open()        
 
     def _set_left_panel_width(self, *args):
-        menu = self.root.ids.menu_area
+        menu = self.root.ids.menu
         menu_buttons = menu.children
         self.root.ids.left_panel.width = sum(
             [
                 menu_buttons[0].width * len(menu_buttons),
-                menu.padding[0],
-                menu.padding[2],
+                menu.padding * 2,
                 menu.spacing * (len(menu_buttons) - 1),
             ]
         )
@@ -417,9 +420,3 @@ class NetworkPuzzlesApp(App):
         # raise NotImplementedError
         for d in self.devices:
             print(f"{d.nics=}")
-
-
-class PuzzleLayout(RelativeLayout):
-    pass
-
-

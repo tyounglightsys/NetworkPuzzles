@@ -23,7 +23,7 @@ class ThemedLabel(Label):
         self.app = session.app
 
 
-class HelpToolTip(ThemedLabel):
+class ToolTip(ThemedLabel):
     pass
 
 

@@ -3,7 +3,6 @@ from dataclasses import dataclass
 from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
 from kivy.clock import Clock
-from kivy.core.window import Window
 from kivy.graphics import Color
 from kivy.graphics import Ellipse
 from kivy.graphics import Line
@@ -24,7 +23,6 @@ from .. import session
 from .buttons import CommandButton
 from .buttons import DeviceButton
 from .labels import DeviceLabel
-from .labels import HelpToolTip
 from .layouts import ThemedBoxLayout
 from .popups import CommandsPopup
 from .popups import ExceptionPopup
@@ -108,7 +106,6 @@ class ThemedCheckBox(CheckBox):
 class Device(ThemedBoxLayout):
     def __init__(self, init_data=None, **kwargs):
         super().__init__(**kwargs)
-        Window.bind(mouse_pos=self.on_mouse_pos)
         self.app = session.app
         self.base = device.Device(init_data)
 
@@ -117,11 +114,10 @@ class Device(ThemedBoxLayout):
         self.commands.extend(self.base.get_nontest_commands())
         self._set_pos()  # sets self.rel_pos and self.pos_hint
         self.label_hostname = DeviceLabel(text=self.base.hostname)
-        self.button = DeviceButton(on_press=self.on_press, on_long_press=self.on_long_press)
+        self.button = DeviceButton(on_press=self.on_press)
         self._set_image()
         self.add_widget(self.button)
         self.add_widget(self.label_hostname)
-        self.tooltip = HelpToolTip()
         # Updates that rely on Device's pos already being set.
         Clock.schedule_once(self.set_power_status)
 
@@ -140,29 +136,6 @@ class Device(ThemedBoxLayout):
             return list()
 
     @property
-    def tooltip_text(self):
-        return self.tooltip.text
-    
-    @tooltip_text.setter
-    def tooltip_text(self, text):
-        # Add hostname.
-        t = self.hostname
-        # Add IP addresses and netmasks.
-        for nic in self.nics:
-            for iface in nic.get('interface', []):
-                ip = iface.get('myip', {})
-                ipaddr = ip.get('ip', '0.0.0.0')
-                if ipaddr != '0.0.0.0':
-                    t += f"\n{ipaddr}/{ip.get('mask')}"
-        # Add help text.
-        if text:
-            t += f"\n{text}"
-        self.tooltip.text = t
-        self.tooltip.texture_update()
-        self.tooltip.size = self.tooltip.texture_size
-        self.tooltip.text_size = (None, None)
-
-    @property
     def uid(self):
         if hasattr(self, 'base') and self.base:
             return self.base.uid
@@ -177,31 +150,10 @@ class Device(ThemedBoxLayout):
         self.set_location()
         self.set_hostname()
 
-    def on_mouse_pos(self, *args):
-        if not self.get_root_window():
-            return
-        pos = self.app.root.ids.layout.to_widget(*args[1])
-        self.tooltip.center = pos
-        Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event 
-        self.close_tooltip() # close if it's opened
-        if self.collide_point(*pos):
-            Clock.schedule_once(self.open_tooltip, 1)
-
-    def close_tooltip(self, *args):
-        self.app.root.ids.layout.remove_widget(self.tooltip)
-
-    def open_tooltip(self, *args):
-        if self.tooltip not in self.app.root.ids.layout.children:
-            self.app.root.ids.layout.add_widget(self.tooltip)
-
-    def on_long_press(self, *args):
-        self.open_tooltip()
-
     def on_press(self):
         self._build_commands_popup().open()
     
     def set_power_status(self, *args):
-        print(f"{self.hostname=}; {self.base.powered_on=}")
         if self.base.powered_on:
             self.canvas.after.clear()
         else:
@@ -234,6 +186,18 @@ class Device(ThemedBoxLayout):
         rootgrid.height = get_layout_height(rootgrid)
         popup.height = rootgrid.height + dp(24)  # account for undocumented padding
         return popup
+
+    def _extra_tooltip_text(self):
+        # Add hostname.
+        text = self.hostname
+        # Add IP addresses and netmasks.
+        for nic in self.nics:
+            for iface in nic.get('interface', []):
+                ip = iface.get('myip', {})
+                ipaddr = ip.get('ip', '0.0.0.0')
+                if ipaddr != '0.0.0.0':
+                    text += f"\n{ipaddr}/{ip.get('mask')}"
+        return text
 
     def _set_image(self):
         devices = NETWORK_ITEMS.get('devices').get('user') | NETWORK_ITEMS.get('devices').get('infrastructure')
