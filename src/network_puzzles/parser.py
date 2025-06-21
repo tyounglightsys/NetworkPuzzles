@@ -97,13 +97,16 @@ class Parser:
                 #We deleted something and it needs to be re-added
                 #determine what it is; a device or link
                 payload = lastcmd.get('payload')
+                session.print(f"restoring deleted {payload.get('hostname')}")
                 if 'DstNic' in payload:
                     #it is a link.
-                    puzzle.json['link'].append(payload)
+                    if not isinstance(session.puzzle.json['link'],list):
+                        session.puzzle.json['link'] = [session.puzzle.json['link']]
+                    session.puzzle.json['link'].append(payload)
                     return True
                 else:
                     #it is a device
-                    puzzle.json['device'].append(payload)
+                    session.puzzle.json['device'].append(payload)
                     return True
             #If we get here, we had no payload.
             #we need to run the backwards command

@@ -265,6 +265,9 @@ class Puzzle:
         itemlist = self.json['device']
         for i in range(len(itemlist) - 1, -1, -1):
             if(itemlist[i]['hostname'] == itemToDelete):
+                forwards = f"delete {itemToDelete}"
+                backwards = f"restore {itemToDelete}" #note; the restore command is never used.  We pass it a payload and it is processed that way
+
                 #can we delete it?
                 if session.puzzle.device_is_critical(itemlist[i]['hostname']):
                     session.print(f"Cannot delete {itemlist[i]['hostname']}.  The puzzle has it locked.")
@@ -275,6 +278,7 @@ class Puzzle:
                     if onelink is not None:
                         self.deleteItem(onelink.get('hostname'))
                 session.print(f"Deleting: {itemToDelete}")
+                session.add_undo_entry(f"delete {itemToDelete}", f"restore {itemToDelete}", itemlist[i]) #make entry using payload
                 del itemlist[i]
                 return True
         itemlist = self.json['link']
@@ -285,6 +289,7 @@ class Puzzle:
                 session.print(f"Deleting: {itemToDelete}")
                 # Additional call for special UI handling.
                 session.ui.delete_item(itemlist[i])
+                session.add_undo_entry(f"delete {itemToDelete}", f"restore {itemToDelete}", itemlist[i]) #make entry using payload
                 del itemlist[i]
                 return True
         return False
