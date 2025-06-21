@@ -33,6 +33,13 @@ class Device:
         self.json['hostname'] = name
 
     @property
+    def powered_on(self):
+        if self.json.get('poweroff', '').lower() == 'true':
+            return False
+        else:
+            return True
+
+    @property
     def uid(self):
         return self.json.get('uniqueidentifier')
 

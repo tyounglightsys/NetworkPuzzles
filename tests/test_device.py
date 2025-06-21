@@ -44,6 +44,16 @@ class TestGetDeviceAttribs(unittest.TestCase):
 
     def test_hostname(self):
         self.assertEqual(self.data.get('hostname'), device.Device(self.data).hostname)
+    
+    def test_powered_on(self):
+        # Test undefined.
+        self.assertTrue(self.device.powered_on)
+        # Test powered on.
+        self.device.json['poweroff'] = 'False'
+        self.assertTrue(self.device.powered_on)
+        # Test powered off.
+        self.device.json['poweroff'] = 'True'
+        self.assertFalse(self.device.powered_on)
 
 
 class TestGetItemByAttrib(unittest.TestCase):
