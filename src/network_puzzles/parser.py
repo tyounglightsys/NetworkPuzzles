@@ -48,7 +48,7 @@ class Parser:
             print("loading: ")
         return {'command': cmd, 'value': val}
 
-    def parse(self, command: str, fromuser=True):
+    def parse(self, command: str, fromuser=True, fromundo=False):
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         items = command.split() # break at all whitespace
         if fromuser:
@@ -80,11 +80,47 @@ class Parser:
                     self.show_info(args)
                 case 'set':
                     return self.setvalue(args)
+                case 'undo':
+                    return self.try_undo()
+                case 'undo':
+                    return self.try_redo()
                 case _:
                     session.print(f"unknown: {command}")
         else:
             # If command is empty, do nothing. The prompt will just be reshown.
             pass
+
+    def try_undo(self):
+        if len(session.undolist) >0:
+            lastcmd = session.undolist.pop()
+            if lastcmd.get('payload') is not None:
+                #We deleted something and it needs to be re-added
+                #determine what it is; a device or link
+                payload = lastcmd.get('payload')
+                if 'DstNic' in payload:
+                    #it is a link.
+                    puzzle.json['link'].append(payload)
+                    return True
+                else:
+                    #it is a device
+                    puzzle.json['device'].append(payload)
+                    return True
+            #If we get here, we had no payload.
+            #we need to run the backwards command
+            self.parse(lastcmd.get('backwards'),False,True) # specify this is from undo.  It does not get added to undo
+            session.redolist.append(lastcmd) #Put it onto the redo list
+        else:
+            session.print("Noting to undo")
+
+    def try_redo(self):
+        if len(session.redolist) >0:
+            lastcmd = session.redolist.pop()
+            self.parse(lastcmd.get('backwards'),False,False)
+            #The command is automatically added to the undo; through the parse.  We are done
+        else:
+            session.print("Noting to redo")
+
+
 
     def create_something(self, args):
         if len(args) == 0:
