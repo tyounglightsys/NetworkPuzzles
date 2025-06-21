@@ -15,8 +15,21 @@ class Session:
         self.puzzle = None
         self.packetlist: list = list()
         self.history = list()
+        self.undolist = list()
+        self.redolist = list()
         self.ui = None
     
     def print(self, message):
         print("<default print method>")
         print(message)
+
+    def add_undo_entry(self, forwards_cmd:str, backwards_cmd:str, payload=None):
+        """Add a record to the undo list.  
+        The forwards command is used for redo, 
+        the backwards command is used for undo.
+        the payload is used if we delete something and need to recover it."""
+        newrec = {}
+        newrec['forwards'] = forwards_cmd
+        newrec['backwards'] = backwards_cmd
+        newrec['payload'] = payload
+        self.undolist.append(newrec)

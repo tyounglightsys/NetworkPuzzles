@@ -454,6 +454,8 @@ def readPuzzle():
             session.puzzlelist.append(oneentry)
             #print("loading: " + one)
         sort_session_puzzles()
+        session.undolist = list() #get rid of undo history; it would not apply to the new puzzle
+        session.redolist = list() #get rid of redo history; it would not apply to the new puzzle
 
 def choosePuzzleFromName(what:str):
     """
