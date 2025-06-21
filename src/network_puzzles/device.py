@@ -7,7 +7,6 @@ from . import packet
 
 class Device:
     def __init__(self, value=None):
-        self.json = None
         try:
             value = int(value)
         except (TypeError, ValueError):
@@ -22,22 +21,39 @@ class Device:
             self.json = value
         else:
             raise ValueError("Not a valid uniqueidentifier, hostname, or JSON data.")
+        if self.json is None:
+            self.json = {}
 
     @property
     def hostname(self):
-        if isinstance(self.json, dict):
-            return self.json.get('hostname')
+        return self.json.get('hostname')
     
     @hostname.setter
     def hostname(self, name):
-        if self.json is None:
-            self.json = {}
         self.json['hostname'] = name
 
     @property
     def uid(self):
-        if isinstance(self.json, dict):
-            return self.json.get('uniqueidentifier')
+        return self.json.get('uniqueidentifier')
+
+    def all_nics(self):
+        if not isinstance(self.json.get('nic'), list):
+            self.json['nic'] = [ self.json['nic']]
+        return self.json.get('nic')
+
+    def all_tests(self):
+        tests = []
+        for t in session.puzzle.all_tests():
+            if t.get('shost') == self.hostname:
+                tests.append(t)
+        return tests
+
+    def get_nontest_commands(self):
+        # Add item-related commands for items not mentioned in tests.
+        commands = list()
+        if not self.powered_on:
+            commands.append(f'set {self.hostname} power on')
+        return commands
 
     def mac_list(self):
         """
@@ -49,8 +65,6 @@ class Device:
             A list of mac-addresses.  Each MAC is a struct containing at least the ip and mac.
         """
         maclist = []
-        if self.json is None:
-            return None
         if 'nic' not in self.json:
             return None
         if not isinstance(self.json.get('nic'), list):
@@ -78,23 +92,9 @@ class Device:
         Returns:
             the network card record from the device or None
             """
-        if self.json is None:
-            return None
         if 'nic' not in self.json:
             return None
         return self._item_by_attrib(self.json.get('nic'), 'nicname', nicname)
-    
-    def all_nics(self):
-        if not isinstance(self.json.get('nic'),list):
-            self.json['nic'] = [ self.json['nic']]
-        return self.json.get('nic')
-
-    def all_tests(self):
-        tests = []
-        for t in session.puzzle.all_tests():
-            if t.get('shost') == self.hostname:
-                tests.append(t)
-        return tests
 
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict|None:
         # Returns first match; i.e. assumes only one item in list matches given
