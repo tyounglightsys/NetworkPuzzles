@@ -82,7 +82,7 @@ class Parser:
                     return self.setvalue(args)
                 case 'undo':
                     return self.try_undo()
-                case 'undo':
+                case 'redo':
                     return self.try_redo()
                 case _:
                     session.print(f"unknown: {command}")
@@ -103,10 +103,12 @@ class Parser:
                     if not isinstance(session.puzzle.json['link'],list):
                         session.puzzle.json['link'] = [session.puzzle.json['link']]
                     session.puzzle.json['link'].append(payload)
+                    session.redolist.append(lastcmd)
                     return True
                 else:
                     #it is a device
                     session.puzzle.json['device'].append(payload)
+                    session.redolist.append(lastcmd)
                     return True
             #If we get here, we had no payload.
             #we need to run the backwards command
@@ -118,7 +120,7 @@ class Parser:
     def try_redo(self):
         if len(session.redolist) >0:
             lastcmd = session.redolist.pop()
-            self.parse(lastcmd.get('backwards'),False,False)
+            self.parse(lastcmd.get('forwards'),False,False)
             #The command is automatically added to the undo; through the parse.  We are done
         else:
             session.print("Noting to redo")
