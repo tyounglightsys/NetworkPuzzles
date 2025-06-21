@@ -15,10 +15,9 @@ ThemedBoxLayout:
         id: left_panel
         size_hint_x: None
         orientation: 'vertical'
-        #width: self.children[0].width
         padding: dp(0)
-        ThemedBoxLayout:  # menu buttons group
-            id: menu_area
+        MenuLayout:  # menu buttons group
+            id: menu
             spacing: dp(5)
             size_hint_y: 0.1
             size_hint_max_y: dp(app.BUTTON_MAX_H + 10)  # 10px more for padding
@@ -26,27 +25,40 @@ ThemedBoxLayout:
             width: self.parent.width
             padding: dp(5)
             AppButton:
+                info: _("choose puzzle")
                 text: "+"
+                pos: self.get_pos()
                 on_press: app.on_puzzle_chooser()
             AppButton:  # save
+                info: _("save puzzle")
                 text: "\u2193"
+                pos: self.get_pos()
                 on_press: app.on_save()
             AppButton:  # restart
+                info: _("restart puzzle")
                 text: "\u21ba"
+                pos: self.get_pos()
                 on_press: app.setup_puzzle()
             AppButton:  # undo
+                info: _("undo")
                 text: "\u2190"
+                pos: self.get_pos()
                 on_press: print("undo")
             AppButton:  # redo
+                info: _("redo")
                 text: "\u2192"
+                pos: self.get_pos()
                 on_press: print("redo")
             AppButton:  # lang
                 id: lang
+                info: _("choose language")
                 text: session.lang
+                pos: self.get_pos()
                 on_press: app.on_language()
             AppButton:  # help
-                pos_hint: {'right': 1}
+                info: _("help")
                 text: "?"
+                pos: self.get_pos()
                 on_press: app.on_help()
         HSeparator:
         ThemedBoxLayout:
