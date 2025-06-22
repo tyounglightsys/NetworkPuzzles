@@ -148,6 +148,7 @@ class Parser:
             item = session.puzzle.link_from_name(args[0])
             if item is not None:
                 #we have a link.  We can replace one of these
+                session.add_undo_entry(f"delete {item.get('hostname')}", f"restore {item.get('hostname')}", item)
                 session.puzzle.deleteItem(item.get('hostname'))
                 linktype = item.get('linktype')
                 if linktype == 'broken':
@@ -161,6 +162,8 @@ class Parser:
                     ],
                     linktype
                 )
+                session.add_undo_entry(f"create link {item['SrcNic']['hostname']} {item['SrcNic']['nicname']} {item['DstNic']['hostname']} {item['DstNic']['nicname']}", 
+                                       f"delete {item.get('hostname')}")
                 return True
             item = session.puzzle.device_from_name(args[0])
             if item is not None:
