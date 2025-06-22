@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-11 17:32+0100\n"
+"POT-Creation-Date: 2025-06-22 06:13+0100\n"
 "PO-Revision-Date: 2025-05-18 16:52+0100\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -429,11 +429,291 @@ msgstr ""
 msgid "Practice7"
 msgstr ""
 
-#: base.py:111 base.py:156
+#: messages.py:155 messages.py:160 messages.py:165 messages.py:170
+#: messages.py:175 messages.py:180 messages.py:185 messages.py:190
+#: messages.py:195 messages.py:200 messages.py:205 messages.py:210
+#: messages.py:215 messages.py:220 messages.py:225 messages.py:230
+#: messages.py:235 messages.py:240 messages.py:245 messages.py:250
+#: messages.py:255 messages.py:260 messages.py:265 messages.py:270
+#: messages.py:275 messages.py:280 messages.py:285 messages.py:290
+#: messages.py:295 messages.py:300 messages.py:305 messages.py:310
+#: messages.py:315
+msgid "has a problem"
+msgstr ""
+
+#: messages.py:156
+msgid "hardware problem"
+msgstr ""
+
+#: messages.py:157
+msgid "bad power supply"
+msgstr ""
+
+#: messages.py:161
+msgid "device is frozen"
+msgstr ""
+
+#: messages.py:162
+msgid "reboot the device"
+msgstr ""
+
+#: messages.py:166
+msgid "is plugged into bad power"
+msgstr ""
+
+#: messages.py:167
+msgid "needs a UPS"
+msgstr ""
+
+#: messages.py:171 messages.py:172
+msgid "network card sprays net when used"
+msgstr ""
+
+#: messages.py:176
+msgid "needs change to DHCP server:"
+msgstr ""
+
+#: messages.py:177
+msgid "DHCP server enabled ="
+msgstr ""
+
+#: messages.py:181
+msgid "should fail to ping a specific host"
+msgstr ""
+
+#: messages.py:182
+msgid "needs to try to ping (and fail):"
+msgstr ""
+
+#: messages.py:186
+msgid "get mouse-over help"
+msgstr ""
+
+#: messages.py:187
+msgid "get mouse-over help of level:"
+msgstr ""
+
+#: messages.py:191
+msgid "is locked"
+msgstr ""
+
+#: messages.py:192
+msgid "is locked:"
+msgstr ""
+
+#: messages.py:196
+msgid "has locked DHCP"
+msgstr ""
+
+#: messages.py:197
+msgid "has locked DHCP:"
+msgstr ""
+
+#: messages.py:201
+msgid "has locked gateway"
+msgstr ""
+
+#: messages.py:202
+msgid "has locked gateway:"
+msgstr ""
+
+#: messages.py:206
+msgid "the VLAN on an interface is locked"
+msgstr ""
+
+#: messages.py:207
+msgid "the VLAN on an interface is locked:"
+msgstr ""
+
+#: messages.py:211
+msgid "has locked IP"
+msgstr ""
+
+#: messages.py:212
+msgid "has locked IP:"
+msgstr ""
+
+#: messages.py:216
+msgid "device cannot be moved"
+msgstr ""
+
+#: messages.py:217
+msgid "device cannot be moved:"
+msgstr ""
+
+#: messages.py:221
+msgid "has locked NIC"
+msgstr ""
+
+#: messages.py:222
+msgid "has locked NIC:"
+msgstr ""
+
+#: messages.py:226
+msgid "the VLAN on a NIC is locked"
+msgstr ""
+
+#: messages.py:227
+msgid "the VLAN on a NIC is locked:"
+msgstr ""
+
+#: messages.py:231
+msgid "has locked route"
+msgstr ""
+
+#: messages.py:232
+msgid "has locked route:"
+msgstr ""
+
+#: messages.py:236
+msgid "VLAN names and IDs are locked"
+msgstr ""
+
+#: messages.py:237
+msgid "VLAN names and IDs are locked:"
+msgstr ""
+
+#: messages.py:241
+msgid "a VLAN is locked"
+msgstr ""
+
+#: messages.py:242
+msgid "a VLAN is locked:"
+msgstr ""
+
+#: messages.py:246
+msgid "needs the gateway set"
+msgstr ""
+
+#: messages.py:247
+msgid "needs the gateway set to:"
+msgstr ""
+
+#: messages.py:251
+msgid "the interface needs a forbidden VLAN"
+msgstr ""
+
+#: messages.py:252
+msgid "the interface needs a forbidden VLAN:"
+msgstr ""
+
+#: messages.py:256
+msgid "needs to be connected to the network"
+msgstr ""
+
+#: messages.py:257
+msgid "needs a link to host:"
+msgstr ""
+
+#: messages.py:261
+msgid "needs a local IP"
+msgstr ""
+
+#: messages.py:262
+msgid "needs an IP local to host:"
+msgstr ""
+
+#: messages.py:266
+msgid "cannot ping"
+msgstr ""
+
+#: messages.py:267
+msgid "cannot ping host:"
+msgstr ""
+
+#: messages.py:271
+msgid "needs a route set"
+msgstr ""
+
+#: messages.py:272
+msgid "needs a route to network:"
+msgstr ""
+
+#: messages.py:276
+msgid "the interface needs a tagged VLAN"
+msgstr ""
+
+#: messages.py:277
+msgid "the interface needs a tagged VLAN:"
+msgstr ""
+
+#: messages.py:281
+msgid "the interface needs an untagged VLAN"
+msgstr ""
+
+#: messages.py:282
+msgid "the interface needs an untagged VLAN:"
+msgstr ""
+
+#: messages.py:286 messages.py:287
+msgid "read context help for:"
+msgstr ""
+
+#: messages.py:291
+msgid "needs to find ARP from some device"
+msgstr ""
+
+#: messages.py:292
+msgid "needs to find ARP from:"
+msgstr ""
+
+#: messages.py:296
+msgid "needs a DHCP IP address"
+msgstr ""
+
+#: messages.py:297
+msgid "needs a DHCP IP address from server:"
+msgstr ""
+
+#: messages.py:301 messages.py:306 messages.py:311
+msgid "must ping a host"
+msgstr ""
+
+#: messages.py:302 messages.py:307 messages.py:312
+msgid "must ping:"
+msgstr ""
+
+#: messages.py:316
+msgid "needs to traceroute"
+msgstr ""
+
+#: messages.py:317
+msgid "needs to traceroute to:"
+msgstr ""
+
+#: base.py:112 base.py:169
 msgid "Ping [host]"
 msgstr ""
 
-#: networkpuzzles.kv:51
+#: networkpuzzles.kv:28
+msgid "choose puzzle"
+msgstr ""
+
+#: networkpuzzles.kv:33
+msgid "save puzzle"
+msgstr ""
+
+#: networkpuzzles.kv:38
+msgid "restart puzzle"
+msgstr ""
+
+#: networkpuzzles.kv:43
+msgid "undo"
+msgstr ""
+
+#: networkpuzzles.kv:48
+msgid "redo"
+msgstr ""
+
+#: networkpuzzles.kv:54
+msgid "choose language"
+msgstr ""
+
+#: networkpuzzles.kv:59
+msgid "help"
+msgstr ""
+
+#: networkpuzzles.kv:69
 msgid "Help level:"
 msgstr ""
 

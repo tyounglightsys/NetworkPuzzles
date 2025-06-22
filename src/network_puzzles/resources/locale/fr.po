@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-11 17:32+0100\n"
+"POT-Creation-Date: 2025-06-22 06:13+0100\n"
 "PO-Revision-Date: 2025-05-18 16:52+0100\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -68,7 +68,7 @@ msgstr ""
 
 #: messages.py:21
 msgid "Power It On"
-msgstr ""
+msgstr "Démarrer-le"
 
 #: messages.py:22
 msgid ""
@@ -88,7 +88,7 @@ msgstr ""
 
 #: messages.py:29
 msgid "IP Puzzle"
-msgstr ""
+msgstr "Puzzle IP"
 
 #: messages.py:30
 msgid ""
@@ -134,7 +134,7 @@ msgstr ""
 
 #: messages.py:41
 msgid "Frozen!"
-msgstr ""
+msgstr "Figé !"
 
 #: messages.py:42
 msgid ""
@@ -150,7 +150,7 @@ msgstr ""
 
 #: messages.py:45
 msgid "Switch vs Hub"
-msgstr ""
+msgstr "Commutateur vs concentrateur"
 
 #: messages.py:46
 msgid ""
@@ -164,7 +164,7 @@ msgstr ""
 
 #: messages.py:49
 msgid "Where did I put that?"
-msgstr ""
+msgstr "Où est-ce j'ai mis ça ?"
 
 #: messages.py:50
 msgid ""
@@ -179,7 +179,7 @@ msgstr ""
 
 #: messages.py:53
 msgid "Broken Link"
-msgstr ""
+msgstr "Lien rompu"
 
 #: messages.py:54
 msgid ""
@@ -196,7 +196,7 @@ msgstr ""
 
 #: messages.py:57
 msgid "Packet Corruption"
-msgstr ""
+msgstr "Corruption de paquet"
 
 #: messages.py:58
 msgid ""
@@ -207,7 +207,7 @@ msgstr ""
 
 #: messages.py:61
 msgid "Packet Corruption2"
-msgstr ""
+msgstr "Corruption de paquet 2"
 
 #: messages.py:62
 msgid ""
@@ -233,7 +233,7 @@ msgstr ""
 
 #: messages.py:69
 msgid "Bad Power Supply"
-msgstr ""
+msgstr "Mauvaise alimentation"
 
 #: messages.py:70
 msgid ""
@@ -249,7 +249,7 @@ msgstr ""
 
 #: messages.py:73
 msgid "Bad Power - Needs UPS"
-msgstr ""
+msgstr "Mauvaise alimentation - besoin de UPS"
 
 #: messages.py:74
 msgid ""
@@ -270,7 +270,7 @@ msgstr ""
 
 #: messages.py:77
 msgid "Bad IP"
-msgstr ""
+msgstr "Mauvaise adresse IP"
 
 #: messages.py:78
 msgid ""
@@ -280,7 +280,7 @@ msgstr ""
 
 #: messages.py:81
 msgid "Bad DHCP"
-msgstr ""
+msgstr "Serveur DHCP mal configuré"
 
 #: messages.py:82
 msgid ""
@@ -291,7 +291,7 @@ msgstr ""
 
 #: messages.py:85
 msgid "Gateway Puzzle"
-msgstr ""
+msgstr "Puzzle de passerelle"
 
 #: messages.py:86
 msgid ""
@@ -302,7 +302,7 @@ msgstr ""
 
 #: messages.py:89
 msgid "Duplicate IPs"
-msgstr ""
+msgstr "Duplication d'adresses IP"
 
 #: messages.py:90
 msgid "Get the PCs so they are happy"
@@ -310,7 +310,7 @@ msgstr ""
 
 #: messages.py:93
 msgid "Two Subnets, Shared Network"
-msgstr ""
+msgstr "Deux sous-réseaux, réseau partagé"
 
 #: messages.py:94
 msgid ""
@@ -323,7 +323,7 @@ msgstr ""
 
 #: messages.py:97
 msgid "Two Subnets, Shared Network2"
-msgstr ""
+msgstr "Deux sous-réseaux, réseau partagé 2"
 
 #: messages.py:98
 msgid ""
@@ -342,7 +342,7 @@ msgstr ""
 
 #: messages.py:101
 msgid "Adding Devices"
-msgstr ""
+msgstr "Ajout d'appareils"
 
 #: messages.py:102
 msgid ""
@@ -355,7 +355,7 @@ msgstr ""
 
 #: messages.py:105
 msgid "Add DHCP Server"
-msgstr ""
+msgstr "Ajout de serveur DHCP"
 
 #: messages.py:106
 msgid ""
@@ -366,7 +366,7 @@ msgstr ""
 
 #: messages.py:109
 msgid "Bad Gateway"
-msgstr ""
+msgstr "Mauvaise passerelle"
 
 #: messages.py:110
 msgid ""
@@ -377,7 +377,7 @@ msgstr ""
 
 #: messages.py:113
 msgid "Duplicate MAC addresses"
-msgstr ""
+msgstr "Adresses MAC en double"
 
 #: messages.py:114
 msgid ""
@@ -391,7 +391,7 @@ msgstr ""
 
 #: messages.py:117
 msgid "Bad Netmask"
-msgstr ""
+msgstr "Mauvais masque de réseau"
 
 #: messages.py:118
 msgid ""
@@ -414,37 +414,317 @@ msgstr ""
 
 #: messages.py:121
 msgid "Practice1"
-msgstr ""
+msgstr "Entraînement 1"
 
 #: messages.py:125
 msgid "Practice2"
-msgstr ""
+msgstr "Entraînement 2"
 
 #: messages.py:129
 msgid "Practice3"
-msgstr ""
+msgstr "Entraînement 3"
 
 #: messages.py:133
 msgid "Practice4"
-msgstr ""
+msgstr "Entraînement 4"
 
 #: messages.py:137
 msgid "Practice5"
-msgstr ""
+msgstr "Entraînement 5"
 
 #: messages.py:141
 msgid "Practice6"
-msgstr ""
+msgstr "Entraînement 6"
 
 #: messages.py:145
 msgid "Practice7"
+msgstr "Entraînement 7"
+
+#: messages.py:155 messages.py:160 messages.py:165 messages.py:170
+#: messages.py:175 messages.py:180 messages.py:185 messages.py:190
+#: messages.py:195 messages.py:200 messages.py:205 messages.py:210
+#: messages.py:215 messages.py:220 messages.py:225 messages.py:230
+#: messages.py:235 messages.py:240 messages.py:245 messages.py:250
+#: messages.py:255 messages.py:260 messages.py:265 messages.py:270
+#: messages.py:275 messages.py:280 messages.py:285 messages.py:290
+#: messages.py:295 messages.py:300 messages.py:305 messages.py:310
+#: messages.py:315
+msgid "has a problem"
+msgstr "a un problème"
+
+#: messages.py:156
+msgid "hardware problem"
+msgstr "problème matériel"
+
+#: messages.py:157
+msgid "bad power supply"
+msgstr "mauvaise alimentation"
+
+#: messages.py:161
+msgid "device is frozen"
+msgstr "appareil s'est figé"
+
+#: messages.py:162
+msgid "reboot the device"
+msgstr "redémarrer l'appareil"
+
+#: messages.py:166
+msgid "is plugged into bad power"
+msgstr "est branché à une mauvaise alimentation"
+
+#: messages.py:167
+msgid "needs a UPS"
+msgstr "besoin d'un UPS"
+
+#: messages.py:171 messages.py:172
+msgid "network card sprays net when used"
 msgstr ""
 
-#: base.py:111 base.py:156
+#: messages.py:176
+msgid "needs change to DHCP server:"
+msgstr "besoin de modification du serveur DHCP :"
+
+#: messages.py:177
+msgid "DHCP server enabled ="
+msgstr "Activation du serveur DHCP ="
+
+#: messages.py:181
+msgid "should fail to ping a specific host"
+msgstr "ne devrait pas arriver à faire un ping à un hôte précis"
+
+#: messages.py:182
+msgid "needs to try to ping (and fail):"
+msgstr "besoin d'essayer (et d'échouer) de faire un ping :"
+
+#: messages.py:186
+msgid "get mouse-over help"
+msgstr ""
+
+#: messages.py:187
+msgid "get mouse-over help of level:"
+msgstr ""
+
+#: messages.py:191
+msgid "is locked"
+msgstr "est verrouillé"
+
+#: messages.py:192
+msgid "is locked:"
+msgstr "est verrouillé :"
+
+#: messages.py:196
+msgid "has locked DHCP"
+msgstr "DHCP verrouillé"
+
+#: messages.py:197
+msgid "has locked DHCP:"
+msgstr "DHCP verrouillé :"
+
+#: messages.py:201
+msgid "has locked gateway"
+msgstr "passerelle verrouillée"
+
+#: messages.py:202
+msgid "has locked gateway:"
+msgstr "passerelle verrouillée :"
+
+#: messages.py:206
+msgid "the VLAN on an interface is locked"
+msgstr "le VLAN d'une interface est verrouillé"
+
+#: messages.py:207
+msgid "the VLAN on an interface is locked:"
+msgstr "le VLAN d'une interface est verrouillé :"
+
+#: messages.py:211
+msgid "has locked IP"
+msgstr "adresse IP verrouillée"
+
+#: messages.py:212
+msgid "has locked IP:"
+msgstr "adresse IP verrouillée :"
+
+#: messages.py:216
+msgid "device cannot be moved"
+msgstr "déplacement d'appareil interdite"
+
+#: messages.py:217
+msgid "device cannot be moved:"
+msgstr "déplacement d'appareil interdite :"
+
+#: messages.py:221
+msgid "has locked NIC"
+msgstr "carte réseau verrouillée"
+
+#: messages.py:222
+msgid "has locked NIC:"
+msgstr "carte réseau verrouillée :"
+
+#: messages.py:226
+msgid "the VLAN on a NIC is locked"
+msgstr "le VLAN d'une carte réseau est verrouillé"
+
+#: messages.py:227
+msgid "the VLAN on a NIC is locked:"
+msgstr "le VLAN d'une carte réseau est verrouillé :"
+
+#: messages.py:231
+msgid "has locked route"
+msgstr "route verrouillée"
+
+#: messages.py:232
+msgid "has locked route:"
+msgstr "route verrouillée :"
+
+#: messages.py:236
+msgid "VLAN names and IDs are locked"
+msgstr ""
+
+#: messages.py:237
+msgid "VLAN names and IDs are locked:"
+msgstr ""
+
+#: messages.py:241
+msgid "a VLAN is locked"
+msgstr "un VLAN est verrouillé"
+
+#: messages.py:242
+msgid "a VLAN is locked:"
+msgstr "un VLAN est verrouillé :"
+
+#: messages.py:246
+msgid "needs the gateway set"
+msgstr "manque de définition de passerelle"
+
+#: messages.py:247
+msgid "needs the gateway set to:"
+msgstr "passerelle doit être définié comme :"
+
+#: messages.py:251
+msgid "the interface needs a forbidden VLAN"
+msgstr ""
+
+#: messages.py:252
+msgid "the interface needs a forbidden VLAN:"
+msgstr ""
+
+#: messages.py:256
+msgid "needs to be connected to the network"
+msgstr "manque de connexion au réseau"
+
+#: messages.py:257
+msgid "needs a link to host:"
+msgstr "besoin de lien à l'hôte :"
+
+#: messages.py:261
+msgid "needs a local IP"
+msgstr "manque d'adresse IP locale"
+
+#: messages.py:262
+msgid "needs an IP local to host:"
+msgstr "manque d'adresse IP locale à l'hôte :"
+
+#: messages.py:266
+msgid "cannot ping"
+msgstr "échec de ping"
+
+#: messages.py:267
+msgid "cannot ping host:"
+msgstr "impossible de faire un ping à l'hôte :"
+
+#: messages.py:271
+msgid "needs a route set"
+msgstr "manque de définition de route"
+
+#: messages.py:272
+msgid "needs a route to network:"
+msgstr "manque de définition de route au réseau :"
+
+#: messages.py:276
+msgid "the interface needs a tagged VLAN"
+msgstr ""
+
+#: messages.py:277
+msgid "the interface needs a tagged VLAN:"
+msgstr ""
+
+#: messages.py:281
+msgid "the interface needs an untagged VLAN"
+msgstr ""
+
+#: messages.py:282
+msgid "the interface needs an untagged VLAN:"
+msgstr ""
+
+#: messages.py:286 messages.py:287
+msgid "read context help for:"
+msgstr ""
+
+#: messages.py:291
+msgid "needs to find ARP from some device"
+msgstr ""
+
+#: messages.py:292
+msgid "needs to find ARP from:"
+msgstr ""
+
+#: messages.py:296
+msgid "needs a DHCP IP address"
+msgstr "manque d'adresse IP par DHCP"
+
+#: messages.py:297
+msgid "needs a DHCP IP address from server:"
+msgstr "manque d'adresse IP par DHCP depuis serveur :"
+
+#: messages.py:301 messages.py:306 messages.py:311
+msgid "must ping a host"
+msgstr "doit faire un ping à un hôte"
+
+#: messages.py:302 messages.py:307 messages.py:312
+msgid "must ping:"
+msgstr "doit faire un ping à :"
+
+#: messages.py:316
+msgid "needs to traceroute"
+msgstr "doit faire un traceroute"
+
+#: messages.py:317
+msgid "needs to traceroute to:"
+msgstr "doit faire un traceroute à :"
+
+#: base.py:112 base.py:169
 msgid "Ping [host]"
 msgstr "Ping [hôte]"
 
-#: networkpuzzles.kv:51
+#: networkpuzzles.kv:28
+msgid "choose puzzle"
+msgstr "sélection de puzzle"
+
+#: networkpuzzles.kv:33
+msgid "save puzzle"
+msgstr "enregistrer"
+
+#: networkpuzzles.kv:38
+msgid "restart puzzle"
+msgstr "recommencer"
+
+#: networkpuzzles.kv:43
+msgid "undo"
+msgstr "annuler"
+
+#: networkpuzzles.kv:48
+msgid "redo"
+msgstr "refaire"
+
+#: networkpuzzles.kv:54
+msgid "choose language"
+msgstr "choisir la langue"
+
+#: networkpuzzles.kv:59
+msgid "help"
+msgstr "aide"
+
+#: networkpuzzles.kv:69
 msgid "Help level:"
 msgstr "Niveau d'aide :"
 
