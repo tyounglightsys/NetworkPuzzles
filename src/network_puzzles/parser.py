@@ -332,6 +332,30 @@ class Parser:
                             session.print(f"Setting {args[0]} gateway: {chosendevice['gateway']['ip']}")
                         else:
                             session.print(f"invalid address: {args[2]}")
+                if len(args) == 3:
+                    nicname = args[1].lower()
+                    if nicname.startswith('eth') or nicname.startswith('wan') or nicname.startswith('wlan'):
+                        #we should be setting the IP address.
+                        theparts = args[2].split('/')
+                        ip = theparts[0]
+                        mask=""
+                        if len(theparts) > 1:
+                            mask = theparts[1]
+                        print(f"Should be setting the IP address to: {ip}")
+                        if packet.is_ipv4(ip) or packet.is_ipv6(ip):
+                            #we are good to go.
+                            #get the nic and interface.
+                            interface = device.Device(chosendevice).interface_from_name(nicname)
+                            if interface is not None:
+                                #we found it.  Change the IP
+                                interface['myip']['ip'] = ip
+                                if mask != "":
+                                    interface['myip']['mask'] = mask
+                                print(f"setting to: {interface['myip']['ip']} / {interface['myip']['mask']}")
+                            else:
+                                session.print(f"Could not find Nic: {nicname}")
+                        else:
+                            session.print(f"Not a valid IP: {ip}")
         if len(args) == 2:
             if chosendevice is not None:
                 print("fewer args")

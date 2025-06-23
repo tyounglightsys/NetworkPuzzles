@@ -103,6 +103,26 @@ class Device:
             return None
         return self._item_by_attrib(self.json.get('nic'), 'nicname', nicname)
 
+    def interface_from_name(self, interfacename):
+        """return the network interface from the name
+        Args:
+        Returns:
+            the network interface record from the device or None
+            """
+        if 'nic' not in self.json:
+            return None
+        if not isinstance(self.json['nic'],list):
+            self.json['nic'] = [self.json['nic']]
+        for onenic in self.json['nic']:
+            if not isinstance(onenic['interface'],list):
+                onenic['interface'] = [onenic['interface']]
+            for oneinterface in onenic['interface']:
+                if oneinterface.get('nicname') == interfacename:
+                    return oneinterface
+        return None
+
+
+
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict|None:
         # Returns first match; i.e. assumes only one item in list matches given
         # attribute. It also assumes that 'items' is a list of dicts or json data.
