@@ -279,6 +279,14 @@ class Parser:
                 for oneline in session.history:
                     session.print(oneline)
                 return
+            if args[0].lower() == 'undo':
+                for oneline in session.undolist:
+                    session.print(oneline['forwards'])
+                return
+            if args[0].lower() == 'redo':
+                for oneline in session.redolist:
+                    session.print(oneline['backwards'])
+                return
             session.print(f"No such host {args[0]}")
 
     def setvalue(self,args):
