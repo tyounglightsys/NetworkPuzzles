@@ -341,17 +341,20 @@ class Parser:
                         mask=""
                         if len(theparts) > 1:
                             mask = theparts[1]
-                        print(f"Should be setting the IP address to: {ip}")
                         if packet.is_ipv4(ip) or packet.is_ipv6(ip):
                             #we are good to go.
                             #get the nic and interface.
                             interface = device.Device(chosendevice).interface_from_name(nicname)
                             if interface is not None:
                                 #we found it.  Change the IP
+                                #we should have some better syntax checking here.
+                                if mask == "":
+                                    mask = interface['myip']['mask']
+                                session.add_undo_entry(f"set {chosendevice['hostname']} {nicname} {ip}/{mask}", 
+                                                       f"set {chosendevice['hostname']} {nicname} {interface['myip']['ip']}/{interface['myip']['mask']}")
                                 interface['myip']['ip'] = ip
-                                if mask != "":
-                                    interface['myip']['mask'] = mask
-                                print(f"setting to: {interface['myip']['ip']} / {interface['myip']['mask']}")
+                                interface['myip']['mask'] = mask
+                                print(f"Setting {chosendevice['hostname']} {nicname} to: {interface['myip']['ip']} / {interface['myip']['mask']}")
                             else:
                                 session.print(f"Could not find Nic: {nicname}")
                         else:
