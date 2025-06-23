@@ -82,6 +82,8 @@ class ThemedButton(Button):
         self.tooltip_anchor.remove_widget(self.tooltip)
 
     def open_tooltip(self, *args):
+        if not self.info:
+            return
         self.tooltip_text = self.info
         if self.tooltip not in self.tooltip_anchor.children:
             self.tooltip_anchor.add_widget(self.tooltip)
@@ -136,7 +138,7 @@ class MenuButton(AppButton):
     def __init__(self, props, **kwargs):
         super().__init__(**kwargs)
         self.props = props
-        self.info = self.props.get('info')
+        self.info = self.props.get('info', '')  # must be a str
         self._set_size_hint()
         self._set_face()
         self._set_callback()
