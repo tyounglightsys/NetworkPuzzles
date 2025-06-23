@@ -98,13 +98,16 @@ class UI:
         """return a list of all tests in the current puzzle"""
         return session.puzzle.all_tests()
 
-    def create_link(self, link_data):
+    def create_link(self, *args):
         pass
 
-    def delete_item(self, item_data):
+    def delete_item(self, *args):
         pass
 
-    def replace_link(self, link_data):
+    def replace_link(self, *args):
+        pass
+
+    def update_power_status(self, *args):
         pass
 
     def acknowledge_any_tests():
@@ -234,6 +237,5 @@ class GUI(UI):
 
     def update_power_status(self, hostname):
         device = self.app.get_widget_by_hostname(hostname)
-        print(f"{device=}")
         if device:
             device.set_power_status()
