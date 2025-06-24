@@ -28,3 +28,6 @@ build = [
 [tool.setuptools.dynamic]
 readme = {file = ["README.md"], content-type = "text/plain"}
 version = {attr = "network_puzzles.__version__"}
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["E402"]

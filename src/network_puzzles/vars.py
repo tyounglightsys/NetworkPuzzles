@@ -8,7 +8,7 @@ class Session:
     # happens in the `ui.py` module rather than here.
     def __init__(self):
         self.app = None
-        self.locale = locale.getlocale()[0]
+        self.locale = str(locale.getlocale()[0])
         self.lang: str = self.locale[:2]
         self.maclist: list = list()
         self.puzzlelist: list = list()
@@ -18,18 +18,18 @@ class Session:
         self.undolist = list()
         self.redolist = list()
         self.ui = None
-    
+
     def print(self, message):
         print("<default print method>")
         print(message)
 
-    def add_undo_entry(self, forwards_cmd:str, backwards_cmd:str, payload=None):
-        """Add a record to the undo list.  
-        The forwards command is used for redo, 
+    def add_undo_entry(self, forwards_cmd: str, backwards_cmd: str, payload=None):
+        """Add a record to the undo list.
+        The forwards command is used for redo,
         the backwards command is used for undo.
         the payload is used if we delete something and need to recover it."""
         newrec = {}
-        newrec['forwards'] = forwards_cmd
-        newrec['backwards'] = backwards_cmd
-        newrec['payload'] = payload
+        newrec["forwards"] = forwards_cmd
+        newrec["backwards"] = backwards_cmd
+        newrec["payload"] = payload
         self.undolist.append(newrec)
