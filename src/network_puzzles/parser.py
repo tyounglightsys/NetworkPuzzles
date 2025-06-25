@@ -1,5 +1,6 @@
 # This file will be the main parser.  We will pass commands to the puzzle through this.
 # Most interaction with the puzzle, making changes or doing actions, will go through this
+import logging
 import sys
 from . import device
 from . import puzzle
@@ -50,6 +51,7 @@ class Parser:
 
     def parse(self, command: str, fromuser=True, fromundo=False):
         # We will make this a lot more interesting later.  For now, just do a very simple thing
+        logging.debug(f"{command=}")
         items = command.split() # break at all whitespace
         if fromuser:
             session.history.append(command) #add commands to the history

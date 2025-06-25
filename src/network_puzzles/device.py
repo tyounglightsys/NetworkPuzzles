@@ -1,5 +1,6 @@
 import ipaddress
 import copy
+import logging
 
 from .nic import Nic
 from . import session
@@ -178,17 +179,17 @@ def arpLookup(srcDevice, ip):
         """
     oldsrc=""
     if srcDevice is None:
-        print("Error: source to arpLookup is None")
+        logging.error("Error: source to arpLookup is None")
     if isinstance(srcDevice, str):
         #We need to look the device up
         oldsrc = srcDevice
         srcDevice = session.puzzle.device_from_name(srcDevice)
     if srcDevice is None:
-        print("Error: Unable to find source for arpLookup: " + oldsrc)
+        logging.error("Error: Unable to find source for arpLookup: " + oldsrc)
     #If we are here, src should be a valid device
     if isinstance(ip,str):
         ip = ipaddress.IPv4Address(ip)
-        print ("ARP: Converting ip: " + packet.justIP(ip))
+        logging.info("ARP: Converting ip: " + packet.justIP(ip))
     if 'maclist' not in srcDevice:
         srcDevice['maclist']=[] #make an empty list.  That way we can itterate through it
     #The maclist on a device should have the port on which the MAC is found.  Particularly on switches. 
@@ -196,7 +197,7 @@ def arpLookup(srcDevice, ip):
     for oneMAC in srcDevice['maclist']:
         #print ("ARP: comparing: " + justIP(oneMAC['ip']) + " to " + justIP(ip))
         if packet.justIP(oneMAC['ip']) == packet.justIP(ip):
-            print("Found the MAC for IP " + packet.justIP(ip))
+            logging.info("Found the MAC for IP " + packet.justIP(ip))
             return oneMAC['mac'] #Return the one in the local arp.
     #If we cannot find it on the device, look it up from the global list
     tmac = globalArpLookup(ip)
@@ -298,7 +299,7 @@ def routeRecFromDestIP(theDeviceRec,destinationIPString:str):
         theDeviceRec['route'] =  [ theDeviceRec['route']] #turn it into a list
     for oneroute in theDeviceRec['route']:
         tstring = oneroute['ip'] + "/" + oneroute['mask']
-        print(f" the string is {tstring}")
+        logging.debug(f" the string is {tstring}")
         staticroute=ipaddress.ip_network(oneroute['ip'] + "/" + oneroute['mask'], strict=False)
         if destinationIPString in staticroute:
             #We found a gateway that we should use.
@@ -367,16 +368,16 @@ def destIP(srcDevice,dstDevice):
         that is connected to its gateway IP.  None if the IP cannot be determined 
     """
     if srcDevice is None:
-        print("Error: function destIP: None passed in as source.")
+        logging.error("Error: function destIP: None passed in as source.")
         return None
     if dstDevice is None:
-        print("Error: function destIP: None passed in as destination.")
+        logging.error("Error: function destIP: None passed in as destination.")
         return None
     if 'hostname' not in srcDevice:
-        print("Error: function destIP: Not a valid source device.")
+        logging.error("Error: function destIP: Not a valid source device.")
         return None
     if 'hostname' not in dstDevice:
-        print("Error: function destIP: Not a valid destination device.")
+        logging.error("Error: function destIP: Not a valid destination device.")
         return None
     srcIPs = DeviceIPs(srcDevice)
     dstIPs = DeviceIPs(dstDevice)
@@ -413,7 +414,7 @@ def sourceIP(src,dstIP):
     if 'hostname' not in src:
         srcDevice = session.puzzle.device_from_name(src)
     if srcDevice is None:
-        print('Error: passed in an invalid source to function: sourceIP')
+        logging.error('Error: passed in an invalid source to function: sourceIP')
         return None
     #Get all the IPs from this device
     allIPs = DeviceIPs(src)
@@ -428,20 +429,20 @@ def sourceIP(src,dstIP):
             staticroute=ipaddress.ip_network(oneroute['ip' + "/" + oneroute['mask']])
             if dstIP in staticroute:
                 #We found the route.  But we need to find the IP address that is local to the route
-                print("A static route matched.  Finding the IP for that route")
+                logging.info("A static route matched.  Finding the IP for that route")
                 for oneip in allIPs:
                     #oneip=ipaddress.IPv4Interface
                     if oneip in staticroute:
-                        print("We found a local interface that worked with the route")
-                        print(oneip.ip)
+                        logging.info("We found a local interface that worked with the route")
+                        logging.debug(oneip.ip)
                         return oneip
         
     #return the IP that is local to the dest IP
     for oneip in allIPs:
         #oneip=ipaddress.IPv4Interface
         if dstIP in oneip.network:
-            print("We found a local network ")
-            print(oneip.ip)
+            logging.info("We found a local network ")
+            logging.debug(oneip.ip)
             return oneip
     #if we get here, we do not have a nic that is local to the destination.  Return the nic that the GW is on
     tmpval=f"{srcDevice['gateway']['ip']}/{srcDevice['gateway']['mask']}"
@@ -496,7 +497,7 @@ def DeviceIPs(src, ignoreLoopback=True):
     if 'hostname' not in src:
         srcDevice = session.puzzle.device_from_name(src)
     if srcDevice is None:
-        print('Error: passed in an invalid source to function: sourceIP')
+        logging.error('Error: passed in an invalid source to function: sourceIP')
         return None
     if not isinstance(srcDevice['nic'],list):
         #If it is not a list, turn it into a list so we can iterate it
@@ -531,7 +532,7 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
     if 'hostname' not in src:
         srcDevice = session.puzzle.device_from_name(src)
     if srcDevice is None:
-        print('Error: passed in an invalid source to function: sourceIP')
+        logging.error('Error: passed in an invalid source to function: sourceIP')
         return None
     if not isinstance(srcDevice['nic'],list):
         #If it is not a list, turn it into a list so we can iterate it
@@ -700,13 +701,13 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     #print("   Checking against" + str(allIPStrings(thisDevice)))
     if deviceHasIP(thisDevice, packRec['destIP']):
         packRec['status'] = 'done'
-        print ("Packet arrived at destination")
+        logging.info("Packet arrived at destination")
 #        print ("packet type: -" + packRec['packettype'] + "-") 
 
         # ping, send ping packet back
         if packRec['packettype'] == 'ping':
             dest = deviceFromIP(packet.justIP(str(packRec['sourceIP'])))
-            print("A ping came.  Making a return packet")
+            logging.info("A ping came.  Making a return packet")
             #print (packet.justIP(str(packRec['sourceIP'])))
             #print(dest)
             #we need to generate a ping response
@@ -720,11 +721,11 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
 
         # ping response, mark it as done
         if packRec['packettype'] == 'ping-response':
-            print("Woot! We returned with a ping")
+            logging.info("Woot! We returned with a ping")
             packRec['status'] = 'done'
             pingdest = deviceFromIP(packet.justIP(packRec.get('sourceIP')))
-            print(f"sourceip is {packet.justIP(packRec.get('sourceIP'))}")
-            print(f"dest host is {pingdest.get('hostname')}")
+            logging.info(f"sourceip is {packet.justIP(packRec.get('sourceIP'))}")
+            logging.info(f"dest host is {pingdest.get('hostname')}")
             if pingdest is not None:
                 mark_test_as_completed(
                     thisDevice.get('hostname'),
@@ -825,15 +826,15 @@ def packetFromTo(src, dest):
             src=newsrc
         else:
             #we were unable to fix it.  Complain bitterly
-            print('Error: invalid source passed to packetFromTo.  src must be a device.')
+            logging.error('Error: invalid source passed to packetFromTo.  src must be a device.')
             return None
     if src is None:
         #the function is being improperly used
-        print('Error: packetFromTo function must have a valid device as src.  None was passed in.')
+        logging.error('Error: packetFromTo function must have a valid device as src.  None was passed in.')
         return None
     #dest should be a device, an ip address, or a hostname
     if dest is None:
-        print('Error: You must have a destination for packetFromTo.  None was passed in.')
+        logging.error('Error: You must have a destination for packetFromTo.  None was passed in.')
         return None
     if isinstance(dest,str) and not packet.is_ipv4(dest):
         #If it is a string, but not a string that is an IP address
@@ -845,7 +846,7 @@ def packetFromTo(src, dest):
         dest = destIP(src,dest)
     if dest is None:
         #This means we were unable to figure out the dest.  No such host, or something
-        print('Error: Not a valid target')
+        logging.error('Error: Not a valid target')
         return None
     if isinstance(dest,ipaddress.IPv4Address):
         #This is what we are hoping for.

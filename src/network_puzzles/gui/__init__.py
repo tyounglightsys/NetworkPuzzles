@@ -1,11 +1,16 @@
+import logging
 import platform
+
+# Remove root logger b/c kivy's logger will handle all logging.
+root_logger = logging.getLogger()
+for handler in root_logger.handlers:
+    root_logger.removeHandler(handler)
 from kivy.app import App
 from kivy.base import ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.metrics import sp
-from kivy.uix.relativelayout import RelativeLayout
 from pathlib import Path
 
 from .. import messages
@@ -30,14 +35,13 @@ class NetworkPuzzlesApp(App):
     PACKET_DIMS = (dp(15), dp(15))
 
     # file paths
-    IMAGES = Path(__file__).parents[1] / 'resources' / 'images'
+    IMAGES = Path(__file__).parents[1] / "resources" / "images"
 
     def __init__(self, ui, **kwargs):
         # Set session `app` variable.
         session.app = self
-
         # Set initial window size for desktop systems.
-        if platform.system() not in ['Android', 'iOS']:
+        if platform.system() not in ["Android", "iOS"]:
             Window.size = (1600, 720)  # 20:9 aspect ratio
 
         super().__init__(**kwargs)
@@ -69,11 +73,11 @@ class NetworkPuzzlesApp(App):
 
     @property
     def devices(self):
-        return self._get_widgets_by_class_name('Device')
+        return self._get_widgets_by_class_name("Device")
 
     @property
     def links(self):
-        return self._get_widgets_by_class_name('Link')
+        return self._get_widgets_by_class_name("Link")
 
     def check_puzzle(self, *args):
         """Checked at regular interval during kivy app loop."""
@@ -103,8 +107,8 @@ class NetworkPuzzlesApp(App):
         self.root.ids.layout.add_widget(link, 99)
 
     def add_terminal_line(self, line):
-        if not line.endswith('\n'):
-            line += '\n'
+        if not line.endswith("\n"):
+            line += "\n"
         self.root.ids.terminal.text += f"{line}"
 
     def clear_puzzle(self):
@@ -115,20 +119,20 @@ class NetworkPuzzlesApp(App):
     def first_link_index(self):
         first_index = 999
         for w in self.root.ids.layout.children:
-            if w.__class__.__name__ == 'Link':
+            if w.__class__.__name__ == "Link":
                 first_index = min([self.root.ids.layout.children.index(w), first_index])
         return first_index
 
     def get_widget_by_hostname(self, hostname):
-        return self._get_widget_by_prop('hostname', hostname)
+        return self._get_widget_by_prop("hostname", hostname)
 
     def get_widget_by_uid(self, uid):
-        return self._get_widget_by_prop('uid', uid)
+        return self._get_widget_by_prop("uid", uid)
 
     def on_checkbox_activate(self, inst):
-        if inst.state == 'down':
+        if inst.state == "down":
             self.filters.append(inst.name)
-        elif inst.state == 'normal':
+        elif inst.state == "normal":
             self.filters.remove(inst.name)
         # TODO: Refresh the puzzle list using the updated self.filters.
         # I have the checkbox instance, but it doesn't seem to contain any
@@ -144,12 +148,12 @@ class NetworkPuzzlesApp(App):
 
     def on_new_infra_device(self, inst):
         # Open "tray" to select from infrastructure devices.
-        devices = NETWORK_ITEMS.get('devices').get('infrastructure')
+        devices = NETWORK_ITEMS.get("devices").get("infrastructure")
         if self.new_infra_device_menu is None:
             choices = []
             for choice in devices.values():
-                choice['cb'] = Device
-                choice['orientation'] = 'horizontal'
+                choice["cb"] = Device
+                choice["orientation"] = "horizontal"
                 choices.append(choice)
             self.new_infra_device_menu = AppMenu(
                 anchor_pos=inst.pos,
@@ -161,14 +165,14 @@ class NetworkPuzzlesApp(App):
         # Open "tray" to select item type, set its properties, etc.
         if self.new_item_menu is None:
             choices = [
-                {'img': 'link.png', 'cb': self.add_link},
-                {'img': 'Switch.png', 'cb': self.on_new_infra_device},
-                {'img': 'PC.png', 'cb': self.on_new_user_device},
+                {"img": "link.png", "cb": self.add_link},
+                {"img": "Switch.png", "cb": self.on_new_infra_device},
+                {"img": "PC.png", "cb": self.on_new_user_device},
             ]
             self.new_item_menu = AppMenu(
                 anchor_pos=inst.pos,
                 choices=choices,
-                orientation='vertical',
+                orientation="vertical",
             )
         subtrays = [
             self.new_infra_device_menu,
@@ -178,12 +182,12 @@ class NetworkPuzzlesApp(App):
 
     def on_new_user_device(self, inst):
         # Open "tray" to select from user devices.
-        devices = NETWORK_ITEMS.get('devices').get('user')
+        devices = NETWORK_ITEMS.get("devices").get("user")
         if self.new_user_device_menu is None:
             choices = []
             for choice in devices.values():
-                choice['cb'] = Device
-                choice['orientation'] = 'horizontal'
+                choice["cb"] = Device
+                choice["orientation"] = "horizontal"
                 choices.append(choice)
             self.new_user_device_menu = AppMenu(
                 anchor_pos=inst.pos,
@@ -217,7 +221,7 @@ class NetworkPuzzlesApp(App):
         if isinstance(item, Link) or isinstance(item, Device):
             widget = item
         elif isinstance(item, dict):
-            widget = self.get_widget_by_hostname(item.get('hostname'))
+            widget = self.get_widget_by_hostname(item.get("hostname"))
         else:
             raise TypeError(f"{type(item)=}")
         if widget:
@@ -251,17 +255,17 @@ class NetworkPuzzlesApp(App):
         # English text in JSON data.
         puzzle_messages = messages.puzzles.get(self.ui.puzzle.uid)
         if puzzle_messages:
-            title = puzzle_messages.get('title')
-            info = puzzle_messages.get('info')
+            title = puzzle_messages.get("title")
+            info = puzzle_messages.get("info")
         else:
-            title = puzzle_data.get('en_title', '<no title>')
-            info = puzzle_data.get('en_message', '<no message>')
-        
+            title = puzzle_data.get("en_title", "<no title>")
+            info = puzzle_data.get("en_message", "<no message>")
+
         self.title += f": {title}"
         self.root.ids.info.text = info
         self.root.ids.help_slider.value = self.ui.puzzle.default_help_level
-        self.device_data = puzzle_data.get('device')
-        self.link_data = puzzle_data.get('link', [])
+        self.device_data = puzzle_data.get("device")
+        self.link_data = puzzle_data.get("link", [])
 
         # self.device_data is typically a list of devices, but it's occasionally
         # a one-device dict.
@@ -270,7 +274,7 @@ class NetworkPuzzlesApp(App):
         elif isinstance(self.device_data, list):
             for dev in self.device_data:
                 self.add_device(Device(dev))
-        
+
         # Some setup needs to be done one tick after devices, because their
         # positions depends on the devices' positions.
         Clock.schedule_once(self.update_help)
@@ -299,8 +303,8 @@ class NetworkPuzzlesApp(App):
     def _add_new_item_button(self, *args):
         # TODO: Add button to cycle through showing hostname and/or IPs?
         self.new_item_button = MenuButton(
-            props={'text': "+", 'cb': self.on_new_item, 'info': "add new item"},
-            pos_hint={'x': 0.005, 'top': 0.99},
+            props={"text": "+", "cb": self.on_new_item, "info": "add new item"},
+            pos_hint={"x": 0.005, "top": 0.99},
         )
         self.root.ids.layout.add_widget(self.new_item_button)
 
@@ -332,18 +336,20 @@ class NetworkPuzzlesApp(App):
         if help_level > 0:
             # TODO: This only highlights layout devices. We still need to work
             # in highligting of other on-screen elements.
-            for n in set(t.get('shost') for t in self.ui.all_tests()):
+            for n in set(t.get("shost") for t in self.ui.all_tests()):
                 d = self.ui.get_device(n)
                 if d is None:
-                    print(f"Ignoring highlight of non-device \"{n}\"")
+                    print(f'Ignoring highlight of non-device "{n}"')
                     continue
                 w = self.get_widget_by_hostname(n)
                 idx = self.root.ids.layout.children.index(w) + 1
-                self.root.ids.layout.add_widget(HelpHighlight(center=w.children[1].center), idx)
+                self.root.ids.layout.add_widget(
+                    HelpHighlight(center=w.children[1].center), idx
+                )
 
     def _help_update_tooltips(self, help_level):
         # List devices and help_texts.
-        devices = {d.hostname: '' for d in self.devices}
+        devices = {d.hostname: "" for d in self.devices}
         for test_data in self.ui.all_tests():
             nettest = nettests.NetTest(test_data)
             device = nettest.shost
@@ -356,7 +362,7 @@ class NetworkPuzzlesApp(App):
         # Apply each device's help_text.
         for device, help_text in devices.items():
             d = self.get_widget_by_hostname(device)
-            if hasattr(d, 'button'):
+            if hasattr(d, "button"):
                 # if hasattr(d, 'tooltip_text'):
                 info = d._extra_tooltip_text()
                 if help_text:
@@ -365,7 +371,7 @@ class NetworkPuzzlesApp(App):
 
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)
-        tray.open()        
+        tray.open()
 
     def _set_left_panel_width(self, *args):
         menu = self.root.ids.menu
@@ -391,7 +397,6 @@ class NetworkPuzzlesApp(App):
                         self._close_tray(subtray)
             self._close_tray(tray)
 
-
     def _update_packets(self, dt):
         # Update backend packet info.
         self.ui.process_packets(self.packet_progress_rate)
@@ -406,13 +411,15 @@ class NetworkPuzzlesApp(App):
 
         # Add new packet locations to layout.
         for p in self.ui.packetlist:
-            link_data = self.ui.get_link(p.get('packetlocation'))
-            link = self.get_widget_by_uid(link_data.get('uniqueidentifier'))
-            progress = p.get('packetDistance')
-            if p.get('packetDirection') == 2:
+            link_data = self.ui.get_link(p.get("packetlocation"))
+            link = self.get_widget_by_uid(link_data.get("uniqueidentifier"))
+            progress = p.get("packetDistance")
+            if p.get("packetDirection") == 2:
                 progress = 100 - progress
             x, y = link.get_progress_pos(progress)
-            packet = Packet(pos=(x - self.PACKET_DIMS[0] / 2, y - self.PACKET_DIMS[1] / 2))
+            packet = Packet(
+                pos=(x - self.PACKET_DIMS[0] / 2, y - self.PACKET_DIMS[1] / 2)
+            )
             self.root.ids.layout.add_widget(packet, packet_idx)
             self.prev_packets.append(packet)
 
