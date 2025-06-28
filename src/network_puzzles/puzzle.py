@@ -5,6 +5,7 @@ import json
 import copy
 import re
 import os
+import ipaddress
 from packaging.version import Version
 
 # define the global network list
@@ -59,6 +60,12 @@ class Puzzle:
                 if test.get('shost') == hostname:
                     tests.append(test)
         return tests
+    
+    def all_puzzle_IPs(self):
+        iplist = list()
+        for onedevice in self.all_devices():
+            iplist.extend(device.DeviceIPs(onedevice, True))
+        return iplist
 
     def commands_from_tests(self, hostname=None):
         commands = list()
@@ -147,16 +154,21 @@ class Puzzle:
                 #only check tests which are not completed
                 continue
             if test.get('shost') == shost.get('hostname') and test.get('thetest') == "NeedsLocalIPTo":
-                #We have a test we want to check.
-                #verify we do not have duplicate IPs.
+                #We have a test we want to check.                
+                #verify we do not have duplicate IPs.                    
                 #verify that the IP is local to the one on the target device.
                 dhost = self.device_from_name(test.get('dhost'))
+                allIPList = self.all_puzzle_IPs()
                 if dhost is None:
                     continue
                 dstlist = device.DeviceIPs(dhost, True)
                 srclist = device.DeviceIPs(shost, True)
-                for one_d_ip in dstlist:                    
-                    for one_s_ip in srclist:
+                for one_s_ip in srclist:
+                    #make sure we do not have a duplicate IP
+                    if allIPList.count(one_s_ip) > 1:
+                        continue #There is a duplicate.  It does not count as success.
+                    for one_d_ip in dstlist:
+                        #Now, check to see if the source is in the destination network      
                         if one_d_ip != one_s_ip and one_s_ip in one_d_ip.network:
                             #It is true.
                             test['completed'] = True
