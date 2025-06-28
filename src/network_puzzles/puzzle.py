@@ -140,6 +140,29 @@ class Puzzle:
                 return test.get('completed', False)
         return False
 
+    def check_local_IP_test(self, shost):
+        """Check to see if there is a test we need to check for completion"""
+        for test in self.all_tests():
+            if test.get('completed'):
+                #only check tests which are not completed
+                continue
+            if test.get('shost') == shost.get('hostname') and test.get('thetest') == "NeedsLocalIPTo":
+                #We have a test we want to check.
+                #verify we do not have duplicate IPs.
+                #verify that the IP is local to the one on the target device.
+                dhost = self.device_from_name(test.get('dhost'))
+                if dhost is None:
+                    continue
+                dstlist = device.DeviceIPs(dhost, True)
+                srclist = device.DeviceIPs(shost, True)
+                for one_d_ip in dstlist:                    
+                    for one_s_ip in srclist:
+                        if one_d_ip != one_s_ip and one_s_ip in one_d_ip.network:
+                            #It is true.
+                            test['completed'] = True
+                            test['acknowledged'] = False
+                            test['message'] = f"{shost.get('hostname')} has local IP to {dhost.get('hostname')}"
+
     def item_from_uid(self, uid):
         """Return the item matching the ID.  Could be a device, a link, or a nic"""
         result = self.device_from_uid(uid)

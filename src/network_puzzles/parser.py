@@ -357,6 +357,7 @@ class Parser:
                                 interface['myip']['ip'] = ip
                                 interface['myip']['mask'] = mask
                                 print(f"Setting {chosendevice['hostname']} {nicname} to: {interface['myip']['ip']} / {interface['myip']['mask']}")
+                                session.puzzle.check_local_IP_test(chosendevice)
                             else:
                                 session.print(f"Could not find Nic: {nicname}")
                         else:

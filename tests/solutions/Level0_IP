@@ -1,0 +1,7 @@
+load Level0_IP
+show
+show pc0
+show pc1
+show pc2
+set pc0 eth0 192.168.1.2/24
+show pc0
