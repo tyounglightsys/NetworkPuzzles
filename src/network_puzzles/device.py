@@ -603,6 +603,11 @@ def doInputFromLink(packRec, nicRec):
         packRec['status'] = "done"
         #nothing more to be done
         return False
+    
+    if device_is_frozen(thisDevice):
+        packRec['status'] = "done"
+        #nothing more to be done
+        return False
     #If the packet is a DHCP answer, process that here.  To be done later
     #If the packet is a DHCP request, and this is a DHCP server, process that.  To be done later.
 
@@ -897,6 +902,10 @@ def all_tests(JustForHost=None):
 def device_is_critical(devicename):
     """This is a convenience function."""
     return session.puzzle.device_is_critical(devicename)
+
+def device_is_frozen(devicename):
+    """This is a convenience function."""
+    return session.puzzle.device_is_frozen(devicename)
 
 def item_is_locked(shost, dhost, whattocheck):
     """This is a convenience function."""

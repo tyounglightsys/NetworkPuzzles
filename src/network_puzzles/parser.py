@@ -301,11 +301,12 @@ class Parser:
                 match args[1].lower():
                     case 'power'|'poweroff':
                         pastvalue='on'
-                        if chosendevice['poweroff'] == 'True':
+                        if chosendevice.get('poweroff') == 'True':
                             pastvalue = 'off'
                         if args[2].lower() == "off":
                             session.add_undo_entry("set power off", f"set power {pastvalue}")
                             chosendevice['poweroff'] = 'True'
+                            session.puzzle.mark_test_as_completed(None, chosendevice.get('hostname'),'DeviceIsFrozen','')
                         else:
                             session.add_undo_entry("set power on", f"set power {pastvalue}")
                             chosendevice['poweroff']= 'False'

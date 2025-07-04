@@ -98,6 +98,12 @@ class Puzzle:
                         commands.append(f"create link {test.get('shost')} {test.get('dhost')}")
                 case 'SuccessfullyPings'|'SuccessfullyPingsAgain':
                     commands.append(f"ping {test.get('shost')} {test.get('dhost')}")
+                case 'DeviceIsFrozen'|'DeviceBlowsUpWithPower'|'DeviceNeedsUPS':
+                    if device.powerOff(hostname):
+                        commands.append(f"set {test.get('shost')} power on")
+                    else:
+                        commands.append(f"set {test.get('shost')} power off")
+
         return commands
 
     def _get_items(self, item_type: str):
@@ -139,6 +145,15 @@ class Puzzle:
                 if host:
                     test_devices.add(host)
         return name in test_devices
+
+    def device_is_frozen(self, name):
+        for test in self.all_tests():
+            if test.get('shost') == name and test.get('thestest') == 'DeviceIsFrozen':
+                if test.get('completed'):
+                    return False
+                else:
+                    return True
+        return False
 
     def has_test_been_completed(self, shost, dhost, whattocheck):
         for test in self.all_tests():
@@ -242,7 +257,7 @@ class Puzzle:
 
     def mark_test_as_completed(self, shost, dhost, whattocheck, message):
         for onetest in self.all_tests():
-            if onetest.get('shost') == shost and onetest.get('dhost') == dhost and onetest.get('thetest') == whattocheck:
+            if (onetest.get('shost') == shost and onetest.get('dhost') == dhost and onetest.get('thetest') == whattocheck) or (onetest.get('dhost') == dhost and onetest.get('thetest') == whattocheck and whattocheck == 'DeviceIsFrozen'):
                 #if the test has never been completed
                 if not onetest.get('completed', False):
                     onetest['completed'] = True

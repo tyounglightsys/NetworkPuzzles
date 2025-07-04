@@ -1,0 +1,4 @@
+load Level0_Frozen
+set net_switch0 power off
+set net_switch0 power on
+ping pc0 laptop1
