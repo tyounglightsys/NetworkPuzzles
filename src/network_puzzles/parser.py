@@ -52,6 +52,7 @@ class Parser:
     def parse(self, command: str, fromuser=True, fromundo=False):
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         logging.debug(f"{command=}")
+        command = command.replace(','," ") # replace commas with spaces.  This fixes x,y coords
         items = command.split() # break at all whitespace
         if fromuser:
             session.history.append(command) #add commands to the history
@@ -296,6 +297,20 @@ class Parser:
         #right now, we have something like: set pc0 poweroff true
         if len(args) > 1:
             chosendevice = session.puzzle.device_from_name(args[0])
+            if chosendevice is not None:
+                if chosendevice.get('isinvisible') == 'True' or chosendevice.get('isinvisible') == 'true':
+                    #the device is hidden.  We can only work with it when we have jiggled wires next to it
+                    print("the device is invisible")
+                    can_continue=False
+                    for onenic in device.Device(chosendevice).all_nics():
+                        onelink = device.linkConnectedToNic(onenic)
+                        if onelink is not None and (onelink.get('isinvisible') == 'false' or onelink.get('isinvisible') == 'False'):
+                            can_continue = True
+                        if onelink is not None and 'isinvisible' not in onelink:
+                            can_continue = True
+                    if not can_continue:
+                        session.print(f"{chosendevice.get('hostname')} is lost and you cannot work with it until it is found")
+                        return
         if len(args) == 3:
             if chosendevice is not None:
                 match args[1].lower():
@@ -337,7 +352,7 @@ class Parser:
                             session.print(f"invalid address: {args[2]}")
                 if len(args) == 3:
                     nicname = args[1].lower()
-                    if nicname.startswith('eth') or nicname.startswith('wan') or nicname.startswith('wlan'):
+                    if nicname.startswith('eth') or nicname.startswith('wan') or nicname.startswith('wlan') or nicname.startswith('management'):
                         #we should be setting the IP address.
                         theparts = args[2].split('/')
                         ip = theparts[0]
@@ -363,6 +378,29 @@ class Parser:
                                 session.print(f"Could not find Nic: {nicname}")
                         else:
                             session.print(f"Not a valid IP: {ip}")
+        if len(args) == 4 and chosendevice is not None:
+            #change the location of a device?
+            if (args[1].lower() in ('location','position','pos')):
+                if session.puzzle.item_is_locked(None,chosendevice.get('hostname'),'LockLocation'):
+                    session.print(f"Device cannot be moved {chosendevice.get['hostname']}")
+                    return
+                x = int(args[2].replace(',',""))
+                y = int(args[3].replace(',',""))
+                if (x + 0 and y > 0):
+                    session.print(f"Setting position of {chosendevice.get('hostname')} to {x},{y}")
+                    chosendevice['location'] = f"{x},{y}"
+                    #We need a callback here to tell te gui to redraw. - we just moved a device
+                    #if we just moved a 'lost' switch, we can draw it
+                    if chosendevice.get('isinvisible')  == 'True' or chosendevice.get('isinvisible') == 'true':
+                        chosendevice['isinvisible'] = 'False'
+                        #We need a callback here to tell te gui to redraw.
+                    #if any of the links connected to the switch were hidden/invisible, draw them
+                    for onenic in device.Device(chosendevice).all_nics():
+                        onelink = device.linkConnectedToNic(onenic)
+                        if onelink is not None and (onelink.get('isinvisible') == 'True' or onelink.get('isinvisible') == 'True'):
+                            onelink['isinvisible'] = 'False'
+                            #We need a callback here to tell te gui to redraw.
+
         if len(args) == 2:
             if chosendevice is not None:
                 print("fewer args")

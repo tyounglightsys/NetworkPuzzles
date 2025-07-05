@@ -1,0 +1,4 @@
+load Level0_HiddenSwitch
+set net_switch0 location 1  2
+set net_switch1 location 1  2
+set net_switch1 management_interface0 192.168.1.20
