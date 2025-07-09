@@ -1,5 +1,6 @@
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.metrics import dp
 from kivy.properties import StringProperty
 from kivy.uix.button import Button
 
@@ -17,7 +18,7 @@ class ThemedButton(Button):
         self.tooltip = ToolTip()
         self._on_press = on_press
         Window.bind(mouse_pos=self.on_mouse_pos)
-    
+
     def on_press(self):
         if self._on_press is None:
             return
@@ -73,7 +74,7 @@ class ThemedButton(Button):
         if not self.get_root_window():
             return
         w_pos = self.to_widget(*pos)
-        Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event 
+        Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event
         self.close_tooltip() # close if it's opened
         if self.collide_point(*w_pos):
             Clock.schedule_once(self.open_tooltip, 1)
@@ -90,17 +91,18 @@ class ThemedButton(Button):
 
     def _calc_tooltip_pos(self):
         # Put the tooltip to the right by default.
-        x = self.x + self.width
+        sp = dp(3)
+        x = self.x + self.width + sp
         if x + self.tooltip.width > self.tooltip_anchor.width:
             # Put the tooltip to the left if not enough room to the right.
-            x = self.x - self.tooltip.width
+            x = self.x - self.tooltip.width - sp
         y = self.y + self.height - self.tooltip.height
         return (x, y)
 
     def _calc_tooltip_size(self):
         self.tooltip.texture_update()
         return self.tooltip.texture_size
-    
+
     def _update_tooltip_props(self):
         self.tooltip.texture_update()  # depends on text value
         self.tooltip_size = self.tooltip.texture_size
@@ -119,7 +121,7 @@ class AppButton(ThemedButton):
     def callback(self):
         if callable(self.cb):
             self.cb(self, *self.cb_args, **self.cb_kwargs)
-    
+
     def get_pos(self):
         idx = len(self.parent.children) - self.parent.children.index(self) - 1
         button_width = self.size_hint_max_y
@@ -129,9 +131,7 @@ class AppButton(ThemedButton):
 
 
 class DeviceButton(ThemedButton):
-    def __init__(self, on_press, **kwargs):
-        super().__init__(**kwargs)
-        self._on_press = on_press
+    pass
 
 
 class MenuButton(AppButton):
@@ -173,7 +173,7 @@ class CommandButton(ThemedButton):
         self.command = command
         # TODO: Parse text from passed command?
         self.text = command
-    
+
     def on_press(self):
         self.cb(self.command)
         # Find parent Popup and dismiss it.
