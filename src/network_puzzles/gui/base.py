@@ -81,7 +81,7 @@ class PuzzlesRecView(AppRecView):
         self.app.update_puzzle_list()
         self.data = {}
         self.update_data()
-    
+
     def update_data(self):
         self.data = [{'text': n} for n in self.app.filtered_puzzlelist]
 
@@ -105,21 +105,24 @@ class ThemedCheckBox(CheckBox):
 
 class Device(ThemedBoxLayout):
     def __init__(self, init_data=None, **kwargs):
+        self.base = device.Device(init_data)
         super().__init__(**kwargs)
         self.app = session.app
-        self.base = device.Device(init_data)
 
         self.commands =[_("Ping [host]")]
         self.commands.extend(session.puzzle.commands_from_tests(self.hostname))
         self.commands.extend(self.base.get_nontest_commands())
         self._set_pos()  # sets self.rel_pos and self.pos_hint
-        self.label_hostname = DeviceLabel(text=self.base.hostname)
-        self.button = DeviceButton(on_press=self.on_press)
         self._set_image()
-        self.add_widget(self.button)
-        self.add_widget(self.label_hostname)
         # Updates that rely on Device's pos already being set.
         Clock.schedule_once(self.set_power_status)
+
+    @property
+    def button(self):
+        for child in self.children:
+            if child.__class__.__name__ == 'DeviceButton':
+                return child
+        return None
 
     @property
     def hostname(self):
@@ -127,6 +130,13 @@ class Device(ThemedBoxLayout):
         # self.base is defined.
         if hasattr(self, 'base') and self.base:
             return self.base.hostname
+
+    @property
+    def label(self):
+        for child in self.children:
+            if child.__class__.__name__ == 'DeviceLabel':
+                return child
+        return None
 
     @property
     def nics(self):
@@ -152,7 +162,7 @@ class Device(ThemedBoxLayout):
 
     def on_press(self):
         self._build_commands_popup().open()
-    
+
     def set_power_status(self, *args):
         if self.base.powered_on:
             self.canvas.after.clear()
@@ -260,7 +270,7 @@ class Link(Widget):
         # TODO: Set hostname once DstNic is set as:
         # "SrcNicHostname_link_DstNicHostname"
         raise NotImplementedError
-    
+
     def set_link_type(self):
         # Set one of: 'broken', 'normal', 'wireless'
         raise NotImplementedError
@@ -276,7 +286,7 @@ class Link(Widget):
         self.start = start_dev.button.center
         end_dev = self.app.get_widget_by_uid(self.base.json.get('DstNic').get('hostid'))
         self.end = end_dev.button.center
-    
+
     def _set_size_and_pos(self):
         # Set pos.
         self.x = min([self.start[0], self.end[0]])

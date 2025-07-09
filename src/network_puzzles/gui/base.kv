@@ -1,9 +1,13 @@
 <Device>:
     orientation: 'vertical'
-    spacing: 0
+    spacing: 0  # TODO: this is not applied
     size_hint: (0.08, 0.20)
     size_hint_max: (dp(85), dp(120))
-
+    DeviceButton:
+        _on_press: root.on_press
+    DeviceLabel:
+        text: root.hostname
+        pos_hint: {'center_x': 0.5}
 
 <ThemedCheckBox>:
     canvas.before:
