@@ -21,8 +21,6 @@ from .. import device
 from .. import link
 from .. import session
 from .buttons import CommandButton
-from .buttons import DeviceButton
-from .labels import DeviceLabel
 from .layouts import ThemedBoxLayout
 from .popups import CommandsPopup
 from .popups import ExceptionPopup
@@ -31,32 +29,32 @@ from .popups import PingHostPopup
 
 
 NETWORK_ITEMS = {
-    'links': {
-        'link': {'img': 'link.png'},
+    "links": {
+        "link": {"img": "link.png"},
     },
-    'devices': {
-        'user': {
-            'cellphone': {'img': 'cellphone.png'},
-            'copier': {'img': 'Copier.png'},
-            'ip_phone': {'img': 'ip_phone.png'},
-            'laptop': {'img': 'Laptop.png'},
-            'microwave': {'img': 'microwave.png'},
-            'pc': {'img': 'PC.png'},
-            'printer': {'img': 'Printer.png'},
-            'tablet': {'img': 'tablet.png'},
+    "devices": {
+        "user": {
+            "cellphone": {"img": "cellphone.png"},
+            "copier": {"img": "Copier.png"},
+            "ip_phone": {"img": "ip_phone.png"},
+            "laptop": {"img": "Laptop.png"},
+            "microwave": {"img": "microwave.png"},
+            "pc": {"img": "PC.png"},
+            "printer": {"img": "Printer.png"},
+            "tablet": {"img": "tablet.png"},
         },
-        'infrastructure': {
-            'firewall': {'img': 'firewall.png'},
-            'fluorescent': {'img': 'fluorescent.png'},
-            'net_hub': {'img': 'Hub.png'},
-            'net_switch': {'img': 'Switch.png'},
-            'router': {'img': 'Router.png'},
-            'server': {'img': 'Server.png'},
-            'tree': {'img': 'tree.png'},
-            'wap': {'img': 'WAP.png'},
-            'wbridge': {'img': 'WBridge.png'},
-            'wrepeater': {'img': 'WRepeater.png'},
-            'wrouter': {'img': 'WRouter.png'},
+        "infrastructure": {
+            "firewall": {"img": "firewall.png"},
+            "fluorescent": {"img": "fluorescent.png"},
+            "net_hub": {"img": "Hub.png"},
+            "net_switch": {"img": "Switch.png"},
+            "router": {"img": "Router.png"},
+            "server": {"img": "Server.png"},
+            "tree": {"img": "tree.png"},
+            "wap": {"img": "WAP.png"},
+            "wbridge": {"img": "WBridge.png"},
+            "wrepeater": {"img": "WRepeater.png"},
+            "wrouter": {"img": "WRouter.png"},
         },
     },
 }
@@ -83,7 +81,7 @@ class PuzzlesRecView(AppRecView):
         self.update_data()
 
     def update_data(self):
-        self.data = [{'text': n} for n in self.app.filtered_puzzlelist]
+        self.data = [{"text": n} for n in self.app.filtered_puzzlelist]
 
 
 class ThemedCheckBox(CheckBox):
@@ -96,7 +94,7 @@ class ThemedCheckBox(CheckBox):
     def get_popup(self):
         for win in self.get_parent_window().children:
             # Only Popup widget has 'content' attribute.
-            if hasattr(win, 'content'):
+            if hasattr(win, "content"):
                 return win
 
     def on_activate(self):
@@ -109,7 +107,7 @@ class Device(ThemedBoxLayout):
         super().__init__(**kwargs)
         self.app = session.app
 
-        self.commands =[_("Ping [host]")]
+        self.commands = [_("Ping [host]")]
         self.commands.extend(session.puzzle.commands_from_tests(self.hostname))
         self.commands.extend(self.base.get_nontest_commands())
         self._set_pos()  # sets self.rel_pos and self.pos_hint
@@ -120,7 +118,7 @@ class Device(ThemedBoxLayout):
     @property
     def button(self):
         for child in self.children:
-            if child.__class__.__name__ == 'DeviceButton':
+            if child.__class__.__name__ == "DeviceButton":
                 return child
         return None
 
@@ -128,26 +126,26 @@ class Device(ThemedBoxLayout):
     def hostname(self):
         # NOTE: @properties seem to be evaluated during super(), which is before
         # self.base is defined.
-        if hasattr(self, 'base') and self.base:
+        if hasattr(self, "base") and self.base:
             return self.base.hostname
 
     @property
     def label(self):
         for child in self.children:
-            if child.__class__.__name__ == 'DeviceLabel':
+            if child.__class__.__name__ == "DeviceLabel":
                 return child
         return None
 
     @property
     def nics(self):
-        if hasattr(self, 'base') and self.base:
+        if hasattr(self, "base") and self.base:
             return self.base.all_nics()
         else:
             return list()
 
     @property
     def uid(self):
-        if hasattr(self, 'base') and self.base:
+        if hasattr(self, "base") and self.base:
             return self.base.uid
 
     def callback(self, cmd_string):
@@ -177,7 +175,9 @@ class Device(ThemedBoxLayout):
         content = GridLayout(cols=1, spacing=dp(5))
         for command in self.commands:
             if command == _("Ping [host]"):
-                cb = PingHostPopup(title=f"{_("Ping [host] from")} {self.hostname}").open
+                cb = PingHostPopup(
+                    title=f"{_('Ping [host] from')} {self.hostname}"
+                ).open
             else:
                 cb = self.callback
             content.add_widget(CommandButton(cb, command))
@@ -202,23 +202,25 @@ class Device(ThemedBoxLayout):
         text = self.hostname
         # Add IP addresses and netmasks.
         for nic in self.nics:
-            for iface in nic.get('interface', []):
-                ip = iface.get('myip', {})
-                ipaddr = ip.get('ip', '0.0.0.0')
-                if ipaddr != '0.0.0.0':
+            for iface in nic.get("interface", []):
+                ip = iface.get("myip", {})
+                ipaddr = ip.get("ip", "0.0.0.0")
+                if ipaddr != "0.0.0.0":
                     text += f"\n{ipaddr}/{ip.get('mask')}"
         return text
 
     def _set_image(self):
-        devices = NETWORK_ITEMS.get('devices').get('user') | NETWORK_ITEMS.get('devices').get('infrastructure')
-        img = devices.get(self.base.json.get('mytype')).get('img')
+        devices = NETWORK_ITEMS.get("devices").get("user") | NETWORK_ITEMS.get(
+            "devices"
+        ).get("infrastructure")
+        img = devices.get(self.base.json.get("mytype")).get("img")
         if img is None:
             raise TypeError(f"Unhandled device type: {self.base.json.get('mytype')}")
         self.button.background_normal = str(self.app.IMAGES / img)
 
     def _set_pos(self):
-        self.rel_pos = location_to_pos_hint(self.base.json.get('location'))
-        self.pos_hint = {'center': self.rel_pos}
+        self.rel_pos = location_to_pos_hint(self.base.json.get("location"))
+        self.pos_hint = {"center": self.rel_pos}
 
 
 class Link(Widget):
@@ -233,22 +235,22 @@ class Link(Widget):
         self._set_points()
         self._set_size_and_pos()
 
-        self.background_normal = ''
+        self.background_normal = ""
         with self.canvas:
             Color(rgba=self.app.theme.fg1)
             Line(points=(*self.start, *self.end), width=2)
 
     @property
     def hostname(self):
-        if hasattr(self, 'base') and hasattr(self.base, 'json'):
-            return self.base.json.get('hostname')
+        if hasattr(self, "base") and hasattr(self.base, "json"):
+            return self.base.json.get("hostname")
         else:
             return None
 
     @property
     def uid(self):
-        if hasattr(self, 'base') and hasattr(self.base, 'json'):
-            return self.base.json.get('uniqueidentifier')
+        if hasattr(self, "base") and hasattr(self.base, "json"):
+            return self.base.json.get("uniqueidentifier")
         else:
             return None
 
@@ -282,9 +284,11 @@ class Link(Widget):
         raise NotImplementedError
 
     def _set_points(self):
-        start_dev = self.app.get_widget_by_uid(self.base.json.get('SrcNic').get('hostid'))
+        start_dev = self.app.get_widget_by_uid(
+            self.base.json.get("SrcNic").get("hostid")
+        )
         self.start = start_dev.button.center
-        end_dev = self.app.get_widget_by_uid(self.base.json.get('DstNic').get('hostid'))
+        end_dev = self.app.get_widget_by_uid(self.base.json.get("DstNic").get("hostid"))
         self.end = end_dev.button.center
 
     def _set_size_and_pos(self):
@@ -342,7 +346,7 @@ class Theme:
 
 @dataclass
 class LightGrayscaleTheme(Theme):
-    name = 'Grayscale, light'
+    name = "Grayscale, light"
     fg3 = (0.10, 0.10, 0.10, 1)
     fg2 = (0.15, 0.15, 0.15, 1)
     fg1 = (0.20, 0.20, 0.20, 1)
@@ -356,9 +360,9 @@ class LightGrayscaleTheme(Theme):
 @dataclass
 class LightColorTheme(LightGrayscaleTheme):
     name = "Color, light"
-    detail = (46/255, 194/255, 126/255, 1)  # separators, etc.; light green
-    #(143/255, 240/255, 164/255, 1)  #8ff0a4 light green
-    bg3 = (204/255, 227/255, 249/255, 1)  # text highlighting; light blue
+    detail = (46 / 255, 194 / 255, 126 / 255, 1)  # separators, etc.; light green
+    # (143/255, 240/255, 164/255, 1)  #8ff0a4 light green
+    bg3 = (204 / 255, 227 / 255, 249 / 255, 1)  # text highlighting; light blue
 
 
 def get_layout_height(layout) -> None:
@@ -368,11 +372,13 @@ def get_layout_height(layout) -> None:
         spacing = layout.spacing[1]
     h_padding = layout.padding[1] + layout.padding[3]
     h_widgets = sum(c.height for c in layout.children)
-    h_widgets_padding = sum(c.padding[1] + c.padding[3] for c in layout.children if hasattr(c, 'padding'))
+    h_widgets_padding = sum(
+        c.padding[1] + c.padding[3] for c in layout.children if hasattr(c, "padding")
+    )
     h_spacing = spacing * (len(layout.children) - 1)
     return h_padding + h_widgets + h_widgets_padding + h_spacing
 
 
 def location_to_pos_hint(location: str) -> list:
-    coords = location.split(',')
-    return [int(coords[0])/900, 1 - int(coords[1])/850]
+    coords = location.split(",")
+    return [int(coords[0]) / 900, 1 - int(coords[1]) / 850]
