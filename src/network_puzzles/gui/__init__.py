@@ -70,6 +70,7 @@ class NetworkPuzzlesApp(App):
 
         Clock.schedule_interval(self._update_packets, self.packet_tick_delay)
         Clock.schedule_interval(self.check_puzzle, 0.1)  # every 1/10th sec
+        Clock.schedule_interval(self._help_highlight_devices, 0.1)  # every 1/10th sec
 
     @property
     def devices(self):
@@ -328,6 +329,9 @@ class NetworkPuzzlesApp(App):
         """
         Always runs when help level is initialized or changed.
         """
+        # Skip if no puzzle loaded.
+        if not self.ui or not self.ui.puzzle:
+            return
         # Clear existing highlights.
         for c in self.root.ids.layout.children:
             if isinstance(c, HelpHighlight):
@@ -335,11 +339,11 @@ class NetworkPuzzlesApp(App):
         # Add any required highlights.
         if help_level > 0:
             # TODO: This only highlights layout devices. We still need to work
-            # in highligting of other on-screen elements.
-            for n in set(t.get("shost") for t in self.ui.all_tests()):
+            # in highlighting of other on-screen elements.
+            for n in set(t.get("shost") for t in self.ui.all_tests() if not t.get("completed")):
                 d = self.ui.get_device(n)
                 if d is None:
-                    print(f'Ignoring highlight of non-device "{n}"')
+                    logging.info(f'Ignoring highlight of non-device "{n}"')
                     continue
                 w = self.get_widget_by_hostname(n)
                 idx = self.root.ids.layout.children.index(w) + 1
