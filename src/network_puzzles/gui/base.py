@@ -106,10 +106,6 @@ class Device(ThemedBoxLayout):
         self.base = device.Device(init_data)
         super().__init__(**kwargs)
         self.app = session.app
-
-        self.commands = [_("Ping [host]")]
-        self.commands.extend(session.puzzle.commands_from_tests(self.hostname))
-        self.commands.extend(self.base.get_nontest_commands())
         self._set_pos()  # sets self.rel_pos and self.pos_hint
         self._set_image()
         # Updates that rely on Device's pos already being set.
@@ -171,9 +167,14 @@ class Device(ThemedBoxLayout):
                 Ellipse(pos=pos, size=(dp(8), dp(8)))
 
     def _build_commands_popup(self):
+        # Build commands list (might change if state changes).
+        commands = [_("Ping [host]")]
+        commands.extend(session.puzzle.commands_from_tests(self.hostname))
+        commands.extend(self.base.get_nontest_commands())
+
         # Setup the content.
         content = GridLayout(cols=1, spacing=dp(5))
-        for command in self.commands:
+        for command in commands:
             if command == _("Ping [host]"):
                 cb = PingHostPopup(
                     title=f"{_('Ping [host] from')} {self.hostname}"
