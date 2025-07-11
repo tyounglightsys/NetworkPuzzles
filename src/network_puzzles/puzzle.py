@@ -146,9 +146,9 @@ class Puzzle:
                     test_devices.add(host)
         return name in test_devices
 
-    def device_is_frozen(self, name):
+    def device_is_frozen(self, thost):
         for test in self.all_tests():
-            if test.get('shost') == name and test.get('thestest') == 'DeviceIsFrozen':
+            if test.get('shost') == thost.get('hostname') and test.get('thetest') == 'DeviceIsFrozen':
                 if test.get('completed'):
                     return False
                 else:
