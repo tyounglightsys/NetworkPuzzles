@@ -324,7 +324,7 @@ class Parser:
                         if chosendevice.get('poweroff') == 'True':
                             pastvalue = 'off'
                         if args[2].lower() == "off":
-                            session.add_undo_entry("set power off", f"set power {pastvalue}")
+                            session.add_undo_entry(f"set {chosendevice.get('hostname')} power off", f"set {chosendevice.get('hostname')} power {pastvalue}")
                             chosendevice['poweroff'] = 'True'
                             session.puzzle.mark_test_as_completed(None, chosendevice.get('hostname'),'DeviceIsFrozen','')
                         else:
@@ -392,6 +392,8 @@ class Parser:
                 x = int(args[2].replace(',',""))
                 y = int(args[3].replace(',',""))
                 if (x + 0 and y > 0):
+                    pastvalue=chosendevice.get('location')
+                    session.add_undo_entry(f"set {chosendevice.get('hostname')} location {x},{y}", f"set {chosendevice.get('hostname')} location {pastvalue}")
                     session.print(f"Setting position of {chosendevice.get('hostname')} to {x},{y}")
                     chosendevice['location'] = f"{x},{y}"
                     #We need a callback here to tell te gui to redraw. - we just moved a device
