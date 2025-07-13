@@ -70,7 +70,11 @@ class Parser:
                 case 'puzzles' | 'search':
                     return self.get_puzzles(cmd, args)
                 case 'load' | 'open':
-                    return self.open_puzzle(cmd, args)
+                    val=self.open_puzzle(cmd, args)
+                    #if we are debugging, show what we just loaded
+                    if logging.getLogger().level < logging.WARNING:
+                        self.show_info(["puzzle"])
+                    return val
                 case 'delete':
                     return self.delete_item(args)
                 case 'exit' | 'quit' | 'stop':
@@ -242,6 +246,7 @@ class Parser:
                 session.print("----links----")
             for one in linklist:
                 session.print(one['hostname'])
+
         if len(args) == 1:
             thedevice = session.puzzle.device_from_name(args[0])
             if thedevice is not None:
