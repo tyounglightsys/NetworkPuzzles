@@ -400,6 +400,11 @@ class Parser:
         x = int(x_in.replace(",", ""))
         y = int(y_in.replace(",", ""))
         if x + 0 and y > 0:
+            pastvalue = dev_obj.json.get("location")
+            session.add_undo_entry(
+                f"set {dev_obj.hostname} location {x},{y}",
+                f"set {dev_obj.hostname} location {pastvalue}",
+            )
             session.print(f"Setting position of {dev_obj.hostname} to {x},{y}")
             dev_obj.json["location"] = f"{x},{y}"
             # TODO: We need a callback here to tell te gui to redraw. - we just moved a device
@@ -425,7 +430,10 @@ class Parser:
         if not dev_obj.powered_on:
             pastvalue = "off"
         if value.lower() == "off":
-            session.add_undo_entry("set power off", f"set power {pastvalue}")
+            session.add_undo_entry(
+                f"set {dev_obj.hostname} power off",
+                f"set {dev_obj.hostname} power {pastvalue}",
+            )
             dev_obj.powered_on = True
             session.puzzle.mark_test_as_completed(
                 None, dev_obj.hostname, "DeviceIsFrozen", ""
