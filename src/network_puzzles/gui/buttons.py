@@ -14,6 +14,7 @@ class ThemedButton(Button):
 
     def __init__(self, on_press=None, **kwargs):
         super().__init__(**kwargs)
+        self.app = session.app
         self.long_press = None
         self.tooltip = ToolTip()
         self._on_press = on_press
@@ -113,7 +114,6 @@ class ThemedButton(Button):
 class AppButton(ThemedButton):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app = session.app
         self.cb = None
         self.cb_args = list()
         self.cb_kwargs = dict()

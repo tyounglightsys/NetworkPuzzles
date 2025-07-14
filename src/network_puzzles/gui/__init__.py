@@ -288,6 +288,9 @@ class NetworkPuzzlesApp(App):
             self._help_highlight_devices(value)
             self._help_update_tooltips(value)
 
+    def update_help_highlight_devices(self):
+        self._help_highlight_devices(self.root.ids.help_slider.value)
+
     def update_puzzle_list(self, popup=None):
         # TODO: At the moment self.filter is a list that can include 0 or more
         # puzzle names, but getAllPuzzleNames only accepts a single string. So
