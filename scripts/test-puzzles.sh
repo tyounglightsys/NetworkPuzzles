@@ -4,14 +4,28 @@ errorcount=0
 
 function test_one_file {
     filename=$1
+    reversed=$(echo $filename | grep -v NOT)
     echo -n "testing $filename: "
     result=$(cat $filename | python -m src.network_puzzles | grep -i Congratulations)
     if [ -z "$result" ]; then
-        echo "Failed"
-        return 1
+        if [ -z "$reversed" ]; then
+            passed=true
+        else
+            passed=false
+        fi
     else
+        if [ -z "$reversed" ]; then
+            passed=false
+        else
+            passed=true
+        fi
+    fi
+    if $passed; then
         echo "OK"
         return 0
+    else
+        echo "Failed"
+        return 1
     fi
 }
 
