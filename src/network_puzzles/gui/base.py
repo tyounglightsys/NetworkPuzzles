@@ -9,6 +9,7 @@ from kivy.graphics import Line
 from kivy.metrics import dp
 from kivy.properties import ListProperty
 from kivy.properties import StringProperty
+from kivy.uix.behaviors import DragBehavior
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.recycleview import RecycleView
@@ -28,6 +29,8 @@ from .popups import LinkPopup
 from .popups import PingHostPopup
 
 
+LOCATION_MAX_X = 900
+LOCATION_MAX_Y = 850
 NETWORK_ITEMS = {
     "links": {
         "link": {"img": "link.png"},
@@ -101,12 +104,12 @@ class ThemedCheckBox(CheckBox):
         self.app.on_checkbox_activate(self)
 
 
-class Device(ThemedBoxLayout):
+class Device(DragBehavior, ThemedBoxLayout):
     def __init__(self, init_data=None, **kwargs):
         self.base = device.Device(init_data)
         super().__init__(**kwargs)
         self.app = session.app
-        self._set_pos()  # sets self.rel_pos and self.pos_hint
+        self._set_pos()  # sets self.pos_hint
         self._set_image()
         # Updates that rely on Device's pos already being set.
         Clock.schedule_once(self.set_power_status)
@@ -153,6 +156,18 @@ class Device(ThemedBoxLayout):
         self.set_type()
         self.set_location()
         self.set_hostname()
+
+    def on_pos(self, *args):
+        # Nullify pos_hint when initial position is changed to allow for widget
+        # to be drag-n-dropped.
+        self.pos_hint = {}
+        # Move help device highlighting with device.
+        self.app.update_help_highlight_devices()
+        # Move links ends with device.
+        for linkw in self.app.links:
+            if self.hostname in linkw.hostname:
+                print(f"redraw link {linkw.hostname}")
+                linkw.move_connection(self)
 
     def on_press(self):
         self._build_commands_popup().open()
@@ -219,9 +234,10 @@ class Device(ThemedBoxLayout):
             raise TypeError(f"Unhandled device type: {self.base.json.get('mytype')}")
         self.button.background_normal = str(self.app.IMAGES / img)
 
-    def _set_pos(self):
-        self.rel_pos = location_to_pos_hint(self.base.json.get("location"))
-        self.pos_hint = {"center": self.rel_pos}
+    def _set_pos(self, rel_pos=None):
+        if rel_pos is None:
+            rel_pos = location_to_rel_pos(self.base.json.get("location"))
+        self.pos_hint = {"center": rel_pos}
 
 
 class Link(Widget):
@@ -237,9 +253,7 @@ class Link(Widget):
         self._set_size_and_pos()
 
         self.background_normal = ""
-        with self.canvas:
-            Color(rgba=self.app.theme.fg1)
-            Line(points=(*self.start, *self.end), width=2)
+        self._draw_line()
 
     @property
     def hostname(self):
@@ -255,6 +269,12 @@ class Link(Widget):
         else:
             return None
 
+    def _draw_line(self):
+        self.canvas.clear()
+        with self.canvas:
+            Color(rgba=self.app.theme.fg1)
+            Line(points=(*self.start, *self.end), width=2)
+
     def edit(self):
         # TODO: Add Edit Link Popup.
         raise NotImplementedError
@@ -263,6 +283,16 @@ class Link(Widget):
         dx = progress * (self.end[0] - self.start[0]) / 100
         dy = progress * (self.end[1] - self.start[1]) / 100
         return (self.start[0] + dx, self.start[1] + dy)
+
+    def move_connection(self, dev):
+        # Update link properties.
+        if self.hostname.startswith(dev.hostname):
+            self._set_startpoint(dev)
+        elif self.hostname.endswith(dev.hostname):
+            self._set_endpoint(dev)
+        self._set_size_and_pos()
+        # Redraw the link line.
+        self._draw_line()
 
     def on_touch_down(self, touch):
         if self.collide_point(*touch.pos):
@@ -284,13 +314,23 @@ class Link(Widget):
     def _set_uid(self):
         raise NotImplementedError
 
-    def _set_points(self):
-        start_dev = self.app.get_widget_by_uid(
-            self.base.json.get("SrcNic").get("hostid")
-        )
-        self.start = start_dev.button.center
-        end_dev = self.app.get_widget_by_uid(self.base.json.get("DstNic").get("hostid"))
+    def _set_endpoint(self, end_dev=None):
+        if end_dev is None:
+            end_dev = self.app.get_widget_by_uid(
+                self.base.json.get("DstNic").get("hostid")
+            )
         self.end = end_dev.button.center
+
+    def _set_startpoint(self, start_dev=None):
+        if start_dev is None:
+            start_dev = self.app.get_widget_by_uid(
+                self.base.json.get("SrcNic").get("hostid")
+            )
+        self.start = start_dev.button.center
+
+    def _set_points(self):
+        self._set_startpoint()
+        self._set_endpoint()
 
     def _set_size_and_pos(self):
         # Set pos.
@@ -380,6 +420,11 @@ def get_layout_height(layout) -> None:
     return h_padding + h_widgets + h_widgets_padding + h_spacing
 
 
-def location_to_pos_hint(location: str) -> list:
+def location_to_rel_pos(location: str) -> list:
     coords = location.split(",")
-    return [int(coords[0]) / 900, 1 - int(coords[1]) / 850]
+    pos = (int(coords[0]), LOCATION_MAX_Y - int(coords[1]))
+    return pos_to_rel_pos(pos)
+
+
+def pos_to_rel_pos(pos) -> list:
+    return [pos[0] / LOCATION_MAX_X, pos[1] / LOCATION_MAX_Y]

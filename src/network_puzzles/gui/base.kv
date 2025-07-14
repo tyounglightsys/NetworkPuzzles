@@ -3,6 +3,7 @@
     spacing: 0  # TODO: this is not applied
     size_hint: (0.08, 0.20)
     size_hint_max: (dp(85), dp(120))
+    drag_rectangle: (self.x, self.y, self.width, self.height)
     DeviceButton:
         _on_press: root.on_press
     DeviceLabel:
