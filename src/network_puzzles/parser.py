@@ -269,6 +269,7 @@ class Parser:
                 session.print("----links----")
             for one in linklist:
                 session.print(one["hostname"])
+
         if len(args) == 1:
             thedevice = session.puzzle.device_from_name(args[0])
             if thedevice is not None:
