@@ -92,6 +92,10 @@ class NetworkPuzzlesApp(App):
         if device_inst is None:
             device_inst = Device()
 
+        # Hide invisible devices.
+        if device_inst.base.is_invisible:
+            device_inst.hide()
+
         self.root.ids.layout.add_widget(device_inst)
 
     def add_link(self, link=None):
@@ -207,7 +211,9 @@ class NetworkPuzzlesApp(App):
 
     def on_start(self):
         # Make widget adjustments.
-        Clock.schedule_once(self._set_left_panel_width)  # buttons must update before panel
+        Clock.schedule_once(
+            self._set_left_panel_width
+        )  # buttons must update before panel
         self._add_new_item_button()
         # Open puzzle chooser if no puzzle is defined.
         if not self.ui.puzzle:
@@ -343,16 +349,16 @@ class NetworkPuzzlesApp(App):
         if help_level > 0:
             # TODO: This only highlights layout devices. We still need to work
             # in highlighting of other on-screen elements.
-            for n in set(t.get("shost") for t in self.ui.all_tests() if not t.get("completed")):
+            for n in set(
+                t.get("shost") for t in self.ui.all_tests() if not t.get("completed")
+            ):
                 d = self.ui.get_device(n)
                 if d is None:
                     logging.info(f'Ignoring highlight of non-device "{n}"')
                     continue
                 w = self.get_widget_by_hostname(n)
-                idx = self.root.ids.layout.children.index(w) + 1
-                self.root.ids.layout.add_widget(
-                    HelpHighlight(center=w.children[1].center), idx
-                )
+                if isinstance(w, Device) and not w.base.is_invisible:
+                    w.highlight()
 
     def _help_update_tooltips(self, help_level):
         # List devices and help_texts.

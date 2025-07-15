@@ -1,3 +1,4 @@
+import logging
 import traceback
 from dataclasses import dataclass
 from kivy.base import ExceptionHandler
@@ -150,6 +151,35 @@ class Device(DragBehavior, ThemedBoxLayout):
     def callback(self, cmd_string):
         self.app.ui.parse(cmd_string)
 
+    def highlight(self, do_highlight=True):
+        # Find corresponding highlight widget.
+        current_highlight = None
+        for c in self.app.root.ids.layout.children:
+            logging.debug(f"{c=}")
+            if isinstance(c, HelpHighlight):
+                logging.debug(f"{c.name=}")
+            if isinstance(c, HelpHighlight) and c.name == self.hostname:
+                current_highlight = c
+                break
+
+        if not current_highlight and do_highlight:
+            # Add highlight.
+            logging.debug(f"Adding highlight: {self.hostname}")
+            # Set draw index one higher than (i.e. behind) Device.
+            idx = self.parent.children.index(self) + 1
+            self.app.root.ids.layout.add_widget(
+                HelpHighlight(center=self.center, name=self.hostname), idx
+            )
+        elif current_highlight and not do_highlight:
+            # Remove highlight.
+            logging.debug(f"Removing highlight: {self.hostname}")
+            self.app.root.ids.layout.remove_widget(current_highlight)
+
+    def hide(self, do_hide=True):
+        logging.debug(f"Hiding item: {self.hostname}")
+        self.highlight(False)
+        hide_widget(self, do_hide)
+
     def new(self):
         raise NotImplementedError
         self._set_uid()
@@ -166,7 +196,6 @@ class Device(DragBehavior, ThemedBoxLayout):
         # Move links ends with device.
         for linkw in self.app.links:
             if self.hostname in linkw.hostname:
-                print(f"redraw link {linkw.hostname}")
                 linkw.move_connection(self)
 
     def on_press(self):
@@ -353,7 +382,9 @@ class Packet(Widget):
 
 
 class HelpHighlight(Widget):
-    pass
+    def __init__(self, name=None, **kwargs):
+        super().__init__(**kwargs)
+        self.name = name
 
 
 class HelpSlider(Slider):
@@ -418,6 +449,29 @@ def get_layout_height(layout) -> None:
     )
     h_spacing = spacing * (len(layout.children) - 1)
     return h_padding + h_widgets + h_widgets_padding + h_spacing
+
+
+def hide_widget(wid, do_hide=True):
+    if hasattr(wid, "saved_attrs"):
+        if not do_hide:
+            (
+                wid.height,
+                wid.size_hint_y,
+                wid.opacity,
+                wid.disabled,
+            ) = wid.saved_attrs
+            del wid.saved_attrs
+    elif do_hide:
+        wid.saved_attrs = (
+            wid.height,
+            wid.size_hint_y,
+            wid.opacity,
+            wid.disabled,
+        )
+        wid.height = 0
+        wid.size_hint_y = None
+        wid.opacity = 0
+        wid.disabled = True
 
 
 def location_to_rel_pos(location: str) -> list:
