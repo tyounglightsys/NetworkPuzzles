@@ -86,30 +86,35 @@ class NetworkPuzzlesApp(App):
             # TODO: Handle puzzle complete (popup?).
             self.ui.console_write("<-- TODO: Handle puzzle complete -->")
 
-    def add_device(self, device_inst=None):
+    def add_device(self, devicew=None):
         # TODO: If device_inst not given, require user to choose device type
         # on the screen to instantiate a new device.
-        if device_inst is None:
-            device_inst = Device()
+        if devicew is None:
+            devicew = Device()
 
         # Hide invisible devices.
-        if device_inst.base.is_invisible:
-            device_inst.hide()
+        if devicew.base.is_invisible:
+            devicew.hide()
 
-        self.root.ids.layout.add_widget(device_inst)
+        self.root.ids.layout.add_widget(devicew)
 
-    def add_link(self, link=None):
+    def add_link(self, linkw=None):
         # TODO: If link_inst not given, require user to tap on start and end
         # devices on the screen to instantiate a new link.
-        if not isinstance(link, Link):
-            if isinstance(link, dict):
-                link = Link(link)
-            elif isinstance(link, MenuButton):
+        if not isinstance(linkw, Link):
+            if isinstance(linkw, dict):
+                linkw = Link(linkw)
+            elif isinstance(linkw, MenuButton):
                 raise NotImplementedError
 
-        # self.links.append(link_inst)
+        # Hide liks connected to invisible devices.
+        for host in linkw.base.hosts:
+            w = self.get_widget_by_hostname(host)
+            if w.base.is_invisible:
+                linkw.hide()
+
         # Add link to z-index = 99 to ensure it's drawn under devices.
-        self.root.ids.layout.add_widget(link, 99)
+        self.root.ids.layout.add_widget(linkw, 99)
 
     def add_terminal_line(self, line):
         if not line.endswith("\n"):
@@ -283,7 +288,7 @@ class NetworkPuzzlesApp(App):
                 self.add_device(Device(dev))
 
         # Some setup needs to be done one tick after devices, because their
-        # positions depends on the devices' positions.
+        # positions depend on the devices' positions.
         Clock.schedule_once(self.update_help)
         Clock.schedule_once(self.setup_links)
 

@@ -56,7 +56,7 @@ class Device:
             value = True
         else:
             value = False
-        logging.debug(f"{self.hostname}.is_invisible: {value} ")
+        # logging.debug(f"{self.hostname}.is_invisible: {value} ")
         return value
 
     @is_invisible.setter

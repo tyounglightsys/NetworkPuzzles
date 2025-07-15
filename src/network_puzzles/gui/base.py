@@ -137,6 +137,15 @@ class Device(DragBehavior, ThemedBoxLayout):
         return None
 
     @property
+    def links(self):
+        links = list()
+        for lnk in self.app.links:
+            logging.debug(f"{lnk=}")
+            if self.hostname in lnk.hostname:
+                links.append(lnk)
+        return links
+
+    @property
     def nics(self):
         if hasattr(self, "base") and self.base:
             return self.base.all_nics()
@@ -155,9 +164,6 @@ class Device(DragBehavior, ThemedBoxLayout):
         # Find corresponding highlight widget.
         current_highlight = None
         for c in self.app.root.ids.layout.children:
-            logging.debug(f"{c=}")
-            if isinstance(c, HelpHighlight):
-                logging.debug(f"{c.name=}")
             if isinstance(c, HelpHighlight) and c.name == self.hostname:
                 current_highlight = c
                 break
@@ -176,8 +182,12 @@ class Device(DragBehavior, ThemedBoxLayout):
             self.app.root.ids.layout.remove_widget(current_highlight)
 
     def hide(self, do_hide=True):
-        logging.debug(f"Hiding item: {self.hostname}")
+        # Hide any help highlight.
         self.highlight(False)
+        # Hide any links.
+        for lnk in self.links:
+            lnk.hide()
+        # Hide self.
         hide_widget(self, do_hide)
 
     def new(self):
@@ -286,8 +296,8 @@ class Link(Widget):
 
     @property
     def hostname(self):
-        if hasattr(self, "base") and hasattr(self.base, "json"):
-            return self.base.json.get("hostname")
+        if hasattr(self, "base"):
+            return self.base.hostname
         else:
             return None
 
@@ -312,6 +322,9 @@ class Link(Widget):
         dx = progress * (self.end[0] - self.start[0]) / 100
         dy = progress * (self.end[1] - self.start[1]) / 100
         return (self.start[0] + dx, self.start[1] + dy)
+
+    def hide(self, do_hide=True):
+        hide_widget(self, do_hide)
 
     def move_connection(self, dev):
         # Update link properties.
@@ -452,6 +465,7 @@ def get_layout_height(layout) -> None:
 
 
 def hide_widget(wid, do_hide=True):
+    logging.debug(f"Hiding: {wid.hostname}={do_hide}")
     if hasattr(wid, "saved_attrs"):
         if not do_hide:
             (
