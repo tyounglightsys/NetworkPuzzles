@@ -24,7 +24,9 @@ class ThemedButton(Button):
         if self._on_press is None:
             return
         # Schedule long-press callback into the future.
-        self.long_press = Clock.schedule_once(self._on_long_press, self.LONG_PRESS_THRESHOLD)
+        self.long_press = Clock.schedule_once(
+            self._on_long_press, self.LONG_PRESS_THRESHOLD
+        )
 
     def on_release(self):
         if self._on_press is None:
@@ -76,7 +78,7 @@ class ThemedButton(Button):
             return
         w_pos = self.to_widget(*pos)
         Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event
-        self.close_tooltip() # close if it's opened
+        self.close_tooltip()  # close if it's opened
         if self.collide_point(*w_pos):
             Clock.schedule_once(self.open_tooltip, 1)
 
@@ -84,7 +86,8 @@ class ThemedButton(Button):
         self.tooltip_anchor.remove_widget(self.tooltip)
 
     def open_tooltip(self, *args):
-        if not self.info:
+        # Don't show tooltip in certain cases.
+        if 0 in (self.opacity, self.parent.opacity) or not self.info:
             return
         self.tooltip_text = self.info
         if self.tooltip not in self.tooltip_anchor.children:
@@ -138,29 +141,29 @@ class MenuButton(AppButton):
     def __init__(self, props, **kwargs):
         super().__init__(**kwargs)
         self.props = props
-        self.info = self.props.get('info', '')  # must be a str
+        self.info = self.props.get("info", "")  # must be a str
         self._set_size_hint()
         self._set_face()
         self._set_callback()
 
     def _set_callback(self):
-        self.cb = self.props.get('cb')
-        self.cb_args = self.props.get('cb_args', list())
-        self.cb_kwargs = self.props.get('cb_kwargs', dict())
+        self.cb = self.props.get("cb")
+        self.cb_args = self.props.get("cb_args", list())
+        self.cb_kwargs = self.props.get("cb_kwargs", dict())
 
     def _set_face(self):
-        text = self.props.get('text')
+        text = self.props.get("text")
         if text:
             self.text = text
-            self.background_normal = ''
-        img = self.props.get('img')
+            self.background_normal = ""
+        img = self.props.get("img")
         if img:
-            self.text = ''
+            self.text = ""
             self.background_color[3] = 1  # make it opaque so the image is visible
             self.background_normal = str(self.app.IMAGES / img)
 
     def _set_size_hint(self):
-        if self.props.get('orientation') == 'horizontal':
+        if self.props.get("orientation") == "horizontal":
             self.size_hint = (1, None)  # to set explicit height
             self.width = self.app.BUTTON_MAX_H
             self.height = self.width
@@ -178,6 +181,6 @@ class CommandButton(ThemedButton):
         self.cb(self.command)
         # Find parent Popup and dismiss it.
         popup = self.parent
-        while not hasattr(popup, 'dismiss'):
+        while not hasattr(popup, "dismiss"):
             popup = popup.parent
         popup.dismiss()

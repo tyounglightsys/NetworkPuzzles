@@ -110,6 +110,7 @@ class Device(DragBehavior, ThemedBoxLayout):
         self.base = device.Device(init_data)
         super().__init__(**kwargs)
         self.app = session.app
+        self.pos_init = (0, 0)
         self._set_pos()  # sets self.pos_hint
         self._set_image()
         # Updates that rely on Device's pos already being set.
@@ -140,7 +141,6 @@ class Device(DragBehavior, ThemedBoxLayout):
     def links(self):
         links = list()
         for lnk in self.app.links:
-            logging.debug(f"{lnk=}")
             if self.hostname in lnk.hostname:
                 links.append(lnk)
         return links
@@ -170,7 +170,7 @@ class Device(DragBehavior, ThemedBoxLayout):
 
         if not current_highlight and do_highlight:
             # Add highlight.
-            logging.debug(f"Adding highlight: {self.hostname}")
+            logging.debug(f"GUI: add highlight for {self.hostname}")
             # Set draw index one higher than (i.e. behind) Device.
             idx = self.parent.children.index(self) + 1
             self.app.root.ids.layout.add_widget(
@@ -178,16 +178,22 @@ class Device(DragBehavior, ThemedBoxLayout):
             )
         elif current_highlight and not do_highlight:
             # Remove highlight.
-            logging.debug(f"Removing highlight: {self.hostname}")
+            logging.debug(f"GUI: remove highlight for {self.hostname}")
             self.app.root.ids.layout.remove_widget(current_highlight)
 
     def hide(self, do_hide=True):
-        # Hide any help highlight.
-        self.highlight(False)
-        # Hide any links.
+        # Ensure base object state matches GUI object state.
+        self.base.is_invisible = do_hide
+        if do_hide:
+            # Hide any help highlight.
+            self.highlight(False)
+        elif do_hide is False:
+            # Show help highlight if relevant.
+            self.app.update_help_highlight_devices()
+        # Hide/show any links.
         for lnk in self.links:
-            lnk.hide()
-        # Hide self.
+            lnk.hide(do_hide)
+        # Hide/show self.
         hide_widget(self, do_hide)
 
     def new(self):
@@ -198,15 +204,24 @@ class Device(DragBehavior, ThemedBoxLayout):
         self.set_hostname()
 
     def on_pos(self, *args):
+        # Set initial position for comparison later.
+        # NOTE: pos is set in 2 steps: x first, then y, and `pos` is modified
+        # each time. So we have to wait until both x and y values are nonzero
+        # before setting the true initial position.
+        if 0 in self.pos_init:
+            self.pos_init = (self.x, self.y)
+        # Show if hidden and not in initial position.
+        if self.opacity == 0 and (self.x, self.y) != self.pos_init:
+            self.hide(False)
         # Nullify pos_hint when initial position is changed to allow for widget
         # to be drag-n-dropped.
         self.pos_hint = {}
         # Move help device highlighting with device.
         self.app.update_help_highlight_devices()
-        # Move links ends with device.
-        for linkw in self.app.links:
-            if self.hostname in linkw.hostname:
-                linkw.move_connection(self)
+        # Move links' ends with device.
+        for lnk in self.links:
+            lnk.hide(False)
+            lnk.move_connection(self)
 
     def on_press(self):
         self._build_commands_popup().open()
@@ -300,6 +315,10 @@ class Link(Widget):
             return self.base.hostname
         else:
             return None
+
+    @property
+    def hosts(self):
+        return [self.app.get_widget_by_hostname(h) for h in self.base.hosts]
 
     @property
     def uid(self):
@@ -465,27 +484,13 @@ def get_layout_height(layout) -> None:
 
 
 def hide_widget(wid, do_hide=True):
-    logging.debug(f"Hiding: {wid.hostname}={do_hide}")
-    if hasattr(wid, "saved_attrs"):
-        if not do_hide:
-            (
-                wid.height,
-                wid.size_hint_y,
-                wid.opacity,
-                wid.disabled,
-            ) = wid.saved_attrs
-            del wid.saved_attrs
+    # logging.debug(f"GUI: hide {wid.hostname}={do_hide}")
+    if hasattr(wid, "opacity_prev") and not do_hide:
+        wid.opacity = wid.opacity_prev
+        del wid.opacity_prev
     elif do_hide:
-        wid.saved_attrs = (
-            wid.height,
-            wid.size_hint_y,
-            wid.opacity,
-            wid.disabled,
-        )
-        wid.height = 0
-        wid.size_hint_y = None
+        wid.opacity_prev = wid.opacity
         wid.opacity = 0
-        wid.disabled = True
 
 
 def location_to_rel_pos(location: str) -> list:
