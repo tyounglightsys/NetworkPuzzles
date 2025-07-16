@@ -377,8 +377,82 @@ class Puzzle:
         self.json["uniqueidentifier"] = nextval
         return availableval
 
+    def createNIC(self, thedevicejson, nictype):
+        thedevice = device.Device(thedevicejson)
+        count=0
+        while (thedevice.nic_from_name(f"{nictype}{count}")) is not None:
+            count = count + 1
+        newnicname = f"{nictype}{count}"
+        newid = self.issueUniqueIdentifier()
+        newnic={
+            'nictype':[f"{nictype}",f"{nictype}"],
+            'nicname':newnicname,
+            'myid':{
+                'hostid':thedevice.uid,
+                'nicid':newid,
+                'hostname':thedevice.hostname,
+                'nicname':newnicname
+            },
+            'uniqueidentifier':newnicname,
+            'usesdhcp':'False',
+            'encryptionkey':None,
+            'ssid':None,
+            'interface': [
+                {
+                    'nicname':newnicname,
+                    'myip': {
+                        'ip':"0.0.0.0",
+                        'netmask':"0.0.0.0",
+                        'gateway':"0.0.0.0"
+                    }
+                }
+            ]
+        }
+        thedevicejson['nic'].append(newnic)
+        return newnic
+
     def createDevice(self, args):
-        raise NotImplementedError
+        if len(args) != 3:
+            logging.error("createDevice: invalid number of arguments.")
+            return
+        device_type = args[0]
+        x=args[1]
+        y=args[2]
+        count=0
+        while self.device_from_name(f"{device_type}{count}") is not None:
+            count = count + 1
+        newdevicename = f"{device_type}{count}"
+        newid = self.issueUniqueIdentifier()
+        newdevice = {
+            'hostname':newdevicename,
+            'uniqueidentifier':newid,
+            'location':f"{x},{y}",
+            'mytype':device_type,
+            'isdns':'False',
+            'isdhcp':'False',
+            'gateway': {
+                        'ip':"0.0.0.0",
+                        'netmask':"0.0.0.0",
+            },
+            'nic':list(),           
+        }
+        self.createNIC(newdevice, 'lo')
+        if device_type in {'net_switch','net_hub'}:
+            for a in range(8):
+                self.createNIC(newdevice, 'port')
+        if device_type in {'wrouter','wap'}:
+            for a in range(8):
+                self.createNIC(newdevice, 'wport')
+        if device_type == 'pc':
+            for a in range(2):
+                self.createNIC(newdevice, 'eth')
+        if device_type == 'laptop':
+            self.createNIC(newdevice, 'eth')
+            self.createNIC(newdevice, 'wlan')
+
+        self.json['device'].append(newdevice)
+        session.print(f"Creating new device: {newdevicename}")
+         
 
     def createLink(self, args, linktype="normal") -> bool:
         """returns False on error, True if successful, None if unhandled"""
