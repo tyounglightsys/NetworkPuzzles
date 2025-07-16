@@ -436,18 +436,42 @@ class Puzzle:
             },
             'nic':list(),           
         }
-        self.createNIC(newdevice, 'lo')
+        if device_type not in {'tree','fluorescent'}:
+            self.createNIC(newdevice, 'lo')
         if device_type in {'net_switch','net_hub'}:
+            self.createNIC(newdevice,'management_interface')
             for a in range(8):
                 self.createNIC(newdevice, 'port')
-        if device_type in {'wrouter','wap'}:
-            for a in range(8):
-                self.createNIC(newdevice, 'wport')
         if device_type == 'pc':
             for a in range(2):
                 self.createNIC(newdevice, 'eth')
         if device_type == 'laptop':
             self.createNIC(newdevice, 'eth')
+            self.createNIC(newdevice, 'wlan')
+        if device_type == 'wbridge':
+            self.createNIC(newdevice, 'wlan')
+            for a in range(4):
+                self.createNIC(newdevice, 'wport')
+        if device_type == 'wap':
+            self.createNIC(newdevice,'management_interface')
+            self.createNIC(newdevice, 'port')
+            for a in range(6):
+                self.createNIC(newdevice, 'wport')
+        if device_type == 'wrepeater':
+            self.createNIC(newdevice, 'wport')
+            self.createNIC(newdevice, 'wlan')
+        if device_type == 'wrouter':
+            self.createNIC(newdevice,'management_interface')
+            for a in range(4):
+                self.createNIC(newdevice, 'port')
+            for a in range(8):
+                self.createNIC(newdevice, 'wport')
+            self.createNIC(newdevice,'vpn')
+            self.createNIC(newdevice,'wan')
+        if device_type == 'firewall':
+            self.createNIC(newdevice, 'eth')
+            self.createNIC(newdevice, 'wan')
+        if device_type in {'cellphone', 'tablet'}:
             self.createNIC(newdevice, 'wlan')
 
         self.json['device'].append(newdevice)
