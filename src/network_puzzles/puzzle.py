@@ -556,8 +556,8 @@ class Puzzle:
             newlink["uniqueidentifier"] = session.puzzle.issueUniqueIdentifier()
             newlink["SrcNic"] = copy.copy(snic.get("myid"))
             newlink["DstNic"] = copy.copy(dnic.get("myid"))
-            if not isinstance(self.json["link"], list):
-                self.json["link"] = [self.json["link"]]
+            if not isinstance(self.json.get("link"), list):
+                self.json["link"] = [self.json.get("link")]
             self.json["link"].append(newlink)
             session.print(f"Created link: {newlink['hostname']}")
             device.mark_test_as_completed(

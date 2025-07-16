@@ -1,0 +1,5 @@
+load Level0_NoSwitch
+create device net_switch 378 200
+create link pc0 net_switch0
+create link pc1 net_switch0
+create link pc2 net_switch0
