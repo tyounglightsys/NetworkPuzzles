@@ -21,6 +21,7 @@ from typing import Tuple
 from .. import _
 from .. import device
 from .. import link
+from .. import nic
 from .. import session
 from .buttons import CommandButton
 from .layouts import ThemedBoxLayout
@@ -149,7 +150,7 @@ class Device(DragBehavior, ThemedBoxLayout):
     @property
     def nics(self):
         if hasattr(self, "base") and self.base:
-            return self.base.all_nics()
+            return [nic.Nic(n) for n in self.base.all_nics()]
         else:
             return list()
 
@@ -171,7 +172,7 @@ class Device(DragBehavior, ThemedBoxLayout):
 
         if not current_highlight and do_highlight:
             # Add highlight.
-            logging.debug(f"GUI: add highlight for {self.hostname}")
+            # logging.debug(f"GUI: add highlight for {self.hostname}")
             # Set draw index one higher than (i.e. behind) Device.
             idx = self.parent.children.index(self) + 1
             self.app.root.ids.layout.add_widget(
@@ -275,8 +276,8 @@ class Device(DragBehavior, ThemedBoxLayout):
         # Add hostname.
         text = self.hostname
         # Add IP addresses and netmasks.
-        for nic in self.nics:
-            for iface in nic.get("interface", []):
+        for n in self.nics:
+            for iface in n.interfaces:
                 ip = iface.get("myip", {})
                 ipaddr = ip.get("ip", "0.0.0.0")
                 if ipaddr != "0.0.0.0":
