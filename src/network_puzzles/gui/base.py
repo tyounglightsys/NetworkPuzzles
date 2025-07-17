@@ -25,6 +25,7 @@ from .. import session
 from .buttons import CommandButton
 from .layouts import ThemedBoxLayout
 from .popups import CommandsPopup
+from .popups import EditDevicePopup
 from .popups import ExceptionPopup
 from .popups import LinkPopup
 from .popups import PingHostPopup
@@ -240,6 +241,7 @@ class Device(DragBehavior, ThemedBoxLayout):
         commands = [_("Ping [host]")]
         commands.extend(session.puzzle.commands_from_tests(self.hostname))
         commands.extend(self.base.get_nontest_commands())
+        commands.append(_("Edit"))
 
         # Setup the content.
         content = GridLayout(cols=1, spacing=dp(5))
@@ -248,6 +250,8 @@ class Device(DragBehavior, ThemedBoxLayout):
                 cb = PingHostPopup(
                     title=f"{_('Ping [host] from')} {self.hostname}"
                 ).open
+            elif command == _("Edit"):
+                cb = EditDevicePopup(title=_("Edit device"), device=self).open
             else:
                 cb = self.callback
             content.add_widget(CommandButton(cb, command))

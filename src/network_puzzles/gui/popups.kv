@@ -73,14 +73,14 @@
             padding: dp(5)
             spacing: dp(5)
             size_hint_y: 0.1
-            size_hint_max_y: dp(app.BUTTON_MAX_H)
+            size_hint_max_y: app.BUTTON_MAX_H
             PopupButton:
                 text: _("Cancel")
                 on_press: root.on_cancel()
             PopupButton:
                 text: _("Load")
                 on_press: root.on_load()
-        
+
 
 <ExceptionPopup>:
     title: _("Error")
@@ -142,3 +142,76 @@
             PopupButton:
                 text: _("Okay")
                 on_press: root.on_okay(root.ids.host.text)
+
+
+<EditDevicePopup>:
+    size_hint: (0.75, 0.5)
+    ThemedBoxLayout:
+        canvas.before:
+            Color:
+                rgba: (1, 1, 1, 1)
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        spacing: dp(20)
+        ThemedBoxLayout:
+            size_hint_x: 0.3
+            orientation: "vertical"
+            ThemedBoxLayout:
+                size_hint_y: 0.1
+                size_hint_max_y: dp(30)
+                ThemedLabel:  # Hostname
+                    text: _("Hostname")
+                TextInput:  # device.hostname
+                    multiline: False
+                    text: root.device.hostname
+            PopupButton:  # Gateway
+                size_hint_y: 0.3
+                text: _("Gateway")
+            PopupButton:  # Routes
+                size_hint_y: 0.3
+                text: _("Routes")
+            PopupButton:  # VLANs
+                size_hint_y: 0.3
+                text: _("VLANs")
+        ThemedBoxLayout:
+            size_hint_x: 0.3
+            orientation: "vertical"
+            ThemedBoxLayout:
+                size_hint_y: 0.15
+                ThemedLabel:  # NICs
+                    size_hint_x: 0.45
+                    text: _("NICs")
+                PopupButton:  # Edit
+                    size_hint_x: 0.55
+                    text: _("Edit")
+            TextInput:  # available NICs
+                size_hint_y: 0.50
+            ThemedBoxLayout:
+                size_hint_y: 0.15
+                ThemedLabel:  # IPs
+                    size_hint_x: 0.15
+                    text: _("IPs")
+                PopupButton:  # +
+                    size_hint_x: 0.15
+                    text: "+"
+                PopupButton:  # -
+                    size_hint_x: 0.15
+                    text: "-"
+                PopupButton:  # Edit
+                    size_hint_x: 0.55
+                    text: _("Edit")
+            ThemedLabel:
+                size_hint_y: 0.20
+                text: "###.###.###.###"
+        ThemedBoxLayout:
+            size_hint_x: 0.4
+            orientation: "vertical"
+            TextInput:  # ARP table
+                text: "XXXXXXXX"
+            ThemedBoxLayout:
+                orientation: "vertical"
+                PopupButton:  # Cancel
+                    text: _("Cancel")
+                PopupButton:  # OK
+                    text: _("Okay")

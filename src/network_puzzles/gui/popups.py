@@ -12,7 +12,7 @@ class AppPopup(Popup):
         # widgets: BoxLayout, Widget, Label. Better to set the content
         # explicitly when the popup is instantiated elsewhere.
         self.app = session.app
-    
+
     def _update_sep_color(self):
         # Set separator color according to theme.
         w = self.children[0].children[1]
@@ -42,8 +42,8 @@ class LinkPopup(AppPopup):
     def __init__(self, widget, **kwargs):
         super().__init__(**kwargs)
         self.link = widget
-        self.title = self.link.base.json.get('hostname', '<hostname>')
-    
+        self.title = self.link.base.json.get("hostname", "<hostname>")
+
     def delete(self):
         self.app.remove_item(self.link)
         self.dismiss()
@@ -73,3 +73,9 @@ class PuzzleChooserPopup(AppPopup):
         self.app.ui.load_puzzle(self.app.selected_puzzle)
         self.app.setup_puzzle(self.app.ui.puzzle.json)
         self.dismiss()
+
+
+class EditDevicePopup(AppPopup):
+    def __init__(self, device, **kwargs):
+        self.device = device
+        super().__init__(**kwargs)
