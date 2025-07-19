@@ -18,8 +18,6 @@ from .base import NETWORK_ITEMS
 from .buttons import CommandButton
 from .layouts import ThemedBoxLayout
 from .popups import AppPopup
-from .popups import CommandsPopup
-from .popups import PingHostPopup
 
 
 class Device(DragBehavior, ThemedBoxLayout):
@@ -214,6 +212,10 @@ class Device(DragBehavior, ThemedBoxLayout):
         self.pos_hint = {"center": rel_pos}
 
 
+class CommandsPopup(AppPopup):
+    pass
+
+
 class EditDevicePopup(AppPopup):
     def __init__(self, device, **kwargs):
         self.device = device
@@ -248,3 +250,12 @@ class EditDevicePopup(AppPopup):
     def on_okay(self):
         logging.debug("GUI: TODO: Apply config updates on exit.")
         raise NotImplementedError
+
+
+class PingHostPopup(AppPopup):
+    def on_cancel(self):
+        self.dismiss()
+
+    def on_okay(self, text):
+        self.app.ui.parse(f"ping {self.title.split()[-1]} {text}")
+        self.dismiss()

@@ -24,10 +24,6 @@ class AppPopup(Popup):
         self._update_sep_color()
 
 
-class CommandsPopup(AppPopup):
-    pass
-
-
 class ExceptionPopup(AppPopup):
     def __init__(self, message, **kwargs):
         super().__init__(**kwargs)
@@ -36,40 +32,3 @@ class ExceptionPopup(AppPopup):
     def on_dismiss(self):
         # Don't allow the app to continue running.
         self.app.stop()
-
-
-class LinkPopup(AppPopup):
-    def __init__(self, widget, **kwargs):
-        super().__init__(**kwargs)
-        self.link = widget
-        self.title = self.link.base.json.get("hostname", "<hostname>")
-
-    def delete(self):
-        self.app.remove_item(self.link)
-        self.dismiss()
-
-    def edit(self):
-        self.link.edit()
-        self.dismiss()
-
-
-class PingHostPopup(AppPopup):
-    def on_cancel(self):
-        self.dismiss()
-
-    def on_okay(self, text):
-        self.app.ui.parse(f"ping {self.title.split()[-1]} {text}")
-        self.dismiss()
-
-
-class PuzzleChooserPopup(AppPopup):
-    def on_cancel(self):
-        self.dismiss()
-
-    def on_dismiss(self):
-        self.app.selected_puzzle = None
-
-    def on_load(self):
-        self.app.ui.load_puzzle(self.app.selected_puzzle)
-        self.app.setup_puzzle(self.app.ui.puzzle.json)
-        self.dismiss()

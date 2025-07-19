@@ -17,15 +17,16 @@ from .. import messages
 from .. import nettests
 from .. import session
 from .base import AppExceptionHandler
+from .base import AppRecView
 from .base import HelpHighlight
-from .base import Link
 from .base import Packet
 from .base import NETWORK_ITEMS
 from .base import LightColorTheme
 from .buttons import MenuButton
 from .device import Device
 from .layouts import AppMenu
-from .popups import PuzzleChooserPopup
+from .link import Link
+from .popups import AppPopup
 
 
 class NetworkPuzzlesApp(App):
@@ -445,3 +446,27 @@ class NetworkPuzzlesApp(App):
         # raise NotImplementedError
         for d in self.devices:
             print(f"{d.nics=}")
+
+
+class PuzzleChooserPopup(AppPopup):
+    def on_cancel(self):
+        self.dismiss()
+
+    def on_dismiss(self):
+        self.app.selected_puzzle = None
+
+    def on_load(self):
+        self.app.ui.load_puzzle(self.app.selected_puzzle)
+        self.app.setup_puzzle(self.app.ui.puzzle.json)
+        self.dismiss()
+
+
+class PuzzlesRecView(AppRecView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app.update_puzzle_list()
+        self.data = {}
+        self.update_data()
+
+    def update_data(self):
+        self.data = [{"text": n} for n in self.app.filtered_puzzlelist]

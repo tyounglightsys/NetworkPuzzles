@@ -1,0 +1,11 @@
+<LinkPopup>
+    size_hint: (0.25, 0.33)
+    ThemedBoxLayout:
+        orientation: 'vertical'
+        #size_hint_y: None
+        PopupButton:
+            text: _("Delete")
+            on_press: root.delete()
+        PopupButton:
+            text: _("Edit")
+            on_press: root.edit()

@@ -10,6 +10,9 @@
         text: root.hostname
         pos_hint: {'center_x': 0.5}
 
+<CommandsPopup>:
+    size_hint_x: 0.25
+
 <EditDevicePopup>:
     size_hint: (0.75, 0.6)
     ThemedBoxLayout:
@@ -93,3 +96,20 @@
                 PopupButton:  # OK
                     text: _("Okay")
                     on_press: root.on_okay()
+
+<PingHostPopup>:
+    size_hint: (0.25, 0.25)
+    ThemedBoxLayout:
+        orientation: 'vertical'
+        TextInput:
+            id: host
+            multiline: False
+            hint_text: _("hostname or IP")
+            on_text_validate: root.on_okay(root.ids.host.text)
+        ThemedBoxLayout:
+            PopupButton:
+                text: _("Cancel")
+                on_press: root.dismiss()
+            PopupButton:
+                text: _("Okay")
+                on_press: root.on_okay(root.ids.host.text)
