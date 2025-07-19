@@ -17,13 +17,13 @@ from .. import messages
 from .. import nettests
 from .. import session
 from .base import AppExceptionHandler
-from .base import Device
 from .base import HelpHighlight
 from .base import Link
 from .base import Packet
 from .base import NETWORK_ITEMS
 from .base import LightColorTheme
 from .buttons import MenuButton
+from .device import Device
 from .layouts import AppMenu
 from .popups import PuzzleChooserPopup
 
