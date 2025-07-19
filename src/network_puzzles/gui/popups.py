@@ -1,4 +1,3 @@
-import logging
 from kivy.graphics import Color
 from kivy.graphics import Rectangle
 from kivy.uix.popup import Popup
@@ -74,39 +73,3 @@ class PuzzleChooserPopup(AppPopup):
         self.app.ui.load_puzzle(self.app.selected_puzzle)
         self.app.setup_puzzle(self.app.ui.puzzle.json)
         self.dismiss()
-
-
-class EditDevicePopup(AppPopup):
-    def __init__(self, device, **kwargs):
-        self.device = device
-        super().__init__(**kwargs)
-
-    def get_editable_nic_names(self):
-        return "\n".join(
-            [n.name for n in self.device.nics if not n.name.startswith("lo")]
-        )
-
-    def on_gateway(self):
-        raise NotImplementedError
-
-    def on_routes(self):
-        raise NotImplementedError
-
-    def on_vlans(self):
-        raise NotImplementedError
-
-    def on_nics_edit(self):
-        raise NotImplementedError
-
-    def on_ips_add(self):
-        raise NotImplementedError
-
-    def on_ips_remove(self):
-        raise NotImplementedError
-
-    def on_ips_edit(self):
-        raise NotImplementedError
-
-    def on_okay(self):
-        logging.debug("GUI: TODO: Apply config updates on exit.")
-        raise NotImplementedError

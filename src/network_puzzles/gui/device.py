@@ -17,8 +17,8 @@ from .base import location_to_rel_pos
 from .base import NETWORK_ITEMS
 from .buttons import CommandButton
 from .layouts import ThemedBoxLayout
+from .popups import AppPopup
 from .popups import CommandsPopup
-from .popups import EditDevicePopup
 from .popups import PingHostPopup
 
 
@@ -212,3 +212,39 @@ class Device(DragBehavior, ThemedBoxLayout):
         if rel_pos is None:
             rel_pos = location_to_rel_pos(self.base.json.get("location"))
         self.pos_hint = {"center": rel_pos}
+
+
+class EditDevicePopup(AppPopup):
+    def __init__(self, device, **kwargs):
+        self.device = device
+        super().__init__(**kwargs)
+
+    def get_editable_nic_names(self):
+        return "\n".join(
+            [n.name for n in self.device.nics if not n.name.startswith("lo")]
+        )
+
+    def on_gateway(self):
+        raise NotImplementedError
+
+    def on_routes(self):
+        raise NotImplementedError
+
+    def on_vlans(self):
+        raise NotImplementedError
+
+    def on_nics_edit(self):
+        raise NotImplementedError
+
+    def on_ips_add(self):
+        raise NotImplementedError
+
+    def on_ips_remove(self):
+        raise NotImplementedError
+
+    def on_ips_edit(self):
+        raise NotImplementedError
+
+    def on_okay(self):
+        logging.debug("GUI: TODO: Apply config updates on exit.")
+        raise NotImplementedError
