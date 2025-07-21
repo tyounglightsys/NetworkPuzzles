@@ -10,7 +10,7 @@ class TerminalLabel(TextInput):
     def get_max_row(self, text):
         max_row = 0
         max_length = 0
-        for i, line in enumerate(text.split('\n')):
+        for i, line in enumerate(text.split("\n")):
             if len(line) > max_length:
                 max_row = i
                 max_length = len(line)
@@ -33,9 +33,10 @@ class DeviceLabel(ThemedLabel):
 
 class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
     """Add selection support to the Label"""
+
     index = None
-    selected = BooleanProperty(False)
     selectable = BooleanProperty(True)
+    selected = BooleanProperty(False)
 
     def refresh_view_attrs(self, rv, index, data):
         """Catch and handle the view changes"""
@@ -51,7 +52,7 @@ class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
 
     def apply_selection(self, rv, index, is_selected):
         """Respond to the selection of items in the view."""
-        name = rv.data[index].get('text')
         self.selected = is_selected
         if is_selected:
-            self.app.selected_puzzle = name
+            # Call RecycleView callback with index of selected item.
+            rv.on_selection(index)

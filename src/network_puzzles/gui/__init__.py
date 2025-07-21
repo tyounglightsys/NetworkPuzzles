@@ -456,6 +456,7 @@ class PuzzleChooserPopup(AppPopup):
         self.app.selected_puzzle = None
 
     def on_load(self):
+        self.app.selected_puzzle = self.ids.puzzles_view.selected_item.get("text")
         self.app.ui.load_puzzle(self.app.selected_puzzle)
         self.app.setup_puzzle(self.app.ui.puzzle.json)
         self.dismiss()
@@ -466,6 +467,7 @@ class PuzzlesRecView(AppRecView):
         super().__init__(**kwargs)
         self.app.update_puzzle_list()
         self.data = {}
+        self.selected_item = None
         self.update_data()
 
     def update_data(self):

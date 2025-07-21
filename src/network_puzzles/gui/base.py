@@ -59,6 +59,10 @@ class AppRecView(RecycleView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app = session.app
+        self.selected_item = None
+
+    def on_selection(self, idx):
+        self.selected_item = self.data[idx]
 
 
 class ThemedCheckBox(CheckBox):

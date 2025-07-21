@@ -10,6 +10,7 @@ from .. import _
 from .. import device
 from .. import nic
 from .. import session
+from .base import AppRecView
 from .base import get_layout_height
 from .base import HelpHighlight
 from .base import hide_widget
@@ -221,11 +222,6 @@ class EditDevicePopup(AppPopup):
         self.device = device
         super().__init__(**kwargs)
 
-    def get_editable_nic_names(self):
-        return "\n".join(
-            [n.name for n in self.device.nics if not n.name.startswith("lo")]
-        )
-
     def on_gateway(self):
         raise NotImplementedError
 
@@ -237,6 +233,9 @@ class EditDevicePopup(AppPopup):
 
     def on_nics_edit(self):
         raise NotImplementedError
+
+    def on_nic_selection(self, selected_nic):
+        self._set_ips(selected_nic)
 
     def on_ips_add(self):
         raise NotImplementedError
@@ -250,6 +249,33 @@ class EditDevicePopup(AppPopup):
     def on_okay(self):
         logging.debug("GUI: TODO: Apply config updates on exit.")
         raise NotImplementedError
+
+    def _set_ips(self, selected_nic):
+        for n in self.device.nics:
+            if n.name == selected_nic:
+                for iface in n.interfaces:
+                    if iface.get("nicname") == n.name:
+                        print(f"{iface.get('myip')=}")
+                        ipdata = iface.get("myip")
+                        ip = ipdata.get("ip")
+                        if ip.startswith("0"):
+                            self.ids.ip_list.text = ""
+                        else:
+                            self.ids.ip_list.text = f"{ip}/{ipdata.get('mask')}"
+                        break
+                break
+
+
+class NICsRecView(AppRecView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data = {}
+
+    def update_data(self, nics):
+        self.data = [{"text": n.name} for n in nics if not n.name.startswith("lo")]
+
+    def on_selection(self, index):
+        self.root.on_nic_selection(self.data[index].get("text"))
 
 
 class PingHostPopup(AppPopup):
