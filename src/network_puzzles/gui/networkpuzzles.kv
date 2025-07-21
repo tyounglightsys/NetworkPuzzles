@@ -2,12 +2,12 @@
 #:import _ network_puzzles._
 #:import session network_puzzles.session
 # Order of "include" directives seems to matter.
-#:include network_puzzles/gui/popups.kv
-#:include network_puzzles/gui/base.kv
-#:include network_puzzles/gui/buttons.kv
-#:include network_puzzles/gui/layouts.kv
-#:include network_puzzles/gui/device.kv
 #:include network_puzzles/gui/labels.kv
+#:include network_puzzles/gui/layouts.kv
+#:include network_puzzles/gui/base.kv
+#:include network_puzzles/gui/popups.kv
+#:include network_puzzles/gui/buttons.kv
+#:include network_puzzles/gui/device.kv
 #:include network_puzzles/gui/link.kv
 
 
@@ -92,18 +92,6 @@ ThemedBoxLayout:
             size_hint_y: 0.10
             max_lines: 6
 
-
-<PuzzlesRecView>:
-    viewclass: 'SelectableLabel'
-    bar_color: app.theme.detail
-    bar_inactive_color: self.bar_color
-    bar_width: dp(3)
-    SelectableRecycleBoxLayout:
-        orientation: 'vertical'
-        default_size: None, dp(56)
-        default_size_hint: 1, None
-        size_hint_y: None
-        height: self.minimum_height
 
 <PuzzleChooserPopup>:
     size_hint: (1/3, 3/4)

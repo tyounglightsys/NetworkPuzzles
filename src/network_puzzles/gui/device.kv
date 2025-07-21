@@ -82,9 +82,9 @@
                     size_hint_x: 0.55
                     text: _("Edit")
                     on_press: root.on_ips_edit()
-            ThemedLabel:  # IP addresses data
+            IPsRecView:  # IP addresses data
                 size_hint_y: 0.20
-                id: ip_list
+                id: ips_list
         ThemedBoxLayout:
             size_hint_x: 0.4
             orientation: "vertical"
@@ -98,18 +98,6 @@
                 PopupButton:  # OK
                     text: _("Okay")
                     on_press: root.on_okay()
-
-<NICsRecView>:
-    viewclass: 'SelectableLabel'
-    bar_color: app.theme.detail
-    bar_inactive_color: self.bar_color
-    bar_width: dp(3)
-    SelectableRecycleBoxLayout:
-        orientation: 'vertical'
-        default_size: None, dp(28)
-        default_size_hint: 1, None
-        size_hint_y: None
-        height: self.minimum_height
 
 <PingHostPopup>:
     size_hint: (0.25, 0.25)

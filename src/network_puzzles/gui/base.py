@@ -59,6 +59,7 @@ class AppRecView(RecycleView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app = session.app
+        self.data = list()
         self.selected_item = None
 
     def on_selection(self, idx):

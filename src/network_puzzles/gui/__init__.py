@@ -466,7 +466,6 @@ class PuzzlesRecView(AppRecView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app.update_puzzle_list()
-        self.data = {}
         self.selected_item = None
         self.update_data()
 

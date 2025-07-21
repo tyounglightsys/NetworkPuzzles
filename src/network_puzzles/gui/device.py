@@ -251,6 +251,7 @@ class EditDevicePopup(AppPopup):
         raise NotImplementedError
 
     def _set_ips(self, selected_nic):
+        ips = list()
         for n in self.device.nics:
             if n.name == selected_nic:
                 for iface in n.interfaces:
@@ -258,24 +259,24 @@ class EditDevicePopup(AppPopup):
                         print(f"{iface.get('myip')=}")
                         ipdata = iface.get("myip")
                         ip = ipdata.get("ip")
-                        if ip.startswith("0"):
-                            self.ids.ip_list.text = ""
-                        else:
-                            self.ids.ip_list.text = f"{ip}/{ipdata.get('mask')}"
+                        if not ip.startswith("0"):
+                            ips.append(ipdata)
                         break
                 break
+        self.ids.ips_list.update_data(ips)
 
 
 class NICsRecView(AppRecView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.data = {}
-
     def update_data(self, nics):
         self.data = [{"text": n.name} for n in nics if not n.name.startswith("lo")]
 
     def on_selection(self, index):
         self.root.on_nic_selection(self.data[index].get("text"))
+
+
+class IPsRecView(AppRecView):
+    def update_data(self, ips):
+        self.data = [{"text": f"{d.get('ip')}/{d.get('mask')}"} for d in ips]
 
 
 class PingHostPopup(AppPopup):
