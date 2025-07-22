@@ -1,6 +1,7 @@
 import time
 import ipaddress
 import re
+import logging
 
 from . import session
 from . import device
@@ -82,6 +83,12 @@ def addPacketToPacketlist(thepacket):
 def packetsNeedProcessing():
     """determine if we should continue to loop through packets
     returns true or false"""
+    if len(session.packetlist) > session.maxpackets:
+        session.maxpackets = len(session.packetlist)
+    if len(session.packetlist) > 30:
+        if not session.packetstorm:
+            logging.info(f"We started a storm: {len(session.packetlist)}")
+        session.packetstorm = True #There were too many packets.  Must have created a storm/net loop
     return len(session.packetlist) > 0
 
 def processPackets(killSeconds: int = 20, tick_pct: float = 10):

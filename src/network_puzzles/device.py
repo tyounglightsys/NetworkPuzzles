@@ -738,8 +738,11 @@ def beginIngressOnNIC(packRec, nicRec):
         trackPackets = True
     if trackPackets:
         # We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
-        1  # do nothing for now.  We will come back when we know how we want these stored
-        # here we would store the MAC and tie it to this NIC.
+        if 'port_arps' not in theDevice:
+            theDevice['port_arps'] = {}
+        if packRec.get('sourceMAC') not in theDevice.get('port_arps'):
+            theDevice['port_arps'][packRec.get('sourceMAC')] = nicRec.get('nicname')
+
 
     # If we are entering a WAN port, see if we should be blocked or if it is a return packet
     if nictype == "wan":
@@ -822,11 +825,25 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                     "SuccessfullyPings",
                     f"Successfully pinged from {thisDevice.get('hostname')} to {pingdest.get('hostname')}",
                 )
+                #We mark this as complete too, but the test for 'WithoutLoop' happens later
+                mark_test_as_completed(
+                    thisDevice.get("hostname"),
+                    pingdest.get("hostname"),
+                    "SuccessfullyPingsWithoutLoop",
+                    f"Successfully pinged from {thisDevice.get('hostname')} to {pingdest.get('hostname')} without a network loop.",
+                )
+
+                #print(f" we are done, and packetlist is: {len(session.packetlist)} and storm: {session.packetstorm}")
             return True
 
     # If the packet is not done and we forward, forward. Basically, a switch/hub
     if packRec["status"] != "done" and forwardsPackets(thisDevice):
         # We loop through all nics. (minus the one we came in from)
+        onlyport = ''
+        if thisDevice.get('mytype') == "net_switch":
+            if packRec.get('destMAC') in thisDevice.get('port_arps',{}):
+                #we just send this out the one port.
+                onlyport = thisDevice.get('port_arps').get(packRec.get('destMAC'))
         # print("We are forwarding.")
         for onenic in thisDevice["nic"]:
             # we duplicate the packet and send it out each port-type
@@ -839,18 +856,19 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             ):
                 # We have a network wire connected to the NIC.  Send the packet out
                 # if it is a switch-port, then we check first if we know where the packet goes - undone
-                tpacket = copy.deepcopy(packRec)
-                tpacket["packetlocation"] = tlink["hostname"]
-                tpacket["packetDistance"] = (
-                    0  # reset it to the beginning of the next link
-                )
-                if tlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
-                    tpacket["packetDirection"] = 1  # Src to Dest
-                else:
-                    tpacket["packetDirection"] = 2  # Dest to Source
-                tpacket["packetDistance"] = 0  # start at the beginning.
-                packet.addPacketToPacketlist(tpacket)
-                # print (" Sending packet out a port: " + tpacket['packetlocation'])
+                if(onlyport == '' or onlyport == onenic.get('nicname')):
+                    tpacket = copy.deepcopy(packRec)
+                    tpacket["packetlocation"] = tlink["hostname"]
+                    tpacket["packetDistance"] = (
+                        0  # reset it to the beginning of the next link
+                    )
+                    if tlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
+                        tpacket["packetDirection"] = 1  # Src to Dest
+                    else:
+                        tpacket["packetDirection"] = 2  # Dest to Source
+                    tpacket["packetDistance"] = 0  # start at the beginning.
+                    packet.addPacketToPacketlist(tpacket)
+                    # print (" Sending packet out a port: " + tpacket['packetlocation'])
         # we set this packet as done.
         packRec["status"] = (
             "done"  # The packet that came in gets killed since it was replicated everywhere else

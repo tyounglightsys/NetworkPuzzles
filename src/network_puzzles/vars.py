@@ -14,6 +14,8 @@ class Session:
         self.puzzlelist: list = list()
         self.puzzle = None
         self.packetlist: list = list()
+        self.packetstorm = False
+        self.maxpackets = 0
         self.history = list()
         self.undolist = list()
         self.redolist = list()

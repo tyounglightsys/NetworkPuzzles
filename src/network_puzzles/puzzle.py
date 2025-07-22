@@ -99,7 +99,7 @@ class Puzzle:
                         commands.append(
                             f"create link {test.get('shost')} {test.get('dhost')}"
                         )
-                case "SuccessfullyPings" | "SuccessfullyPingsAgain":
+                case "SuccessfullyPings" | "SuccessfullyPingsAgain" | "SuccessfullyPingsWithoutLoop":
                     commands.append(f"ping {test.get('shost')} {test.get('dhost')}")
                 case "DeviceIsFrozen" | "DeviceBlowsUpWithPower" | "DeviceNeedsUPS":
                     if device.powerOff(hostname):

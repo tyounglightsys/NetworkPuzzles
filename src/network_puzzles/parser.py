@@ -52,6 +52,7 @@ class Parser:
     def parse(self, command: str, fromuser=True, fromundo=False):
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         logging.debug(f"{command=}")
+        session.packetstorm = False #We are starting something new. It is false until we determine otherwise
         command = command.replace(
             ",", " "
         )  # replace commas with spaces.  This fixes x,y coords

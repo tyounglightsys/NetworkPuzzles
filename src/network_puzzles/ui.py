@@ -156,12 +156,15 @@ class CLI(UI):
             sys.exit()
 
     def acknowledge_any_tests(self):
-        for onetest in session.puzzle.all_tests():
-            if onetest.get('completed',False) and not onetest.get('acknowledged',False):
-                #we have something completed, but not acknowledged
-                if onetest.get('message', "") != "":
-                    session.print(onetest.get('message', ""))
-                    onetest['acknowledged'] = True
+        for test in session.puzzle.all_tests():
+            if test.get('thetest','') == 'SuccessfullyPingsWithoutLoop' and session.packetstorm and not test.get('acknowledged',False):
+                #The ping was successful, but the storm did happen.  Mark it as false
+                test['completed'] = False
+            if test.get('completed',False) and not test.get('acknowledged',False):
+                #we have something completed, but not acknowledged                    
+                if test.get('message', "") != "":
+                    session.print(test.get('message', ""))
+                    test['acknowledged'] = True
 
     def quit(self):
         self.parser.parse.exit_app()
@@ -180,6 +183,9 @@ class GUI(UI):
 
     def acknowledge_any_tests(self):
         for test in session.puzzle.all_tests():
+            if test.get('thetest','') == 'SuccessfullyPingsWithoutLoop' and session.packetstorm and not test.get('acknowledged',False):
+                #The ping was successful, but the storm did happen.  Mark it as false
+                test['completed'] = False
             if test.get('completed', False) and not test.get('acknowledged', False):
                 # we have something completed, but not acknowledged
                 if test.get('message') is not None:
@@ -223,7 +229,7 @@ class GUI(UI):
     def process_packets(self, tick_pct):
         # If we created packets, process them until done.
         if packet.packetsNeedProcessing():
-            packet.processPackets(3, tick_pct=tick_pct)
+            packet.processPackets(4, tick_pct=tick_pct)
 
     def quit(self):
         self.app.stop()
