@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from kivy.clock import Clock
 from kivy.graphics import Color
 from kivy.graphics import Ellipse
@@ -8,6 +9,7 @@ from kivy.uix.gridlayout import GridLayout
 
 from .. import _
 from .. import device
+from .. import interface
 from .. import nic
 from .. import session
 from .base import AppRecView
@@ -27,6 +29,7 @@ class Device(DragBehavior, ThemedBoxLayout):
         super().__init__(**kwargs)
         self.app = session.app
         self.pos_init = (0, 0)
+        self.help_text = None
         self._set_pos()  # sets self.pos_hint
         self._set_image()
         # Updates that rely on Device's pos already being set.
@@ -75,6 +78,11 @@ class Device(DragBehavior, ThemedBoxLayout):
 
     def callback(self, cmd_string):
         self.app.ui.parse(cmd_string)
+
+    def get_nic(self, name):
+        for n in self.nics:
+            if n.name == name:
+                return n
 
     def highlight(self, do_highlight=True):
         # Find corresponding highlight widget.
@@ -151,6 +159,14 @@ class Device(DragBehavior, ThemedBoxLayout):
                 Color(rgb=(1, 0, 0))
                 Ellipse(pos=pos, size=(dp(8), dp(8)))
 
+    def update_tooltip_text(self, help_text=None):
+        info = self._extra_tooltip_text()
+        if help_text:
+            self.help_text = help_text
+        if self.help_text:
+            info += f"\n{self.help_text}"
+        self.button.info = info
+
     def _build_commands_popup(self):
         # Build commands list (might change if state changes).
         commands = [_("Ping [host]")]
@@ -166,7 +182,7 @@ class Device(DragBehavior, ThemedBoxLayout):
                     title=f"{_('Ping [host] from')} {self.hostname}"
                 ).open
             elif command == _("Edit"):
-                cb = EditDevicePopup(title=_("Edit device"), device=self).open
+                cb = self._edit_device
             else:
                 cb = self.callback
             content.add_widget(CommandButton(cb, command))
@@ -198,6 +214,9 @@ class Device(DragBehavior, ThemedBoxLayout):
                     text += f"\n{ipaddr}/{ip.get('mask')}"
         return text
 
+    def _edit_device(self, *args):
+        EditDevicePopup(title=f"{_('Edit')} {self.hostname}", dev=self).open()
+
     def _set_image(self):
         devices = NETWORK_ITEMS.get("devices").get("user") | NETWORK_ITEMS.get(
             "devices"
@@ -217,10 +236,24 @@ class CommandsPopup(AppPopup):
     pass
 
 
+class PingHostPopup(AppPopup):
+    def on_cancel(self):
+        self.dismiss()
+
+    def on_okay(self, text):
+        self.app.ui.parse(f"ping {self.title.split()[-1]} {text}")
+        self.dismiss()
+
+
 class EditDevicePopup(AppPopup):
-    def __init__(self, device, **kwargs):
-        self.device = device
+    def __init__(self, dev, **kwargs):
+        # Use copy of data for displaying in UI b/c real changes will be
+        # applied via parser commands.
+        self.device = Device(deepcopy(dev.base.json))
         super().__init__(**kwargs)
+        self.selected_ip = None
+        self.selected_nic = None
+        self.puzzle_commands = list()
 
     def on_gateway(self):
         raise NotImplementedError
@@ -235,7 +268,13 @@ class EditDevicePopup(AppPopup):
         raise NotImplementedError
 
     def on_nic_selection(self, selected_nic):
-        self._set_ips(selected_nic)
+        self.selected_ip = None
+        self.root.ids.edit_ip.disabled = True
+        self.root.ids.remove_ip.disabled = True
+        self.selected_nic = selected_nic
+        self.root.ids.edit_nic.disabled = False
+        self.root.ids.add_ip.disabled = False
+        self._set_ips()
 
     def on_ips_add(self):
         raise NotImplementedError
@@ -244,24 +283,50 @@ class EditDevicePopup(AppPopup):
         raise NotImplementedError
 
     def on_ips_edit(self):
-        raise NotImplementedError
+        if not self.selected_ip:
+            logging.warning("GUI: No IP selected for editing.")
+            return
+        n = self.device.get_nic(self.selected_nic)
+        ip_address = None
+        for iface_data in n.interfaces:
+            iface = interface.Interface(iface_data)
+            ip_addr = interface.IpAddress(iface.ip_data)
+            if self.selected_ip.split("/") == [ip_addr.address, ip_addr.netmask]:
+                ip_address = ip_addr
+                break
+        if ip_address:
+            EditIpPopup(self, ip_address, title=_("Edit IP configuration")).open()
+
+    def on_ip_selection(self, selected_ip):
+        self.selected_ip = selected_ip
+        self.root.ids.remove_ip.disabled = False
+        self.root.ids.edit_ip.disabled = False
+
+    def on_cancel(self):
+        self.dismiss()
 
     def on_okay(self):
-        logging.debug("GUI: TODO: Apply config updates on exit.")
-        raise NotImplementedError
+        logging.info(f"GUI: Updating {self.device.hostname}:")
+        for cmd in self.puzzle_commands:
+            logging.info(f"GUI: - {cmd}")
+            self.app.ui.parse(cmd)
+        # Update GUI helps b/c it will trigger tooltip updates, which are needed
+        # b/c IP data has likely changed.
+        self.app.update_help()
+        self.dismiss()
 
-    def _set_ips(self, selected_nic):
+    def _data_changed(self):
+        return self.device.base.json != self.initial_data
+
+    def _set_ips(self):
         ips = list()
-        for n in self.device.nics:
-            if n.name == selected_nic:
-                for iface in n.interfaces:
-                    if iface.get("nicname") == n.name:
-                        print(f"{iface.get('myip')=}")
-                        ipdata = iface.get("myip")
-                        ip = ipdata.get("ip")
-                        if not ip.startswith("0"):
-                            ips.append(ipdata)
-                        break
+        n = self.device.get_nic(self.selected_nic)
+        for iface_data in n.interfaces:
+            iface = interface.Interface(iface_data)
+            if iface.nicname == n.name:
+                ip_addr = interface.IpAddress(iface.ip_data)
+                if not ip_addr.address.startswith("0"):
+                    ips.append(iface.ip_data)
                 break
         self.ids.ips_list.update_data(ips)
 
@@ -278,11 +343,29 @@ class IPsRecView(AppRecView):
     def update_data(self, ips):
         self.data = [{"text": f"{d.get('ip')}/{d.get('mask')}"} for d in ips]
 
+    def on_selection(self, index):
+        self.root.on_ip_selection(self.data[index].get("text"))
 
-class PingHostPopup(AppPopup):
+
+class EditIpPopup(AppPopup):
+    def __init__(self, device_popup, ip_address, **kwargs):
+        self.device_popup = device_popup
+        self.ip_address = ip_address
+        super().__init__(**kwargs)
+
     def on_cancel(self):
         self.dismiss()
 
-    def on_okay(self, text):
-        self.app.ui.parse(f"ping {self.title.split()[-1]} {text}")
+    def on_okay(self):
+        # Update IPs in IPs list.
+        self.device_popup._set_ips()
+        # self.device_popup.device.update_tooltip_text()
+        # Add updating command.
+        self.device_popup.puzzle_commands.append(
+            f"set {self.device_popup.device.hostname} {self.device_popup.selected_nic} {self.ip_address.address}/{self.ip_address.netmask}"
+        )
         self.dismiss()
+
+    def _set_address(self, input_inst):
+        if not input_inst.focus:
+            self.ip_address.address = input_inst.text

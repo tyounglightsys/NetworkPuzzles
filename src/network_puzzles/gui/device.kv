@@ -15,6 +15,7 @@
 
 <EditDevicePopup>:
     size_hint: (0.75, 0.6)
+    root: root
     ThemedBoxLayout:
         canvas.before:
             Color:
@@ -23,7 +24,7 @@
                 pos: self.pos
                 size: self.size
         spacing: dp(20)
-        ThemedBoxLayout:
+        ThemedBoxLayout:  # left 1/3
             size_hint_x: 0.3
             orientation: "vertical"
             ThemedBoxLayout:
@@ -48,43 +49,51 @@
                 on_press: root.on_vlans()
             Widget:
                 size_hint_y: 0.28
-        ThemedBoxLayout:
+        ThemedBoxLayout:  # center 1/3
             size_hint_x: 0.3
             orientation: "vertical"
-            ThemedBoxLayout:
+            ThemedBoxLayout:  # NICs label/button
                 size_hint_y: 0.15
                 ThemedLabel:  # NICs
                     size_hint_x: 0.45
                     text: _("NICs")
                 PopupButton:  # Edit
+                    id: edit_nic
                     size_hint_x: 0.55
                     text: _("Edit")
+                    disabled: True
                     on_press: root.on_nics_edit()
             NICsRecView:
-                size_hint_y: 0.5
-                id: selected_nic
+                size_hint_y: 0.35
                 root: root
                 on_parent: self.update_data(root.device.nics)
-            ThemedBoxLayout:
+            ThemedBoxLayout:  # IPs label/buttons
                 size_hint_y: 0.15
                 ThemedLabel:  # IPs
                     size_hint_x: 0.15
                     text: _("IPs")
                 PopupButton:  # +
+                    id: add_ip
                     size_hint_x: 0.15
                     text: "+"
+                    disabled: True
                     on_press: root.on_ips_add()
                 PopupButton:  # -
+                    id: remove_ip
                     size_hint_x: 0.15
                     text: "-"
+                    disabled: True
                     on_press: root.on_ips_remove()
                 PopupButton:  # Edit
+                    id: edit_ip
                     size_hint_x: 0.55
                     text: _("Edit")
+                    disabled: True
                     on_press: root.on_ips_edit()
             IPsRecView:  # IP addresses data
-                size_hint_y: 0.20
                 id: ips_list
+                size_hint_y: 0.35
+                root: root
         ThemedBoxLayout:
             size_hint_x: 0.4
             orientation: "vertical"
@@ -94,7 +103,7 @@
                 orientation: "vertical"
                 PopupButton:  # Cancel
                     text: _("Cancel")
-                    on_press: root.dismiss()
+                    on_press: root.on_cancel()
                 PopupButton:  # OK
                     text: _("Okay")
                     on_press: root.on_okay()
@@ -115,3 +124,42 @@
             PopupButton:
                 text: _("Okay")
                 on_press: root.on_okay(root.ids.host.text)
+
+
+<ValueInput@TextInput>:
+    multiline: False
+    text_validate_unfocus: True
+    write_tab: False
+
+<EditIpPopup>:
+    size_hint_x: 0.25
+    ThemedBoxLayout:
+        orientation: "vertical"
+        ThemedBoxLayout:
+            ThemedLabel:
+                text: _("IP Address:")
+            ValueInput:
+                id: address
+                text: root.ip_address.address
+                on_focus: root._set_address(self)
+        ThemedBoxLayout:
+            ThemedLabel:
+                text: _("Netmask:")
+            ValueInput:
+                id: netmask
+                text: root.ip_address.netmask
+                #on_focus: root._set
+        ThemedBoxLayout:
+            ThemedLabel:
+                text: _("Gateway:")
+            ValueInput:
+                id: gateway
+                text: root.ip_address.gateway
+        Widget:
+        ThemedBoxLayout:
+            PopupButton:
+                text: _("Cancel")
+                on_press: root.on_cancel()
+            PopupButton:
+                text: _("Okay")
+                on_press: root.on_okay()

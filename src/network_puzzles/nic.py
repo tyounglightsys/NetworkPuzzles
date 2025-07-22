@@ -14,11 +14,18 @@ class Nic:
 
     @property
     def interfaces(self):
-        return [iface for iface in self.json.get("interface")]
+        data = self.json.get("interface")
+        if not isinstance(data, list):
+            data = [data]
+        return [iface for iface in data]
 
     @property
     def name(self):
         return self.json.get("nicname")
+
+    @property
+    def type(self):
+        return self.json.get("nictype")
 
     def ensure_mac(self, data=None):
         if data is not None:

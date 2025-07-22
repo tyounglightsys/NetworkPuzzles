@@ -382,11 +382,7 @@ class NetworkPuzzlesApp(App):
         for device, help_text in devices.items():
             d = self.get_widget_by_hostname(device)
             if hasattr(d, "button"):
-                # if hasattr(d, 'tooltip_text'):
-                info = d._extra_tooltip_text()
-                if help_text:
-                    info += f"\n{help_text}"
-                d.button.info = info
+                d.update_tooltip_text(help_text)
 
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)
