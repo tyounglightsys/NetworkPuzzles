@@ -17,15 +17,16 @@ from .. import messages
 from .. import nettests
 from .. import session
 from .base import AppExceptionHandler
-from .base import Device
+from .base import AppRecView
 from .base import HelpHighlight
-from .base import Link
 from .base import Packet
 from .base import NETWORK_ITEMS
 from .base import LightColorTheme
 from .buttons import MenuButton
+from .device import Device
 from .layouts import AppMenu
-from .popups import PuzzleChooserPopup
+from .link import Link
+from .popups import AppPopup
 
 
 class NetworkPuzzlesApp(App):
@@ -86,26 +87,35 @@ class NetworkPuzzlesApp(App):
             # TODO: Handle puzzle complete (popup?).
             self.ui.console_write("<-- TODO: Handle puzzle complete -->")
 
-    def add_device(self, device_inst=None):
+    def add_device(self, devicew=None):
         # TODO: If device_inst not given, require user to choose device type
         # on the screen to instantiate a new device.
-        if device_inst is None:
-            device_inst = Device()
+        if devicew is None:
+            devicew = Device()
 
-        self.root.ids.layout.add_widget(device_inst)
+        # Hide invisible devices.
+        if devicew.base.is_invisible:
+            devicew.hide()
 
-    def add_link(self, link=None):
+        self.root.ids.layout.add_widget(devicew)
+
+    def add_link(self, linkw=None):
         # TODO: If link_inst not given, require user to tap on start and end
         # devices on the screen to instantiate a new link.
-        if not isinstance(link, Link):
-            if isinstance(link, dict):
-                link = Link(link)
-            elif isinstance(link, MenuButton):
+        if not isinstance(linkw, Link):
+            if isinstance(linkw, dict):
+                linkw = Link(linkw)
+            elif isinstance(linkw, MenuButton):
                 raise NotImplementedError
 
-        # self.links.append(link_inst)
+        # Hide liks connected to invisible devices.
+        for host in linkw.base.hosts:
+            w = self.get_widget_by_hostname(host)
+            if w.base.is_invisible:
+                linkw.hide()
+
         # Add link to z-index = 99 to ensure it's drawn under devices.
-        self.root.ids.layout.add_widget(link, 99)
+        self.root.ids.layout.add_widget(linkw, 99)
 
     def add_terminal_line(self, line):
         if not line.endswith("\n"):
@@ -207,7 +217,9 @@ class NetworkPuzzlesApp(App):
 
     def on_start(self):
         # Make widget adjustments.
-        Clock.schedule_once(self._set_left_panel_width)  # buttons must update before panel
+        Clock.schedule_once(
+            self._set_left_panel_width
+        )  # buttons must update before panel
         self._add_new_item_button()
         # Open puzzle chooser if no puzzle is defined.
         if not self.ui.puzzle:
@@ -277,7 +289,7 @@ class NetworkPuzzlesApp(App):
                 self.add_device(Device(dev))
 
         # Some setup needs to be done one tick after devices, because their
-        # positions depends on the devices' positions.
+        # positions depend on the devices' positions.
         Clock.schedule_once(self.update_help)
         Clock.schedule_once(self.setup_links)
 
@@ -343,16 +355,16 @@ class NetworkPuzzlesApp(App):
         if help_level > 0:
             # TODO: This only highlights layout devices. We still need to work
             # in highlighting of other on-screen elements.
-            for n in set(t.get("shost") for t in self.ui.all_tests() if not t.get("completed")):
+            for n in set(
+                t.get("shost") for t in self.ui.all_tests() if not t.get("completed")
+            ):
                 d = self.ui.get_device(n)
                 if d is None:
                     logging.info(f'Ignoring highlight of non-device "{n}"')
                     continue
                 w = self.get_widget_by_hostname(n)
-                idx = self.root.ids.layout.children.index(w) + 1
-                self.root.ids.layout.add_widget(
-                    HelpHighlight(center=w.children[1].center), idx
-                )
+                if isinstance(w, Device) and not w.base.is_invisible:
+                    w.highlight()
 
     def _help_update_tooltips(self, help_level):
         # List devices and help_texts.
@@ -370,11 +382,7 @@ class NetworkPuzzlesApp(App):
         for device, help_text in devices.items():
             d = self.get_widget_by_hostname(device)
             if hasattr(d, "button"):
-                # if hasattr(d, 'tooltip_text'):
-                info = d._extra_tooltip_text()
-                if help_text:
-                    info += f"\n{help_text}"
-                d.button.info = info
+                d.update_tooltip_text(help_text)
 
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)
@@ -434,3 +442,28 @@ class NetworkPuzzlesApp(App):
         # raise NotImplementedError
         for d in self.devices:
             print(f"{d.nics=}")
+
+
+class PuzzleChooserPopup(AppPopup):
+    def on_cancel(self):
+        self.dismiss()
+
+    def on_dismiss(self):
+        self.app.selected_puzzle = None
+
+    def on_load(self):
+        self.app.selected_puzzle = self.ids.puzzles_view.selected_item.get("text")
+        self.app.ui.load_puzzle(self.app.selected_puzzle)
+        self.app.setup_puzzle(self.app.ui.puzzle.json)
+        self.dismiss()
+
+
+class PuzzlesRecView(AppRecView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app.update_puzzle_list()
+        self.selected_item = None
+        self.update_data()
+
+    def update_data(self):
+        self.data = [{"text": n} for n in self.app.filtered_puzzlelist]

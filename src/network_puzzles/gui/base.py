@@ -1,32 +1,17 @@
+# import logging
 import traceback
 from dataclasses import dataclass
 from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
-from kivy.clock import Clock
-from kivy.graphics import Color
-from kivy.graphics import Ellipse
-from kivy.graphics import Line
-from kivy.metrics import dp
-from kivy.properties import ListProperty
 from kivy.properties import StringProperty
-from kivy.uix.behaviors import DragBehavior
 from kivy.uix.checkbox import CheckBox
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.slider import Slider
 from kivy.uix.widget import Widget
 from typing import Tuple
 
-from .. import _
-from .. import device
-from .. import link
 from .. import session
-from .buttons import CommandButton
-from .layouts import ThemedBoxLayout
-from .popups import CommandsPopup
 from .popups import ExceptionPopup
-from .popups import LinkPopup
-from .popups import PingHostPopup
 
 
 LOCATION_MAX_X = 900
@@ -74,17 +59,11 @@ class AppRecView(RecycleView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app = session.app
+        self.data = list()
+        self.selected_item = None
 
-
-class PuzzlesRecView(AppRecView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app.update_puzzle_list()
-        self.data = {}
-        self.update_data()
-
-    def update_data(self):
-        self.data = [{"text": n} for n in self.app.filtered_puzzlelist]
+    def on_selection(self, idx):
+        self.selected_item = self.data[idx]
 
 
 class ThemedCheckBox(CheckBox):
@@ -104,256 +83,14 @@ class ThemedCheckBox(CheckBox):
         self.app.on_checkbox_activate(self)
 
 
-class Device(DragBehavior, ThemedBoxLayout):
-    def __init__(self, init_data=None, **kwargs):
-        self.base = device.Device(init_data)
-        super().__init__(**kwargs)
-        self.app = session.app
-        self._set_pos()  # sets self.pos_hint
-        self._set_image()
-        # Updates that rely on Device's pos already being set.
-        Clock.schedule_once(self.set_power_status)
-
-    @property
-    def button(self):
-        for child in self.children:
-            if child.__class__.__name__ == "DeviceButton":
-                return child
-        return None
-
-    @property
-    def hostname(self):
-        # NOTE: @properties seem to be evaluated during super(), which is before
-        # self.base is defined.
-        if hasattr(self, "base") and self.base:
-            return self.base.hostname
-
-    @property
-    def label(self):
-        for child in self.children:
-            if child.__class__.__name__ == "DeviceLabel":
-                return child
-        return None
-
-    @property
-    def nics(self):
-        if hasattr(self, "base") and self.base:
-            return self.base.all_nics()
-        else:
-            return list()
-
-    @property
-    def uid(self):
-        if hasattr(self, "base") and self.base:
-            return self.base.uid
-
-    def callback(self, cmd_string):
-        self.app.ui.parse(cmd_string)
-
-    def new(self):
-        raise NotImplementedError
-        self._set_uid()
-        self.set_type()
-        self.set_location()
-        self.set_hostname()
-
-    def on_pos(self, *args):
-        # Nullify pos_hint when initial position is changed to allow for widget
-        # to be drag-n-dropped.
-        self.pos_hint = {}
-        # Move help device highlighting with device.
-        self.app.update_help_highlight_devices()
-        # Move links ends with device.
-        for linkw in self.app.links:
-            if self.hostname in linkw.hostname:
-                print(f"redraw link {linkw.hostname}")
-                linkw.move_connection(self)
-
-    def on_press(self):
-        self._build_commands_popup().open()
-
-    def set_power_status(self, *args):
-        if self.base.powered_on:
-            self.canvas.after.clear()
-        else:
-            pos = (self.button.x + self.button.width - dp(15), self.button.y + dp(5))
-            with self.canvas.after:
-                Color(rgb=(1, 0, 0))
-                Ellipse(pos=pos, size=(dp(8), dp(8)))
-
-    def _build_commands_popup(self):
-        # Build commands list (might change if state changes).
-        commands = [_("Ping [host]")]
-        commands.extend(session.puzzle.commands_from_tests(self.hostname))
-        commands.extend(self.base.get_nontest_commands())
-
-        # Setup the content.
-        content = GridLayout(cols=1, spacing=dp(5))
-        for command in commands:
-            if command == _("Ping [host]"):
-                cb = PingHostPopup(
-                    title=f"{_('Ping [host] from')} {self.hostname}"
-                ).open
-            else:
-                cb = self.callback
-            content.add_widget(CommandButton(cb, command))
-        content.size_hint_y = None
-        content.height = get_layout_height(content)
-        # Setup the Popup.
-        popup = CommandsPopup(content=content, title=self.base.hostname)
-        rootgrid = popup.children[0]
-        box = rootgrid.children[0]
-        grid = box.children[0]
-        grid.size_hint_y = None
-        grid.height = get_layout_height(grid)
-        box.size_hint_y = None
-        box.height = get_layout_height(box)
-        rootgrid.size_hint_y = None
-        rootgrid.height = get_layout_height(rootgrid)
-        popup.height = rootgrid.height + dp(24)  # account for undocumented padding
-        return popup
-
-    def _extra_tooltip_text(self):
-        # Add hostname.
-        text = self.hostname
-        # Add IP addresses and netmasks.
-        for nic in self.nics:
-            for iface in nic.get("interface", []):
-                ip = iface.get("myip", {})
-                ipaddr = ip.get("ip", "0.0.0.0")
-                if ipaddr != "0.0.0.0":
-                    text += f"\n{ipaddr}/{ip.get('mask')}"
-        return text
-
-    def _set_image(self):
-        devices = NETWORK_ITEMS.get("devices").get("user") | NETWORK_ITEMS.get(
-            "devices"
-        ).get("infrastructure")
-        img = devices.get(self.base.json.get("mytype")).get("img")
-        if img is None:
-            raise TypeError(f"Unhandled device type: {self.base.json.get('mytype')}")
-        self.button.background_normal = str(self.app.IMAGES / img)
-
-    def _set_pos(self, rel_pos=None):
-        if rel_pos is None:
-            rel_pos = location_to_rel_pos(self.base.json.get("location"))
-        self.pos_hint = {"center": rel_pos}
-
-
-class Link(Widget):
-    end = ListProperty(None)
-    start = ListProperty(None)
-
-    def __init__(self, init_data=None, **kwargs):
-        super().__init__(**kwargs)
-        self.app = session.app
-        self.base = link.Link(init_data)
-
-        self._set_points()
-        self._set_size_and_pos()
-
-        self.background_normal = ""
-        self._draw_line()
-
-    @property
-    def hostname(self):
-        if hasattr(self, "base") and hasattr(self.base, "json"):
-            return self.base.json.get("hostname")
-        else:
-            return None
-
-    @property
-    def uid(self):
-        if hasattr(self, "base") and hasattr(self.base, "json"):
-            return self.base.json.get("uniqueidentifier")
-        else:
-            return None
-
-    def _draw_line(self):
-        self.canvas.clear()
-        with self.canvas:
-            Color(rgba=self.app.theme.fg1)
-            Line(points=(*self.start, *self.end), width=2)
-
-    def edit(self):
-        # TODO: Add Edit Link Popup.
-        raise NotImplementedError
-
-    def get_progress_pos(self, progress):
-        dx = progress * (self.end[0] - self.start[0]) / 100
-        dy = progress * (self.end[1] - self.start[1]) / 100
-        return (self.start[0] + dx, self.start[1] + dy)
-
-    def move_connection(self, dev):
-        # Update link properties.
-        if self.hostname.startswith(dev.hostname):
-            self._set_startpoint(dev)
-        elif self.hostname.endswith(dev.hostname):
-            self._set_endpoint(dev)
-        self._set_size_and_pos()
-        # Redraw the link line.
-        self._draw_line()
-
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            LinkPopup(self).open()
-            return True
-
-    def set_end_nic(self):
-        # TODO: Set hostname once DstNic is set as:
-        # "SrcNicHostname_link_DstNicHostname"
-        raise NotImplementedError
-
-    def set_link_type(self):
-        # Set one of: 'broken', 'normal', 'wireless'
-        raise NotImplementedError
-
-    def set_start_nic(self):
-        raise NotImplementedError
-
-    def _set_uid(self):
-        raise NotImplementedError
-
-    def _set_endpoint(self, end_dev=None):
-        if end_dev is None:
-            end_dev = self.app.get_widget_by_uid(
-                self.base.json.get("DstNic").get("hostid")
-            )
-        self.end = end_dev.button.center
-
-    def _set_startpoint(self, start_dev=None):
-        if start_dev is None:
-            start_dev = self.app.get_widget_by_uid(
-                self.base.json.get("SrcNic").get("hostid")
-            )
-        self.start = start_dev.button.center
-
-    def _set_points(self):
-        self._set_startpoint()
-        self._set_endpoint()
-
-    def _set_size_and_pos(self):
-        # Set pos.
-        self.x = min([self.start[0], self.end[0]])
-        self.y = min([self.start[1], self.end[1]])
-        # Set size.
-        self.size_hint = (None, None)
-        w = self.start[0] - self.end[0]
-        if w < 0:
-            w = -1 * w
-        self.width = w
-        h = self.start[1] - self.end[1]
-        if h < 0:
-            h = -1 * h
-        self.height = h
-
-
 class Packet(Widget):
     pass
 
 
 class HelpHighlight(Widget):
-    pass
+    def __init__(self, name=None, **kwargs):
+        super().__init__(**kwargs)
+        self.name = name
 
 
 class HelpSlider(Slider):
@@ -418,6 +155,16 @@ def get_layout_height(layout) -> None:
     )
     h_spacing = spacing * (len(layout.children) - 1)
     return h_padding + h_widgets + h_widgets_padding + h_spacing
+
+
+def hide_widget(wid, do_hide=True):
+    # logging.debug(f"GUI: hide {wid.hostname}={do_hide}")
+    if hasattr(wid, "opacity_prev") and not do_hide:
+        wid.opacity = wid.opacity_prev
+        del wid.opacity_prev
+    elif do_hide:
+        wid.opacity_prev = wid.opacity
+        wid.opacity = 0
 
 
 def location_to_rel_pos(location: str) -> list:

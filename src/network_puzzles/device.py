@@ -56,7 +56,7 @@ class Device:
             value = True
         else:
             value = False
-        logging.debug(f"{self.hostname}.is_invisible {value=} ")
+        # logging.debug(f"{self.hostname}.is_invisible: {value} ")
         return value
 
     @is_invisible.setter
@@ -71,7 +71,7 @@ class Device:
             value = False
         else:
             value = True
-        logging.debug(f"{self.hostname}.powered_on {value=}")
+        logging.debug(f"{self.hostname}.powered_on: {value}")
         return value
 
     @powered_on.setter

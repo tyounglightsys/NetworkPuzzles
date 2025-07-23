@@ -1,0 +1,165 @@
+<Device>:
+    orientation: 'vertical'
+    spacing: 0  # TODO: this is not applied
+    size_hint: (0.08, 0.20)
+    size_hint_max: (dp(85), dp(120))
+    drag_rectangle: (self.x, self.y, self.width, self.height)
+    DeviceButton:
+        _on_press: root.on_press
+    DeviceLabel:
+        text: root.hostname
+        pos_hint: {'center_x': 0.5}
+
+<CommandsPopup>:
+    size_hint_x: 0.25
+
+<EditDevicePopup>:
+    size_hint: (0.75, 0.6)
+    root: root
+    ThemedBoxLayout:
+        canvas.before:
+            Color:
+                rgba: (1, 1, 1, 1)
+            Rectangle:
+                pos: self.pos
+                size: self.size
+        spacing: dp(20)
+        ThemedBoxLayout:  # left 1/3
+            size_hint_x: 0.3
+            orientation: "vertical"
+            ThemedBoxLayout:
+                size_hint_y: 0.16
+                size_hint_max_y: root.app.BUTTON_MAX_H
+                ThemedLabel:  # Hostname
+                    text: _("Hostname")
+                TextInput:  # device.hostname
+                    multiline: False
+                    text: root.device.hostname
+            PopupButton:  # Gateway
+                size_hint_y: 0.28
+                text: _("Gateway")
+                on_press: root.on_gateway()
+            PopupButton:  # Routes
+                size_hint_y: 0.28
+                text: _("Routes")
+                on_press: root.on_routes()
+            PopupButton:  # VLANs
+                size_hint_y: 0.28
+                text: _("VLANs")
+                on_press: root.on_vlans()
+            Widget:
+                size_hint_y: 0.28
+        ThemedBoxLayout:  # center 1/3
+            size_hint_x: 0.3
+            orientation: "vertical"
+            ThemedBoxLayout:  # NICs label/button
+                size_hint_y: 0.15
+                ThemedLabel:  # NICs
+                    size_hint_x: 0.45
+                    text: _("NICs")
+                PopupButton:  # Edit
+                    id: edit_nic
+                    size_hint_x: 0.55
+                    text: _("Edit")
+                    disabled: True
+                    on_press: root.on_nics_edit()
+            NICsRecView:
+                size_hint_y: 0.35
+                root: root
+                on_parent: self.update_data(root.device.nics)
+            ThemedBoxLayout:  # IPs label/buttons
+                size_hint_y: 0.15
+                ThemedLabel:  # IPs
+                    size_hint_x: 0.15
+                    text: _("IPs")
+                PopupButton:  # +
+                    id: add_ip
+                    size_hint_x: 0.15
+                    text: "+"
+                    disabled: True
+                    on_press: root.on_ips_add()
+                PopupButton:  # -
+                    id: remove_ip
+                    size_hint_x: 0.15
+                    text: "-"
+                    disabled: True
+                    on_press: root.on_ips_remove()
+                PopupButton:  # Edit
+                    id: edit_ip
+                    size_hint_x: 0.55
+                    text: _("Edit")
+                    disabled: True
+                    on_press: root.on_ips_edit()
+            IPsRecView:  # IP addresses data
+                id: ips_list
+                size_hint_y: 0.35
+                root: root
+        ThemedBoxLayout:
+            size_hint_x: 0.4
+            orientation: "vertical"
+            TextInput:  # ARP table
+                text: "XXXXXXXX"
+            ThemedBoxLayout:
+                orientation: "vertical"
+                PopupButton:  # Cancel
+                    text: _("Cancel")
+                    on_press: root.on_cancel()
+                PopupButton:  # OK
+                    text: _("Okay")
+                    on_press: root.on_okay()
+
+<PingHostPopup>:
+    size_hint: (0.25, 0.25)
+    ThemedBoxLayout:
+        orientation: 'vertical'
+        TextInput:
+            id: host
+            multiline: False
+            hint_text: _("hostname or IP")
+            on_text_validate: root.on_okay(root.ids.host.text)
+        ThemedBoxLayout:
+            PopupButton:
+                text: _("Cancel")
+                on_press: root.dismiss()
+            PopupButton:
+                text: _("Okay")
+                on_press: root.on_okay(root.ids.host.text)
+
+
+<ValueInput@TextInput>:
+    multiline: False
+    text_validate_unfocus: True
+    write_tab: False
+
+<EditIpPopup>:
+    size_hint_x: 0.25
+    ThemedBoxLayout:
+        orientation: "vertical"
+        ThemedBoxLayout:
+            ThemedLabel:
+                text: _("IP Address:")
+            ValueInput:
+                id: address
+                text: root.ip_address.address
+                on_focus: root._set_address(self)
+        ThemedBoxLayout:
+            ThemedLabel:
+                text: _("Netmask:")
+            ValueInput:
+                id: netmask
+                text: root.ip_address.netmask
+                #on_focus: root._set
+        ThemedBoxLayout:
+            ThemedLabel:
+                text: _("Gateway:")
+            ValueInput:
+                id: gateway
+                text: root.ip_address.gateway
+        Widget:
+        ThemedBoxLayout:
+            PopupButton:
+                text: _("Cancel")
+                on_press: root.on_cancel()
+            PopupButton:
+                text: _("Okay")
+                on_press: root.on_okay()
