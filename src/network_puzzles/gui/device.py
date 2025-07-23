@@ -179,7 +179,7 @@ class Device(DragBehavior, ThemedBoxLayout):
         for command in commands:
             if command == _("Ping [host]"):
                 cb = PingHostPopup(
-                    title=f"{_('Ping [host] from')} {self.hostname}"
+                    self, title=f"{_('Ping [host] from')} {self.hostname}"
                 ).open
             elif command == _("Edit"):
                 cb = self._edit_device
@@ -237,18 +237,22 @@ class CommandsPopup(AppPopup):
 
 
 class PingHostPopup(AppPopup):
+    def __init__(self, dev, **kwargs):
+        self.device = dev
+        super().__init__(**kwargs)
+
     def on_cancel(self):
         self.dismiss()
 
-    def on_okay(self, text):
-        self.app.ui.parse(f"ping {self.title.split()[-1]} {text}")
+    def on_okay(self, dest):
+        self.app.ui.parse(f"ping {self.device.hostname} {dest}")
         self.dismiss()
 
 
 class EditDevicePopup(AppPopup):
     def __init__(self, dev, **kwargs):
         # Use copy of data for displaying in UI b/c real changes will be
-        # applied via parser commands.
+        # applied via parser commands when "Okay" is clicked.
         self.device = Device(deepcopy(dev.base.json))
         super().__init__(**kwargs)
         self.selected_ip = None
@@ -277,7 +281,16 @@ class EditDevicePopup(AppPopup):
         self._set_ips()
 
     def on_ips_add(self):
-        raise NotImplementedError
+        # Send correct NIC and interface data to IP Popup.
+        n = self.device.get_nic(self.selected_nic)
+        ip_address = None
+        for iface_data in n.interfaces:
+            iface = interface.Interface(iface_data)
+            if iface.nicname == n.name:
+                ip_address = interface.IpAddress(iface.ip_data)
+                break
+        if ip_address:
+            EditIpPopup(self, ip_address).open()
 
     def on_ips_remove(self):
         raise NotImplementedError
@@ -288,6 +301,7 @@ class EditDevicePopup(AppPopup):
             return
         n = self.device.get_nic(self.selected_nic)
         ip_address = None
+        # Find interface that matches self.selected_ip.
         for iface_data in n.interfaces:
             iface = interface.Interface(iface_data)
             ip_addr = interface.IpAddress(iface.ip_data)
@@ -295,7 +309,7 @@ class EditDevicePopup(AppPopup):
                 ip_address = ip_addr
                 break
         if ip_address:
-            EditIpPopup(self, ip_address, title=_("Edit IP configuration")).open()
+            EditIpPopup(self, ip_address).open()
 
     def on_ip_selection(self, selected_ip):
         self.selected_ip = selected_ip
@@ -308,19 +322,17 @@ class EditDevicePopup(AppPopup):
     def on_okay(self):
         logging.info(f"GUI: Updating {self.device.hostname}:")
         for cmd in self.puzzle_commands:
-            logging.info(f"GUI: - {cmd}")
+            logging.info(f"GUI: > {cmd}")
             self.app.ui.parse(cmd)
         # Update GUI helps b/c it will trigger tooltip updates, which are needed
         # b/c IP data has likely changed.
         self.app.update_help()
         self.dismiss()
 
-    def _data_changed(self):
-        return self.device.base.json != self.initial_data
-
     def _set_ips(self):
         ips = list()
         n = self.device.get_nic(self.selected_nic)
+        logging.debug(f"GUI: {n.name} ifaces: {n.interfaces}")
         for iface_data in n.interfaces:
             iface = interface.Interface(iface_data)
             if iface.nicname == n.name:
@@ -328,6 +340,7 @@ class EditDevicePopup(AppPopup):
                 if not ip_addr.address.startswith("0"):
                     ips.append(iface.ip_data)
                 break
+        logging.debug(f"GUI: IPs for {self.device.hostname}: {ips}")
         self.ids.ips_list.update_data(ips)
 
 
@@ -366,6 +379,14 @@ class EditIpPopup(AppPopup):
         )
         self.dismiss()
 
-    def _set_address(self, input_inst):
+    def set_address(self, input_inst):
         if not input_inst.focus:
             self.ip_address.address = input_inst.text
+
+    def set_netmask(self, input_inst):
+        if not input_inst.focus:
+            self.ip_address.netmask = input_inst.text
+
+    def set_gateway(self, input_inst):
+        if not input_inst.focus:
+            self.ip_address.gateway = input_inst.text

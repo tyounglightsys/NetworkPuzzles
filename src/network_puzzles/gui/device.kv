@@ -112,9 +112,8 @@
     size_hint: (0.25, 0.25)
     ThemedBoxLayout:
         orientation: 'vertical'
-        TextInput:
+        ValueInput:
             id: host
-            multiline: False
             hint_text: _("hostname or IP")
             on_text_validate: root.on_okay(root.ids.host.text)
         ThemedBoxLayout:
@@ -126,35 +125,30 @@
                 on_press: root.on_okay(root.ids.host.text)
 
 
-<ValueInput@TextInput>:
-    multiline: False
-    text_validate_unfocus: True
-    write_tab: False
-
 <EditIpPopup>:
     size_hint_x: 0.25
+    title: _("Edit IP configuration")
     ThemedBoxLayout:
         orientation: "vertical"
         ThemedBoxLayout:
             ThemedLabel:
                 text: _("IP Address:")
             ValueInput:
-                id: address
                 text: root.ip_address.address
-                on_focus: root._set_address(self)
+                on_focus: root.set_address(self)
         ThemedBoxLayout:
             ThemedLabel:
                 text: _("Netmask:")
             ValueInput:
-                id: netmask
                 text: root.ip_address.netmask
-                #on_focus: root._set
+                on_focus: root.set_netmask(self)
         ThemedBoxLayout:
             ThemedLabel:
                 text: _("Gateway:")
             ValueInput:
-                id: gateway
                 text: root.ip_address.gateway
+                on_focus: root.set_gateway(self)
+                disabled: True
         Widget:
         ThemedBoxLayout:
             PopupButton:

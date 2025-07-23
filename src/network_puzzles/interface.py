@@ -31,7 +31,9 @@ class Interface:
 
 
 class IpAddress:
-    def __init__(self, data):
+    def __init__(self, data=None):
+        if data is None:
+            data = {}
         self.json = data
 
     @property
