@@ -283,33 +283,33 @@ class EditDevicePopup(AppPopup):
     def on_ips_add(self):
         # Send correct NIC and interface data to IP Popup.
         n = self.device.get_nic(self.selected_nic)
-        ip_address = None
-        for iface_data in n.interfaces:
-            iface = interface.Interface(iface_data)
-            if iface.nicname == n.name:
-                ip_address = interface.IpAddress(iface.ip_data)
-                break
-        if ip_address:
-            EditIpPopup(self, ip_address).open()
+        ip_config = self._get_ip_config_from_nic(n, n.name)
+        if ip_config:
+            EditIpPopup(self, ip_config).open()
 
     def on_ips_remove(self):
-        raise NotImplementedError
+        n = self.device.get_nic(self.selected_nic)
+        ip_config = self._get_ip_config_from_nic(n, self.selected_ip)
+        if ip_config:
+            ip_config.address = "0.0.0.0"
+            ip_config.netmask = "0.0.0.0"
+            ip_config.gateway = "0.0.0.0"
+            # Update IPs in IPs list.
+            self._set_ips()
+            # Add command to be applied.
+            self.puzzle_commands.append(
+                f"set {self.device.hostname} {self.selected_nic} {ip_config.address}/{ip_config.netmask}"
+            )
 
     def on_ips_edit(self):
         if not self.selected_ip:
             logging.warning("GUI: No IP selected for editing.")
             return
-        n = self.device.get_nic(self.selected_nic)
-        ip_address = None
-        # Find interface that matches self.selected_ip.
-        for iface_data in n.interfaces:
-            iface = interface.Interface(iface_data)
-            ip_addr = interface.IpAddress(iface.ip_data)
-            if self.selected_ip.split("/") == [ip_addr.address, ip_addr.netmask]:
-                ip_address = ip_addr
-                break
-        if ip_address:
-            EditIpPopup(self, ip_address).open()
+        ip_config = self._get_ip_config_from_nic(
+            self.device.get_nic(self.selected_nic), self.selected_ip
+        )
+        if ip_config:
+            EditIpPopup(self, ip_config).open()
 
     def on_ip_selection(self, selected_ip):
         self.selected_ip = selected_ip
@@ -328,6 +328,30 @@ class EditDevicePopup(AppPopup):
         # b/c IP data has likely changed.
         self.app.update_help()
         self.dismiss()
+
+    def _get_ip_config_from_nic(self, nic_obj, value):
+        """Return IP config object from NIC.
+        Value to search can be NIC name or IP config data.
+        """
+        ip_config = None
+        for iface_data in nic_obj.interfaces:
+            iface = interface.Interface(iface_data)
+            iface_ip_config = interface.IpAddress(iface.ip_data)
+            if self._is_ip_and_gateway(value):
+                if value.split("/") == [
+                    iface_ip_config.address,
+                    iface_ip_config.netmask,
+                ]:
+                    ip_config = iface_ip_config
+                    break
+            else:
+                if iface.nicname == nic_obj.name:
+                    ip_config = iface_ip_config
+                    break
+        return ip_config
+
+    def _is_ip_and_gateway(self, value):
+        return "/" in value
 
     def _set_ips(self):
         ips = list()
