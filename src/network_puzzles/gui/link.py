@@ -14,8 +14,8 @@ class Link(Widget):
     start = ListProperty(None)
 
     def __init__(self, init_data=None, **kwargs):
-        super().__init__(**kwargs)
         self.app = session.app
+        super().__init__(**kwargs)
         self.base = link.Link(init_data)
 
         self._set_points()
@@ -30,10 +30,6 @@ class Link(Widget):
             return self.base.hostname
         else:
             return None
-
-    @property
-    def hosts(self):
-        return [self.app.get_widget_by_hostname(h) for h in self.base.hosts]
 
     @property
     def uid(self):
@@ -92,15 +88,15 @@ class Link(Widget):
 
     def _set_endpoint(self, end_dev=None):
         if end_dev is None:
-            end_dev = self.app.get_widget_by_uid(
-                self.base.json.get("DstNic").get("hostid")
+            end_dev = self.app.get_widget_by_hostname(
+                self.base.json.get("DstNic").get("hostname")
             )
         self.end = end_dev.button.center
 
     def _set_startpoint(self, start_dev=None):
         if start_dev is None:
-            start_dev = self.app.get_widget_by_uid(
-                self.base.json.get("SrcNic").get("hostid")
+            start_dev = self.app.get_widget_by_hostname(
+                self.base.json.get("SrcNic").get("hostname")
             )
         self.start = start_dev.button.center
 
@@ -128,7 +124,7 @@ class LinkPopup(AppPopup):
     def __init__(self, widget, **kwargs):
         super().__init__(**kwargs)
         self.link = widget
-        self.title = self.link.base.json.get("hostname", "<hostname>")
+        self.title = self.link.hostname
 
     def delete(self):
         self.app.remove_item(self.link)

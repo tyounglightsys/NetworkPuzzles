@@ -3,6 +3,7 @@ from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
+from kivy.uix.relativelayout import RelativeLayout
 
 from .. import session
 from .buttons import MenuButton
@@ -13,12 +14,14 @@ class ThemedBoxLayout(BoxLayout):
 
 
 class AppMenu(ThemedBoxLayout):
-    def __init__(self, anchor_pos=None, choices=list(), orientation='horizontal', **kwargs):
+    def __init__(
+        self, anchor_pos=None, choices=list(), orientation="horizontal", **kwargs
+    ):
         super().__init__(**kwargs)
         self.app = session.app
         self.size_hint = (None, None)
         self.orientation = orientation
-        if self.orientation == 'horizontal':
+        if self.orientation == "horizontal":
             self.padding[1] = 0
             self.padding[3] = 0
         else:
@@ -37,7 +40,7 @@ class AppMenu(ThemedBoxLayout):
         self.clear_widgets()
 
     def _set_pos(self):
-        if self.orientation == 'horizontal':
+        if self.orientation == "horizontal":
             # NOTE: The tray's pos is immediately adjacent to the anchor button.
             x = self.anchor_pos[0] + self.height
             y = self.anchor_pos[1]
@@ -47,11 +50,11 @@ class AppMenu(ThemedBoxLayout):
             x = self.anchor_pos[0]
             y = self.anchor_pos[1] - self.height
         self.pos = (x, y)
-    
+
     def _set_size(self):
         length = len(self.children)
         breadth = self.app.BUTTON_MAX_H + dp(10)  # 10px more for padding
-        if self.orientation == 'horizontal':
+        if self.orientation == "horizontal":
             self.width = length * breadth
             self.height = breadth
         else:
@@ -59,10 +62,23 @@ class AppMenu(ThemedBoxLayout):
             self.height = length * breadth
 
 
+class PuzzleLayout(RelativeLayout):
+    def __init__(self, **kwargs):
+        self.app = session.app
+        super().__init__(**kwargs)
+
+    def on_touch_up(self, touch):
+        if hasattr(self.app, "chosen_device"):
+            pos = self.to_local(*touch.pos)
+            for d in self.app.devices:
+                if d.collide_point(*pos):
+                    self.app.chosen_device = d
+                    return True
+
+
 class SelectableRecycleBoxLayout(
-    FocusBehavior,
-    LayoutSelectionBehavior,
-    RecycleBoxLayout
+    FocusBehavior, LayoutSelectionBehavior, RecycleBoxLayout
 ):
-    ''' Adds selection and focus behaviour to the view. '''
+    """Adds selection and focus behaviour to the view."""
+
     pass

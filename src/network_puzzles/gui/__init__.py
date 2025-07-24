@@ -106,10 +106,12 @@ class NetworkPuzzlesApp(App):
             if isinstance(linkw, dict):
                 linkw = Link(linkw)
             elif isinstance(linkw, MenuButton):
-                raise NotImplementedError
+                # Initiate new link creation sequence.
+                Clock.schedule_once(self._new_link)
+                return
 
         # Hide liks connected to invisible devices.
-        for host in linkw.base.hosts:
+        for host in (linkw.base.src, linkw.base.dest):
             w = self.get_widget_by_hostname(host)
             if w.base.is_invisible:
                 linkw.hide()
@@ -316,6 +318,17 @@ class NetworkPuzzlesApp(App):
         if popup:
             popup.ids.puzzles_view.update_data()
 
+    def user_select_device(self):
+        # TODO: Add tooltip next to cursor that says "Creating link; choose device"
+        if not hasattr(self, "chosen_device"):
+            self.chosen_device = None
+        elif self.chosen_device:
+            logging.info(f"GUI: User selected device: {self.chosen_device.hostname}")
+
+    def user_select_nic(self, devicew):
+        # TODO: Need popup for user to select NIC from device.
+        return devicew.nics[-1].hostname
+
     def _add_new_item_button(self, *args):
         # TODO: Add button to cycle through showing hostname and/or IPs?
         self.new_item_button = MenuButton(
@@ -383,6 +396,44 @@ class NetworkPuzzlesApp(App):
             d = self.get_widget_by_hostname(device)
             if hasattr(d, "button"):
                 d.update_tooltip_text(help_text)
+
+    def _new_link(self, *args):
+        """Create a new link in the puzzle layout.
+
+        This method is called repeatedly until each aspect of the new link is
+        defined and the link is created.
+        """
+        if not hasattr(self, "new_link_data"):
+            self.new_link_data = []
+            Clock.schedule_once(self._new_link)
+        elif len(self.new_link_data) < 1:
+            self.user_select_device()
+            if self.chosen_device:
+                self.new_link_data.append(self.chosen_device.hostname)
+                del self.chosen_device
+            Clock.schedule_once(self._new_link)
+        elif len(self.new_link_data) < 2:
+            logging.debug("GUI: Waiting for source device NIC.")
+            srcdev = self.new_link_data[0]
+            # self.new_link_data.append(self.user_select_nic(srcdev))
+            self.new_link_data.append("port2")
+            Clock.schedule_once(self._new_link)
+        elif len(self.new_link_data) < 3:
+            self.user_select_device()
+            if self.chosen_device:
+                self.new_link_data.append(self.chosen_device.hostname)
+                del self.chosen_device
+            Clock.schedule_once(self._new_link)
+        elif len(self.new_link_data) < 4:
+            dstdev = self.new_link_data[2]
+            # self.new_link_data.append(self.user_select_nic(srcdev))
+            self.new_link_data.append("eth0")
+            Clock.schedule_once(self._new_link)
+        else:
+            # Construct the parser command.
+            cmd = ["create", "link", *self.new_link_data]
+            del self.new_link_data
+            self.ui.parse(" ".join(cmd))
 
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)
