@@ -670,7 +670,7 @@
               "myid": {
                 "hostid": "155",
                 "nicid": "156",
-                "hostname": "pc3",
+                "hostname": "pc1",
                 "nicname": "lo0"
               },
               "uniqueidentifier": "156",
@@ -699,7 +699,7 @@
               "myid": {
                 "hostid": "155",
                 "nicid": "157",
-                "hostname": "pc3",
+                "hostname": "pc1",
                 "nicname": "eth0"
               },
               "uniqueidentifier": "157",
@@ -1286,7 +1286,7 @@
           "SrcNic": {
             "hostid": "155",
             "nicid": "157",
-            "hostname": "pc3",
+            "hostname": "pc1",
             "nicname": "eth0"
           },
           "DstNic": {

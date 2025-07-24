@@ -302,7 +302,9 @@ def powerOff(deviceRec):
 
 def isWirelessForwarder(deviceRec):
     """return true if the device is a wireless device that does forwarding, false if it does not"""
-    match deviceRec["mytype"]:
+    if deviceRec is None:
+        return False
+    match deviceRec.get("mytype"):
         case "wrepeater" | "wap" | "wbridge" | "wrouter":
             return True
     return False
