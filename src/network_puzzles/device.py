@@ -178,11 +178,12 @@ def buildGlobalMACList():
     """Build/rebuild the global MAC list.  Should be run when we load a new puzzle, when we change IPs, or add/remove NICs."""
     # global maclist
     session.maclist = []  # clear it out
-    for onedevice in session.puzzle.all_devices():
-        # print ("finding macs for " + onedevice['hostname'])
-        # for onemac in maclistFromDevice(onedevice):
-        for onemac in Device(onedevice).mac_list():
-            session.maclist.append(onemac)
+    for onedevice in session.puzzle.devices:
+        if onedevice:
+            # print ("finding macs for " + onedevice['hostname'])
+            # for onemac in maclistFromDevice(onedevice):
+            for onemac in Device(onedevice).mac_list():
+                session.maclist.append(onemac)
     # print("Built maclist")
     # print(maclist)
     return session.maclist
@@ -316,12 +317,13 @@ def linkConnectedToNic(nicRec):
         return None
     # print("looking for link connecting to nicid: "+ nicRec['myid']['nicid'])
     # print("  Looking at nic: " + nicRec['nicname'])
-    for one in session.puzzle.all_links():
-        # print ("   link - " + one['hostname'])
-        if one["SrcNic"]["nicid"] == nicRec["myid"]["nicid"]:
-            return one
-        if one["DstNic"]["nicid"] == nicRec["myid"]["nicid"]:
-            return one
+    for one in session.puzzle.links:
+        if one:
+            # print ("   link - " + one['hostname'])
+            if one["SrcNic"]["nicid"] == nicRec["myid"]["nicid"]:
+                return one
+            if one["DstNic"]["nicid"] == nicRec["myid"]["nicid"]:
+                return one
     # we did not find anything that matched.  Return None
     return None
 
@@ -398,13 +400,14 @@ def deviceFromIP(what):
     """Return the device, given a name
     Args: what:int the unique id of the device
     returns the device matching the id, or None"""
-    for oneDevice in session.puzzle.all_devices():
-        for oneNic in oneDevice["nic"]:
-            if not isinstance(oneNic["interface"], list):
-                oneNic["interface"] = [oneNic["interface"]]
-            for oneInterface in oneNic["interface"]:
-                if oneInterface["myip"]["ip"] == what:
-                    return oneDevice
+    for oneDevice in session.puzzle.devices:
+        if oneDevice:
+            for oneNic in oneDevice["nic"]:
+                if not isinstance(oneNic["interface"], list):
+                    oneNic["interface"] = [oneNic["interface"]]
+                for oneInterface in oneNic["interface"]:
+                    if oneInterface["myip"]["ip"] == what:
+                        return oneDevice
     return None
 
 
@@ -740,11 +743,10 @@ def beginIngressOnNIC(packRec, nicRec):
         trackPackets = True
     if trackPackets:
         # We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
-        if 'port_arps' not in theDevice:
-            theDevice['port_arps'] = {}
-        if packRec.get('sourceMAC') not in theDevice.get('port_arps'):
-            theDevice['port_arps'][packRec.get('sourceMAC')] = nicRec.get('nicname')
-
+        if "port_arps" not in theDevice:
+            theDevice["port_arps"] = {}
+        if packRec.get("sourceMAC") not in theDevice.get("port_arps"):
+            theDevice["port_arps"][packRec.get("sourceMAC")] = nicRec.get("nicname")
 
     #Look better tracking for network loops
     #If the same packet hits the same switch, we determine it is a loop
@@ -838,7 +840,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                     "SuccessfullyPings",
                     f"Successfully pinged from {thisDevice.get('hostname')} to {pingdest.get('hostname')}",
                 )
-                #We mark this as complete too, but the test for 'WithoutLoop' happens later
+                # We mark this as complete too, but the test for 'WithoutLoop' happens later
                 mark_test_as_completed(
                     thisDevice.get("hostname"),
                     pingdest.get("hostname"),
@@ -846,17 +848,17 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                     f"Successfully pinged from {thisDevice.get('hostname')} to {pingdest.get('hostname')} without a network loop.",
                 )
 
-                #print(f" we are done, and packetlist is: {len(session.packetlist)} and storm: {session.packetstorm}")
+                # print(f" we are done, and packetlist is: {len(session.packetlist)} and storm: {session.packetstorm}")
             return True
 
     # If the packet is not done and we forward, forward. Basically, a switch/hub
     if packRec["status"] != "done" and forwardsPackets(thisDevice):
         # We loop through all nics. (minus the one we came in from)
-        onlyport = ''
-        if thisDevice.get('mytype') == "net_switch":
-            if packRec.get('destMAC') in thisDevice.get('port_arps',{}):
-                #we just send this out the one port.
-                onlyport = thisDevice.get('port_arps').get(packRec.get('destMAC'))
+        onlyport = ""
+        if thisDevice.get("mytype") == "net_switch":
+            if packRec.get("destMAC") in thisDevice.get("port_arps", {}):
+                # we just send this out the one port.
+                onlyport = thisDevice.get("port_arps").get(packRec.get("destMAC"))
         # print("We are forwarding.")
         for onenic in thisDevice["nic"]:
             # we duplicate the packet and send it out each port-type
@@ -869,7 +871,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             ):
                 # We have a network wire connected to the NIC.  Send the packet out
                 # if it is a switch-port, then we check first if we know where the packet goes - undone
-                if(onlyport == '' or onlyport == onenic.get('nicname')):
+                if onlyport == "" or onlyport == onenic.get("nicname"):
                     tpacket = copy.deepcopy(packRec)
                     tpacket["packetlocation"] = tlink["hostname"]
                     tpacket["packetDistance"] = (

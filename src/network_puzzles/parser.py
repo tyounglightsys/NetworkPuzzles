@@ -52,7 +52,7 @@ class Parser:
     def parse(self, command: str, fromuser=True, fromundo=False):
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         logging.debug(f"{command=}")
-        session.packetstorm = False #We are starting something new. It is false until we determine otherwise
+        session.packetstorm = False  # We are starting something new. It is false until we determine otherwise
         command = command.replace(
             ",", " "
         )  # replace commas with spaces.  This fixes x,y coords
@@ -244,6 +244,7 @@ class Parser:
             session.print(" example: delete pc0")
             session.print(" example: delete pc0_link_net_switch0")
             return False
+        logging.debug(f"parser.Parser.delete_item({args[0]}")
         target_device = session.puzzle.device_from_name(args[0])
         if target_device is None:
             target_device = session.puzzle.link_from_name(args[0])
@@ -252,7 +253,6 @@ class Parser:
             return False
         # check to see if we are able to delete.  Is it locked?
         # We will need to check for that later after the tests are done.
-        session.print(f"Deleting {args[0]}")
         return session.puzzle.deleteItem(args[0])
 
     def show_info(self, args):
@@ -260,12 +260,12 @@ class Parser:
         if len(args) == 0:
             # Just the show command.  List all the devices
             session.print(session.puzzle.json.get("name"))
-            devicelist = session.puzzle.all_devices()
+            devicelist = [d for d in session.puzzle.devices]
             if len(devicelist) > 0:
                 session.print("----devices----")
             for one in devicelist:
                 session.print(one["hostname"])
-            linklist = session.puzzle.all_links()
+            linklist = [k for k in session.puzzle.links]
             if len(linklist) > 0:
                 session.print("----links----")
             for one in linklist:

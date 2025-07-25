@@ -7,7 +7,7 @@ class Link:
 
     @property
     def dest(self):
-        return self.hosts[1]
+        return self.json.get("DstNic").get("hostname")
 
     @property
     def hostname(self):
@@ -18,9 +18,5 @@ class Link:
         self.json["hostname"] = name
 
     @property
-    def hosts(self):
-        return re.sub(r"(.*)_link_(.*)", r"\1|\2", self.hostname).split("|")
-
-    @property
     def src(self):
-        return self.hosts[0]
+        return self.json.get("SrcNic").get("hostname")

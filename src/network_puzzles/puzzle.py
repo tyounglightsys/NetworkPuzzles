@@ -37,6 +37,24 @@ class Puzzle:
         return help_level
 
     @property
+    def devices(self):
+        """Generator to yield all devices in puzzle."""
+        for dev in self.json.get("device", []):
+            if isinstance(dev, str):
+                yield self.json.get("device")
+                break
+            yield dev
+
+    @property
+    def links(self):
+        """Generator to yield all devices in puzzle."""
+        for lnk in self.json.get("link", []):
+            if isinstance(lnk, str):
+                yield self.json.get("link")
+                break
+            yield lnk
+
+    @property
     def uid(self):
         return f"{self.json.get('level')}.{self.json.get('sortorder')}"
 
@@ -64,8 +82,9 @@ class Puzzle:
 
     def all_puzzle_IPs(self):
         iplist = list()
-        for onedevice in self.all_devices():
-            iplist.extend(device.DeviceIPs(onedevice, True))
+        for onedevice in self.devices:
+            if onedevice:
+                iplist.extend(device.DeviceIPs(onedevice, True))
         return iplist
 
     def commands_from_tests(self, hostname=None):
@@ -92,14 +111,18 @@ class Puzzle:
                         # Reverse the link hostname and try again.
                         link_name = f"{test.get('dhost')}_link_{test.get('shost')}"
                         link = self.link_from_name(link_name)
-                    if link in self.all_links():
+                    if link in self.links:
                         # Link exists, include option to replace it.
                         commands.append(f"replace {link_name}")
                     else:
                         commands.append(
                             f"create link {test.get('shost')} {test.get('dhost')}"
                         )
-                case "SuccessfullyPings" | "SuccessfullyPingsAgain" | "SuccessfullyPingsWithoutLoop":
+                case (
+                    "SuccessfullyPings"
+                    | "SuccessfullyPingsAgain"
+                    | "SuccessfullyPingsWithoutLoop"
+                ):
                     commands.append(f"ping {test.get('shost')} {test.get('dhost')}")
                 case "DeviceIsFrozen" | "DeviceBlowsUpWithPower" | "DeviceNeedsUPS":
                     if device.powerOff(hostname):
@@ -134,11 +157,11 @@ class Puzzle:
         return device.globalArpLookup(ipaddr)
 
     def device_from_name(self, name):
-        return self._item_by_attrib(self.all_devices(), "hostname", name)
+        return self._item_by_attrib(self.devices, "hostname", name)
 
     def device_from_uid(self, uid):
         uid = str(uid)  # ensure not an integer
-        return self._item_by_attrib(self.all_devices(), "uniqueidentifier", uid)
+        return self._item_by_attrib(self.devices, "uniqueidentifier", uid)
 
     def device_is_critical(self, name):
         test_devices = set()
@@ -258,18 +281,20 @@ class Puzzle:
         # The link name looks like: pc0_link_pc1
         result = session.puzzle.link_from_name(srcstr + "_link_" + dststr)
         if result is not None:
+            logging.warning(f"link exists, {result.get('hostname')}")
             return result
         result = session.puzzle.link_from_name(dststr + "_link_" + srcstr)
         if result is not None:
+            logging.warning(f"link exists, {result.get('hostname')}")
             return result
         # if we get here, we could not find it. Return none
         return None
 
     def link_from_name(self, name):
-        return self._item_by_attrib(self.all_links(), "hostname", name)
+        return self._item_by_attrib(self.links, "hostname", name)
 
     def link_from_uid(self, uid):
-        return self._item_by_attrib(self.all_links(), "uniqueidentifier", uid)
+        return self._item_by_attrib(self.links, "uniqueidentifier", uid)
 
     def mark_test_as_completed(self, shost, dhost, whattocheck, message):
         for onetest in self.all_tests():
@@ -297,10 +322,11 @@ class Puzzle:
             Each component on the network has a unique ID.  PCs can change names, so we do not assume host-names are unique.
             Thus, for a network link (ethernet cable, wireless, etc) to know what two devices it is connecting, we use the ID
         """
-        for d in self.all_devices():
-            item = self._item_by_attrib(d.get("nic"), "uniqueidentifier", uid)
-            if item:
-                return item
+        for d in self.devices:
+            if d:
+                item = self._item_by_attrib(d.get("nic"), "uniqueidentifier", uid)
+                if item:
+                    return item
         return None
 
     def firstFreeNic(self, deviceRec):
@@ -322,53 +348,61 @@ class Puzzle:
         return None
 
     def set_all_device_nic_macs(self):
-        for oneDevice in self.all_devices():
-            if not isinstance(oneDevice["nic"], list):
-                oneDevice["nic"] = [oneDevice["nic"]]
-            for oneNic in oneDevice["nic"]:
-                oneNic = Nic(oneNic).ensure_mac()
+        for oneDevice in self.devices:
+            if oneDevice:
+                if not isinstance(oneDevice["nic"], list):
+                    oneDevice["nic"] = [oneDevice["nic"]]
+                for oneNic in oneDevice["nic"]:
+                    oneNic = Nic(oneNic).ensure_mac()
 
-    def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict | None:
+    def _item_by_attrib(self, items: iter, attrib: str, value: str) -> dict | None:
         # Returns first match; i.e. assumes only one item in list matches given
         # attribute. It also assumes that 'items' is a list of dicts or json data.
         for item in items:
-            if item.get(attrib) == value:
+            if item and item.get(attrib) == value:
                 return item
 
     def deleteItem(self, itemToDelete: str):
-        itemlist = self.json["device"]
-        for i in range(len(itemlist) - 1, -1, -1):
-            if itemlist[i]["hostname"] == itemToDelete:
-                # can we delete it?
-                if session.puzzle.device_is_critical(itemlist[i]["hostname"]):
-                    session.print(
-                        f"Cannot delete {itemlist[i]['hostname']}.  The puzzle has it locked."
-                    )
-                    return False
-                # We need to find any links connected to this device and delete them
-                for onenic in device.Device(itemlist[i]).all_nics():
-                    onelink = device.linkConnectedToNic(onenic)
-                    if onelink is not None:
-                        self.deleteItem(onelink.get("hostname"))
-                session.print(f"Deleting: {itemToDelete}")
-                session.add_undo_entry(
-                    f"delete {itemToDelete}", f"restore {itemToDelete}", itemlist[i]
-                )  # make entry using payload
-                del itemlist[i]
-                return True
-        itemlist = self.json["link"]
-        if isinstance(itemlist, dict):
-            itemlist = [itemlist]
-        for i in range(len(itemlist) - 1, -1, -1):
-            if itemlist[i]["hostname"] == itemToDelete:
-                session.print(f"Deleting: {itemToDelete}")
-                # Additional call for special UI handling.
-                session.ui.delete_item(itemlist[i])
-                session.add_undo_entry(
-                    f"delete {itemToDelete}", f"restore {itemToDelete}", itemlist[i]
-                )  # make entry using payload
-                del itemlist[i]
-                return True
+        existing_device = self.device_from_name(itemToDelete)
+        if existing_device:
+            if session.puzzle.device_is_critical(itemToDelete):
+                session.print(
+                    f"Cannot delete {itemToDelete}.  The puzzle has it locked."
+                )
+                return False
+            # We need to find any links connected to this device and delete them
+            for onenic in device.Device(existing_device).all_nics():
+                onelink = device.linkConnectedToNic(onenic)
+                if onelink is not None:
+                    self.deleteItem(onelink.get("hostname"))
+            session.print(f"Deleting: {itemToDelete}")
+            session.ui.delete_item(existing_device)
+            session.add_undo_entry(
+                f"delete {itemToDelete}", f"restore {itemToDelete}", existing_device
+            )  # make entry using payload
+            if isinstance(self.json.get("device"), dict):
+                # Replace single-item dict with an empty list.
+                self.json["device"] = []
+            elif isinstance(self.json.get("device"), list):
+                idx = self.json["device"].index(existing_device)
+                del self.json["device"][idx]
+            return True
+        existing_link = self.link_from_name(itemToDelete)
+        if existing_link:
+            session.print(f"Deleting: {itemToDelete}")
+            # Additional call for special UI handling.
+            session.ui.delete_item(existing_link)
+            session.add_undo_entry(
+                f"delete {itemToDelete}", f"restore {itemToDelete}", existing_link
+            )  # make entry using payload
+            if isinstance(self.json.get("link"), dict):
+                # Replace single-item dict with an empty list.
+                self.json["link"] = []
+            elif isinstance(self.json.get("link"), list):
+                # Delete item from list.
+                idx = self.json["link"].index(existing_link)
+                del self.json["link"][idx]
+            return True
         return False
 
     def issueUniqueIdentifier(self):
@@ -379,36 +413,36 @@ class Puzzle:
 
     def createNIC(self, thedevicejson, nictype):
         thedevice = device.Device(thedevicejson)
-        count=0
+        count = 0
         while (thedevice.nic_from_name(f"{nictype}{count}")) is not None:
             count = count + 1
         newnicname = f"{nictype}{count}"
         newid = self.issueUniqueIdentifier()
-        newnic={
-            'nictype':[f"{nictype}",f"{nictype}"],
-            'nicname':newnicname,
-            'myid':{
-                'hostid':thedevice.uid,
-                'nicid':newid,
-                'hostname':thedevice.hostname,
-                'nicname':newnicname
+        newnic = {
+            "nictype": [f"{nictype}", f"{nictype}"],
+            "nicname": newnicname,
+            "myid": {
+                "hostid": thedevice.uid,
+                "nicid": newid,
+                "hostname": thedevice.hostname,
+                "nicname": newnicname,
             },
-            'uniqueidentifier':newnicname,
-            'usesdhcp':'False',
-            'encryptionkey':None,
-            'ssid':None,
-            'interface': [
+            "uniqueidentifier": newnicname,
+            "usesdhcp": "False",
+            "encryptionkey": None,
+            "ssid": None,
+            "interface": [
                 {
-                    'nicname':newnicname,
-                    'myip': {
-                        'ip':"0.0.0.0",
-                        'netmask':"0.0.0.0",
-                        'gateway':"0.0.0.0"
-                    }
+                    "nicname": newnicname,
+                    "myip": {
+                        "ip": "0.0.0.0",
+                        "netmask": "0.0.0.0",
+                        "gateway": "0.0.0.0",
+                    },
                 }
-            ]
+            ],
         }
-        thedevicejson['nic'].append(newnic)
+        thedevicejson["nic"].append(newnic)
         return newnic
 
     def createDevice(self, args):
@@ -416,67 +450,66 @@ class Puzzle:
             logging.error("createDevice: invalid number of arguments.")
             return
         device_type = args[0]
-        x=args[1]
-        y=args[2]
-        count=0
+        x = args[1]
+        y = args[2]
+        count = 0
         while self.device_from_name(f"{device_type}{count}") is not None:
             count = count + 1
         newdevicename = f"{device_type}{count}"
         newid = self.issueUniqueIdentifier()
         newdevice = {
-            'hostname':newdevicename,
-            'uniqueidentifier':newid,
-            'location':f"{x},{y}",
-            'mytype':device_type,
-            'isdns':'False',
-            'isdhcp':'False',
-            'gateway': {
-                        'ip':"0.0.0.0",
-                        'netmask':"0.0.0.0",
+            "hostname": newdevicename,
+            "uniqueidentifier": newid,
+            "location": f"{x},{y}",
+            "mytype": device_type,
+            "isdns": "False",
+            "isdhcp": "False",
+            "gateway": {
+                "ip": "0.0.0.0",
+                "netmask": "0.0.0.0",
             },
-            'nic':list(),           
+            "nic": list(),
         }
-        if device_type not in {'tree','fluorescent'}:
-            self.createNIC(newdevice, 'lo')
-        if device_type in {'net_switch','net_hub'}:
-            self.createNIC(newdevice,'management_interface')
+        if device_type not in {"tree", "fluorescent"}:
+            self.createNIC(newdevice, "lo")
+        if device_type in {"net_switch", "net_hub"}:
+            self.createNIC(newdevice, "management_interface")
             for a in range(8):
-                self.createNIC(newdevice, 'port')
-        if device_type == 'pc':
+                self.createNIC(newdevice, "port")
+        if device_type == "pc":
             for a in range(2):
-                self.createNIC(newdevice, 'eth')
-        if device_type == 'laptop':
-            self.createNIC(newdevice, 'eth')
-            self.createNIC(newdevice, 'wlan')
-        if device_type == 'wbridge':
-            self.createNIC(newdevice, 'wlan')
+                self.createNIC(newdevice, "eth")
+        if device_type == "laptop":
+            self.createNIC(newdevice, "eth")
+            self.createNIC(newdevice, "wlan")
+        if device_type == "wbridge":
+            self.createNIC(newdevice, "wlan")
             for a in range(4):
-                self.createNIC(newdevice, 'wport')
-        if device_type == 'wap':
-            self.createNIC(newdevice,'management_interface')
-            self.createNIC(newdevice, 'port')
+                self.createNIC(newdevice, "wport")
+        if device_type == "wap":
+            self.createNIC(newdevice, "management_interface")
+            self.createNIC(newdevice, "port")
             for a in range(6):
-                self.createNIC(newdevice, 'wport')
-        if device_type == 'wrepeater':
-            self.createNIC(newdevice, 'wport')
-            self.createNIC(newdevice, 'wlan')
-        if device_type == 'wrouter':
-            self.createNIC(newdevice,'management_interface')
+                self.createNIC(newdevice, "wport")
+        if device_type == "wrepeater":
+            self.createNIC(newdevice, "wport")
+            self.createNIC(newdevice, "wlan")
+        if device_type == "wrouter":
+            self.createNIC(newdevice, "management_interface")
             for a in range(4):
-                self.createNIC(newdevice, 'port')
+                self.createNIC(newdevice, "port")
             for a in range(8):
-                self.createNIC(newdevice, 'wport')
-            self.createNIC(newdevice,'vpn')
-            self.createNIC(newdevice,'wan')
-        if device_type == 'firewall':
-            self.createNIC(newdevice, 'eth')
-            self.createNIC(newdevice, 'wan')
-        if device_type in {'cellphone', 'tablet'}:
-            self.createNIC(newdevice, 'wlan')
+                self.createNIC(newdevice, "wport")
+            self.createNIC(newdevice, "vpn")
+            self.createNIC(newdevice, "wan")
+        if device_type == "firewall":
+            self.createNIC(newdevice, "eth")
+            self.createNIC(newdevice, "wan")
+        if device_type in {"cellphone", "tablet"}:
+            self.createNIC(newdevice, "wlan")
 
-        self.json['device'].append(newdevice)
+        self.json["device"].append(newdevice)
         session.print(f"Creating new device: {newdevicename}")
-         
 
     def createLink(self, args, linktype="normal") -> bool:
         """returns False on error, True if successful, None if unhandled"""

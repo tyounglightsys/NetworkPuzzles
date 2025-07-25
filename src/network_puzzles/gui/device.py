@@ -148,6 +148,9 @@ class Device(DragBehavior, ThemedBoxLayout):
             lnk.move_connection(self)
 
     def on_press(self):
+        if hasattr(self.app, "chosen_device"):
+            self.app.chosen_device = self
+            return True
         self._build_commands_popup().open()
 
     def set_power_status(self, *args):
@@ -414,3 +417,19 @@ class EditIpPopup(AppPopup):
     def set_gateway(self, input_inst):
         if not input_inst.focus:
             self.ip_address.gateway = input_inst.text
+
+
+class ChooseNicPopup(AppPopup):
+    def __init__(self, devicew, **kwargs):
+        self.device = devicew
+        super().__init__(**kwargs)
+        self.selected_nic = None
+        # print(f"{self.device.nics=}")
+        self.ids.nics_list.update_data(self.device.nics)
+
+    def on_nic_selection(self, selected_nic):
+        self.selected_nic = selected_nic
+
+    def on_okay(self):
+        self.app.chosen_nic = self.selected_nic
+        self.dismiss()
