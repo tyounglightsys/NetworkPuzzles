@@ -23,6 +23,7 @@ from .base import Packet
 from .base import NETWORK_ITEMS
 from .base import LightColorTheme
 from .buttons import MenuButton
+from .device import ChooseNicPopup
 from .device import Device
 from .layouts import AppMenu
 from .link import Link
@@ -232,6 +233,7 @@ class NetworkPuzzlesApp(App):
 
     def remove_item(self, item):
         """Remove widget from layout by widget or item JSON data."""
+        # TODO: Add parser command to also remove widget from puzzle JSON.
         widget = None
         if isinstance(item, Link) or isinstance(item, Device):
             widget = item
@@ -326,8 +328,11 @@ class NetworkPuzzlesApp(App):
             logging.info(f"GUI: User selected device: {self.chosen_device.hostname}")
 
     def user_select_nic(self, devicew):
-        # TODO: Need popup for user to select NIC from device.
-        return devicew.nics[-1].hostname
+        if not hasattr(self, "chosen_nic"):
+            self.chosen_nic = None
+            ChooseNicPopup(devicew).open()
+        elif self.chosen_nic:
+            logging.info(f"GUI: User selected NIC: {self.chosen_nic}")
 
     def _add_new_item_button(self, *args):
         # TODO: Add button to cycle through showing hostname and/or IPs?
@@ -413,10 +418,11 @@ class NetworkPuzzlesApp(App):
                 del self.chosen_device
             Clock.schedule_once(self._new_link)
         elif len(self.new_link_data) < 2:
-            logging.debug("GUI: Waiting for source device NIC.")
-            srcdev = self.new_link_data[0]
-            # self.new_link_data.append(self.user_select_nic(srcdev))
-            self.new_link_data.append("port2")
+            srcdev = self.get_widget_by_hostname(self.new_link_data[0])
+            self.user_select_nic(srcdev)
+            if self.chosen_nic:
+                self.new_link_data.append(self.chosen_nic)
+                del self.chosen_nic
             Clock.schedule_once(self._new_link)
         elif len(self.new_link_data) < 3:
             self.user_select_device()
@@ -425,9 +431,11 @@ class NetworkPuzzlesApp(App):
                 del self.chosen_device
             Clock.schedule_once(self._new_link)
         elif len(self.new_link_data) < 4:
-            dstdev = self.new_link_data[2]
-            # self.new_link_data.append(self.user_select_nic(srcdev))
-            self.new_link_data.append("eth0")
+            dstdev = self.get_widget_by_hostname(self.new_link_data[2])
+            self.user_select_nic(dstdev)
+            if self.chosen_nic:
+                self.new_link_data.append(self.chosen_nic)
+                del self.chosen_nic
             Clock.schedule_once(self._new_link)
         else:
             # Construct the parser command.

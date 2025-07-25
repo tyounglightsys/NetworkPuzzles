@@ -127,6 +127,7 @@ class LinkPopup(AppPopup):
         self.title = self.link.hostname
 
     def delete(self):
+        self.app.ui.parse(f"delete {self.link.hostname}")
         self.app.remove_item(self.link)
         self.dismiss()
 

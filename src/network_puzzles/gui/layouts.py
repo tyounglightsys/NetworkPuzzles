@@ -62,20 +62,6 @@ class AppMenu(ThemedBoxLayout):
             self.height = length * breadth
 
 
-class PuzzleLayout(RelativeLayout):
-    def __init__(self, **kwargs):
-        self.app = session.app
-        super().__init__(**kwargs)
-
-    def on_touch_up(self, touch):
-        if hasattr(self.app, "chosen_device"):
-            pos = self.to_local(*touch.pos)
-            for d in self.app.devices:
-                if d.collide_point(*pos):
-                    self.app.chosen_device = d
-                    return True
-
-
 class SelectableRecycleBoxLayout(
     FocusBehavior, LayoutSelectionBehavior, RecycleBoxLayout
 ):
