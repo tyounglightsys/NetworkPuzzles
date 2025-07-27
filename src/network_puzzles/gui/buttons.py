@@ -40,7 +40,7 @@ class ThemedButton(Button):
 
     @property
     def tooltip_anchor(self):
-        if isinstance(self, DeviceButton):
+        if isinstance(self, DeviceButton) or isinstance(self, MenuButton):
             return self.parent.parent  # puzzle layout
         else:
             return self.parent  # menu/puzzle layout
@@ -141,7 +141,8 @@ class MenuButton(AppButton):
     def __init__(self, props, **kwargs):
         super().__init__(**kwargs)
         self.props = props
-        self.info = self.props.get("info", "")  # must be a str
+        print(f"{self.props=}")
+        self.info = self._set_info()
         self._set_size_hint()
         self._set_face()
         self._set_callback()
@@ -161,6 +162,16 @@ class MenuButton(AppButton):
             self.text = ""
             self.background_color[3] = 1  # make it opaque so the image is visible
             self.background_normal = str(self.app.IMAGES / img)
+
+    def _set_info(self):
+        info = ""  # must be type "str"
+        puzzle_info = self.props.get("info")
+        puzzle_img = self.props.get("img")
+        if puzzle_info:
+            info = puzzle_info
+        elif puzzle_img:
+            info = puzzle_img.lower().rstrip(".png")
+        return info
 
     def _set_size_hint(self):
         if self.props.get("orientation") == "horizontal":
