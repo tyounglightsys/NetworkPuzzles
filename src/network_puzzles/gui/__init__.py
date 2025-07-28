@@ -91,18 +91,28 @@ class NetworkPuzzlesApp(App):
     def add_device(self, devicew=None):
         # TODO: If device_inst not given, require user to choose device type
         # on the screen to instantiate a new device.
-        if devicew is None:
-            devicew = Device()
+        if not isinstance(devicew, Device):
+            if isinstance(devicew, dict):
+                devicew = Device(devicew)
+            elif isinstance(devicew, MenuButton):
+                # Initiate new device creation sequence.
+                Clock.schedule_once(self._new_device)
+                return
 
         # Hide invisible devices.
         if devicew.base.is_invisible:
             devicew.hide()
 
+        # Close menu if open & add device to layout.
+        if self.new_item_menu:
+            subtrays = [
+                self.new_infra_device_menu,
+                self.new_user_device_menu,
+            ]
+            self._toggle_tray(self.new_item_menu, subtrays=subtrays)
         self.root.ids.layout.add_widget(devicew)
 
     def add_link(self, linkw=None):
-        # TODO: If link_inst not given, require user to tap on start and end
-        # devices on the screen to instantiate a new link.
         if not isinstance(linkw, Link):
             if isinstance(linkw, dict):
                 linkw = Link(linkw)
@@ -117,6 +127,13 @@ class NetworkPuzzlesApp(App):
             if w.base.is_invisible:
                 linkw.hide()
 
+        # Close new link menu if open.
+        if self.new_item_menu:
+            subtrays = [
+                self.new_infra_device_menu,
+                self.new_user_device_menu,
+            ]
+            self._toggle_tray(self.new_item_menu, subtrays=subtrays)
         # Add link to z-index = 99 to ensure it's drawn under devices.
         self.root.ids.layout.add_widget(linkw, 99)
 
@@ -166,7 +183,7 @@ class NetworkPuzzlesApp(App):
         if self.new_infra_device_menu is None:
             choices = []
             for choice in devices.values():
-                choice["cb"] = Device
+                choice["cb"] = self.add_device
                 choice["orientation"] = "horizontal"
                 choices.append(choice)
             self.new_infra_device_menu = AppMenu(
@@ -179,9 +196,17 @@ class NetworkPuzzlesApp(App):
         # Open "tray" to select item type, set its properties, etc.
         if self.new_item_menu is None:
             choices = [
-                {"img": "link.png", "cb": self.add_link},
-                {"img": "Switch.png", "cb": self.on_new_infra_device},
-                {"img": "PC.png", "cb": self.on_new_user_device},
+                {"img": "link.png", "cb": self.add_link, "info": "add link"},
+                {
+                    "img": "Switch.png",
+                    "cb": self.on_new_infra_device,
+                    "info": "infrastructure devices",
+                },
+                {
+                    "img": "PC.png",
+                    "cb": self.on_new_user_device,
+                    "info": "user devices",
+                },
             ]
             self.new_item_menu = AppMenu(
                 anchor_pos=inst.pos,
@@ -401,6 +426,23 @@ class NetworkPuzzlesApp(App):
             d = self.get_widget_by_hostname(device)
             if hasattr(d, "button"):
                 d.update_tooltip_text(help_text)
+
+    def _new_device(self, *args):
+        """Create a new device in the puzzle layout.
+
+        This method is called repeatedly until each aspect of the new device is
+        defined and the device is created.
+        """
+        if not hasattr(self, "new_device_data"):
+            self.new_device_data = []
+            Clock.schedule_once(self._new_device)
+        elif len(self.new_device_data) < 1:
+            self.new_device_data = ["net_switch", "378", "200"]
+            Clock.schedule_once(self._new_device)
+        else:
+            cmd = ["create", "device", *self.new_device_data]
+            del self.new_device_data
+            self.ui.parse(" ".join(cmd))
 
     def _new_link(self, *args):
         """Create a new link in the puzzle layout.

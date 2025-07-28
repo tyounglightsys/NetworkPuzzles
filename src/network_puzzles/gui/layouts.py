@@ -3,7 +3,6 @@ from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
-from kivy.uix.relativelayout import RelativeLayout
 
 from .. import session
 from .buttons import MenuButton

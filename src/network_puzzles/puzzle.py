@@ -510,6 +510,8 @@ class Puzzle:
 
         self.json["device"].append(newdevice)
         session.print(f"Creating new device: {newdevicename}")
+        # Additional call for special UI handling.
+        session.ui.create_device(newdevice)
 
     def createLink(self, args, linktype="normal") -> bool:
         """returns False on error, True if successful, None if unhandled"""

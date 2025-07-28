@@ -40,8 +40,10 @@ class ThemedButton(Button):
 
     @property
     def tooltip_anchor(self):
-        if isinstance(self, DeviceButton) or isinstance(self, MenuButton):
+        if isinstance(self, DeviceButton):
             return self.parent.parent  # puzzle layout
+        elif isinstance(self, MenuButton) and self.text != "+":
+            return self.parent.parent
         else:
             return self.parent  # menu/puzzle layout
 
@@ -86,8 +88,16 @@ class ThemedButton(Button):
         self.tooltip_anchor.remove_widget(self.tooltip)
 
     def open_tooltip(self, *args):
+        def no_tooltip(self):
+            if not self.info:
+                return True
+            if not self.parent:
+                return True
+            if 0 in (self.opacity, self.parent.opacity):
+                return True
+
         # Don't show tooltip in certain cases.
-        if 0 in (self.opacity, self.parent.opacity) or not self.info:
+        if no_tooltip(self):
             return
         self.tooltip_text = self.info
         if self.tooltip not in self.tooltip_anchor.children:
@@ -141,7 +151,6 @@ class MenuButton(AppButton):
     def __init__(self, props, **kwargs):
         super().__init__(**kwargs)
         self.props = props
-        print(f"{self.props=}")
         self.info = self._set_info()
         self._set_size_hint()
         self._set_face()
