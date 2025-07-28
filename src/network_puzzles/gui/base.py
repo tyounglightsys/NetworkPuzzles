@@ -14,8 +14,12 @@ from .. import session
 from .popups import ExceptionPopup
 
 
+# NOTE: Puzzle size is 900x850. Using larger MAX values allows for padding.
+PADDING = 25
 LOCATION_MAX_X = 900
 LOCATION_MAX_Y = 850
+PADDED_MAX_X = LOCATION_MAX_X + 2 * PADDING
+PADDED_MAX_Y = LOCATION_MAX_Y + 2 * PADDING
 NETWORK_ITEMS = {
     "links": {
         "link": {"img": "link.png"},
@@ -167,11 +171,30 @@ def hide_widget(wid, do_hide=True):
         wid.opacity = 0
 
 
-def location_to_rel_pos(location: str) -> list:
+def location_to_pos(location: str) -> list:
     coords = location.split(",")
-    pos = (int(coords[0]), LOCATION_MAX_Y - int(coords[1]))
-    return pos_to_rel_pos(pos)
+    return [float(coords[0]) + PADDING, LOCATION_MAX_Y + PADDING - float(coords[1])]
+
+
+def location_to_rel_pos(location: str) -> list:
+    return pos_to_rel_pos(location_to_pos(location))
+
+
+def pos_to_location(pos) -> list:
+    x = pos[0]
+    y = pos[1]
+    # Limit x and y to LOCATION_MAX values.
+    if x < PADDING:
+        x = PADDING
+    if x > LOCATION_MAX_X + PADDING:
+        x = LOCATION_MAX_X
+    if y < PADDING:
+        y = PADDING
+    if y > LOCATION_MAX_Y + PADDING:
+        y = LOCATION_MAX_Y
+
+    return [str(x - PADDING), str(LOCATION_MAX_Y - (y - PADDING))]
 
 
 def pos_to_rel_pos(pos) -> list:
-    return [pos[0] / LOCATION_MAX_X, pos[1] / LOCATION_MAX_Y]
+    return [pos[0] / PADDED_MAX_X, pos[1] / PADDED_MAX_Y]

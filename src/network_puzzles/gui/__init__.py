@@ -19,9 +19,10 @@ from .. import session
 from .base import AppExceptionHandler
 from .base import AppRecView
 from .base import HelpHighlight
-from .base import Packet
-from .base import NETWORK_ITEMS
 from .base import LightColorTheme
+from .base import NETWORK_ITEMS
+from .base import Packet
+from .base import pos_to_location
 from .buttons import MenuButton
 from .device import ChooseNicPopup
 from .device import Device
@@ -88,7 +89,7 @@ class NetworkPuzzlesApp(App):
             # TODO: Handle puzzle complete (popup?).
             self.ui.console_write("<-- TODO: Handle puzzle complete -->")
 
-    def add_device(self, devicew=None):
+    def add_device(self, devicew=None, dtype=None):
         # TODO: If device_inst not given, require user to choose device type
         # on the screen to instantiate a new device.
         if not isinstance(devicew, Device):
@@ -96,6 +97,7 @@ class NetworkPuzzlesApp(App):
                 devicew = Device(devicew)
             elif isinstance(devicew, MenuButton):
                 # Initiate new device creation sequence.
+                self._new_device_type = dtype
                 Clock.schedule_once(self._new_device)
                 return
 
@@ -182,8 +184,9 @@ class NetworkPuzzlesApp(App):
         devices = NETWORK_ITEMS.get("devices").get("infrastructure")
         if self.new_infra_device_menu is None:
             choices = []
-            for choice in devices.values():
+            for dtype, choice in devices.items():
                 choice["cb"] = self.add_device
+                choice["cb_kwargs"] = {"dtype": dtype}
                 choice["orientation"] = "horizontal"
                 choices.append(choice)
             self.new_infra_device_menu = AppMenu(
@@ -224,8 +227,9 @@ class NetworkPuzzlesApp(App):
         devices = NETWORK_ITEMS.get("devices").get("user")
         if self.new_user_device_menu is None:
             choices = []
-            for choice in devices.values():
-                choice["cb"] = Device
+            for dtype, choice in devices.items():
+                choice["cb"] = self.add_device
+                choice["cb_kwargs"] = {"dtype": dtype}
                 choice["orientation"] = "horizontal"
                 choices.append(choice)
             self.new_user_device_menu = AppMenu(
@@ -359,6 +363,12 @@ class NetworkPuzzlesApp(App):
         elif self.chosen_nic:
             logging.info(f"GUI: User selected NIC: {self.chosen_nic}")
 
+    def user_select_position(self):
+        if not hasattr(self, "chosen_pos"):
+            self.chosen_pos = None
+        elif self.chosen_pos:
+            logging.info(f"GUI: User selected pos: {self.chosen_pos}")
+
     def _add_new_item_button(self, *args):
         # TODO: Add button to cycle through showing hostname and/or IPs?
         self.new_item_button = MenuButton(
@@ -434,10 +444,16 @@ class NetworkPuzzlesApp(App):
         defined and the device is created.
         """
         if not hasattr(self, "new_device_data"):
-            self.new_device_data = []
+            self.new_device_data = [self._new_device_type]
+            del self._new_device_type
             Clock.schedule_once(self._new_device)
-        elif len(self.new_device_data) < 1:
-            self.new_device_data = ["net_switch", "378", "200"]
+        elif len(self.new_device_data) == 1:
+            # Set position.
+            self.user_select_position()
+            if self.chosen_pos:
+                # Invert y-axis for puzzle coords.
+                self.new_device_data.extend(pos_to_location(self.chosen_pos))
+                del self.chosen_pos
             Clock.schedule_once(self._new_device)
         else:
             cmd = ["create", "device", *self.new_device_data]
