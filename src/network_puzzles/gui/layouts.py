@@ -1,3 +1,4 @@
+import logging
 from kivy.metrics import dp
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.boxlayout import BoxLayout
@@ -22,7 +23,7 @@ class PuzzleLayout(RelativeLayout):
         if len(touch.grab_list) > 0:  # widget was touched instead of layout
             return super().on_touch_up(touch)
         if hasattr(self.app, "chosen_pos"):
-            # FIXME: Convert touch.pos to correct relative pos:
+            # Convert touch.pos to relative layout pos.
             self.app.chosen_pos = self.to_widget(*touch.pos)
             return True
 

@@ -1,4 +1,5 @@
 # import logging
+import logging
 import traceback
 from dataclasses import dataclass
 from kivy.base import ExceptionHandler
@@ -15,7 +16,7 @@ from .popups import ExceptionPopup
 
 
 # NOTE: Puzzle size is 900x850. Using larger MAX values allows for padding.
-PADDING = 25
+PADDING = 50
 LOCATION_MAX_X = 900
 LOCATION_MAX_Y = 850
 PADDED_MAX_X = LOCATION_MAX_X + 2 * PADDING
@@ -180,20 +181,30 @@ def location_to_rel_pos(location: str) -> list:
     return pos_to_rel_pos(location_to_pos(location))
 
 
-def pos_to_location(pos) -> list:
+def pos_to_location(pos, size) -> list:
+    """Converts relative layout position to EduNetworkBuilder's location coords."""
     x = pos[0]
     y = pos[1]
-    # Limit x and y to LOCATION_MAX values.
+    x_max = size[0] - 2 * PADDING
+    y_max = size[1] - 2 * PADDING
+    logging.debug(f"GUI: input pos: ({x}, {y})")
+    # Limit x and y to non-padded values.
     if x < PADDING:
         x = PADDING
-    if x > LOCATION_MAX_X + PADDING:
-        x = LOCATION_MAX_X
+    if x > size[0] - PADDING:
+        x = size[0] - PADDING
     if y < PADDING:
         y = PADDING
-    if y > LOCATION_MAX_Y + PADDING:
-        y = LOCATION_MAX_Y
+    if y > size[1] - PADDING:
+        y = size[1] - PADDING
 
-    return [str(x - PADDING), str(LOCATION_MAX_Y - (y - PADDING))]
+    logging.debug(f"GUI: limited pos: ({x}, {y})")
+    loc = [
+        str((x - PADDING) * LOCATION_MAX_X / x_max),
+        str(LOCATION_MAX_Y - ((y - PADDING) * LOCATION_MAX_Y / y_max)),
+    ]
+    logging.debug(f"GUI: location: ({loc})")
+    return loc
 
 
 def pos_to_rel_pos(pos) -> list:

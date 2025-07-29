@@ -454,7 +454,8 @@ class NetworkPuzzlesApp(App):
             self.user_select_position()
             if self.chosen_pos:
                 # Convert pos to puzzle coords.
-                self.new_device_data.extend(pos_to_location(self.chosen_pos))
+                loc = pos_to_location(self.chosen_pos, self.root.ids.layout.size)
+                self.new_device_data.extend(loc)
                 del self.chosen_pos
             Clock.schedule_once(self._new_device)
         else:
