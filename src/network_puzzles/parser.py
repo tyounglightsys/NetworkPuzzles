@@ -244,7 +244,7 @@ class Parser:
             session.print(" example: delete pc0")
             session.print(" example: delete pc0_link_net_switch0")
             return False
-        logging.debug(f"parser.Parser.delete_item({args[0]}")
+        logging.debug(f"parser.Parser.delete_item({args[0]})")
         target_device = session.puzzle.device_from_name(args[0])
         if target_device is None:
             target_device = session.puzzle.link_from_name(args[0])

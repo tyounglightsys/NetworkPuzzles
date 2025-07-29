@@ -90,6 +90,8 @@ class NetworkPuzzlesApp(App):
             self.ui.console_write("<-- TODO: Handle puzzle complete -->")
 
     def add_device(self, devicew=None, dtype=None):
+        # Ensure new item menus are closed.
+        self.close_new_item_menus()
         # TODO: If device_inst not given, require user to choose device type
         # on the screen to instantiate a new device.
         if not isinstance(devicew, Device):
@@ -105,16 +107,13 @@ class NetworkPuzzlesApp(App):
         if devicew.base.is_invisible:
             devicew.hide()
 
-        # Close menu if open & add device to layout.
-        if self.new_item_menu:
-            subtrays = [
-                self.new_infra_device_menu,
-                self.new_user_device_menu,
-            ]
-            self._toggle_tray(self.new_item_menu, subtrays=subtrays)
+        # Aadd device to layout.
         self.root.ids.layout.add_widget(devicew)
 
     def add_link(self, linkw=None):
+        # Ensure new item menus are closed.
+        self.close_new_item_menus()
+
         if not isinstance(linkw, Link):
             if isinstance(linkw, dict):
                 linkw = Link(linkw)
@@ -129,13 +128,6 @@ class NetworkPuzzlesApp(App):
             if w.base.is_invisible:
                 linkw.hide()
 
-        # Close new link menu if open.
-        if self.new_item_menu:
-            subtrays = [
-                self.new_infra_device_menu,
-                self.new_user_device_menu,
-            ]
-            self._toggle_tray(self.new_item_menu, subtrays=subtrays)
         # Add link to z-index = 99 to ensure it's drawn under devices.
         self.root.ids.layout.add_widget(linkw, 99)
 
@@ -148,6 +140,16 @@ class NetworkPuzzlesApp(App):
         """Remove any existing widgets in the puzzle layout."""
         self.selected_puzzle = None
         self.reset_display()
+
+    def close_new_item_menus(self):
+        # Close tray and subtrays if open.
+        for tray in (
+            self.new_infra_device_menu,
+            self.new_user_device_menu,
+            self.new_item_menu,
+        ):
+            if tray is not None:
+                self._close_tray(tray)
 
     def first_link_index(self):
         first_index = 999
@@ -451,7 +453,7 @@ class NetworkPuzzlesApp(App):
             # Set position.
             self.user_select_position()
             if self.chosen_pos:
-                # Invert y-axis for puzzle coords.
+                # Convert pos to puzzle coords.
                 self.new_device_data.extend(pos_to_location(self.chosen_pos))
                 del self.chosen_pos
             Clock.schedule_once(self._new_device)

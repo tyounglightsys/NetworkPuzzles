@@ -424,7 +424,6 @@ class ChooseNicPopup(AppPopup):
         self.device = devicew
         super().__init__(**kwargs)
         self.selected_nic = None
-        # print(f"{self.device.nics=}")
         self.ids.nics_list.update_data(self.device.nics)
 
     def on_nic_selection(self, selected_nic):

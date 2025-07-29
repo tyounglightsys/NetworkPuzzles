@@ -161,7 +161,7 @@
 
 <ChooseNicPopup>:
     size_hint_x: 0.25
-    title: _("Choose NIC")
+    title: f"{self.device.hostname} | {_('Choose NIC')}"
     ThemedBoxLayout:
         orientation: "vertical"
         NICsRecView:
