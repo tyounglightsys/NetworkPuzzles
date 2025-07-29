@@ -22,7 +22,9 @@ class Device:
         elif isinstance(value, dict):
             self.json = value
         else:
-            raise ValueError("Not a valid uniqueidentifier, hostname, or JSON data.")
+            raise ValueError(
+                f"Not a valid uniqueidentifier, hostname, or JSON data: {value}"
+            )
         if self.json is None:
             self.json = {}
 
@@ -748,16 +750,16 @@ def beginIngressOnNIC(packRec, nicRec):
         if packRec.get("sourceMAC") not in theDevice.get("port_arps"):
             theDevice["port_arps"][packRec.get("sourceMAC")] = nicRec.get("nicname")
 
-    #Look better tracking for network loops
-    #If the same packet hits the same switch, we determine it is a loop
+    # Look better tracking for network loops
+    # If the same packet hits the same switch, we determine it is a loop
     hostname = theDevice.get("hostname")
-    if 'path' not in packRec:
-        packRec['path'] = []
-    #Check if the hostname is already in the path of the packet.  If so, it is a loop
-    if hostname in packRec.get('path'):
+    if "path" not in packRec:
+        packRec["path"] = []
+    # Check if the hostname is already in the path of the packet.  If so, it is a loop
+    if hostname in packRec.get("path"):
         session.packetstorm = True
         print("Found network loop")
-    packRec['path'].append(hostname) 
+    packRec["path"].append(hostname)
 
     # If we are entering a WAN port, see if we should be blocked or if it is a return packet
     if nictype == "wan":

@@ -13,6 +13,20 @@ class ThemedBoxLayout(BoxLayout):
     pass
 
 
+class PuzzleLayout(RelativeLayout):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.app = session.app
+
+    def on_touch_up(self, touch):
+        if len(touch.grab_list) > 0:  # widget was touched instead of layout
+            return super().on_touch_up(touch)
+        if hasattr(self.app, "chosen_pos"):
+            # Convert touch.pos to relative layout pos.
+            self.app.chosen_pos = self.to_widget(*touch.pos)
+            return True
+
+
 class AppMenu(ThemedBoxLayout):
     def __init__(
         self, anchor_pos=None, choices=list(), orientation="horizontal", **kwargs

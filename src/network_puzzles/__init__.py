@@ -1,6 +1,7 @@
 import argparse
 import gettext
 import logging
+import sys
 from pathlib import Path
 
 from .vars import Session
@@ -27,6 +28,8 @@ argparser.add_argument(
 
 args = argparser.parse_args()
 log_level = logging.WARNING
+if sys.argv[0].endswith("test"):  # e.g. "python -m unittest"
+    log_level = logging.CRITICAL
 if args.verbose:
     log_level = logging.INFO
 if args.debug:

@@ -97,6 +97,9 @@ class UI:
         """return a list of all tests in the current puzzle"""
         return session.puzzle.all_tests()
 
+    def create_device(self, *args):
+        pass
+
     def create_link(self, *args):
         pass
 
@@ -205,6 +208,9 @@ class GUI(UI):
 
     def console_write(self, line):
         self.app.add_terminal_line(line)
+
+    def create_device(self, device_data):
+        self.app.add_device(device_data)
 
     def create_link(self, link_data):
         self.app.add_link(link_data)
