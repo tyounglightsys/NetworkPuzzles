@@ -129,7 +129,9 @@ class Puzzle:
                         commands.append(f"set {test.get('shost')} power on")
                     else:
                         commands.append(f"set {test.get('shost')} power off")
-
+        tdevice = self.device_from_name(hostname)
+        if tdevice is not None and device.canUseDHCP(hostname):
+            commands.append(f"dhcp {hostname}")
         return commands
 
     def _get_items(self, item_type: str):

@@ -397,6 +397,11 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
         return None
     return routeRec
 
+def canUseDHCP(srcDevice):
+    for nic in Device(srcDevice).all_nics():
+        if nic.get('usesdhcp') == "True":
+            return True
+    return False
 
 def deviceFromIP(what):
     """Return the device, given a name
@@ -1014,6 +1019,33 @@ def Ping(src, dest):
     # print (nPacket)
     packet.addPacketToPacketlist(nPacket)
 
+def doDHCP(srcHostname):
+    """Generate a DHCP request packet from the specified hostname, if that host has any
+    network cards that request DHCP
+    Args:
+        srcHostname:str the hostname to do a DHCP request on"""
+    #see if we can do a dhcp request from the specified hostname
+    srcDevice = session.puzzle.device_from_name(srcHostname)
+    if srcDevice is None:
+        session.print(f"No such host: {srcHostname}")
+        return
+    if not canUseDHCP(srcHostname):
+        return
+    for nic in Device(srcDevice).all_nics():
+        if nic.get('usesdhcp') == "True":
+            #This NIC can do DHCP.  Send out a request
+            nPacket = packet.newPacket()
+            #We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
+            nPacket["sourceIP"] = "0.0.0.0"
+            # packet['sourceMAC'] = #the MAC address of the above IP
+            nPacket["sourceMAC"] = nic.get('Mac')
+            nPacket["destIP"] = "0.0.0.0"
+            # packet['destMAC'] = #If the IP is local, we use the MAC of the host.  Otherwise it is the MAC of the gateway
+            nPacket["destMAC"] = packet.BroadcastMAC()
+            nPacket["packettype"] = "DHCP-Request"
+            sendPacketOutDevice(nPacket, srcDevice)
+            # print (nPacket)
+            packet.addPacketToPacketlist(nPacket)
 
 ##############
 # Net Tests

@@ -80,6 +80,8 @@ class Parser:
                     return val
                 case "delete":
                     return self.delete_item(args)
+                case "dhcp":
+                    return self.do_dhcp(args)
                 case "exit" | "quit" | "stop":
                     self.exit_app()
                 case "ping":
@@ -237,6 +239,18 @@ class Parser:
         # FIXME: This only shows that the ping command was successfully
         # initiated, not that it was itself successful.
         return True
+
+    def do_dhcp(self, args):
+        if len(args) == 0:
+            #It was simply: dhcp.  We assume 'all'
+            args.append('all')
+        if args[0] == 'all':
+            for one in session.puzzle.all_devices():
+                if 'hostname' in one:
+                    device.doDHCP(one.get('hostname'))
+        else:
+            device.doDHCP(args[0])
+
 
     def delete_item(self, args):
         if len(args) == 0:
