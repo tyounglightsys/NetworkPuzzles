@@ -285,7 +285,7 @@ def doesVLANs(deviceRec):
 def servesDHCP(deviceRec):
     """return true if the device can serve dhcp, false if it can not"""
     match deviceRec["mytype"]:
-        case "firewall" | "wrouter":
+        case "firewall" | "wrouter" | "server":
             return True
     return False
 
@@ -763,7 +763,6 @@ def beginIngressOnNIC(packRec, nicRec):
     # Check if the hostname is already in the path of the packet.  If so, it is a loop
     if hostname in packRec.get("path"):
         session.packetstorm = True
-        print("Found network loop")
     packRec["path"].append(hostname)
 
     # If we are entering a WAN port, see if we should be blocked or if it is a return packet
@@ -807,8 +806,23 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
         return False
     # We would check if it was frozen.  That is a test, not a status.  We do not have that check yet.
 
-    # Deal with DHCP.  If it is an answer, update the device IP address.
+    # Deal with DHCP.
     # If it is a request and this is a DHCP server, serve an IP back.
+    if packRec["packettype"] == "DHCP-Request":
+        if servesDHCP(thisDevice):
+            if 'isdhcp' in thisDevice and thisDevice["isdhcp"] == "True" and "dhcprange" in thisDevice:
+                session.print(f"Arrived at DHCP server: {thisDevice["hostname"]}")
+                makeDHCPResponse(packRec, thisDevice, nicRec)
+                packRec["status"]="done"
+                return True
+    # If it is a DHCP answer, update the device IP address.
+    if packRec["packettype"] == "DHCP-Response":
+        if packRec["destMAC"] == nicRec["Mac"] and nicRec.get("usesdhcp") == "True":
+            logging.info(f"Recieved DHCP response.  Dealing with it. payload: {packRec['payload']}")
+            logging.info("packet matches this nic.")
+            session.ui.parser.parse(f"set {thisDevice['hostname']} {nicRec['nicname']} {packRec['payload']}")
+            packRec["status"]="done"
+            return True
 
     # If the packet is destined for here, process that
     # print("Checking destination.  Looking for " + packet.justIP(packRec['destIP']))
@@ -905,6 +919,58 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     packRec["status"] = "done"
 
 
+def makeDHCPResponse(packRec, thisDevice, nicRec):
+    if "dhcplist" not in thisDevice:
+        thisDevice["dhcplist"] = {}
+    inboundip = nicRec["interface"][0]["myip"]["ip"]
+    iprange = None
+    available_ip="" #start with it empty.  Fill it if we can
+    for onerange in thisDevice["dhcprange"]:
+        if onerange["ip"] == inboundip:
+            iprange = onerange
+
+    if iprange is not None:
+        rangestart=int(iprange["mask"].split('.')[3]) #they were stored a bit oddly in the original json
+        rangeend=int(iprange["gateway"].split('.')[3]) #they were stored a bit oddly in the original json
+        iparr = iprange["ip"].split('.')
+        ipprepend = f"{iparr[0]}.{iparr[1]}.{iparr[2]}."
+        for i in range(rangestart,rangeend):
+            newip = ipprepend + str(i)
+            found = False
+            for dhcpentry in thisDevice["dhcplist"].values():
+                if dhcpentry == newip:
+                    found=True
+                    break
+            if not found:
+                available_ip= newip
+                break
+    #Now, check to see if we have an entry already.
+    if packRec['sourceMAC'] in thisDevice["dhcplist"]:
+        #we already have an entry. Use it
+        available_ip = thisDevice["dhcplist"][packRec['sourceMAC']]
+    else:
+        logging.debug(f"DHCP: Making an IP reservation {available_ip} {packRec['sourceMAC']}" )
+
+    if available_ip != "":
+        #stash it.  if it already exists, we use the same value.
+        thisDevice["dhcplist"][packRec['sourceMAC']] = available_ip
+        #Now, make a new DHCP response packet
+        nPacket = packet.newPacket()
+        nPacket["sourceIP"] = nicRec["interface"][0]["myip"]["ip"]
+        nPacket["sourceMAC"] = nicRec.get('Mac')
+        nPacket["destIP"] = "0.0.0.0"
+        nPacket["destMAC"] = packRec['sourceMAC']
+        nPacket["packettype"] = "DHCP-Response"
+        nPacket["payload"] = available_ip
+        destlink = linkConnectedToNic(nicRec)
+        nPacket["packetlocation"] = destlink["hostname"]
+        if destlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
+            nPacket["packetDirection"] = 1  # Src to Dest
+        else:
+            nPacket["packetDirection"] = 2  # Dest to Source
+        packet.addPacketToPacketlist(nPacket)
+        logging.info(f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {packRec['sourceMAC']}")
+
 # def AssignMacIfNeeded(nicRec):
 #     if 'Mac' not in nicRec:
 #         #Most of the network cards do not have this done yet.  We generate a new random one
@@ -927,12 +993,13 @@ def sendPacketOutDevice(packRec, theDevice):
         packRec["sourceMAC"] = routeRec["nic"]["Mac"]
         # set the destination MAC to be the GW MAC if the destination is not local
         # this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
-        if routeRec.get("gateway") is not None:
-            # We are going out the gateway.  Find the ARP for that
-            packRec["destMAC"] = globalArpLookup(routeRec.get("gateway"))
-        else:
-            # We are on a local link.  Set the destmac to be the mac of our destination computer
-            packRec["destMAC"] = globalArpLookup(packRec.get("destIP"))
+        if packRec["destMAC"] != packet.BroadcastMAC() and packRec["packettype"] != "DHCP-Response":
+            if routeRec.get("gateway") is not None:
+                # We are going out the gateway.  Find the ARP for that
+                packRec["destMAC"] = globalArpLookup(routeRec.get("gateway"))
+            else:
+                # We are on a local link.  Set the destmac to be the mac of our destination computer
+                packRec["destMAC"] = globalArpLookup(packRec.get("destIP"))
 
         # set the packet location being the link associated with the nic
         #   Fail if there is no link on the port
