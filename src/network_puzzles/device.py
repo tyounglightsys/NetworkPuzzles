@@ -820,7 +820,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
         if packRec["destMAC"] == nicRec["Mac"] and nicRec.get("usesdhcp") == "True":
             logging.info(f"Recieved DHCP response.  Dealing with it. payload: {packRec['payload']}")
             logging.info("packet matches this nic.")
-            session.ui.parser.parse(f"set {thisDevice['hostname']} {nicRec['nicname']} {packRec['payload']['ip']}/{packRec['payload']['subnet']}")
+            session.ui.parser.parse(f"set {thisDevice['hostname']} {nicRec['nicname']} {packRec['payload']['ip']}/{packRec['payload']['subnet']}", False)
             if packet.isEmpty(thisDevice['gateway']['ip']):
                 session.ui.parser.parse(f"set {thisDevice['hostname']} gateway {packRec['payload']['gateway']}")
             packRec["status"]="done"

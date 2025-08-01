@@ -91,7 +91,7 @@ class Parser:
                 case "show" | "list":
                     self.show_info(args)
                 case "set":
-                    return self.setvalue(args)
+                    return self.setvalue(args, fromuser)
                 case "undo":
                     return self.try_undo()
                 case "redo":
@@ -380,7 +380,7 @@ class Parser:
             session.print(f"invalid address: {value}")
             return False
 
-    def set_ip_value(self, dev_obj, nicname, value):
+    def set_ip_value(self, dev_obj, nicname, value, fromuser=True):
         # we should be setting the IP address.
         theparts = value.split("/")
         ip = theparts[0]
@@ -391,8 +391,13 @@ class Parser:
             # we are good to go.
             # get the nic and interface.
             interface = dev_obj.interface_from_name(nicname)
+            nic = dev_obj.nic_from_name(nicname)
             if interface is not None:
-                # we found it.  Change the IP
+                # we found it.  Change the IP if we are able
+                if fromuser and nic.get('usesdhcp') == "True":
+                    #The user cannot set the IP manually if the NIC is set to use DHCP
+                    session.print(f"{nicname} is set for DHCP.  Cannot change it manually.")
+                    return
                 # we should have some better syntax checking here.
                 if mask == "":
                     mask = interface["myip"]["mask"]
@@ -468,7 +473,7 @@ class Parser:
             f"Defining {dev_obj.hostname} 'poweroff' to {dev_obj.json.get('poweroff')}"
         )
 
-    def setvalue(self, args):
+    def setvalue(self, args, fromuser=True):
         # set a value on a device.
         # right now, we have something like: set pc0 poweroff true
 
@@ -529,4 +534,4 @@ class Parser:
                     or prop.startswith("wlan")
                     or prop.startswith("management")
                 ):
-                    self.set_ip_value(dev_obj, prop, values[0])
+                    self.set_ip_value(dev_obj, prop, values[0],fromuser)
