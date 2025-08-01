@@ -20,6 +20,7 @@ class Session:
         self.undolist = list()
         self.redolist = list()
         self.ui = None
+        self.startinglevel = ""
 
     def print(self, message):
         print("<default print method>")

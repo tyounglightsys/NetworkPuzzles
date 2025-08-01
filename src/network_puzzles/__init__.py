@@ -22,6 +22,7 @@ __version__ = "0.1"
 
 argparser = argparse.ArgumentParser(prog="NetworkPuzzles")
 argparser.add_argument("-d", "--debug", action="store_true", help="show debug output")
+argparser.add_argument("-f", "--filename", type=str, help="specify a different starting level instead of the default")
 argparser.add_argument(
     "-v", "--verbose", action="store_true", help="show verbose output"
 )
@@ -34,6 +35,8 @@ if args.verbose:
     log_level = logging.INFO
 if args.debug:
     log_level = logging.DEBUG
+if args.filename:
+    session.startinglevel = args.filename
 
 logging.basicConfig(
     level=log_level,

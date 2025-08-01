@@ -124,7 +124,10 @@ class CLI(UI):
 
     def run(self):
         print(self.TITLE)
-        self.load_puzzle("2")  # for now, just testing
+        what="2" #for now, just testing
+        if session.startinglevel != "":
+            what = session.startinglevel
+        self.load_puzzle(what)  # for now, just testing
         try:
             while True:
                 self.prompt()
