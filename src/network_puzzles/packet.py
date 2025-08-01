@@ -208,3 +208,6 @@ def isBroadcastMAC(macToCheck:str):
         return True
     return False
     
+def isEmpty(iptocheck:str):
+    if iptocheck == "0.0.0.0":
+        return True

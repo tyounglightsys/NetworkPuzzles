@@ -820,7 +820,9 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
         if packRec["destMAC"] == nicRec["Mac"] and nicRec.get("usesdhcp") == "True":
             logging.info(f"Recieved DHCP response.  Dealing with it. payload: {packRec['payload']}")
             logging.info("packet matches this nic.")
-            session.ui.parser.parse(f"set {thisDevice['hostname']} {nicRec['nicname']} {packRec['payload']}")
+            session.ui.parser.parse(f"set {thisDevice['hostname']} {nicRec['nicname']} {packRec['payload']['ip']}/{packRec['payload']['subnet']}")
+            if packet.isEmpty(thisDevice['gateway']['ip']):
+                session.ui.parser.parse(f"set {thisDevice['hostname']} gateway {packRec['payload']['gateway']}")
             packRec["status"]="done"
             return True
 
@@ -961,7 +963,11 @@ def makeDHCPResponse(packRec, thisDevice, nicRec):
         nPacket["destIP"] = "0.0.0.0"
         nPacket["destMAC"] = packRec['sourceMAC']
         nPacket["packettype"] = "DHCP-Response"
-        nPacket["payload"] = available_ip
+        nPacket["payload"] = { 
+            'ip':available_ip,
+            'subnet':nicRec["interface"][0]["myip"]["mask"],
+            'gateway':thisDevice['gateway']['ip']
+        }
         destlink = linkConnectedToNic(nicRec)
         nPacket["packetlocation"] = destlink["hostname"]
         if destlink["SrcNic"]["hostname"] == thisDevice["hostname"]:

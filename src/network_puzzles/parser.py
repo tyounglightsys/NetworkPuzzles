@@ -200,6 +200,7 @@ class Parser:
             "create link source destination - create a link between two devices.  example: create link pc0 net_switch0"
         )
         session.print("delete [item] - delete a device or link")
+        session.print("dhcp [item] - have that device do a DHCP or all devices do a DHCP request")
         session.print("help - show this page")
         session.print("history - see the commands you typed this session")
         session.print("load - load a puzzle.  Example: load 1 | load Level0_Ping")
