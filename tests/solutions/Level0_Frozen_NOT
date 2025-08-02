@@ -1,2 +1,6 @@
 load Level0_Frozen
+#The net_switch0 is frozen.  We need to reset it
+#This is done by powering it off and back on
+#If this ping succeeds without resetting it, the code
+#for dealing with a frozen device is faulty.
 ping pc0 laptop1

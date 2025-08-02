@@ -1,6 +1,5 @@
 load Level0_BrokenLink
 # The network wire between the router and laptop should be broken
 # To fix it, we replace the router
-replace router0_link_laptop1
-# Then, the ping should work
+# But, here we try the ping.  If this works, then links are not breaking like they are supposed to
 ping pc0 laptop1

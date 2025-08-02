@@ -1,3 +1,5 @@
 load Level0_Ping
+#This is a very simple puzzle
+#We need to ping the two laptops
 ping pc0 laptop0
 ping pc0 laptop1

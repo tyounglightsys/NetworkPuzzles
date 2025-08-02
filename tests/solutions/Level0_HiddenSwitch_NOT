@@ -3,6 +3,8 @@ load Level0_HiddenSwitch
 #we need to move the switch from one point to the other
 #to be able to see it.  Then, we can move the actual switch
 #and finally we can set the IP address
-set net_switch0 location 1  2
-set net_switch1 location 1  2
+#set net_switch0 location 1  2
+#set net_switch1 location 1  2
+#We should not be able to change the settings on the 
+#device until it is found
 set net_switch1 management_interface0 192.168.1.20

@@ -1,2 +1,4 @@
 load Level0_SimpleDHCP
+#The level is solved by doing a dhcp request on PC0.
+#doing dhcp by itself is the same as "dhcp all"
 dhcp

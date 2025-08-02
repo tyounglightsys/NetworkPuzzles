@@ -1,2 +1,5 @@
 load Level0_NetworkLoop2
+#The first ping should trigger a network loop.
+#If the network loop tracking info is not working,
+#this will solve the problem, which it should not.
 ping pc0 pc1

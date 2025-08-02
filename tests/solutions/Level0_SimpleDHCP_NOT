@@ -1,2 +1,6 @@
 load Level0_SimpleDHCP
+#One way to cheat on this puzzle would be to manually
+#set the IP address of PC0.  We should not be able to
+#manually set the IP address of a Nic that requires DHCP
+#this "solution" should fail.
 set pc0 eth0 192.168.1.50/255.255.255.0

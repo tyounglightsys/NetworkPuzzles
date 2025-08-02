@@ -1,4 +1,6 @@
 load Level0_NoSwitch
+#This puzzle is solved by creating a switch
+#and making links between the switch and the PCs
 create device net_switch 378 200
 create link pc0 net_switch0
 create link pc1 net_switch0

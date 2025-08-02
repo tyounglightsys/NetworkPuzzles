@@ -51,6 +51,9 @@ class Parser:
 
     def parse(self, command: str, fromuser=True, fromundo=False):
         # We will make this a lot more interesting later.  For now, just do a very simple thing
+        if command is not None and command.startswith("#"):
+            #ignore comments.  Usually coming from the testing files
+            return
         logging.debug(f"{command=}")
         session.packetstorm = False  # We are starting something new. It is false until we determine otherwise
         command = command.replace(

@@ -1,3 +1,5 @@
 load Level0_Power
+#The power is turned off on the net_switch0
+#we need tp turn it on, and then do our ping
 set net_switch0 poweroff False
 ping pc0 laptop1
