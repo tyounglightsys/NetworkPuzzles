@@ -571,6 +571,16 @@ class Puzzle:
         if existinglink is not None:
             session.print(f"Link already exists: {existinglink['hostname']}")
             return False
+        
+        existinglink = device.linkConnectedToNic(snic)
+        if existinglink is not None:
+            session.print(f"Source nic already in use: {snic['myid']['hostname']} {snic['myid']['nicname']}")
+            return False
+
+        existinglink = device.linkConnectedToNic(dnic)
+        if existinglink is not None:
+            session.print(f"Destination nic already in use: {dnic['myid']['hostname']} {dnic['myid']['nicname']}")
+            return False
         # verify the port types match
         ismatch = False
         snictype = snic.get("nictype")[0]
