@@ -31,10 +31,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "103",
@@ -60,10 +57,7 @@
               }
             },
             {
-              "nictype": [
-                "management_interface",
-                "management_interface"
-              ],
+              "nictype": ["management_interface", "management_interface"],
               "nicname": "management_interface0",
               "myid": {
                 "hostid": "103",
@@ -77,7 +71,7 @@
               "interface": {
                 "nicname": "management_interface0",
                 "myip": {
-                  "ip": "102.168.1.4",
+                  "ip": "192.168.1.4",
                   "mask": "255.255.255.0",
                   "gateway": "0.0.0.0",
                   "type": "ip"
@@ -89,10 +83,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port1",
               "myid": {
                 "hostid": "103",
@@ -118,10 +109,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port2",
               "myid": {
                 "hostid": "103",
@@ -147,10 +135,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port3",
               "myid": {
                 "hostid": "103",
@@ -176,10 +161,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port4",
               "myid": {
                 "hostid": "103",
@@ -205,10 +187,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port5",
               "myid": {
                 "hostid": "103",
@@ -234,10 +213,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port6",
               "myid": {
                 "hostid": "103",
@@ -263,10 +239,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port7",
               "myid": {
                 "hostid": "103",
@@ -309,10 +282,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "113",
@@ -338,10 +308,7 @@
               }
             },
             {
-              "nictype": [
-                "eth",
-                "eth"
-              ],
+              "nictype": ["eth", "eth"],
               "nicname": "eth0",
               "myid": {
                 "hostid": "113",
@@ -384,10 +351,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "100",
@@ -413,10 +377,7 @@
               }
             },
             {
-              "nictype": [
-                "eth",
-                "eth"
-              ],
+              "nictype": ["eth", "eth"],
               "nicname": "eth0",
               "myid": {
                 "hostid": "100",
@@ -499,10 +460,7 @@
         "dhost": "server0",
         "thetest": "NeedsLocalIPTo"
       },
-      "tag": [
-        "DHCP",
-        "DHCPServer"
-      ],
+      "tag": ["DHCP", "DHCPServer"],
       "VLANName": {
         "@ID": "1",
         "@Color": "Blue",
