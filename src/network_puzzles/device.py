@@ -83,7 +83,7 @@ class Device:
         self.json["poweroff"] = value
 
     @property
-    def uid(self):
+    def uniqueidentifier(self):
         return self.json.get("uniqueidentifier")
 
     def all_nics(self):
@@ -397,11 +397,13 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
         return None
     return routeRec
 
+
 def canUseDHCP(srcDevice):
     for nic in Device(srcDevice).all_nics():
-        if nic.get('usesdhcp') == "True":
+        if nic.get("usesdhcp") == "True":
             return True
     return False
+
 
 def deviceFromIP(what):
     """Return the device, given a name
@@ -810,20 +812,31 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     # If it is a request and this is a DHCP server, serve an IP back.
     if packRec["packettype"] == "DHCP-Request":
         if servesDHCP(thisDevice):
-            if 'isdhcp' in thisDevice and thisDevice["isdhcp"] == "True" and "dhcprange" in thisDevice:
-                session.print(f"Arrived at DHCP server: {thisDevice["hostname"]}")
+            if (
+                "isdhcp" in thisDevice
+                and thisDevice["isdhcp"] == "True"
+                and "dhcprange" in thisDevice
+            ):
+                session.print(f"Arrived at DHCP server: {thisDevice['hostname']}")
                 makeDHCPResponse(packRec, thisDevice, nicRec)
-                packRec["status"]="done"
+                packRec["status"] = "done"
                 return True
     # If it is a DHCP answer, update the device IP address.
     if packRec["packettype"] == "DHCP-Response":
         if packRec["destMAC"] == nicRec["Mac"] and nicRec.get("usesdhcp") == "True":
-            logging.info(f"Recieved DHCP response.  Dealing with it. payload: {packRec['payload']}")
+            logging.info(
+                f"Recieved DHCP response.  Dealing with it. payload: {packRec['payload']}"
+            )
             logging.info("packet matches this nic.")
-            session.ui.parser.parse(f"set {thisDevice['hostname']} {nicRec['nicname']} {packRec['payload']['ip']}/{packRec['payload']['subnet']}", False)
-            if packet.isEmpty(thisDevice['gateway']['ip']):
-                session.ui.parser.parse(f"set {thisDevice['hostname']} gateway {packRec['payload']['gateway']}")
-            packRec["status"]="done"
+            session.ui.parser.parse(
+                f"set {thisDevice['hostname']} {nicRec['nicname']} {packRec['payload']['ip']}/{packRec['payload']['subnet']}",
+                False,
+            )
+            if packet.isEmpty(thisDevice["gateway"]["ip"]):
+                session.ui.parser.parse(
+                    f"set {thisDevice['hostname']} gateway {packRec['payload']['gateway']}"
+                )
+            packRec["status"] = "done"
             return True
 
     # If the packet is destined for here, process that
@@ -926,47 +939,53 @@ def makeDHCPResponse(packRec, thisDevice, nicRec):
         thisDevice["dhcplist"] = {}
     inboundip = nicRec["interface"][0]["myip"]["ip"]
     iprange = None
-    available_ip="" #start with it empty.  Fill it if we can
+    available_ip = ""  # start with it empty.  Fill it if we can
     for onerange in thisDevice["dhcprange"]:
         if onerange["ip"] == inboundip:
             iprange = onerange
 
     if iprange is not None:
-        rangestart=int(iprange["mask"].split('.')[3]) #they were stored a bit oddly in the original json
-        rangeend=int(iprange["gateway"].split('.')[3]) #they were stored a bit oddly in the original json
-        iparr = iprange["ip"].split('.')
+        rangestart = int(
+            iprange["mask"].split(".")[3]
+        )  # they were stored a bit oddly in the original json
+        rangeend = int(
+            iprange["gateway"].split(".")[3]
+        )  # they were stored a bit oddly in the original json
+        iparr = iprange["ip"].split(".")
         ipprepend = f"{iparr[0]}.{iparr[1]}.{iparr[2]}."
-        for i in range(rangestart,rangeend):
+        for i in range(rangestart, rangeend):
             newip = ipprepend + str(i)
             found = False
             for dhcpentry in thisDevice["dhcplist"].values():
                 if dhcpentry == newip:
-                    found=True
+                    found = True
                     break
             if not found:
-                available_ip= newip
+                available_ip = newip
                 break
-    #Now, check to see if we have an entry already.
-    if packRec['sourceMAC'] in thisDevice["dhcplist"]:
-        #we already have an entry. Use it
-        available_ip = thisDevice["dhcplist"][packRec['sourceMAC']]
+    # Now, check to see if we have an entry already.
+    if packRec["sourceMAC"] in thisDevice["dhcplist"]:
+        # we already have an entry. Use it
+        available_ip = thisDevice["dhcplist"][packRec["sourceMAC"]]
     else:
-        logging.debug(f"DHCP: Making an IP reservation {available_ip} {packRec['sourceMAC']}" )
+        logging.debug(
+            f"DHCP: Making an IP reservation {available_ip} {packRec['sourceMAC']}"
+        )
 
     if available_ip != "":
-        #stash it.  if it already exists, we use the same value.
-        thisDevice["dhcplist"][packRec['sourceMAC']] = available_ip
-        #Now, make a new DHCP response packet
+        # stash it.  if it already exists, we use the same value.
+        thisDevice["dhcplist"][packRec["sourceMAC"]] = available_ip
+        # Now, make a new DHCP response packet
         nPacket = packet.newPacket()
         nPacket["sourceIP"] = nicRec["interface"][0]["myip"]["ip"]
-        nPacket["sourceMAC"] = nicRec.get('Mac')
+        nPacket["sourceMAC"] = nicRec.get("Mac")
         nPacket["destIP"] = "0.0.0.0"
-        nPacket["destMAC"] = packRec['sourceMAC']
+        nPacket["destMAC"] = packRec["sourceMAC"]
         nPacket["packettype"] = "DHCP-Response"
-        nPacket["payload"] = { 
-            'ip':available_ip,
-            'subnet':nicRec["interface"][0]["myip"]["mask"],
-            'gateway':thisDevice['gateway']['ip']
+        nPacket["payload"] = {
+            "ip": available_ip,
+            "subnet": nicRec["interface"][0]["myip"]["mask"],
+            "gateway": thisDevice["gateway"]["ip"],
         }
         destlink = linkConnectedToNic(nicRec)
         nPacket["packetlocation"] = destlink["hostname"]
@@ -975,7 +994,10 @@ def makeDHCPResponse(packRec, thisDevice, nicRec):
         else:
             nPacket["packetDirection"] = 2  # Dest to Source
         packet.addPacketToPacketlist(nPacket)
-        logging.info(f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {packRec['sourceMAC']}")
+        logging.info(
+            f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {packRec['sourceMAC']}"
+        )
+
 
 # def AssignMacIfNeeded(nicRec):
 #     if 'Mac' not in nicRec:
@@ -999,7 +1021,10 @@ def sendPacketOutDevice(packRec, theDevice):
         packRec["sourceMAC"] = routeRec["nic"]["Mac"]
         # set the destination MAC to be the GW MAC if the destination is not local
         # this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
-        if packRec["destMAC"] != packet.BroadcastMAC() and packRec["packettype"] != "DHCP-Response":
+        if (
+            packRec["destMAC"] != packet.BroadcastMAC()
+            and packRec["packettype"] != "DHCP-Response"
+        ):
             if routeRec.get("gateway") is not None:
                 # We are going out the gateway.  Find the ARP for that
                 packRec["destMAC"] = globalArpLookup(routeRec.get("gateway"))
@@ -1092,12 +1117,13 @@ def Ping(src, dest):
     # print (nPacket)
     packet.addPacketToPacketlist(nPacket)
 
+
 def doDHCP(srcHostname):
     """Generate a DHCP request packet from the specified hostname, if that host has any
     network cards that request DHCP
     Args:
         srcHostname:str the hostname to do a DHCP request on"""
-    #see if we can do a dhcp request from the specified hostname
+    # see if we can do a dhcp request from the specified hostname
     srcDevice = session.puzzle.device_from_name(srcHostname)
     if srcDevice is None:
         session.print(f"No such host: {srcHostname}")
@@ -1105,13 +1131,13 @@ def doDHCP(srcHostname):
     if not canUseDHCP(srcHostname):
         return
     for nic in Device(srcDevice).all_nics():
-        if nic.get('usesdhcp') == "True":
-            #This NIC can do DHCP.  Send out a request
+        if nic.get("usesdhcp") == "True":
+            # This NIC can do DHCP.  Send out a request
             nPacket = packet.newPacket()
-            #We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
+            # We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
             nPacket["sourceIP"] = "0.0.0.0"
             # packet['sourceMAC'] = #the MAC address of the above IP
-            nPacket["sourceMAC"] = nic.get('Mac')
+            nPacket["sourceMAC"] = nic.get("Mac")
             nPacket["destIP"] = "0.0.0.0"
             # packet['destMAC'] = #If the IP is local, we use the MAC of the host.  Otherwise it is the MAC of the gateway
             nPacket["destMAC"] = packet.BroadcastMAC()
@@ -1119,6 +1145,7 @@ def doDHCP(srcHostname):
             sendPacketOutDevice(nPacket, srcDevice)
             # print (nPacket)
             packet.addPacketToPacketlist(nPacket)
+
 
 ##############
 # Net Tests
