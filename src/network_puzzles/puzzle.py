@@ -378,7 +378,6 @@ class Puzzle:
                 if onelink is not None:
                     self.deleteItem(onelink.get("hostname"))
             session.print(f"Deleting: {itemToDelete}")
-            session.ui.delete_item(existing_device)
             session.add_undo_entry(
                 f"delete {itemToDelete}", f"restore {itemToDelete}", existing_device
             )  # make entry using payload
@@ -392,8 +391,6 @@ class Puzzle:
         existing_link = self.link_from_name(itemToDelete)
         if existing_link:
             session.print(f"Deleting: {itemToDelete}")
-            # Additional call for special UI handling.
-            session.ui.delete_item(existing_link)
             session.add_undo_entry(
                 f"delete {itemToDelete}", f"restore {itemToDelete}", existing_link
             )  # make entry using payload
@@ -424,7 +421,7 @@ class Puzzle:
             "nictype": [f"{nictype}", f"{nictype}"],
             "nicname": newnicname,
             "myid": {
-                "hostid": thedevice.uid,
+                "hostid": thedevice.uniqueidentifier,
                 "nicid": newid,
                 "hostname": thedevice.hostname,
                 "nicname": newnicname,
@@ -512,8 +509,6 @@ class Puzzle:
 
         self.json["device"].append(newdevice)
         session.print(f"Creating new device: {newdevicename}")
-        # Additional call for special UI handling.
-        session.ui.create_device(newdevice)
 
     def createLink(self, args, linktype="normal") -> bool:
         """returns False on error, True if successful, None if unhandled"""
@@ -571,15 +566,19 @@ class Puzzle:
         if existinglink is not None:
             session.print(f"Link already exists: {existinglink['hostname']}")
             return False
-        
+
         existinglink = device.linkConnectedToNic(snic)
         if existinglink is not None:
-            session.print(f"Source nic already in use: {snic['myid']['hostname']} {snic['myid']['nicname']}")
+            session.print(
+                f"Source nic already in use: {snic['myid']['hostname']} {snic['myid']['nicname']}"
+            )
             return False
 
         existinglink = device.linkConnectedToNic(dnic)
         if existinglink is not None:
-            session.print(f"Destination nic already in use: {dnic['myid']['hostname']} {dnic['myid']['nicname']}")
+            session.print(
+                f"Destination nic already in use: {dnic['myid']['hostname']} {dnic['myid']['nicname']}"
+            )
             return False
         # verify the port types match
         ismatch = False
@@ -619,8 +618,6 @@ class Puzzle:
                 "NeedsLinkToDevice",
                 f"Solved: Create link between {sdevicename} and {ddevicename}",
             )
-            # Additional call for special UI handling.
-            session.ui.create_link(newlink)
             return True
         else:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")

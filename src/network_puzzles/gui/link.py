@@ -1,3 +1,4 @@
+import logging
 from kivy.graphics import Color
 from kivy.graphics import Line
 from kivy.properties import ListProperty
@@ -32,9 +33,9 @@ class Link(Widget):
             return None
 
     @property
-    def uid(self):
-        if hasattr(self, "base") and hasattr(self.base, "json"):
-            return self.base.json.get("uniqueidentifier")
+    def uniqueidentifier(self):
+        if hasattr(self, "base"):
+            return self.base.uniqueidentifier
         else:
             return None
 

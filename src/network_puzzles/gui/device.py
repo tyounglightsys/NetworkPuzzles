@@ -72,9 +72,9 @@ class Device(DragBehavior, ThemedBoxLayout):
             return list()
 
     @property
-    def uid(self):
+    def uniqueidentifier(self):
         if hasattr(self, "base") and self.base:
-            return self.base.uid
+            return self.base.uniqueidentifier
 
     def callback(self, cmd_string):
         self.app.ui.parse(cmd_string)
@@ -424,7 +424,9 @@ class ChooseNicPopup(AppPopup):
         self.device = devicew
         super().__init__(**kwargs)
         self.selected_nic = None
-        free_nics = [n for n in self.device.nics if device.linkConnectedToNic(n.json) is None]
+        free_nics = [
+            n for n in self.device.nics if device.linkConnectedToNic(n.json) is None
+        ]
         self.ids.nics_list.update_data(free_nics)
 
     def on_nic_selection(self, selected_nic):

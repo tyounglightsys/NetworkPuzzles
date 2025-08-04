@@ -97,20 +97,23 @@ class UI:
         """return a list of all tests in the current puzzle"""
         return session.puzzle.all_tests()
 
-    def create_device(self, *args):
+    def redraw(self):
         pass
 
-    def create_link(self, *args):
-        pass
+    # def create_device(self, *args):
+    #     pass
 
-    def delete_item(self, *args):
-        pass
+    # def create_link(self, *args):
+    #     pass
 
-    def replace_link(self, *args):
-        pass
+    # def delete_item(self, *args):
+    #     pass
 
-    def update_power_status(self, *args):
-        pass
+    # def replace_link(self, *args):
+    #     pass
+
+    # def update_power_status(self, *args):
+    #     pass
 
     def acknowledge_any_tests():
         raise NotImplementedError
@@ -124,7 +127,7 @@ class CLI(UI):
 
     def run(self):
         print(self.TITLE)
-        what="2" #for now, just testing
+        what = "2"  # for now, just testing
         if session.startinglevel != "":
             what = session.startinglevel
         self.load_puzzle(what)  # for now, just testing
@@ -212,14 +215,14 @@ class GUI(UI):
     def console_write(self, line):
         self.app.add_terminal_line(line)
 
-    def create_device(self, device_data):
-        self.app.add_device(device_data)
+    # def create_device(self, device_data):
+    #     self.app.add_device(device_data)
 
-    def create_link(self, link_data):
-        self.app.add_link(link_data)
+    # def create_link(self, link_data):
+    #     self.app.add_link(link_data)
 
-    def delete_item(self, item_data):
-        self.app.remove_item(item_data)
+    # def delete_item(self, item_data):
+    #     self.app.remove_item(item_data)
 
     def is_puzzle_done(self, *args) -> bool | None:
         """
@@ -245,6 +248,10 @@ class GUI(UI):
 
     def parse(self, command: str):
         self.parser.parse(command)
+        # Update GUI after every command.
+        # NOTE: Any asynchronous commands (e.g. ping) will need their own forced
+        # redraws at the end of the command.
+        self.redraw()
 
     def process_packets(self, tick_pct):
         # If we created packets, process them until done.
@@ -254,6 +261,11 @@ class GUI(UI):
     def quit(self):
         self.app.stop()
 
+    def redraw(self):
+        self.app.draw_puzzle()
+        self.app.check_puzzle()
+        self.app.update_help()
+
     def replace_link(self, link_data):
         self.delete_item(link_data)
         self.create_link(link_data)
@@ -261,7 +273,7 @@ class GUI(UI):
     def run(self):
         self.app.run()
 
-    def update_power_status(self, hostname):
-        device = self.app.get_widget_by_hostname(hostname)
-        if device:
-            device.set_power_status()
+    # def update_power_status(self, hostname):
+    #     device = self.app.get_widget_by_hostname(hostname)
+    #     if device:
+    #         device.set_power_status()

@@ -20,3 +20,7 @@ class Link:
     @property
     def src(self):
         return self.json.get("SrcNic").get("hostname")
+
+    @property
+    def uniqueidentifier(self):
+        return self.json.get("uniqueidentifier")
