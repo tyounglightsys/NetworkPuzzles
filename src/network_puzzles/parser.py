@@ -52,7 +52,7 @@ class Parser:
     def parse(self, command: str, fromuser=True, fromundo=False):
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         if command is not None and command.startswith("#"):
-            #ignore comments.  Usually coming from the testing files
+            # ignore comments.  Usually coming from the testing files
             return
         logging.debug(f"{command=}")
         session.packetstorm = False  # We are starting something new. It is false until we determine otherwise
@@ -203,7 +203,9 @@ class Parser:
             "create link source destination - create a link between two devices.  example: create link pc0 net_switch0"
         )
         session.print("delete [item] - delete a device or link")
-        session.print("dhcp [item] - have that device do a DHCP or all devices do a DHCP request")
+        session.print(
+            "dhcp [item] - have that device do a DHCP or all devices do a DHCP request"
+        )
         session.print("help - show this page")
         session.print("history - see the commands you typed this session")
         session.print("load - load a puzzle.  Example: load 1 | load Level0_Ping")
@@ -246,15 +248,14 @@ class Parser:
 
     def do_dhcp(self, args):
         if len(args) == 0:
-            #It was simply: dhcp.  We assume 'all'
-            args.append('all')
-        if args[0] == 'all':
+            # It was simply: dhcp.  We assume 'all'
+            args.append("all")
+        if args[0] == "all":
             for one in session.puzzle.all_devices():
-                if 'hostname' in one:
-                    device.doDHCP(one.get('hostname'))
+                if "hostname" in one:
+                    device.doDHCP(one.get("hostname"))
         else:
             device.doDHCP(args[0])
-
 
     def delete_item(self, args):
         if len(args) == 0:
@@ -398,9 +399,11 @@ class Parser:
             nic = dev_obj.nic_from_name(nicname)
             if interface is not None:
                 # we found it.  Change the IP if we are able
-                if fromuser and nic.get('usesdhcp') == "True":
-                    #The user cannot set the IP manually if the NIC is set to use DHCP
-                    session.print(f"{nicname} is set for DHCP.  Cannot change it manually.")
+                if fromuser and nic.get("usesdhcp") == "True":
+                    # The user cannot set the IP manually if the NIC is set to use DHCP
+                    session.print(
+                        f"{nicname} is set for DHCP.  Cannot change it manually."
+                    )
                     return
                 # we should have some better syntax checking here.
                 if mask == "":
@@ -471,8 +474,8 @@ class Parser:
         else:
             session.add_undo_entry("set power on", f"set power {pastvalue}")
             dev_obj.powered_on = False
-        # Additional call for special UI handling.
-        session.ui.update_power_status(dev_obj.hostname)
+        # Update GUI.
+        session.ui.redraw()
         session.print(
             f"Defining {dev_obj.hostname} 'poweroff' to {dev_obj.json.get('poweroff')}"
         )
@@ -538,4 +541,4 @@ class Parser:
                     or prop.startswith("wlan")
                     or prop.startswith("management")
                 ):
-                    self.set_ip_value(dev_obj, prop, values[0],fromuser)
+                    self.set_ip_value(dev_obj, prop, values[0], fromuser)
