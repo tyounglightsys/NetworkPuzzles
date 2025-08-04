@@ -161,8 +161,8 @@ class NetworkPuzzlesApp(App):
     def get_widget_by_hostname(self, hostname):
         return self._get_widget_by_prop("hostname", hostname)
 
-    def get_widget_by_uid(self, uid):
-        return self._get_widget_by_prop("uid", uid)
+    def get_widget_by_uniqueidentifier(self, uid):
+        return self._get_widget_by_prop("uniqueidentifier", uid)
 
     def on_checkbox_activate(self, inst):
         if inst.state == "down":
