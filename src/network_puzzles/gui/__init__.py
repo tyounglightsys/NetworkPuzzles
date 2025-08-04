@@ -55,7 +55,7 @@ class NetworkPuzzlesApp(App):
         self.theme = LightColorTheme
         Window.clearcolor = self.theme.bg2
         # Re-add puzzle widgets on resize.
-        Window.bind(on_resize=self.setup_puzzle)
+        Window.bind(on_resize=self.draw_puzzle)
 
         self.filtered_puzzles = []
         self.filters = []
@@ -70,10 +70,7 @@ class NetworkPuzzlesApp(App):
         self.packet_tick_delay = 0.01  # packet pos refresh rate in seconds
         self.packet_progress_rate = 2.5  # % of link traveled each tick
         self.prev_packets = []  # packets to remove from last refresh
-
         Clock.schedule_interval(self._update_packets, self.packet_tick_delay)
-        Clock.schedule_interval(self.check_puzzle, 0.1)  # every 1/10th sec
-        Clock.schedule_interval(self._help_highlight_devices, 0.1)  # every 1/10th sec
 
     @property
     def devices(self):
@@ -107,7 +104,7 @@ class NetworkPuzzlesApp(App):
         if devicew.base.is_invisible:
             devicew.hide()
 
-        # Aadd device to layout.
+        # Add device to layout.
         self.root.ids.layout.add_widget(devicew)
 
     def add_link(self, linkw=None):
@@ -151,11 +148,20 @@ class NetworkPuzzlesApp(App):
             if tray is not None:
                 self._close_tray(tray)
 
+    def draw_devices(self, *args):
+        for dev in self.ui.puzzle.devices:
+            self.add_device(Device(dev))
+
+    def draw_links(self, *args):
+        for link in self.ui.puzzle.links:
+            if link is None:
+                continue
+            self.add_link(Link(link))
+
     def first_link_index(self):
         first_index = 999
-        for w in self.root.ids.layout.children:
-            if w.__class__.__name__ == "Link":
-                first_index = min([self.root.ids.layout.children.index(w), first_index])
+        for w in self.links:
+            first_index = min([self.root.ids.layout.children.index(w), first_index])
         return first_index
 
     def get_widget_by_hostname(self, hostname):
@@ -262,6 +268,34 @@ class NetworkPuzzlesApp(App):
     def on_undo(self):
         raise NotImplementedError
 
+    def draw_puzzle(self, *args):
+        if not self.ui.puzzle:
+            return
+
+        self.reset_display()
+
+        # Get puzzle text from localized messages, if possible, but fallback to
+        # English text in JSON data.
+        puzzle_data = self.ui.puzzle.json
+        puzzle_messages = messages.puzzles.get(self.ui.puzzle.uid)
+        if puzzle_messages:
+            title = puzzle_messages.get("title")
+            info = puzzle_messages.get("info")
+        else:
+            title = puzzle_data.get("en_title", "<no title>")
+            info = puzzle_data.get("en_message", "<no message>")
+
+        self.title += f": {title}"
+        self.root.ids.info.text = info
+        # self.root.ids.help_slider.value = self.ui.puzzle.default_help_level
+
+        # Add devices.
+        self.draw_devices()
+        # Some setup needs to be done one tick after devices, because their
+        # positions depend on the devices' positions.
+        Clock.schedule_once(self.update_help)
+        Clock.schedule_once(self.draw_links)
+
     def remove_item(self, item):
         """Remove widget from layout by widget or item JSON data."""
         # TODO: Add parser command to also remove widget from puzzle JSON.
@@ -280,53 +314,12 @@ class NetworkPuzzlesApp(App):
         self.title = self.app_title
         # Remove any remaining child widgets from puzzle layout.
         self.root.ids.layout.clear_widgets()
-        # Replace the "+" button for adding new items.
+        # Redraw the "+" button for adding new items.
         self._add_new_item_button()
 
-    def setup_links(self, *args):
-        # self.link_data is typically a list of links, but it's occasionally
-        # a one-link dict.
-        if isinstance(self.link_data, dict):
-            self.add_link(Link(self.link_data))
-        elif isinstance(self.link_data, list):
-            for link in self.link_data:
-                self.add_link(Link(link))
-
-    def setup_puzzle(self, *args, puzzle_data=None):
-        self.reset_display()
-        if puzzle_data is None:
-            if not self.ui.puzzle:
-                return
-            puzzle_data = self.ui.puzzle.json
-
-        # Get puzzle text from localized messages, if possible, but fallback to
-        # English text in JSON data.
-        puzzle_messages = messages.puzzles.get(self.ui.puzzle.uid)
-        if puzzle_messages:
-            title = puzzle_messages.get("title")
-            info = puzzle_messages.get("info")
-        else:
-            title = puzzle_data.get("en_title", "<no title>")
-            info = puzzle_data.get("en_message", "<no message>")
-
-        self.title += f": {title}"
-        self.root.ids.info.text = info
+    def setup_puzzle(self, *args):
+        self.draw_puzzle()
         self.root.ids.help_slider.value = self.ui.puzzle.default_help_level
-        self.device_data = puzzle_data.get("device")
-        self.link_data = puzzle_data.get("link", [])
-
-        # self.device_data is typically a list of devices, but it's occasionally
-        # a one-device dict.
-        if isinstance(self.device_data, dict):
-            self.add_device(Device(self.device_data))
-        elif isinstance(self.device_data, list):
-            for dev in self.device_data:
-                self.add_device(Device(dev))
-
-        # Some setup needs to be done one tick after devices, because their
-        # positions depend on the devices' positions.
-        Clock.schedule_once(self.update_help)
-        Clock.schedule_once(self.setup_links)
 
     def update_help(self, inst=None, value=None):
         if value is None:
@@ -395,12 +388,12 @@ class NetworkPuzzlesApp(App):
                 widgets.append(w)
         return widgets
 
-    def _help_highlight_devices(self, help_level):
+    def _help_highlight_devices(self, help_level=None):
         """
         Always runs when help level is initialized or changed.
         """
         # Skip if no puzzle loaded.
-        if not self.ui or not self.ui.puzzle:
+        if not self.ui or not self.ui.puzzle or help_level is None:
             return
         # Clear existing highlights.
         for c in self.root.ids.layout.children:
@@ -533,6 +526,9 @@ class NetworkPuzzlesApp(App):
             self._close_tray(tray)
 
     def _update_packets(self, dt):
+        if not self.ui.puzzle:
+            return
+
         # Update backend packet info.
         self.ui.process_packets(self.packet_progress_rate)
 
@@ -547,16 +543,24 @@ class NetworkPuzzlesApp(App):
         # Add new packet locations to layout.
         for p in self.ui.packetlist:
             link_data = self.ui.get_link(p.get("packetlocation"))
-            link = self.get_widget_by_uid(link_data.get("uniqueidentifier"))
             progress = p.get("packetDistance")
             if p.get("packetDirection") == 2:
                 progress = 100 - progress
-            x, y = link.get_progress_pos(progress)
-            packet = Packet(
-                pos=(x - self.PACKET_DIMS[0] / 2, y - self.PACKET_DIMS[1] / 2)
-            )
-            self.root.ids.layout.add_widget(packet, packet_idx)
-            self.prev_packets.append(packet)
+            link = self.get_widget_by_hostname(link_data.get("hostname"))
+            # NOTE: Sometimes the layout doesn't contain the link widgets, maybe
+            # due to a race condition with a redraw? So skipping packet update
+            # if the link isn't found seems to work for now.
+            if link:
+                x, y = link.get_progress_pos(progress)
+                packet = Packet(
+                    pos=(x - self.PACKET_DIMS[0] / 2, y - self.PACKET_DIMS[1] / 2)
+                )
+                self.root.ids.layout.add_widget(packet, packet_idx)
+                self.prev_packets.append(packet)
+
+        # Update other GUI elements that depend on completed pings.
+        self.check_puzzle()
+        self.update_help()
 
     def _test(self, *args, **kwargs):
         # raise NotImplementedError
@@ -574,7 +578,7 @@ class PuzzleChooserPopup(AppPopup):
     def on_load(self):
         self.app.selected_puzzle = self.ids.puzzles_view.selected_item.get("text")
         self.app.ui.load_puzzle(self.app.selected_puzzle)
-        self.app.setup_puzzle(self.app.ui.puzzle.json)
+        self.app.setup_puzzle()
         self.dismiss()
 
 

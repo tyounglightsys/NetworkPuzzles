@@ -262,7 +262,9 @@ class GUI(UI):
         self.app.stop()
 
     def redraw(self):
-        self.app.setup_puzzle()
+        self.app.draw_puzzle()
+        self.app.check_puzzle()
+        self.app.update_help()
 
     def replace_link(self, link_data):
         self.delete_item(link_data)

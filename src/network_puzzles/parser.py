@@ -474,8 +474,6 @@ class Parser:
         else:
             session.add_undo_entry("set power on", f"set power {pastvalue}")
             dev_obj.powered_on = False
-        # Update GUI.
-        session.ui.redraw()
         session.print(
             f"Defining {dev_obj.hostname} 'poweroff' to {dev_obj.json.get('poweroff')}"
         )

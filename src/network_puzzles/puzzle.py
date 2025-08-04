@@ -387,8 +387,6 @@ class Puzzle:
             elif isinstance(self.json.get("device"), list):
                 idx = self.json["device"].index(existing_device)
                 del self.json["device"][idx]
-            # Update GUI.
-            session.ui.redraw()
             return True
         existing_link = self.link_from_name(itemToDelete)
         if existing_link:
@@ -403,8 +401,6 @@ class Puzzle:
                 # Delete item from list.
                 idx = self.json["link"].index(existing_link)
                 del self.json["link"][idx]
-            # Update GUI.
-            session.ui.redraw()
             return True
         return False
 
@@ -425,7 +421,7 @@ class Puzzle:
             "nictype": [f"{nictype}", f"{nictype}"],
             "nicname": newnicname,
             "myid": {
-                "hostid": thedevice.uid,
+                "hostid": thedevice.uniqueidentifier,
                 "nicid": newid,
                 "hostname": thedevice.hostname,
                 "nicname": newnicname,
@@ -513,8 +509,6 @@ class Puzzle:
 
         self.json["device"].append(newdevice)
         session.print(f"Creating new device: {newdevicename}")
-        # Update GUI.
-        session.ui.redraw()
 
     def createLink(self, args, linktype="normal") -> bool:
         """returns False on error, True if successful, None if unhandled"""
@@ -624,8 +618,6 @@ class Puzzle:
                 "NeedsLinkToDevice",
                 f"Solved: Create link between {sdevicename} and {ddevicename}",
             )
-            # Update GUI.
-            session.ui.redraw()
             return True
         else:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
