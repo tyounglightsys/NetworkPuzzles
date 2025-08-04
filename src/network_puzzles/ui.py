@@ -248,6 +248,10 @@ class GUI(UI):
 
     def parse(self, command: str):
         self.parser.parse(command)
+        # Update GUI after every command.
+        # NOTE: Any asynchronous commands (e.g. ping) will need their own forced
+        # redraws at the end of the command.
+        self.redraw()
 
     def process_packets(self, tick_pct):
         # If we created packets, process them until done.
