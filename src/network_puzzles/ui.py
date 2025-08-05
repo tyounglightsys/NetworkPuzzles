@@ -1,3 +1,4 @@
+import logging
 import sys
 
 from . import parser
@@ -214,6 +215,7 @@ class GUI(UI):
 
     def console_write(self, line):
         self.app.add_terminal_line(line)
+        logging.info(f"GUI: terminal: {line}")
 
     # def create_device(self, device_data):
     #     self.app.add_device(device_data)

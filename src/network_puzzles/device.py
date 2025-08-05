@@ -866,9 +866,12 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
         if packRec["packettype"] == "ping-response":
             logging.info("Woot! We returned with a ping")
             packRec["status"] = "done"
-            pingdest = deviceFromIP(packet.justIP(packRec.get("sourceIP")))
-            logging.info(f"sourceip is {packet.justIP(packRec.get('sourceIP'))}")
+            pingsrcip = packet.justIP(packRec.get("destIP"))
+            srcip = pingdestip = packet.justIP(packRec.get("sourceIP"))
+            pingdest = deviceFromIP(pingdestip)
+            logging.info(f"sourceip is {srcip}")
             logging.info(f"dest host is {pingdest.get('hostname')}")
+            session.print(f"PING: {pingsrcip} -> {pingdestip}: Success!")
             if pingdest is not None:
                 mark_test_as_completed(
                     thisDevice.get("hostname"),

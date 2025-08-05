@@ -158,6 +158,16 @@ class Puzzle:
     def arp_lookup(self, ipaddr):
         return device.globalArpLookup(ipaddr)
 
+    def device_from_ip(self, ipaddr):
+        for d in self.devices:
+            if d:
+                for n in d.get("nic"):
+                    if not isinstance(n["interface"], list):
+                        n["interface"] = [n.get("interface")]
+                    for iface in n.get("interface"):
+                        if iface.get("myip").get("ip") == ipaddr:
+                            return d
+
     def device_from_name(self, name):
         return self._item_by_attrib(self.devices, "hostname", name)
 
