@@ -132,7 +132,7 @@ class Parser:
             )  # specify this is from undo.  It does not get added to undo
             session.redolist.append(lastcmd)  # Put it onto the redo list
         else:
-            session.print("Noting to undo")
+            session.print("Nothing to undo")
 
     def try_redo(self):
         if len(session.redolist) > 0:
@@ -140,7 +140,7 @@ class Parser:
             self.parse(lastcmd.get("forwards"), False, False)
             # The command is automatically added to the undo; through the parse.  We are done
         else:
-            session.print("Noting to redo")
+            session.print("Nothing to redo")
 
     def create_something(self, args):
         if len(args) == 0:
@@ -231,16 +231,22 @@ class Parser:
             session.print(" example: ping pc0 pc1")
             return False
 
+        # Look for devices by hostname.
         shost = session.puzzle.device_from_name(args[0])
         dhost = session.puzzle.device_from_name(args[1])
+        # Look for devices by IP address.
+        if shost is None:
+            shost = session.puzzle.device_from_ip(args[0])
+        if dhost is None:
+            dhost = session.puzzle.device_from_ip(args[1])
         if shost is None:
             session.print(f"No such host: {args[0]}")
             return False
         if dhost is None:
-            session.print("No such host: " + args[1])
+            session.print(f"No such host: {args[1]}")
             return False
         # if we get here, we are ready to try to ping.
-        session.print(f"PING {args[1]} from {args[0]}")
+        session.print(f"PING: {args[0]} -> {args[1]}")
         device.Ping(shost, dhost)
         # FIXME: This only shows that the ping command was successfully
         # initiated, not that it was itself successful.
