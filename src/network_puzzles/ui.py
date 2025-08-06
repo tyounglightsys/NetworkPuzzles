@@ -101,22 +101,13 @@ class UI:
     def redraw(self):
         pass
 
-    # def create_device(self, *args):
-    #     pass
-
-    # def create_link(self, *args):
-    #     pass
-
-    # def delete_item(self, *args):
-    #     pass
-
-    # def replace_link(self, *args):
-    #     pass
-
-    # def update_power_status(self, *args):
-    #     pass
-
     def acknowledge_any_tests():
+        raise NotImplementedError
+
+    def redo(self):
+        raise NotImplementedError
+
+    def undo(self):
         raise NotImplementedError
 
 
@@ -217,15 +208,6 @@ class GUI(UI):
         self.app.add_terminal_line(line)
         logging.info(f"GUI: terminal: {line}")
 
-    # def create_device(self, device_data):
-    #     self.app.add_device(device_data)
-
-    # def create_link(self, link_data):
-    #     self.app.add_link(link_data)
-
-    # def delete_item(self, item_data):
-    #     self.app.remove_item(item_data)
-
     def is_puzzle_done(self, *args) -> bool | None:
         """
         Determine if puzzle has been solved.
@@ -263,19 +245,17 @@ class GUI(UI):
     def quit(self):
         self.app.stop()
 
+    def redo(self):
+        self.parse("redo")
+
     def redraw(self):
         self.app.draw_puzzle()
         self.app.check_puzzle()
         self.app.update_help()
-
-    def replace_link(self, link_data):
-        self.delete_item(link_data)
-        self.create_link(link_data)
+        self.app.update_undo_redo_states()
 
     def run(self):
         self.app.run()
 
-    # def update_power_status(self, hostname):
-    #     device = self.app.get_widget_by_hostname(hostname)
-    #     if device:
-    #         device.set_power_status()
+    def undo(self):
+        self.parse("undo")
