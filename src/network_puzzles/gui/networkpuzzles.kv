@@ -43,15 +43,17 @@ ThemedBoxLayout:
                 pos: self.get_pos()
                 on_press: app.setup_puzzle()
             AppButton:  # undo
+                id: undo
                 info: _("undo")
                 text: "\u2190"
                 pos: self.get_pos()
-                on_press: print("undo")
+                on_press: app.on_undo()
             AppButton:  # redo
+                id: redo
                 info: _("redo")
                 text: "\u2192"
                 pos: self.get_pos()
-                on_press: print("redo")
+                on_press: app.on_redo()
             AppButton:  # lang
                 id: lang
                 info: _("choose language")

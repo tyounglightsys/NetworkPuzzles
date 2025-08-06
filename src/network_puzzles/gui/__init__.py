@@ -158,6 +158,34 @@ class NetworkPuzzlesApp(App):
                 continue
             self.add_link(Link(link))
 
+    def draw_puzzle(self, *args):
+        if not self.ui.puzzle:
+            return
+
+        self.reset_display()
+
+        # Get puzzle text from localized messages, if possible, but fallback to
+        # English text in JSON data.
+        puzzle_data = self.ui.puzzle.json
+        puzzle_messages = messages.puzzles.get(self.ui.puzzle.uid)
+        if puzzle_messages:
+            title = puzzle_messages.get("title")
+            info = puzzle_messages.get("info")
+        else:
+            title = puzzle_data.get("en_title", "<no title>")
+            info = puzzle_data.get("en_message", "<no message>")
+
+        self.title += f": {title}"
+        self.root.ids.info.text = info
+        # self.root.ids.help_slider.value = self.ui.puzzle.default_help_level
+
+        # Add devices.
+        self.draw_devices()
+        # Some setup needs to be done one tick after devices, because their
+        # positions depend on the devices' positions.
+        Clock.schedule_once(self.update_help)
+        Clock.schedule_once(self.draw_links)
+
     def first_link_index(self):
         first_index = 999
         for w in self.links:
@@ -250,7 +278,7 @@ class NetworkPuzzlesApp(App):
         PuzzleChooserPopup().open()
 
     def on_redo(self):
-        raise NotImplementedError
+        self.ui.redo()
 
     def on_save(self):
         raise NotImplementedError
@@ -261,40 +289,14 @@ class NetworkPuzzlesApp(App):
             self._set_left_panel_width
         )  # buttons must update before panel
         self._add_new_item_button()
+        # Set initial app button states.
+        self.update_undo_redo_states()
         # Open puzzle chooser if no puzzle is defined.
         if not self.ui.puzzle:
             Clock.schedule_once(self.on_puzzle_chooser)
 
     def on_undo(self):
-        raise NotImplementedError
-
-    def draw_puzzle(self, *args):
-        if not self.ui.puzzle:
-            return
-
-        self.reset_display()
-
-        # Get puzzle text from localized messages, if possible, but fallback to
-        # English text in JSON data.
-        puzzle_data = self.ui.puzzle.json
-        puzzle_messages = messages.puzzles.get(self.ui.puzzle.uid)
-        if puzzle_messages:
-            title = puzzle_messages.get("title")
-            info = puzzle_messages.get("info")
-        else:
-            title = puzzle_data.get("en_title", "<no title>")
-            info = puzzle_data.get("en_message", "<no message>")
-
-        self.title += f": {title}"
-        self.root.ids.info.text = info
-        # self.root.ids.help_slider.value = self.ui.puzzle.default_help_level
-
-        # Add devices.
-        self.draw_devices()
-        # Some setup needs to be done one tick after devices, because their
-        # positions depend on the devices' positions.
-        Clock.schedule_once(self.update_help)
-        Clock.schedule_once(self.draw_links)
+        self.ui.undo()
 
     def remove_item(self, item):
         """Remove widget from layout by widget or item JSON data."""
@@ -343,6 +345,16 @@ class NetworkPuzzlesApp(App):
         self.filtered_puzzlelist = self.ui.getAllPuzzleNames(pfilter)
         if popup:
             popup.ids.puzzles_view.update_data()
+
+    def update_undo_redo_states(self):
+        def set_state(wid, lst):
+            disabled = False
+            if len(lst) == 0:
+                disabled = True
+            wid.disabled = disabled
+
+        set_state(self.root.ids.undo, session.undolist)
+        set_state(self.root.ids.redo, session.redolist)
 
     def user_select_device(self):
         # TODO: Add tooltip next to cursor that says "Creating link; choose device"
