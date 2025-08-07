@@ -694,7 +694,7 @@ def filter_items(items: list, pattern: str, json_files: bool = False) -> list:
 
 
 def listPuzzlesFromDisk(regex_pattern: str = None):
-    dir = Path(__file__).parent / "resources" / "puzzles"
+    dir = session.package_dir / "resources" / "puzzles"
     puzzle_names = [f.name for f in dir.iterdir() if f.is_file()]
     return filter_items(puzzle_names, regex_pattern, json_files=True)
 
@@ -710,9 +710,10 @@ def readPuzzle():
     """Read in the puzzles from the various .json files"""
     if len(session.puzzlelist) == 0:
         allfiles = listPuzzlesFromDisk("Level.*")
+        puzzles_dir = session.package_dir / "resources" / "puzzles"
         for one in allfiles:
             # We stripped off the ".json" from the name, so we need to add it back
-            file_path = "src/network_puzzles/resources/puzzles/" + one + ".json"
+            file_path = str(puzzles_dir / f"{one}.json")
             oneentry = read_json_file(file_path)
             oneentry["EduNetworkBuilder"]["Network"]["name"] = one
             session.puzzlelist.append(oneentry)

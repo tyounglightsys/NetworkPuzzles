@@ -44,6 +44,7 @@ class NetworkPuzzlesApp(App):
         # Set session `app` variable.
         session.app = self
         # Set initial window size for desktop systems.
+        logging.debug(f"GUI: {platform.system=}")
         if platform.system() not in ["Android", "iOS"]:
             Window.size = (1600, 720)  # 20:9 aspect ratio
 

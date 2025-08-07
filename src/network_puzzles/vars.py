@@ -1,4 +1,5 @@
 import locale
+from pathlib import Path
 
 
 class Session:
@@ -21,6 +22,7 @@ class Session:
         self.redolist = list()
         self.ui = None
         self.startinglevel = ""
+        self.package_dir = Path(__file__).parent
 
     def print(self, message):
         print("<default print method>")
