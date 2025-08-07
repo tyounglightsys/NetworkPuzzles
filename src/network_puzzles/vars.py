@@ -43,13 +43,13 @@ class Session:
         newrec["payload"] = payload
         self.undolist.append(newrec)
 
-    def get_device_type(self):
-        """Returns platform type: 'desktop' or 'mobile'."""
+    def get_device_type(self) -> str:
+        """Returns device type: 'desktop' or 'mobile'."""
         if hasattr(sys, "getandroidapilevel"):
             # Android
             return "mobile"
         elif os.getenv("DISPLAY"):
-            # Mac or Linux desktop
+            # Linux or Mac desktop
             return "desktop"
         elif os.getenv("COMPUTERNAME"):
             # Windows desktop

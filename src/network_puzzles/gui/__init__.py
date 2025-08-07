@@ -51,6 +51,7 @@ class NetworkPuzzlesApp(App):
             logger = logging.getLogger()
             logger.level = logging.DEBUG
         logging.debug(f"GUI: {session.device_type=}")
+        logging.debug(f"GUI: {Window.size=}")
 
         super().__init__(**kwargs)
         ExceptionManager.add_handler(AppExceptionHandler())
