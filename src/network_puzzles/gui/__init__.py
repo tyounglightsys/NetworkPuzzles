@@ -1,5 +1,4 @@
 import logging
-import platform
 
 # Remove root logger b/c kivy's logger will handle all logging.
 root_logger = logging.getLogger()

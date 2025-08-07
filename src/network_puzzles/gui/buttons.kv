@@ -2,12 +2,12 @@
     background_normal: ''  # sets initial background to white
     background_color: [*app.theme.bg2[:3], 0.2]  # makes it transparent
     size_hint_y: 1
-    size_hint_max_y: dp(app.BUTTON_MAX_H)
-    size_hint_min_y: dp(app.BUTTON_MAX_H - 4)
+    size_hint_max_y: app.BUTTON_MAX_H
+    size_hint_min_y: app.BUTTON_MAX_H - 4
     border: (0, 0, 0, 0)
     color: app.theme.fg3
     font_name: 'DejaVuSans'
-    font_size: dp(app.BUTTON_FONT_SIZE)
+    font_size: app.BUTTON_FONT_SIZE
     bold: True
     canvas.before:
         Color:
@@ -24,12 +24,12 @@
     background_disabled_normal: self.background_normal
     background_disabled_down: self.background_normal
     disabled_color: (*self.color[:3], 0.3)
-    font_size: dp(app.BUTTON_FONT_SIZE - 2)
+    font_size: app.BUTTON_FONT_SIZE - sp(2)
     on_press: self.callback()
 
 <CommandButton>:
     size_hint_y: None
-    height: dp(app.BUTTON_MAX_H)
+    height: app.BUTTON_MAX_H
 
 <DeviceButton>:
     size_hint_y: 0.67
