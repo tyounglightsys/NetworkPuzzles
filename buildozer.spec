@@ -13,7 +13,7 @@ package.domain = io.github.tyounglightsys
 source.dir = src
 
 # (list) Source files to include (let empty to include all the files)
-source.include_exts = json,kv,mo,py,png
+#source.include_exts = json,kv,mo,py,png
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
