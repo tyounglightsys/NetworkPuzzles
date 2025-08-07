@@ -1,4 +1,7 @@
 import locale
+import os
+import platform
+import sys
 from pathlib import Path
 
 
@@ -23,6 +26,7 @@ class Session:
         self.ui = None
         self.startinglevel = ""
         self.package_dir = Path(__file__).parent
+        self.device_type = self.get_device_type()
 
     def print(self, message):
         print("<default print method>")
@@ -38,3 +42,21 @@ class Session:
         newrec["backwards"] = backwards_cmd
         newrec["payload"] = payload
         self.undolist.append(newrec)
+
+    def get_device_type(self):
+        """Returns platform type: 'desktop' or 'mobile'."""
+        if hasattr(sys, "getandroidapilevel"):
+            # Android
+            return "mobile"
+        elif os.getenv("DISPLAY"):
+            # Mac or Linux desktop
+            return "desktop"
+        elif os.getenv("COMPUTERNAME"):
+            # Windows desktop
+            return "desktop"
+        elif platform.system() in ("iOS", "iPadOS"):
+            # iPhone or IPad
+            return "mobile"
+        else:
+            # Fallback
+            return "mobile"

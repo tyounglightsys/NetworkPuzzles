@@ -44,11 +44,13 @@ class NetworkPuzzlesApp(App):
         # Set session `app` variable.
         session.app = self
         # Set initial window size for desktop systems.
-        logger = logging.getLogger()
-        logger.level = logging.DEBUG
-        logging.debug(f"GUI: {platform.system()=}")
-        if platform.system() not in ["Android", "iOS"]:
+        if session.device_type == "desktop":
             Window.size = (1600, 720)  # 20:9 aspect ratio
+        else:
+            # Force loglevel to DEBUG.
+            logger = logging.getLogger()
+            logger.level = logging.DEBUG
+        logging.debug(f"GUI: {session.device_type=}")
 
         super().__init__(**kwargs)
         ExceptionManager.add_handler(AppExceptionHandler())
