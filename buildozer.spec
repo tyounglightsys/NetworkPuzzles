@@ -17,6 +17,7 @@ source.dir = src
 
 # (list) List of inclusions using pattern matching
 #source.include_patterns = assets/*,images/*.png
+source.include_patterns = network_puzzles/*
 
 # (list) Source files to exclude (let empty to not exclude anything)
 #source.exclude_exts = spec
@@ -37,7 +38,7 @@ version.filename = %(source.dir)s/network_puzzles/__init__.py
 
 # (list) Application requirements
 # comma separated e.g. requirements = sqlite3,kivy
-requirements = python3,kivy
+requirements = kivy,packaging
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
