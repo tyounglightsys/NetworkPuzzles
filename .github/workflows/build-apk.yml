@@ -84,12 +84,12 @@ jobs:
       - name: Install app python package
         run: pip install .
 
-      # Cache Buildozer files.
-      - name: Cache Buildozer global directory
-        uses: actions/cache@v4
-        with:
-          path: .buildozer_global
-          key: buildozer-global-${{ hashFiles('buildozer.spec') }} # Replace with your path
+      # # Cache Buildozer files.  # doesn't seem to speed anything up
+      # - name: Cache Buildozer global directory
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: .buildozer_global
+      #     key: buildozer-global-${{ hashFiles('buildozer.spec') }} # Replace with your path
 
       # Build with Buildozer
       # - name: Build with Buildozer
