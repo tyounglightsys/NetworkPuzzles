@@ -44,7 +44,11 @@ class NetworkPuzzlesApp(App):
         session.app = self
         # Set initial window size for desktop systems.
         if session.device_type == "desktop":
-            Window.size = (1600, 720)  # 20:9 aspect ratio
+            Window.minimum_width = 574
+            Window.minimum_height = 270
+            # Force aspect ratio through explicit resolution.
+            if Window.width / Window.height < 1.7:
+                Window.size = (1600, 720)
         else:
             # Force loglevel to DEBUG.
             logger = logging.getLogger()
