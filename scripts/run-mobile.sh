@@ -5,5 +5,7 @@
 # - KIVY_METRICS_FONTSCALE; 0.8 to 1.2 on android
 # - KIVY_DPI; 96 for desktop, but 160, 240, 320, 480 are all possible on android
 # Values used here are based on comparing with a Samsung Galaxy A13.
-export KIVY_METRICS_DENSITY=1.9
-scripts/run-desktop.sh $@
+export KIVY_METRICS_DENSITY=1
+export KIVY_METRICS_FONTSCALE=1
+# export KIVY_DPI=640
+scripts/run-desktop.sh $@ --size 952x448  # 1148x540
