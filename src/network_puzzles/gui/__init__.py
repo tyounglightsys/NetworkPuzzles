@@ -32,7 +32,7 @@ from .popups import AppPopup
 
 class NetworkPuzzlesApp(App):
     # explicit sizes
-    BUTTON_MAX_H = dp(48)
+    BUTTON_MAX_H = dp(32)
     BUTTON_FONT_SIZE = sp(24)
     PACKET_DIMS = (dp(15), dp(15))
 
