@@ -22,12 +22,17 @@ __version__ = "0.1"
 
 argparser = argparse.ArgumentParser(prog="NetworkPuzzles")
 argparser.add_argument("-d", "--debug", action="store_true", help="show debug output")
-argparser.add_argument("-f", "--filename", type=str, help="specify a different starting level instead of the default")
+argparser.add_argument(
+    "-f",
+    "--filename",
+    type=str,
+    help="specify a different starting level instead of the default",
+)
 argparser.add_argument(
     "-v", "--verbose", action="store_true", help="show verbose output"
 )
 
-args = argparser.parse_args()
+args, unknown_args = argparser.parse_known_args()
 log_level = logging.WARNING
 if sys.argv[0].endswith("test"):  # e.g. "python -m unittest"
     log_level = logging.CRITICAL

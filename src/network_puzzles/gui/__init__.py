@@ -1,5 +1,4 @@
 import logging
-import platform
 
 # Remove root logger b/c kivy's logger will handle all logging.
 root_logger = logging.getLogger()
@@ -33,7 +32,7 @@ from .popups import AppPopup
 
 class NetworkPuzzlesApp(App):
     # explicit sizes
-    BUTTON_MAX_H = dp(48)
+    BUTTON_MAX_H = dp(32)
     BUTTON_FONT_SIZE = sp(24)
     PACKET_DIMS = (dp(15), dp(15))
 
@@ -44,8 +43,18 @@ class NetworkPuzzlesApp(App):
         # Set session `app` variable.
         session.app = self
         # Set initial window size for desktop systems.
-        if platform.system() not in ["Android", "iOS"]:
-            Window.size = (1600, 720)  # 20:9 aspect ratio
+        if session.device_type == "desktop":
+            Window.minimum_width = 574
+            Window.minimum_height = 270
+            # Force aspect ratio through explicit resolution.
+            if Window.width / Window.height < 1.7:
+                Window.size = (1600, 720)
+        else:
+            # Force loglevel to DEBUG.
+            logger = logging.getLogger()
+            logger.level = logging.DEBUG
+        logging.debug(f"GUI: {session.device_type=}")
+        logging.debug(f"GUI: {Window.size=}")
 
         super().__init__(**kwargs)
         ExceptionManager.add_handler(AppExceptionHandler())

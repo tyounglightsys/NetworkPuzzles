@@ -23,7 +23,7 @@ ThemedBoxLayout:
             id: menu
             spacing: dp(5)
             size_hint_y: 0.1
-            size_hint_max_y: dp(app.BUTTON_MAX_H + 10)  # 10px more for padding
+            size_hint_max_y: app.BUTTON_MAX_H + dp(10)  # 10px more for padding
             size_hint_x: None
             width: self.parent.width
             padding: dp(5)
@@ -96,7 +96,7 @@ ThemedBoxLayout:
 
 
 <PuzzleChooserPopup>:
-    size_hint: (1/3, 3/4)
+    size_hint: (0.5, 1.0)
     title: _("Load Puzzle")
     ThemedBoxLayout:
         padding: dp(0)
@@ -166,7 +166,7 @@ ThemedBoxLayout:
             padding: dp(5)
             spacing: dp(5)
             size_hint_y: 0.1
-            size_hint_max_y: app.BUTTON_MAX_H
+            size_hint_max_y: app.BUTTON_MAX_H + dp(8)
             PopupButton:
                 text: _("Cancel")
                 on_press: root.on_cancel()
