@@ -30,6 +30,9 @@ class Device(DragBehavior, ThemedBoxLayout):
         self.app = session.app
         self.pos_init = (0, 0)
         self.help_text = None
+        # Set self.height based on self.minimum_height, which is calculated from
+        # total height of the child widgets.
+        self.bind(minimum_height=self.setter("height"))
         self._set_pos()  # sets self.pos_hint
         self._set_image()
         # Updates that rely on Device's pos already being set.
@@ -85,7 +88,7 @@ class Device(DragBehavior, ThemedBoxLayout):
                 return n
 
     def highlight(self, do_highlight=True):
-        # Find corresponding highlight widget.
+        # Find corresponding highlight widget.{
         current_highlight = None
         for c in self.app.root.ids.layout.children:
             if isinstance(c, HelpHighlight) and c.name == self.hostname:
@@ -97,8 +100,10 @@ class Device(DragBehavior, ThemedBoxLayout):
             # logging.debug(f"GUI: add highlight for {self.hostname}")
             # Set draw index one higher than (i.e. behind) Device.
             idx = self.parent.children.index(self) + 1
+            size = (self.width + 6, self.height + 6)
             self.app.root.ids.layout.add_widget(
-                HelpHighlight(center=self.center, name=self.hostname), idx
+                HelpHighlight(center=self.center, name=self.hostname, size=size),
+                idx,
             )
         elif current_highlight and not do_highlight:
             # Remove highlight.
@@ -119,13 +124,6 @@ class Device(DragBehavior, ThemedBoxLayout):
             lnk.hide(do_hide)
         # Hide/show self.
         hide_widget(self, do_hide)
-
-    def new(self):
-        raise NotImplementedError
-        self._set_uid()
-        self.set_type()
-        self.set_location()
-        self.set_hostname()
 
     def on_pos(self, *args):
         # Set initial position for comparison later.

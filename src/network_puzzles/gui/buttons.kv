@@ -32,9 +32,8 @@
     height: app.BUTTON_MAX_H
 
 <DeviceButton>:
-    size_hint_y: 0.67
-    size_hint_max_y: None
-    size_hint_min_y: None
+    size_hint: (None, None)
+    size: (app.BUTTON_MAX_H * 1.5, app.BUTTON_MAX_H * 1.5)
     canvas.before:
         Color:
             rgba: app.theme.bg1 if self.state == 'normal' else app.theme.bg2

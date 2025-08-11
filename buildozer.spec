@@ -48,8 +48,7 @@ requirements = kivy,packaging
 #presplash.filename = %(source.dir)s/data/presplash.png
 
 # (str) Icon of the application
-# FIXME: get PNG icon into repo
-#icon.filename = %(source.dir)s/data/icon.png
+icon.filename = %(source.dir)s/network_puzzles/resources/NBIcon.ico
 
 # (list) Supported orientations
 # Valid options are: landscape, portrait, portrait-reverse or landscape-reverse

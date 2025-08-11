@@ -93,7 +93,8 @@ class Packet(Widget):
 
 
 class HelpHighlight(Widget):
-    def __init__(self, name=None, **kwargs):
+    def __init__(self, name=None, size=None, **kwargs):
+        self.size = size
         super().__init__(**kwargs)
         self.name = name
 

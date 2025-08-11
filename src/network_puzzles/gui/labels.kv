@@ -9,17 +9,17 @@
     halign: 'left'
     valign: 'top'
     font_size: sp(16)
-    text_size: (self.width - dp(10), self.height - dp(10))
 
 <CheckBoxLabel@ThemedLabel>:
     valign: 'center'
+    text_size: self.size
 
 <EditDeviceLabel@ThemedLabel>:
     font_size: sp(20)
 
-<DeviceLabel>:
-    size_hint_x: None
-    size_hint_y: 0.33
+<DeviceLabel@ThemedLabel>:
+    size_hint: (None, None)
+    padding: [dp(5), dp(5), dp(5), dp(5)]
     halign: 'center'
 
 <SelectableLabel>:
@@ -30,6 +30,8 @@
             pos: self.pos
             size: self.size
     valign: 'center'
+    text_size: self.size
+    padding: dp(3)
 
 <TerminalLabel>:
     background_color: app.theme.bg3

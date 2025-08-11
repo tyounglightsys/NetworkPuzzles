@@ -50,8 +50,8 @@
         Color:
             rgba: (1, 0, 0, 0.5)
         RoundedRectangle:
-            pos: (self.x - dp(5), self.y - dp(5))
-            size: (self.width + dp(10), self.height + dp(10))
+            pos: (self.x - dp(3), self.y - dp(3))
+            size: self.size
             radius: [dp(10)]
 
 <HelpSlider>
@@ -60,8 +60,8 @@
         Color:
             rgba: app.theme.detail
         Ellipse:
-            pos: (root.value_pos[0] - dp(18), root.center_y - dp(18))
-            size: (dp(36), dp(36))
+            size: (dp(24), dp(24))
+            pos: (root.value_pos[0] - dp(12), root.center_y - dp(12))
     cursor_image: ''
     cursor_size: (0, 0)
     value_track: True
