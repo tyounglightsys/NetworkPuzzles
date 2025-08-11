@@ -185,7 +185,7 @@ class NetworkPuzzlesApp(App):
             info = puzzle_data.get("en_message", "<no message>")
 
         self.title += f": {title}"
-        self.root.ids.info.text = info
+        self.root.ids.info.text = f"[b]{title}[/b]\n\n{info}"
         # self.root.ids.help_slider.value = self.ui.puzzle.default_help_level
 
         # Add devices.
