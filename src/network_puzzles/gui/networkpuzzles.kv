@@ -67,19 +67,25 @@ ThemedBoxLayout:
                 on_press: app.on_help()
         HSeparator:
         ThemedBoxLayout:
-            size_hint_y: 0.05
+            size_hint_y: 0.08
             orientation: 'horizontal'
             ThemedLabel:
-                size_hint_x: 0.33
+                padding: dp(3)
+                size_hint_x: 0.5
                 text: _("Help level:")
+                halign: "right"
+                valign: "center"
+                text_size: self.size
             HelpSlider:
                 id: help_slider
-                size_hint_x: 0.67
+                size_hint_x: 0.5
         ThemedLabel:  # puzzle information
             id: info
             size_hint_y: 0.67
             border_width: dp(3)
             border_color: app.theme.fg3
+            padding: dp(5)
+            text_size: (self.parent.width, self.height)
 
     VSeparator:
     ThemedBoxLayout:  # right panel
