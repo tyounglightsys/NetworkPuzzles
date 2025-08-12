@@ -385,7 +385,7 @@ class NetworkPuzzlesApp(App):
         set_state(self.root.ids.redo, session.redolist)
 
     def user_select_device(self):
-        # TODO: Add tooltip next to cursor that says "Creating link; choose device"
+        # TODO: Add on-screen indicator that a device needs to be selected.
         if not hasattr(self, "chosen_device"):
             self.chosen_device = None
         elif self.chosen_device:
