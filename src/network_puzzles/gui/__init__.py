@@ -65,14 +65,10 @@ class NetworkPuzzlesApp(App):
         Window.clearcolor = self.theme.bg2
         # Re-add puzzle widgets on resize.
         Window.bind(on_resize=self.draw_puzzle)
+        # Set intial values for variables.
+        self.selected_puzzle = None  # used to reset puzzle after changes
+        self.reset_vars()
 
-        self.filtered_puzzles = []
-        self.filters = []
-        self.selected_puzzle = None
-
-        self.new_item_menu = None
-        self.new_infra_device_menu = None
-        self.new_user_device_menu = None
         # NOTE: Time for packet to traverse each link is:
         #   self.packet_tick_delay * 100 / self.packet_progress_rate
         # However, there's also a tick limit of ~0.017 Hz for kivy.
@@ -142,11 +138,6 @@ class NetworkPuzzlesApp(App):
             line += "\n"
         self.root.ids.terminal.text += f"{line}"
 
-    def clear_puzzle(self):
-        """Remove any existing widgets in the puzzle layout."""
-        self.selected_puzzle = None
-        self.reset_display()
-
     def close_new_item_menus(self):
         # Close tray and subtrays if open.
         for tray in (
@@ -169,6 +160,7 @@ class NetworkPuzzlesApp(App):
 
     def draw_puzzle(self, *args):
         if not self.ui.puzzle:
+            logging.warning("GUI: No puzzle is loaded.")
             return
 
         self.reset_display()
@@ -328,7 +320,34 @@ class NetworkPuzzlesApp(App):
         # Redraw the "+" button for adding new items.
         self._add_new_item_button()
 
+    def reset_vars(self):
+        # Set variables to intial values.
+        self.filtered_puzzles = []
+        self.filters = []
+
+        self.new_item_menu = None
+        self.new_infra_device_menu = None
+        self.new_user_device_menu = None
+
+        # Delete temporary variables.
+        if hasattr(self, "new_device_data"):
+            del self.new_device_data
+        if hasattr(self, "new_link_data"):
+            del self.new_link_data
+        if hasattr(self, "chosen_device"):
+            del self.chosen_device
+        if hasattr(self, "chosen_nic"):
+            del self.chosen_nic
+        if hasattr(self, "chosen_pos"):
+            del self.chosen_pos
+
+        # Cancel scheduled functions.
+        Clock.unschedule(self._new_device)
+        Clock.unschedule(self._new_link)
+
     def setup_puzzle(self, *args):
+        self.reset_vars()
+        self.ui.load_puzzle(self.selected_puzzle)
         self.draw_puzzle()
         self.root.ids.help_slider.value = self.ui.puzzle.default_help_level
 
@@ -366,7 +385,7 @@ class NetworkPuzzlesApp(App):
         set_state(self.root.ids.redo, session.redolist)
 
     def user_select_device(self):
-        # TODO: Add tooltip next to cursor that says "Creating link; choose device"
+        # TODO: Add on-screen indicator that a device needs to be selected.
         if not hasattr(self, "chosen_device"):
             self.chosen_device = None
         elif self.chosen_device:
@@ -593,12 +612,8 @@ class PuzzleChooserPopup(AppPopup):
     def on_cancel(self):
         self.dismiss()
 
-    def on_dismiss(self):
-        self.app.selected_puzzle = None
-
     def on_load(self):
         self.app.selected_puzzle = self.ids.puzzles_view.selected_item.get("text")
-        self.app.ui.load_puzzle(self.app.selected_puzzle)
         self.app.setup_puzzle()
         self.dismiss()
 

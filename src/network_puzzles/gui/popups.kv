@@ -1,6 +1,6 @@
 <AppPopup>:
     title_size: app.BUTTON_FONT_SIZE
-    size_hint: (1/2, 1/2)
+    size_hint: (0.5, 0.75)
 
 <ExceptionPopup>:
     title: _("Error")
@@ -16,8 +16,7 @@
             TerminalLabel:
                 id: exception
                 padding: dp(3)
-                size_hint_x: None
-                size_hint_y: None
+                size_hint: (None, None)
                 height: self.line_height * len(self.text.split('\n'))
                 width: self._get_row_width(self.get_max_row(self.text))
                 text_size: (self.width, None)

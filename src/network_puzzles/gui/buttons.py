@@ -20,6 +20,17 @@ class ThemedButton(Button):
         self._on_press = on_press
         Window.bind(mouse_pos=self.on_mouse_pos)
 
+    def on_mouse_pos(self, window, pos):
+        if not self.get_root_window():
+            return
+        w_pos = self.to_widget(*pos)
+        # Close tooltip if already open.
+        self.cancel_tooltip()
+        # Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event
+        # self.close_tooltip()  # close if it's opened
+        if self.collide_point(*w_pos):
+            Clock.schedule_once(self.open_tooltip, 1)
+
     def on_press(self):
         if self._on_press is None:
             return
@@ -29,6 +40,7 @@ class ThemedButton(Button):
         )
 
     def on_release(self):
+        self.cancel_tooltip()
         if self._on_press is None:
             return
         # If long-press callback hasn't run, cancel it and run the short-press
@@ -75,14 +87,9 @@ class ThemedButton(Button):
     def _on_long_press(self, *args):
         self.open_tooltip()
 
-    def on_mouse_pos(self, window, pos):
-        if not self.get_root_window():
-            return
-        w_pos = self.to_widget(*pos)
+    def cancel_tooltip(self):
         Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event
-        self.close_tooltip()  # close if it's opened
-        if self.collide_point(*w_pos):
-            Clock.schedule_once(self.open_tooltip, 1)
+        self.close_tooltip()
 
     def close_tooltip(self, *args):
         self.tooltip_anchor.remove_widget(self.tooltip)
