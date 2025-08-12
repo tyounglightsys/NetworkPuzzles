@@ -46,10 +46,10 @@ requirements = kivy,packaging
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
-presplash.filename = %(source.dir)s/network_puzzles/resources/images/Switch.png
+presplash.filename = %(source.dir)s/network_puzzles/resources/images/NBIcoLG.png
 
 # (str) Icon of the application
-icon.filename = %(source.dir)s/network_puzzles/resources/images/NBIco.ico
+icon.filename = %(source.dir)s/network_puzzles/resources/images/NBIcoLG.png
 
 # (list) Supported orientations
 # Valid options are: landscape, portrait, portrait-reverse or landscape-reverse
