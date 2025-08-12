@@ -242,9 +242,6 @@ class PingHostPopup(AppPopup):
         self.device = dev
         super().__init__(**kwargs)
 
-    def on_cancel(self):
-        self.dismiss()
-
     def on_okay(self, dest):
         self.app.ui.parse(f"ping {self.device.hostname} {dest}")
         self.dismiss()
