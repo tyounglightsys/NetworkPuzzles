@@ -161,7 +161,7 @@
 
 
 <ChooseNicPopup>:
-    size_hint_x: 0.25
+    size_hint_x: 0.5
     title: f"{self.device.hostname} | {_('Choose NIC')}"
     ThemedBoxLayout:
         orientation: "vertical"
@@ -171,7 +171,7 @@
             id: nics_list
         ThemedBoxLayout:
             size_hint_y: 0.2
-            size_hint_max_y: root.app.BUTTON_MAX_H
+            size_hint_max_y: root.app.BUTTON_MAX_H + self.padding[1] + self.padding[3]
             PopupButton:
                 text: _("Cancel")
                 on_press: root.dismiss()

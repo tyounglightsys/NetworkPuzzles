@@ -371,7 +371,11 @@ class EditDevicePopup(AppPopup):
 
 class NICsRecView(AppRecView):
     def update_data(self, nics):
-        self.data = [{"text": n.name} for n in nics if not n.name.startswith("lo")]
+        self.data = [
+            {"text": n.name}
+            for n in nics
+            if not n.name.startswith("lo") and not n.name.startswith("management")
+        ]
 
     def on_selection(self, index):
         self.root.on_nic_selection(self.data[index].get("text"))
