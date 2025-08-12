@@ -84,7 +84,8 @@ fullscreen = 1
 # darkgray, grey, lightgrey, darkgrey, aqua, fuchsia, lime, maroon, navy,
 # olive, purple, silver, teal.
 #android.presplash_color = #FFFFFF
-android.presplash_color = #2EC27E
+#android.presplash_color = #2EC27E  # light green
+android.presplash_color = #CCE3F9
 
 # (string) Presplash animation using Lottie format.
 # see https://lottiefiles.com/ for examples and https://airbnb.design/lottie/
