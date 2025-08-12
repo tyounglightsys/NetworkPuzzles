@@ -46,6 +46,7 @@ requirements = kivy,packaging
 
 # (str) Presplash of the application
 #presplash.filename = %(source.dir)s/data/presplash.png
+presplash.filename = %(source.dir)s/network_puzzles/resources/images/Switch.png
 
 # (str) Icon of the application
 icon.filename = %(source.dir)s/network_puzzles/resources/images/NBIco.ico
@@ -83,6 +84,7 @@ fullscreen = 1
 # darkgray, grey, lightgrey, darkgrey, aqua, fuchsia, lime, maroon, navy,
 # olive, purple, silver, teal.
 #android.presplash_color = #FFFFFF
+android.presplash_color = #2EC27E
 
 # (string) Presplash animation using Lottie format.
 # see https://lottiefiles.com/ for examples and https://airbnb.design/lottie/
