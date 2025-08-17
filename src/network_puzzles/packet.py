@@ -23,23 +23,26 @@ def getPacketLocation(packetrec):
     ddevice = session.puzzle.device_from_uid(thelink['DstNic']['hostid'])
     if(sdevice is None or ddevice is None):
         return None #This should never happen.  But exit gracefully.
-    if packetrec['packetDirection'] == 1:
-        #set the start of the link as the source
-        sx, sy = splitXYfromString(sdevice['location'])
-        dx, dy = splitXYfromString(ddevice['location'])
-    else:
-        #set the start of the link as the destination
-        sx, sy = splitXYfromString(ddevice['location'])
-        dx, dy = splitXYfromString(sdevice['location'])
+    if packetrec['packetDirection'] != 1:
+        #swap the source and destination
+        tdevice = sdevice #stash it temporarily
+        sdevice = ddevice
+        ddevice = tdevice
+    #Now the source and destination are appropriately set
+    sx, sy = splitXYfromString(sdevice['location'])
+    dx, dy = splitXYfromString(ddevice['location'])    
     #We now have a line that the packet is somewhere on.
-    deltax = (sx - dx) / 100
-    deltay = (sy - dy) / 100
+    deltax = (dx - sx) / 100
+    deltay = (dy - sy) / 100
 
     amountx = deltax * packetrec['packetDistance']
     amounty = deltay * packetrec['packetDistance']
 
-    #return a {x,y} structure
-    return { sx + amountx , sy + amounty }
+    tx = sx + amountx
+    ty = sy + amounty
+
+    #return a [x,y] structure
+    return [ tx , ty ]
 
 def newPacket():
     """Returns an empty packet with all the fields."""
@@ -72,9 +75,50 @@ def splitXYfromString(xystring:str):
         sx, sy =xystring.split(',')
         ix = int(sx)
         iy = int(sy)
-        return { ix, iy}
+        return [ ix, iy]
     except ValueError:
         return None
+
+def distance(sx,sy,dx,dy):
+    #we have a 5/5 grid that we are working with.
+    #The ** is the exponent.  **2 is squared, **.5 is the square-root
+    return ((((sx - dx) **2) + ((sy - dy) **2 )) **.5) / 5
+
+def damagePacketIfNeeded(packetrec, packetnumber, pointlist):
+    """
+    Search damage the packet if wireless+microwave or wired+light
+    """
+    #packets are only displayed when they are on links.
+    thelink = session.puzzle.link_from_name(packetrec['packetlocation'])
+    if (thelink is None):
+        return None #We could not find the link
+    #if we get here, we have the link that the packet is on
+    for one in session.puzzle.devices:
+        doit = False
+        if one.get('mytype') == "microwave" and thelink.get('linktype') == "wireless":
+            doit=True
+        if one.get('mytype') == "fluorescent" and thelink.get('linktype') != "wireless":
+            doit=True
+        if doit:
+            #We need to check for damage.
+            dx, dy = splitXYfromString(one.get('location'))
+            #calculate the centerpoint
+            halfsize = 50 #all devices in EduNetworkBuilder were 100 size
+            dx = dx + halfsize
+            dy = dy + halfsize
+
+            #now compare locations to each point along the distance.
+            for onepoint in pointlist:
+                px, py = onepoint
+                #calculate distance
+                dist = int(distance(px,py,dx,dy))
+                if dist < 34:
+                    session.print(f"Checking damage {packetnumber}: {packetrec['packettype']} {packetrec['health']} - {px},{py} {dx},{dy} distance: {dist} {packetrec['packetlocation']}")
+                if dist <= 32:
+                    packetrec['health'] = packetrec['health'] - 10
+                    session.print(f"Packet damaged {packetnumber}: {packetrec['packettype']} {packetrec['health']} - distance: {dist}")
+                    if packetrec['health'] <= 0:
+                        packetrec['status'] = 'done' #the packet dies silently
 
 def addPacketToPacketlist(thepacket):
     if thepacket is not None:
@@ -91,6 +135,39 @@ def packetsNeedProcessing():
         session.packetstorm = True #There were too many packets.  Must have created a storm/net loop
     return len(session.packetlist) > 0
 
+def packetDistancePoints(packetrec, tick_pct):
+    if(packetrec is None or 'packetlocation' not in packetrec):
+        return None
+    #packets are only displayed when they are on links.
+    thelink = session.puzzle.link_from_name(packetrec['packetlocation'])
+    if (thelink is None):
+        return None #We could not find the link
+    #if we get here, we have the link that the packet is on
+    sdevice = session.puzzle.device_from_uid(thelink['SrcNic']['hostid'])
+    ddevice = session.puzzle.device_from_uid(thelink['DstNic']['hostid'])
+    if(sdevice is None or ddevice is None):
+        return None #This should never happen.  But exit gracefully.
+    if packetrec['packetDirection'] != 1:
+        #swap the source and destination
+        tdevice = sdevice #stash it temporarily
+        sdevice = ddevice
+        ddevice = tdevice
+    #Now the source and destination are appropriately set
+    sx, sy = splitXYfromString(sdevice['location'])
+    dx, dy = splitXYfromString(ddevice['location'])
+    #We now have a line that the packet is somewhere on.
+    deltax = (dx - sx) / 100
+    deltay = (dy - sy) / 100
+
+    myarray = list()
+
+    for a in range(int(packetrec['packetDistance']), int(packetrec['packetDistance'] + tick_pct),2):
+        tx = sx + (deltax * a)
+        ty = sy + (deltay * a)
+        myarray.append([tx,ty])
+
+    return myarray    
+
 def processPackets(killSeconds: int = 20, tick_pct: float = 10):
     """
     Loop through all packets, moving them along through the system
@@ -99,16 +176,20 @@ def processPackets(killSeconds: int = 20, tick_pct: float = 10):
     killMilliseconds = killSeconds * 1000
     #here we loop through all packets and process them
     curtime = int(time.time() * 1000)
+    counter=0
     for one in session.packetlist:
+        counter = counter + 1
         # figure out where the packet is
         theLink = session.puzzle.link_from_name(one['packetlocation'])
         if theLink is not None:
             #the packet is traversing a link
-            one['packetDistance'] += tick_pct #traverse the link.  If we were smarter, we could do it in different chunks based on the time it takes to redraw
+            pointlist = packetDistancePoints(one, tick_pct)
+            one['packetDistance'] += tick_pct
+            damagePacketIfNeeded(one, counter, pointlist)
             if one['packetDistance'] > 50 and theLink.get('linktype') == 'broken':
                 #The link is broken.  The packet gets killed
                 one['status'] = 'done' #the packet dies silently
-            if one['packetDistance'] > 100:
+            if one['packetDistance'] > 100 and one['status'] != 'done':
                 #We have arrived.  We need to process the arrival!
                 #get interface from link
                 nicrec = theLink['SrcNic']

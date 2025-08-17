@@ -871,8 +871,12 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             pingdest = deviceFromIP(pingdestip)
             logging.info(f"sourceip is {srcip}")
             logging.info(f"dest host is {pingdest.get('hostname')}")
-            session.print(f"PING: {pingsrcip} -> {pingdestip}: Success!")
-            if pingdest is not None:
+            if packRec['health'] < 100:
+                logging.info(f"Packet was damaged during transit.  Not complete success: Health={packRec['health']}")
+                session.print(f"PING: {pingsrcip} -> {pingdestip}: Partial Success! - Packet damaged in transit.  Health={packRec['health']}")
+            else:
+                session.print(f"PING: {pingsrcip} -> {pingdestip}: Success!")
+            if pingdest is not None and packRec['health'] == 100:
                 mark_test_as_completed(
                     thisDevice.get("hostname"),
                     pingdest.get("hostname"),
