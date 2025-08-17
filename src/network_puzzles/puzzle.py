@@ -637,6 +637,9 @@ class Puzzle:
     def is_puzzle_done(self):
         """Report back to see if all the tests have been completed."""
         for onetest in self.all_tests():
+            if onetest.get('thetest',"").startswith("Lock"):
+                #These do not count as unfinished tests
+                continue
             if not onetest.get("completed", False):
                 return False
         return True
