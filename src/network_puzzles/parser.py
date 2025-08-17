@@ -303,6 +303,7 @@ class Parser:
                 # we have a valid device.  Show information about the device
                 session.print("----Device----")
                 session.print(f"hostname: {thedevice['hostname']}")
+                session.print(f"location: {thedevice['location']}")
                 if "poweroff" in thedevice and thedevice["poweroff"].lower() == "true":
                     session.print(f"poweroff: {thedevice['poweroff']}")
                 if "isdhcp" in thedevice and thedevice["isdhcp"].lower() == "true":
