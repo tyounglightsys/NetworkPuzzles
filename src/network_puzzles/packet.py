@@ -108,17 +108,18 @@ def damagePacketIfNeeded(packetrec, packetnumber, pointlist):
             dy = dy + halfsize
 
             #now compare locations to each point along the distance.
+            totdamage=0
             for onepoint in pointlist:
                 px, py = onepoint
                 #calculate distance
                 dist = int(distance(px,py,dx,dy))
-                if dist < 34:
-                    session.print(f"Checking damage {packetnumber}: {packetrec['packettype']} {packetrec['health']} - {px},{py} {dx},{dy} distance: {dist} {packetrec['packetlocation']}")
                 if dist <= 32:
-                    packetrec['health'] = packetrec['health'] - 10
-                    session.print(f"Packet damaged {packetnumber}: {packetrec['packettype']} {packetrec['health']} - distance: {dist}")
+                    packetrec['health'] = packetrec['health'] - 5
+                    totdamage = totdamage + 5
                     if packetrec['health'] <= 0:
                         packetrec['status'] = 'done' #the packet dies silently
+            if totdamage > 0:
+                logging.debug(f"Packet damaged  {packetrec['packettype']} {packetrec['health']}")
 
 def addPacketToPacketlist(thepacket):
     if thepacket is not None:
