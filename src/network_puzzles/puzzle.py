@@ -258,7 +258,8 @@ class Puzzle:
         for test in self.all_tests(shost):
             thetest = test.get("thetest")
             if thetest == "LockAll":
-                return True
+                if  whattocheck != "LockLocation":
+                    return True
             if thetest == whattocheck and whattocheck == "LockVlanNames":
                 return True
             if thetest == whattocheck and whattocheck == "LockVLANsOnHost":
