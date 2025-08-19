@@ -18,7 +18,10 @@ from .base import HelpHighlight
 from .base import hide_widget
 from .base import location_to_rel_pos
 from .base import NETWORK_ITEMS
+from .base import pos_to_location
 from .buttons import CommandButton
+from .buttons import DeviceButton
+from .labels import DeviceLabel
 from .layouts import ThemedBoxLayout
 from .popups import AppPopup
 
@@ -28,22 +31,22 @@ class Device(DragBehavior, ThemedBoxLayout):
         self.base = device.Device(init_data)
         super().__init__(**kwargs)
         self.app = session.app
-        self.pos_init = (0, 0)
         self.help_text = None
-        # Set self.height based on self.minimum_height, which is calculated from
-        # total height of the child widgets.
-        self.bind(minimum_height=self.setter("height"))
-        self._set_pos()  # sets self.pos_hint
+        self.loc_init = self.base.location
+        # Add button and label during init for correct height calculation and
+        # correct Device placement according to puzzle location value.
+        self.button = DeviceButton(pos_hint={"center_x": 0.5})
+        self.button._on_press = self.on_press
+        self.label = DeviceLabel(text=self.hostname, pos_hint={"center_x": 0.5})
+        self.label.size = self.label.texture_size
+        self.add_widget(self.button)
+        self.add_widget(self.label)
+        self.minimum_height = self.height
+        # Set final attributes.
         self._set_image()
+        self._set_pos_hint()
         # Updates that rely on Device's pos already being set.
         Clock.schedule_once(self.set_power_status)
-
-    @property
-    def button(self):
-        for child in self.children:
-            if child.__class__.__name__ == "DeviceButton":
-                return child
-        return None
 
     @property
     def hostname(self):
@@ -51,13 +54,6 @@ class Device(DragBehavior, ThemedBoxLayout):
         # self.base is defined.
         if hasattr(self, "base") and self.base:
             return self.base.hostname
-
-    @property
-    def label(self):
-        for child in self.children:
-            if child.__class__.__name__ == "DeviceLabel":
-                return child
-        return None
 
     @property
     def links(self):
@@ -125,25 +121,31 @@ class Device(DragBehavior, ThemedBoxLayout):
         # Hide/show self.
         hide_widget(self, do_hide)
 
-    def on_pos(self, *args):
-        # Set initial position for comparison later.
-        # NOTE: pos is set in 2 steps: x first, then y, and `pos` is modified
-        # each time. So we have to wait until both x and y values are nonzero
-        # before setting the true initial position.
-        if 0 in self.pos_init:
-            self.pos_init = (self.x, self.y)
+    def move(self, loc):
         # Show if hidden and not in initial position.
-        if self.opacity == 0 and (self.x, self.y) != self.pos_init:
+        if self.opacity == 0:
             self.hide(False)
         # Nullify pos_hint when initial position is changed to allow for widget
         # to be drag-n-dropped.
-        self.pos_hint = {}
+        if self.pos_hint:
+            self.pos_hint = {}
+        # Move device in JSON data.
+        self.app.ui.parse(f"set {self.hostname} pos {loc[0]} {loc[1]}")
         # Move help device highlighting with device.
         self.app.update_help_highlight_devices()
         # Move links' ends with device.
         for lnk in self.links:
+            print(lnk)
             lnk.hide(False)
             lnk.move_connection(self)
+
+    def on_pos(self, *args):
+        if 0 in self.pos:
+            # Ignore pos change until device widget is fully placed.
+            return True
+        loc = pos_to_location(self.center, self.app.root.ids.layout.size)
+        if loc != self.loc_init:
+            self.move(loc)
 
     def on_press(self):
         if hasattr(self.app, "chosen_device"):
@@ -227,9 +229,9 @@ class Device(DragBehavior, ThemedBoxLayout):
             raise TypeError(f"Unhandled device type: {self.base.json.get('mytype')}")
         self.button.background_normal = str(self.app.IMAGES / img)
 
-    def _set_pos(self, rel_pos=None):
+    def _set_pos_hint(self, rel_pos=None):
         if rel_pos is None:
-            rel_pos = location_to_rel_pos(self.base.json.get("location"))
+            rel_pos = location_to_rel_pos(self.loc_init, self.app.root.ids.layout.size)
         self.pos_hint = {"center": rel_pos}
 
 

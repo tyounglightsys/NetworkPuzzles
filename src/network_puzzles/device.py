@@ -68,6 +68,16 @@ class Device:
         self.json["isinvisible"] = value
 
     @property
+    def location(self):
+        loc = self.json.get("location")
+        if loc:
+            location = loc.split(",")
+            location = (int(location[0]), int(location[1]))
+            logging.debug(f"{self.hostname} {location=}")
+            return location
+        raise ValueError(f"Invalid JSON location data for '{self.hostname}'")
+
+    @property
     def powered_on(self):
         if self.json.get("poweroff", "").lower() in ("true", "yes"):
             value = False
@@ -871,12 +881,16 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             pingdest = deviceFromIP(pingdestip)
             logging.info(f"sourceip is {srcip}")
             logging.info(f"dest host is {pingdest.get('hostname')}")
-            if packRec['health'] < 100:
-                logging.info(f"Packet was damaged during transit.  Not complete success: Health={packRec['health']}")
-                session.print(f"PING: {pingsrcip} -> {pingdestip}: Partial Success! - Packet damaged in transit.  Health={packRec['health']}")
+            if packRec["health"] < 100:
+                logging.info(
+                    f"Packet was damaged during transit.  Not complete success: Health={packRec['health']}"
+                )
+                session.print(
+                    f"PING: {pingsrcip} -> {pingdestip}: Partial Success! - Packet damaged in transit.  Health={packRec['health']}"
+                )
             else:
                 session.print(f"PING: {pingsrcip} -> {pingdestip}: Success!")
-            if pingdest is not None and packRec['health'] == 100:
+            if pingdest is not None and packRec["health"] == 100:
                 mark_test_as_completed(
                     thisDevice.get("hostname"),
                     pingdest.get("hostname"),

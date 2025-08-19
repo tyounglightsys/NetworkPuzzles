@@ -3,13 +3,6 @@
     spacing: 0  # TODO: this is not applied
     size_hint: (0.08, None)
     drag_rectangle: (self.x, self.y, self.width, self.height)
-    DeviceButton:
-        pos_hint: {"center_x": 0.5}
-        _on_press: root.on_press
-    DeviceLabel:
-        text: root.hostname
-        pos_hint: {"center_x": 0.5}
-        size: self.texture_size
 
 <CommandsPopup>:
     size_hint_x: 0.4
