@@ -60,7 +60,7 @@
             NICsRecView:
                 size_hint_y: 0.35
                 root: root
-                on_parent: self.update_data(root.device.nics)
+                on_parent: self.update_data(root.device.nics, management=True)
             ThemedBoxLayout:  # IPs label/buttons
                 size_hint_y: 0.15
                 ThemedLabel:  # IPs
