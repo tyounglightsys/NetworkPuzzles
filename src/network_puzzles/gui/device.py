@@ -16,7 +16,7 @@ from .base import AppRecView
 from .base import get_layout_height
 from .base import HelpHighlight
 from .base import hide_widget
-from .base import location_to_rel_pos
+from .base import location_to_pos
 from .base import NETWORK_ITEMS
 from .base import pos_to_location
 from .buttons import CommandButton
@@ -44,7 +44,7 @@ class Device(DragBehavior, ThemedBoxLayout):
         self.minimum_height = self.height
         # Set final attributes.
         self._set_image()
-        self._set_pos_hint()
+        self.center = location_to_pos(self.base.location, self.app.root.ids.layout.size)
         # Updates that rely on Device's pos already being set.
         Clock.schedule_once(self.set_power_status)
 
@@ -122,22 +122,12 @@ class Device(DragBehavior, ThemedBoxLayout):
         hide_widget(self, do_hide)
 
     def move(self, loc):
-        # Show if hidden and not in initial position.
+        # Show if hidden.
         if self.opacity == 0:
             self.hide(False)
-        # Nullify pos_hint when initial position is changed to allow for widget
-        # to be drag-n-dropped.
-        if self.pos_hint:
-            self.pos_hint = {}
         # Move device in JSON data.
         self.app.ui.parse(f"set {self.hostname} pos {loc[0]} {loc[1]}")
-        # Move help device highlighting with device.
-        self.app.update_help_highlight_devices()
-        # Move links' ends with device.
-        for lnk in self.links:
-            print(lnk)
-            lnk.hide(False)
-            lnk.move_connection(self)
+        Clock.schedule_once(self._move_after_update)
 
     def on_pos(self, *args):
         if 0 in self.pos:
@@ -229,10 +219,10 @@ class Device(DragBehavior, ThemedBoxLayout):
             raise TypeError(f"Unhandled device type: {self.base.json.get('mytype')}")
         self.button.background_normal = str(self.app.IMAGES / img)
 
-    def _set_pos_hint(self, rel_pos=None):
-        if rel_pos is None:
-            rel_pos = location_to_rel_pos(self.loc_init, self.app.root.ids.layout.size)
-        self.pos_hint = {"center": rel_pos}
+    def _move_after_update(self, *args):
+        # Show hidden links.
+        for lnk in self.links:
+            lnk.hide(False)
 
 
 class CommandsPopup(AppPopup):

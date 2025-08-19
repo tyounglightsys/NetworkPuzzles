@@ -83,7 +83,7 @@ class Device:
             value = False
         else:
             value = True
-        logging.debug(f"{self.hostname}.powered_on: {value}")
+        # logging.debug(f"{self.hostname}.powered_on: {value}")
         return value
 
     @powered_on.setter
