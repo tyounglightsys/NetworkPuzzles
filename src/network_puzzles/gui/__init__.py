@@ -456,10 +456,16 @@ class NetworkPuzzlesApp(App):
                     continue
                 w = self.get_widget_by_hostname(n)
                 if isinstance(w, Device) and not w.base.is_invisible:
-                    if t == "LockLocation":
-                        w.lock()
-                    else:
-                        w.highlight()
+                    match t:
+                        case "LockAll":
+                            # Ignore. Used for fluorescent light in packet
+                            # corruption puzzle.
+                            continue
+                        case "LockLocation":
+                            # Device can't be moved.
+                            w.lock()
+                        case _:
+                            w.highlight()
 
     def _help_update_tooltips(self, help_level):
         # List devices and help_texts.
