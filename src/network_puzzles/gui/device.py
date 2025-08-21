@@ -17,6 +17,7 @@ from .base import get_layout_height
 from .base import HelpHighlight
 from .base import hide_widget
 from .base import location_to_pos
+from .base import LockEmblem
 from .base import NETWORK_ITEMS
 from .base import pos_to_location
 from .buttons import CommandButton
@@ -32,7 +33,10 @@ class Device(DragBehavior, ThemedBoxLayout):
         super().__init__(**kwargs)
         self.app = session.app
         self.help_text = None
+        self.highlighting = None
+        self.lock_icon = None
         self.loc_init = self.base.location
+        self._location_locked = False
         # Add button and label during init for correct height calculation and
         # correct Device placement according to puzzle location value.
         self.button = DeviceButton(pos_hint={"center_x": 0.5})
@@ -41,7 +45,6 @@ class Device(DragBehavior, ThemedBoxLayout):
         self.label.size = self.label.texture_size
         self.add_widget(self.button)
         self.add_widget(self.label)
-        self.minimum_height = self.height
         # Set final attributes.
         self._set_image()
         self.center = location_to_pos(self.base.location, self.app.root.ids.layout.size)
@@ -64,6 +67,16 @@ class Device(DragBehavior, ThemedBoxLayout):
         return links
 
     @property
+    def location_locked(self):
+        return self._location_locked
+
+    @location_locked.setter
+    def location_locked(self, value):
+        if not isinstance(value, bool):
+            raise ValueError("Value must be a boolean.")
+        self._location_locked = value
+
+    @property
     def nics(self):
         if hasattr(self, "base") and self.base:
             return [nic.Nic(n) for n in self.base.all_nics()]
@@ -84,35 +97,30 @@ class Device(DragBehavior, ThemedBoxLayout):
                 return n
 
     def highlight(self, do_highlight=True):
-        # Find corresponding highlight widget.{
-        current_highlight = None
-        for c in self.app.root.ids.layout.children:
-            if isinstance(c, HelpHighlight) and c.name == self.hostname:
-                current_highlight = c
-                break
-
-        if not current_highlight and do_highlight:
+        if do_highlight:
             # Add highlight.
-            # logging.debug(f"GUI: add highlight for {self.hostname}")
+            # logging.debug(f"GUI: Add highlight for {self.hostname}")
+            if not self.highlighting:
+                self.highlighting = HelpHighlight(base=self)
             # Set draw index one higher than (i.e. behind) Device.
             idx = self.parent.children.index(self) + 1
-            size = (self.width + 6, self.height + 6)
-            self.app.root.ids.layout.add_widget(
-                HelpHighlight(center=self.center, name=self.hostname, size=size),
-                idx,
-            )
-        elif current_highlight and not do_highlight:
+            self.app.root.ids.layout.add_widget(self.highlighting, idx)
+        else:
             # Remove highlight.
-            logging.debug(f"GUI: remove highlight for {self.hostname}")
-            self.app.root.ids.layout.remove_widget(current_highlight)
+            # logging.debug(f"GUI: Remove highlight for {self.hostname}")
+            if self.highlighting:
+                self.app.root.ids.layout.remove_widget(self.highlighting)
+            self.highlighting = None
 
     def hide(self, do_hide=True):
         # Ensure base object state matches GUI object state.
         self.base.is_invisible = do_hide
         if do_hide:
+            logging.debug(f"GUI: Hide {self.hostname} & dependent items.")
             # Hide any help highlight.
             self.highlight(False)
         elif do_hide is False:
+            logging.debug(f"GUI: Show {self.hostname} & dependent items.")
             # Show help highlight if relevant.
             self.app.update_help_highlight_devices()
         # Hide/show any links.
@@ -121,16 +129,30 @@ class Device(DragBehavior, ThemedBoxLayout):
         # Hide/show self.
         hide_widget(self, do_hide)
 
+    def lock(self, activate=True):
+        if self.location_locked != activate:
+            # Locked state has changed; update device.
+            self.location_locked = activate
+            if self.location_locked:
+                drag_size = (0, 0)
+                self.lock_icon = LockEmblem(self)
+                self.app.root.ids.layout.add_widget(self.lock_icon)
+            else:
+                drag_size = (self.width, self.height)
+                self.app.root.ids.layout.remove_widget(self.lock_icon)
+                self.lock_icon = None
+            self.drag_rectangle = (*self.drag_rectangle[:2], *drag_size)
+
     def move(self, loc):
         # Show if hidden.
         if self.opacity == 0:
             self.hide(False)
         # Move device in JSON data.
         self.app.ui.parse(f"set {self.hostname} pos {loc[0]} {loc[1]}")
-        Clock.schedule_once(self._move_after_update)
+        Clock.schedule_once(self._post_move)
 
     def on_pos(self, *args):
-        if 0 in self.pos:
+        if 0 in self.pos or self.location_locked:
             # Ignore pos change until device widget is fully placed.
             return True
         loc = pos_to_location(self.center, self.app.root.ids.layout.size)
@@ -219,7 +241,7 @@ class Device(DragBehavior, ThemedBoxLayout):
             raise TypeError(f"Unhandled device type: {self.base.json.get('mytype')}")
         self.button.background_normal = str(self.app.IMAGES / img)
 
-    def _move_after_update(self, *args):
+    def _post_move(self, *args):
         # Show hidden links.
         for lnk in self.links:
             lnk.hide(False)

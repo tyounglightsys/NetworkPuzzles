@@ -91,10 +91,15 @@ class Packet(Widget):
 
 
 class HelpHighlight(Widget):
-    def __init__(self, name=None, size=None, **kwargs):
-        self.size = size
+    def __init__(self, base=None, **kwargs):
+        self.base = base
         super().__init__(**kwargs)
-        self.name = name
+
+
+class LockEmblem(Widget):
+    def __init__(self, base=None, **kwargs):
+        self.base = base
+        super().__init__(**kwargs)
 
 
 class HelpSlider(Slider):

@@ -46,9 +46,11 @@
     write_tab: False
 
 
-<HelpHighlight>
+<HelpHighlight>:
     size_hint: (None, None)
-    canvas.before:
+    size: (self.base.size[0] + dp(6), self.base.size[1] + dp(6))
+    center: self.base.center
+    canvas:
         Color:
             rgba: (1, 0, 0, 0.5)
         RoundedRectangle:
@@ -56,7 +58,18 @@
             size: self.size
             radius: [dp(10)]
 
-<HelpSlider>
+<LockEmblem>:
+    size_hint: (None, None)
+    size: (dp(12), dp(12))
+    center: self.base.center
+    canvas.before:
+        Color:
+            rgba: (0.5, 0.5, 0.5, 1.0)
+        Ellipse:
+            pos: self.pos
+            size: self.size
+
+<HelpSlider>:
     orientation: 'horizontal'
     canvas.after:
         Color:
