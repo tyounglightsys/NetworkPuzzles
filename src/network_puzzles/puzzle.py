@@ -6,7 +6,6 @@ import copy
 import re
 import logging
 from packaging.version import Version
-from pathlib import Path
 
 # define the global network list
 from . import session
@@ -258,7 +257,7 @@ class Puzzle:
         for test in self.all_tests(shost):
             thetest = test.get("thetest")
             if thetest == "LockAll":
-                if  whattocheck != "LockLocation":
+                if whattocheck != "LockLocation":
                     return True
             if thetest == whattocheck and whattocheck == "LockVlanNames":
                 return True
@@ -637,8 +636,8 @@ class Puzzle:
     def is_puzzle_done(self):
         """Report back to see if all the tests have been completed."""
         for onetest in self.all_tests():
-            if onetest.get('thetest',"").startswith("Lock"):
-                #These do not count as unfinished tests
+            if onetest.get("thetest", "").startswith("Lock"):
+                # These do not count as unfinished tests
                 continue
             if not onetest.get("completed", False):
                 return False

@@ -435,16 +435,20 @@ class NetworkPuzzlesApp(App):
         # Skip if no puzzle loaded.
         if not self.ui or not self.ui.puzzle or help_level is None:
             return
-        # Clear existing highlights.
+        # Clear existing highlights (to be redrawn next).
+        # NOTE: Invariant emblems don't get removed.
         for c in self.root.ids.layout.children:
             if isinstance(c, HelpHighlight):
+                # print(f"Removing highlight for {c.base.hostname}")
                 self.root.ids.layout.remove_widget(c)
         # Add any required highlights.
         if help_level > 0:
             # TODO: This only highlights layout devices. We still need to work
             # in highlighting of other on-screen elements.
-            for n in set(
-                t.get("shost") for t in self.ui.all_tests() if not t.get("completed")
+            for n, t in (
+                (e.get("shost"), e.get("thetest"))
+                for e in self.ui.all_tests()
+                if not e.get("completed")
             ):
                 d = self.ui.get_device(n)
                 if d is None:
@@ -452,7 +456,16 @@ class NetworkPuzzlesApp(App):
                     continue
                 w = self.get_widget_by_hostname(n)
                 if isinstance(w, Device) and not w.base.is_invisible:
-                    w.highlight()
+                    match t:
+                        case "LockAll":
+                            # Ignore. Used for fluorescent light in packet
+                            # corruption puzzle.
+                            continue
+                        case "LockLocation":
+                            # Device can't be moved.
+                            w.lock()
+                        case _:
+                            w.highlight()
 
     def _help_update_tooltips(self, help_level):
         # List devices and help_texts.

@@ -23,6 +23,10 @@ class ThemedLabel(Label):
         self.app = session.app
 
 
+class DeviceLabel(ThemedLabel):
+    pass
+
+
 class ToolTip(ThemedLabel):
     # Added here import access.
     pass

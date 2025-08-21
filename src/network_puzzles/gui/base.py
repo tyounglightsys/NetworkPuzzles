@@ -19,8 +19,6 @@ from .popups import ExceptionPopup
 PADDING = 50
 LOCATION_MAX_X = 900
 LOCATION_MAX_Y = 850
-PADDED_MAX_X = LOCATION_MAX_X + 2 * PADDING
-PADDED_MAX_Y = LOCATION_MAX_Y + 2 * PADDING
 NETWORK_ITEMS = {
     "links": {
         "link": {"img": "link.png"},
@@ -93,10 +91,15 @@ class Packet(Widget):
 
 
 class HelpHighlight(Widget):
-    def __init__(self, name=None, size=None, **kwargs):
-        self.size = size
+    def __init__(self, base=None, **kwargs):
+        self.base = base
         super().__init__(**kwargs)
-        self.name = name
+
+
+class LockEmblem(Widget):
+    def __init__(self, base=None, **kwargs):
+        self.base = base
+        super().__init__(**kwargs)
 
 
 class HelpSlider(Slider):
@@ -149,6 +152,10 @@ class LightColorTheme(LightGrayscaleTheme):
     bg3 = (204 / 255, 227 / 255, 249 / 255, 1)  # text highlighting; light blue
 
 
+def get_effective_size(size):
+    return (size[0] - 2 * PADDING, size[1] - 2 * PADDING)
+
+
 def get_layout_height(layout) -> None:
     if isinstance(layout.spacing, int):
         spacing = layout.spacing
@@ -173,22 +180,41 @@ def hide_widget(wid, do_hide=True):
         wid.opacity = 0
 
 
-def location_to_pos(location: str) -> list:
-    coords = location.split(",")
-    return [float(coords[0]) + PADDING, LOCATION_MAX_Y + PADDING - float(coords[1])]
+def location_to_pos(location: iter, size) -> tuple:
+    """Converts EduNetworkBuilder's location coords to relative layout's position."""
+    if len(location) != 2:
+        raise ValueError(f"GUI: location length != 2: {location}")
+    # Get relative location (invert y-coord).
+    # logging.debug(f"GUI: input location: {location}")
+    effective_rel_pos = (
+        location[0] / LOCATION_MAX_X,
+        1 - (location[1] / LOCATION_MAX_Y),
+    )
+    # logging.debug(f"GUI: effective area rel pos: {effective_rel_pos}")
+    # Calculate proportial pos within non-padded puzzle area.
+    effective_pos = rel_pos_to_pos(effective_rel_pos, get_effective_size(size))
+    # logging.debug(f"GUI: effective area pos: {effective_pos}")
+    # Calculate abs pos by taking padding into account.
+    pos = (PADDING + effective_pos[0], PADDING + effective_pos[1])
+    logging.debug(f"GUI: {location=} -> {pos=}")
+    return pos
 
 
-def location_to_rel_pos(location: str) -> list:
-    return pos_to_rel_pos(location_to_pos(location))
+def location_to_rel_pos(location: iter, size) -> tuple:
+    if len(location) != 2:
+        raise ValueError(f"GUI: location length != 2: {location}")
+    pos = location_to_pos(location, size)
+    rel_pos = pos_to_rel_pos(pos, size)
+    logging.debug(f"GUI: {location=} -> {rel_pos=}")
+    return rel_pos
 
 
-def pos_to_location(pos, size) -> list:
-    """Converts relative layout position to EduNetworkBuilder's location coords."""
+def pos_to_location(pos, size) -> tuple:
+    """Converts relative layout's position to EduNetworkBuilder's location coords."""
+    # logging.debug(f"GUI: input pos: {pos}")
     x = pos[0]
     y = pos[1]
-    x_max = size[0] - 2 * PADDING
-    y_max = size[1] - 2 * PADDING
-    logging.debug(f"GUI: input pos: ({x}, {y})")
+
     # Limit x and y to non-padded values.
     if x < PADDING:
         x = PADDING
@@ -198,15 +224,32 @@ def pos_to_location(pos, size) -> list:
         y = PADDING
     if y > size[1] - PADDING:
         y = size[1] - PADDING
+    # logging.debug(f"GUI: limited pos: ({x}, {y})")
 
-    logging.debug(f"GUI: limited pos: ({x}, {y})")
-    loc = [
-        str((x - PADDING) * LOCATION_MAX_X / x_max),
-        str(LOCATION_MAX_Y - ((y - PADDING) * LOCATION_MAX_Y / y_max)),
-    ]
-    logging.debug(f"GUI: location: ({loc})")
+    # Subtract padding to get pos in effective puzzle area.
+    effective_pos = (x - PADDING, y - PADDING)
+    # logging.debug(f"GUI: effective area pos: {effective_pos}")
+    # Divide by effective area l/w to get relative pos in effective area.
+    effective_rel_pos = pos_to_rel_pos(effective_pos, get_effective_size(size))
+    # logging.debug(f"GUI: effective area rel pos: {effective_rel_pos}")
+    # Multiply by location max values to get location value (invert y-axis).
+    loc = (
+        round(effective_rel_pos[0] * LOCATION_MAX_X),
+        round((1 - effective_rel_pos[1]) * LOCATION_MAX_Y),
+    )
+    logging.debug(f"GUI: {pos=} -> {loc=}")
     return loc
 
 
-def pos_to_rel_pos(pos) -> list:
-    return [pos[0] / PADDED_MAX_X, pos[1] / PADDED_MAX_Y]
+def pos_to_rel_pos(pos, size) -> tuple:
+    """Convert absolute position to relative decimal values from 0 to 1."""
+    rel_pos = (pos[0] / size[0], pos[1] / size[1])
+    # logging.debug(f"GUI: {size=}; {pos=} -> {rel_pos=}")
+    return rel_pos
+
+
+def rel_pos_to_pos(rel_pos, size) -> tuple:
+    """Convert relative decimal value position to absolute position."""
+    pos = (rel_pos[0] * size[0], rel_pos[1] * size[1])
+    # logging.debug(f"GUI: {rel_pos=} -> {pos=}; {size=}")
+    return pos
