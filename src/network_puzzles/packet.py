@@ -51,6 +51,7 @@ def newPacket():
         'VLANID':0, #start on the default vlan
         'health':100, #health.  This will drop as the packet goes too close to things causing interferance
         'sourceIP':"",
+        'TTL':32, #The initial time-to-live.  This is really only needed for traceroute packets
         'sourceMAC':"",
         'destIP':"",
         'destMAC':"",

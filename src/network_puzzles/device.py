@@ -1032,6 +1032,7 @@ def makeDHCPResponse(packRec, thisDevice, nicRec):
 def sendPacketOutDevice(packRec, theDevice):
     """Send the packet out of the device."""
     # print("Sending packet out a device: " + theDevice['hostname'])
+    packRec['TTL'] = packRec.get('TTL',0) - 1 #decrement the ttl with every router
     # determine which interface/nic we are exiting out of - routing
     packRec["packetDistance"] = 0  # always reset this
     routeRec = routeRecFromDestIP(theDevice, packRec["destIP"])
