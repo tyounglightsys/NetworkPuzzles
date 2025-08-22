@@ -123,6 +123,8 @@ class Puzzle:
                     | "SuccessfullyPingsWithoutLoop"
                 ):
                     commands.append(f"ping {test.get('shost')} {test.get('dhost')}")
+                case "SuccessfullyTraceroutes":
+                    commands.append(f"traceroute {test.get('shost')} {test.get('dhost')}")
                 case "DeviceIsFrozen" | "DeviceBlowsUpWithPower" | "DeviceNeedsUPS":
                     if device.powerOff(hostname):
                         commands.append(f"set {test.get('shost')} power on")
