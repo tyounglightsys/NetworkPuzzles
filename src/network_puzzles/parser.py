@@ -95,6 +95,8 @@ class Parser:
                     self.show_info(args)
                 case "set":
                     return self.setvalue(args, fromuser)
+                case "traceroute" | "tracert":
+                    return self.run_traceroute(args)
                 case "undo":
                     return self.try_undo()
                 case "redo":
@@ -222,6 +224,9 @@ class Parser:
         session.print(
             "ping [host1] [host2] - ping from one host to the other.  Example: ping pc0 pc1"
         )
+        session.print(
+            "traceroute [host1] [host2] - traceroute from one host to the other.  Example: traceroute pc0 pc1"
+        )
 
     def run_ping(self, args):
         if len(args) != 2:
@@ -251,6 +256,36 @@ class Parser:
         # FIXME: This only shows that the ping command was successfully
         # initiated, not that it was itself successful.
         return True
+
+    def run_traceroute(self, args):
+        if len(args) != 2:
+            session.print(
+                "invalid traceroute command: usage: traceroute source_hostname destination_hostname"
+            )
+            session.print(" example: traceroute pc0 pc1")
+            return False
+
+        # Look for devices by hostname.
+        shost = session.puzzle.device_from_name(args[0])
+        dhost = session.puzzle.device_from_name(args[1])
+        # Look for devices by IP address.
+        if shost is None:
+            shost = session.puzzle.device_from_ip(args[0])
+        if dhost is None:
+            dhost = session.puzzle.device_from_ip(args[1])
+        if shost is None:
+            session.print(f"No such host: {args[0]}")
+            return False
+        if dhost is None:
+            session.print(f"No such host: {args[1]}")
+            return False
+        # if we get here, we are ready to try to ping.
+        session.print(f"TRACEROUTE: {args[0]} -> {args[1]}")
+        device.Traceroute(shost, dhost)
+        # FIXME: This only shows that the ping command was successfully
+        # initiated, not that it was itself successful.
+        return True
+
 
     def do_dhcp(self, args):
         if len(args) == 0:
