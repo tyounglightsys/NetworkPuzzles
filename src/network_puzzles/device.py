@@ -819,6 +819,9 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     # We would check if it was frozen.  That is a test, not a status.  We do not have that check yet.
 
     # Deal with DHCP.
+    if routesPackets(thisDevice):
+        packRec['TTL'] = packRec.get('TTL',0) - 1 #decrement the ttl with every router
+
     # If it is a request and this is a DHCP server, serve an IP back.
     if packRec["packettype"] == "DHCP-Request":
         if servesDHCP(thisDevice):
@@ -1032,7 +1035,6 @@ def makeDHCPResponse(packRec, thisDevice, nicRec):
 def sendPacketOutDevice(packRec, theDevice):
     """Send the packet out of the device."""
     # print("Sending packet out a device: " + theDevice['hostname'])
-    packRec['TTL'] = packRec.get('TTL',0) - 1 #decrement the ttl with every router
     # determine which interface/nic we are exiting out of - routing
     packRec["packetDistance"] = 0  # always reset this
     routeRec = routeRecFromDestIP(theDevice, packRec["destIP"])
@@ -1070,6 +1072,38 @@ def sendPacketOutDevice(packRec, theDevice):
     packRec["status"] = "failed"
     session.print("No route to host")
 
+def ensureHostRec(item):
+    """Return a device from either a hostname or a device
+    Args: item: string or device
+    returns: a device structure"""
+    newitem = item
+    if "hostname" not in item:
+        # The function is being improperly used. Can we fix it?
+        newitem = session.puzzle.device_from_name(item)
+        if newitem is None:
+            # we were unable to fix it.  Complain bitterly
+            logging.error(
+                "Error: invalid source passed to ensureHostRec.  item must be a device."
+            )
+            return None
+    return Device(newitem)
+
+def ensureHostname(item):
+    """Return a hostname from either a hostname or a device
+    Args: item: string or device
+    returns: a valid hostname"""
+    hostname = item
+    if "hostname" in item:
+        hostname = item['hostname']
+    # The function is being improperly used. Can we fix it?
+    newitem = session.puzzle.device_from_name(item)
+    if newitem is None:
+        # somehow it was an invalid hostname
+        logging.error(
+            "Error: invalid hostname passed to ensureHostname."
+        )
+        return None
+    return hostname
 
 def packetFromTo(src, dest):
     """Generate a packet, starting at the srcdevice and destined for the destination device
@@ -1135,6 +1169,28 @@ def Ping(src, dest):
     """
     nPacket = packetFromTo(src, dest)
     nPacket["packettype"] = "ping"
+    sendPacketOutDevice(nPacket, src)
+    # print (nPacket)
+    packet.addPacketToPacketlist(nPacket)
+
+def Traceroute(src, dest):
+    """Generate a traceroute packet, starting at the srcdevice and destined for the destination device
+    Args:
+        src:srcDevice (also works with a hostname)
+        dest:dstDevice (also works with a hostname)
+    """
+    srchost = ensureHostRec(src)
+    desthost = ensureHostRec(dest)
+    nPacket = packetFromTo(src, dest)
+    nPacket["packettype"] = "traceroute-request"
+    nPacket["TTL"] = 1 #This is the secret to the traceroute. 
+    nPacket["payload"] = {
+        'origTTL':1, #We will increase this as we go out.
+        'origSHostname':srchost.hostname,
+        'origSourceIP':nPacket['sourceIP'],
+        'origDHostname':desthost.hostname,
+        'origDestIP':nPacket['destIP'],
+    }
     sendPacketOutDevice(nPacket, src)
     # print (nPacket)
     packet.addPacketToPacketlist(nPacket)
