@@ -1,0 +1,2 @@
+load Level0_Traceroute
+traceroute server0 server1
