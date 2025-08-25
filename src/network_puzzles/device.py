@@ -365,7 +365,7 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
         theDeviceRec["route"] = [theDeviceRec["route"]]  # turn it into a list
     for oneroute in theDeviceRec["route"]:
         tstring = oneroute["ip"] + "/" + oneroute["mask"]
-        #logging.debug(f" the string is {tstring}")
+        # logging.debug(f" the string is {tstring}")
         staticroute = ipaddress.ip_network(
             oneroute["ip"] + "/" + oneroute["mask"], strict=False
         )
@@ -458,8 +458,8 @@ def destIP(srcDevice, dstDevice):
         return None
     srcIPs = DeviceIPs(srcDevice)
     dstIPs = DeviceIPs(dstDevice)
-    #logging.debug(f"we have IPs: src {len(srcIPs)} dst {len(dstIPs)}")
-    #logging.debug(f"we have IPs: src {srcIPs} dst {dstIPs}")
+    # logging.debug(f"we have IPs: src {len(srcIPs)} dst {len(dstIPs)}")
+    # logging.debug(f"we have IPs: src {srcIPs} dst {dstIPs}")
 
     if srcIPs is None or dstIPs is None:
         # we will not be able to find a match.
@@ -506,13 +506,17 @@ def sourceIP(src, dstIP):
         if not isinstance(srcDevice["route"], list):
             srcDevice["route"] = [srcDevice["route"]]
         for oneroute in srcDevice["route"]:
-            staticroute = ipaddress.ip_network(oneroute["ip"] + "/" + oneroute["mask"], False)
+            staticroute = ipaddress.ip_network(
+                oneroute["ip"] + "/" + oneroute["mask"], False
+            )
             logging.info(f"We are looking for a static route to: {staticroute}")
             if dstIP in staticroute:
                 # We found the route.  But we need to find the IP address that is local to the route
-                routeip = ipaddress.ip_network(oneroute["gateway"] + "/" + oneroute["mask"], False)
+                routeip = ipaddress.ip_network(
+                    oneroute["gateway"] + "/" + oneroute["mask"], False
+                )
                 logging.info("A static route matched.  Finding the IP for that route")
-                #logging.info(f"looking for {routeip} through routes {allIPs}")
+                # logging.info(f"looking for {routeip} through routes {allIPs}")
                 for oneip in allIPs:
                     # oneip=ipaddress.IPv4Interface
                     if oneip in routeip:
@@ -539,7 +543,9 @@ def sourceIP(src, dstIP):
             return oneip
 
     # if we do not have a GW, we need to report, "no route to host"
-    logging.info(f"sourceIP Giving 'No Route to host' from {srcDevice['hostname']} when looking for {dstIP}")
+    logging.info(
+        f"sourceIP Giving 'No Route to host' from {srcDevice['hostname']} when looking for {dstIP}"
+    )
     session.print("No route to host")
     return None
 
@@ -859,23 +865,26 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     # print("Checking destination.  Looking for " + packet.justIP(packRec['destIP']))
     # print("   Checking against" + str(allIPStrings(thisDevice)))
     if routesPackets(thisDevice) or deviceHasIP(thisDevice, packRec["destIP"]):
-        packRec['TTL'] = packRec.get('TTL',0) - 1 #decrement the ttl with every router
-        if packRec['TTL'] <= 0:
+        packRec["TTL"] = (
+            packRec.get("TTL", 0) - 1
+        )  # decrement the ttl with every router
+        if packRec["TTL"] <= 0:
             if packRec["packettype"] == "traceroute-request":
-                #We need to bounce a response back
+                # We need to bounce a response back
                 dest = deviceFromIP(packet.justIP(str(packRec["sourceIP"])))
-                logging.info(f"A traceroute timed out at {thisDevice['hostname']}.  Making a return packet")
+                logging.info(
+                    f"A traceroute timed out at {thisDevice['hostname']}.  Making a return packet"
+                )
                 # we need to generate a traceroute response
                 nPacket = packetFromTo(thisDevice, dest)
                 nPacket["packettype"] = "traceroute-response"
-                nPacket['payload'] = packRec['payload']
+                nPacket["payload"] = packRec["payload"]
                 sendPacketOutDevice(nPacket, thisDevice)
-                nPacket['payload']['tempDest'] = nPacket['sourceIP']
+                nPacket["payload"]["tempDest"] = nPacket["sourceIP"]
                 # print (nPacket)
                 packet.addPacketToPacketlist(nPacket)
                 packRec["status"] = "done"
                 return True
-
 
     if deviceHasIP(thisDevice, packRec["destIP"]):
         packRec["status"] = "done"
@@ -884,10 +893,10 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
 
         # ping, send ping packet back
         if packRec["packettype"] == "ping":
-            #logging.debug(f"Returning packet: {packRec}")
-            #logging.debug(f"Returning packet: {packRec['sourceIP']} - {packet.justIP(str(packRec["sourceIP"]))}")
+            # logging.debug(f"Returning packet: {packRec}")
+            # logging.debug(f"Returning packet: {packRec['sourceIP']} - {packet.justIP(str(packRec["sourceIP"]))}")
             dest = deviceFromIP(packet.justIP(str(packRec["sourceIP"])))
-            #logging.info(f"A ping came.  Making a return packet going to {dest}")
+            # logging.info(f"A ping came.  Making a return packet going to {dest}")
             # print (packet.justIP(str(packRec['sourceIP'])))
             # print(dest)
             # we need to generate a ping response
@@ -934,21 +943,29 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
 
                 # print(f" we are done, and packetlist is: {len(session.packetlist)} and storm: {session.packetstorm}")
             return True
-        
+
         if packRec["packettype"] == "traceroute-response":
-            #We need to determine what machine responded.  If it was the true dest, we are done.
-            #If not, we need to send out a packet with a longer TTL
+            # We need to determine what machine responded.  If it was the true dest, we are done.
+            # If not, we need to send out a packet with a longer TTL
             packRec["status"] = "done"
-            if packRec['payload']['tempDest'] is None:
+            if packRec["payload"]["tempDest"] is None:
                 return False
-            print(f" We are looking at a packet from {packRec['payload']['tempDest']} and the final destination should be {packRec['payload']['origDestIP']}")
-            if packRec['payload']['tempDest'] != packRec['payload']['origDestIP']:
-                #It is not the right dest.  Try again
-                sdev = session.puzzle.device_from_name(packRec['payload']['origSHostname'])
-                ddev = session.puzzle.device_from_name(packRec['payload']['origDHostname'])
-                print(f"Making new traceroute from {sdev['hostname']} to {ddev['hostname']} with TTL {packRec['payload']['origTTL'] + 1}")
-                if packRec['payload']['origTTL'] + 1 < 10:
-                    Traceroute(sdev,ddev,packRec['payload']['origTTL'] + 1)
+            print(
+                f" We are looking at a packet from {packRec['payload']['tempDest']} and the final destination should be {packRec['payload']['origDestIP']}"
+            )
+            if packRec["payload"]["tempDest"] != packRec["payload"]["origDestIP"]:
+                # It is not the right dest.  Try again
+                sdev = session.puzzle.device_from_name(
+                    packRec["payload"]["origSHostname"]
+                )
+                ddev = session.puzzle.device_from_name(
+                    packRec["payload"]["origDHostname"]
+                )
+                print(
+                    f"Making new traceroute from {sdev['hostname']} to {ddev['hostname']} with TTL {packRec['payload']['origTTL'] + 1}"
+                )
+                if packRec["payload"]["origTTL"] + 1 < 10:
+                    Traceroute(sdev, ddev, packRec["payload"]["origTTL"] + 1)
             else:
                 pingsrcip = packet.justIP(packRec.get("destIP"))
                 srcip = pingdestip = packet.justIP(packRec.get("sourceIP"))
@@ -1130,8 +1147,11 @@ def sendPacketOutDevice(packRec, theDevice):
     # If we get here, it did not work.  No route to host.
     # right now, we blow up.  We need to deal with this with a bit more grace.  Passing the error back to the user
     packRec["status"] = "failed"
-    logging.info(f"sendpacketoutdevice Giving 'No Route to host' from {theDevice['hostname']} when looking for {packRec["destIP"]}")
+    logging.info(
+        f"sendpacketoutdevice Giving 'No Route to host' from {theDevice['hostname']} when looking for {packRec['destIP']}"
+    )
     session.print("No route to host")
+
 
 def ensureHostRec(item):
     """Return a device from either a hostname or a device
@@ -1149,22 +1169,22 @@ def ensureHostRec(item):
             return None
     return Device(newitem)
 
+
 def ensureHostname(item):
     """Return a hostname from either a hostname or a device
     Args: item: string or device
     returns: a valid hostname"""
     hostname = item
     if "hostname" in item:
-        hostname = item['hostname']
+        hostname = item["hostname"]
     # The function is being improperly used. Can we fix it?
     newitem = session.puzzle.device_from_name(item)
     if newitem is None:
         # somehow it was an invalid hostname
-        logging.error(
-            "Error: invalid hostname passed to ensureHostname."
-        )
+        logging.error("Error: invalid hostname passed to ensureHostname.")
         return None
     return hostname
+
 
 def packetFromTo(src, dest):
     """Generate a packet, starting at the srcdevice and destined for the destination device
@@ -1173,7 +1193,7 @@ def packetFromTo(src, dest):
         dest:dstDevice (also works with a hostname)
     """
     # src should be a device, not just a name.  Sanity check.
-    #logging.debug(f"starting a packet from {src} to {dest}")
+    # logging.debug(f"starting a packet from {src} to {dest}")
     if "hostname" not in src:
         # The function is being improperly used. Can we fix it?
         newsrc = session.puzzle.device_from_name(src)
@@ -1236,6 +1256,7 @@ def Ping(src, dest):
     # print (nPacket)
     packet.addPacketToPacketlist(nPacket)
 
+
 def Traceroute(src, dest, newTTL=1):
     """Generate a traceroute packet, starting at the srcdevice and destined for the destination device
     Args:
@@ -1246,15 +1267,17 @@ def Traceroute(src, dest, newTTL=1):
     desthost = ensureHostRec(dest)
     nPacket = packetFromTo(src, dest)
     nPacket["packettype"] = "traceroute-request"
-    nPacket["TTL"] = newTTL #This is the secret to the traceroute. 
+    nPacket["TTL"] = newTTL  # This is the secret to the traceroute.
     nPacket["payload"] = {
-        'origTTL':newTTL, #We will increase this as we go out.
-        'origSHostname':srchost.hostname,
-        'origSourceIP':nPacket['sourceIP'],
-        'origDHostname':desthost.hostname,
-        'origDestIP':nPacket['destIP'],
+        "origTTL": newTTL,  # We will increase this as we go out.
+        "origSHostname": srchost.hostname,
+        "origSourceIP": nPacket["sourceIP"],
+        "origDHostname": desthost.hostname,
+        "origDestIP": nPacket["destIP"],
     }
-    logging.info(f"Starting traceroute packet from {srchost.hostname} to {desthost.hostname}")
+    logging.info(
+        f"Starting traceroute packet from {srchost.hostname} to {desthost.hostname}"
+    )
     sendPacketOutDevice(nPacket, src)
     # print (nPacket)
     packet.addPacketToPacketlist(nPacket)
