@@ -454,7 +454,7 @@ class Puzzle:
                 "hostname": thedevice.hostname,
                 "nicname": newnicname,
             },
-            "uniqueidentifier": newnicname,
+            "uniqueidentifier": newid,
             "usesdhcp": "False",
             "encryptionkey": None,
             "ssid": None,
