@@ -269,6 +269,22 @@ class Puzzle:
                 # if the source (hostname) and dest (, ping_desthostname, nic, etc) also match.
                 return True
         return False
+    
+    def item_blows_up(self, shost):
+        print(f"Testing item blows up for {shost}")
+        for test in self.all_tests(shost):
+            print(f"testing {test}")
+            thetest = test.get("thetest")
+            if thetest == "DeviceBlowsUpWithPower":
+                return True
+        return False
+
+    def item_needs_ups(self, shost):
+        for test in self.all_tests(shost):
+            thetest = test.get("thetest")
+            if thetest == "DeviceNeedsUPS":
+                return True
+        return False
 
     def link_from_devices(self, srcDevice, dstDevice):
         """return a link given the two devices at either end
