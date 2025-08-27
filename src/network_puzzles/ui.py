@@ -240,7 +240,7 @@ class GUI(UI):
     def process_packets(self, tick_pct):
         # If we created packets, process them until done.
         if packet.packetsNeedProcessing():
-            packet.processPackets(4, tick_pct=tick_pct)
+            packet.processPackets(tick_pct=tick_pct)
 
     def quit(self):
         self.app.stop()
