@@ -321,15 +321,7 @@ def servesDHCP(deviceRec):
 
 def powerOff(deviceRec):
     """return true if the device is powered off"""
-    if "poweroff" not in deviceRec:
-        return False
-    try:
-        match deviceRec["poweroff"]:
-            case "True":
-                return True
-    except ValueError:
-        return False
-    return False
+    return Device(deviceRec).powered_on
 
 
 def isWirelessForwarder(deviceRec):
