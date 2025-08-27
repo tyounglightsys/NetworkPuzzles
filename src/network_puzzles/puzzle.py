@@ -463,7 +463,7 @@ class Puzzle:
                     "nicname": newnicname,
                     "myip": {
                         "ip": "0.0.0.0",
-                        "netmask": "0.0.0.0",
+                        "mask": "0.0.0.0",
                         "gateway": "0.0.0.0",
                     },
                 }
