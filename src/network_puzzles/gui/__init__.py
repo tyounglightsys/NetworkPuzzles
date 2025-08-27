@@ -157,8 +157,20 @@ class NetworkPuzzlesApp(App):
             if link is None:
                 continue
             self.add_link(Link(link))
+        # Additional debug logging.
+        layout = self.root.ids.layout
+        logging.debug(f"GUI: {layout.__class__.__name__} elements:")
+        for w in layout.children:
+            if hasattr(w, "hostname"):
+                logging.debug(f"GUI: - {w.__class__.__name__}/{w.hostname}: {w.pos=}")
+            else:
+                logging.debug(f"GUI: - {w.__class__.__name__}: {w.pos=}")
 
     def draw_puzzle(self, *args):
+        """Clear puzzle layout area; draw all elements related to current puzzle."""
+        logging.debug(
+            f"GUI: {self.root.ids.layout.__class__.__name__}: pos={self.root.ids.layout.pos}; size={self.root.ids.layout.size}"
+        )
         if not self.ui.puzzle:
             logging.warning("GUI: No puzzle is loaded.")
             return
@@ -182,6 +194,7 @@ class NetworkPuzzlesApp(App):
 
         # Add devices.
         self.draw_devices()
+
         # Some setup needs to be done one tick after devices, because their
         # positions depend on the devices' positions.
         Clock.schedule_once(self.update_help)
