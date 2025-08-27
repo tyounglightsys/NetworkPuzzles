@@ -93,6 +93,25 @@ class Device:
         self.json["poweroff"] = value
 
     @property
+    def blown_up(self):
+        if self.json.get("blownup", "").lower() in ("true", "yes"):
+            value = False
+        else:
+            value = True
+        # logging.debug(f"{self.hostname}.powered_on: {value}")
+        return value
+
+    @blown_up.setter
+    def blown_up(self, value):
+        #we can only set it to true.  We cannot unset this value.
+        #to make it 'false', we need to replace the device
+        if (isinstance(value,bool) and value) or (isinstance(value,str) and value.lower() == 'true'): 
+            if isinstance(value, bool):
+                value = str(value)
+            self.json["blownup"] = value
+            self.powered_on = True #when it blows up, the power gets turned off
+
+    @property
     def uniqueidentifier(self):
         return self.json.get("uniqueidentifier")
 
