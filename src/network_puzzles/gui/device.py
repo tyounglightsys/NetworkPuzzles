@@ -37,19 +37,17 @@ class Device(DragBehavior, ThemedBoxLayout):
         self.lock_icon = None
         self.loc_init = self.base.location
         self._location_locked = False
-        # Add button and label during init for correct height calculation and
-        # correct Device placement according to puzzle location value.
-        self.button = DeviceButton(pos_hint={"center_x": 0.5})
-        self.button._on_press = self.on_press
-        self.label = DeviceLabel(text=self.hostname, pos_hint={"center_x": 0.5})
-        self.label.size = self.label.texture_size
-        self.add_widget(self.button)
-        self.add_widget(self.label)
         # Set final attributes.
         self._set_image()
         self.center = location_to_pos(self.base.location, self.app.root.ids.layout.size)
         # Updates that rely on Device's pos already being set.
         Clock.schedule_once(self.set_power_status)
+
+    @property
+    def button(self):
+        for c in self.children:
+            if c.__class__.__name__ == "DeviceButton":
+                return c
 
     @property
     def hostname(self):
@@ -102,13 +100,17 @@ class Device(DragBehavior, ThemedBoxLayout):
             # logging.debug(f"GUI: Add highlight for {self.hostname}")
             if not self.highlighting:
                 self.highlighting = HelpHighlight(base=self)
-            # Set draw index one higher than (i.e. behind) Device.
-            idx = self.parent.children.index(self) + 1
-            self.app.root.ids.layout.add_widget(self.highlighting, idx)
+            if self.highlighting not in self.app.root.ids.layout.children:
+                # Set draw index one higher than (i.e. behind) Device.
+                idx = self.parent.children.index(self) + 1
+                self.app.root.ids.layout.add_widget(self.highlighting, idx)
         else:
             # Remove highlight.
             # logging.debug(f"GUI: Remove highlight for {self.hostname}")
-            if self.highlighting:
+            if (
+                self.highlighting
+                and self.highlighting in self.app.root.ids.layout.children
+            ):
                 self.app.root.ids.layout.remove_widget(self.highlighting)
             self.highlighting = None
 
