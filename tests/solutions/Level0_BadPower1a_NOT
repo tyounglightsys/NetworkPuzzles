@@ -1,0 +1,5 @@
+load Level0_BadPower1
+set net_switch0 power on
+replace net_switch0
+set net_switch0 power on
+ping pc0 net_switch0

@@ -1,0 +1,4 @@
+load Level0_BadPower1
+set net_switch0 management_interface0 192.168.1.20/24
+set net_switch0 power on
+ping pc0 net_switch0

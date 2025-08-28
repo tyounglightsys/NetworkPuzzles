@@ -1004,7 +1004,19 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
 
     # If the packet is not done and we forward, forward. Basically, a switch/hub
     if packRec["status"] != "done" and forwardsPackets(thisDevice):
-        # We loop through all nics. (minus the one we came in from)
+        send_out_hubswitch(thisDevice, packRec, nicRec)
+        return
+    # if the packet is not done and we route, route
+    if packRec["status"] != "done" and routesPackets(thisDevice):
+        # print("routing")
+        sendPacketOutDevice(packRec, thisDevice)
+        return
+    # If we get here, we might have forwarded.  If so, we mark the old packet as done.
+    packRec["status"] = "done"
+
+
+def send_out_hubswitch(thisDevice, packRec, nicRec = None):
+    # We loop through all nics. (minus the one we came in from)
         onlyport = ""
         if thisDevice.get("mytype") == "net_switch":
             if packRec.get("destMAC") in thisDevice.get("port_arps", {}):
@@ -1018,7 +1030,11 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             tlink = linkConnectedToNic(onenic)
             if (
                 tlink is not None
-                and nicRec["uniqueidentifier"] != onenic["uniqueidentifier"]
+                and 
+                ( nicRec is None
+                 or
+                 nicRec["uniqueidentifier"] != onenic["uniqueidentifier"]
+                )
             ):
                 # We have a network wire connected to the NIC.  Send the packet out
                 # if it is a switch-port, then we check first if we know where the packet goes - undone
@@ -1039,15 +1055,6 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
         packRec["status"] = (
             "done"  # The packet that came in gets killed since it was replicated everywhere else
         )
-        return
-    # if the packet is not done and we route, route
-    if packRec["status"] != "done" and routesPackets(thisDevice):
-        # print("routing")
-        sendPacketOutDevice(packRec, thisDevice)
-        return
-    # If we get here, we might have forwarded.  If so, we mark the old packet as done.
-    packRec["status"] = "done"
-
 
 def makeDHCPResponse(packRec, thisDevice, nicRec):
     if "dhcplist" not in thisDevice:
@@ -1148,9 +1155,14 @@ def sendPacketOutDevice(packRec, theDevice):
                 # We are on a local link.  Set the destmac to be the mac of our destination computer
                 packRec["destMAC"] = globalArpLookup(packRec.get("destIP"))
 
-        # set the packet location being the link associated with the nic
-        #   Fail if there is no link on the port
-        destlink = linkConnectedToNic(routeRec["nic"])
+        if routeRec["nic"]["nicname"] == "management_interface0":
+            #If we are exiting a switch / hub; we go out the ports
+            send_out_hubswitch(theDevice, packRec)
+            return
+        else:
+            # set the packet location being the link associated with the nic
+            #   Fail if there is no link on the port
+            destlink = linkConnectedToNic(routeRec["nic"])
 
     if destlink is not None:
         packRec["packetlocation"] = destlink["hostname"]
