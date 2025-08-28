@@ -133,6 +133,8 @@ class Puzzle:
         tdevice = self.device_from_name(hostname)
         if tdevice is not None and device.canUseDHCP(hostname):
             commands.append(f"dhcp {hostname}")
+        if device.Device(tdevice).blown_up:
+            commands.append(f"replace {hostname}")
         return commands
 
     def _get_items(self, item_type: str):
@@ -275,7 +277,7 @@ class Puzzle:
         for test in self.all_tests(shost):
             print(f"testing {test}")
             thetest = test.get("thetest")
-            if thetest == "DeviceBlowsUpWithPower":
+            if thetest == "DeviceBlowsUpWithPower" and not test.get("completed", False):
                 return True
         return False
 

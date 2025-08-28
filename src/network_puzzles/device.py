@@ -94,11 +94,14 @@ class Device:
 
     @property
     def blown_up(self):
-        if self.json.get("blownup", "").lower() in ("true", "yes"):
-            value = False
-        else:
-            value = True
-        # logging.debug(f"{self.hostname}.powered_on: {value}")
+        value = False
+        if 'blownup' in self.json:
+            if self.json.get("blownup", "").lower() in ("true", "yes"):
+                value = True
+            else:
+                value = False
+            # logging.debug(f"{self.hostname}.powered_on: {value}")
+        session.print(f"Checking blown up state of {self.hostname} and found it to be {value}")
         return value
 
     @blown_up.setter
@@ -321,7 +324,7 @@ def servesDHCP(deviceRec):
 
 def powerOff(deviceRec):
     """return true if the device is powered off"""
-    return Device(deviceRec).powered_on
+    return not Device(deviceRec).powered_on
 
 
 def isWirelessForwarder(deviceRec):
@@ -338,8 +341,8 @@ def linkConnectedToNic(nicRec):
     """Find a link connected to the specified network card"""
     if nicRec is None:
         return None
-    # print("looking for link connecting to nicid: "+ nicRec['myid']['nicid'])
-    # print("  Looking at nic: " + nicRec['nicname'])
+    logging.debug("looking for link connecting to nicid: "+ nicRec['myid']['nicid'])
+    logging.debug("  Looking at nic: " + nicRec['nicname'])
     for one in session.puzzle.links:
         if one:
             # print ("   link - " + one['hostname'])
@@ -1129,6 +1132,7 @@ def sendPacketOutDevice(packRec, theDevice):
     destlink = None
     # set the source MAC address on the packet as from the nic
     if routeRec is not None:
+        logging.debug("Found a route rec.")
         routeRec["nic"] = Nic(routeRec["nic"]).ensure_mac()
         packRec["sourceMAC"] = routeRec["nic"]["Mac"]
         # set the destination MAC to be the GW MAC if the destination is not local

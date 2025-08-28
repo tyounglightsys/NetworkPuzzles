@@ -2,6 +2,7 @@
 # Most interaction with the puzzle, making changes or doing actions, will go through this
 import logging
 import sys
+import copy
 from . import device
 from . import puzzle
 from . import session
@@ -195,7 +196,42 @@ class Parser:
             item = session.puzzle.device_from_name(args[0])
             if item is not None:
                 # We have a device. We can replace one of these.
-                raise NotImplementedError
+                # Make deep clone of the device for our undo
+                tcopy = copy.deepcopy(item)
+
+                # go through and clear out all the IP addresses
+                for onenic in device.Device(item).all_nics():
+                    for oneint in onenic['interface']:
+                        if oneint['nicname'] != "lo0":
+                            oneint['myip']['ip'] = "0.0.0.0" #reset them all to nothing - the default
+                            oneint['myip']['mask'] = "0.0.0.0" #reset them all to nothing - the default
+
+                # clear out the gateway
+                item['gateway']['ip'] = "0.0.0.0"
+                item['gateway']['mask'] = "0.0.0.0" #this should never be set, but do it just in case
+
+                # remove blownup entry if one exists
+                if 'blownup' in item:
+                    del item['blownup']
+
+                # mark blowsupwithpower as complete
+                session.puzzle.mark_test_as_completed(
+                    item.get("hostname"),
+                    item.get("hostname"),
+                    "DeviceBlowsUpWithPower",
+                    f"Successfully replaced {item.get('hostname')}.",
+                )
+
+                # Store undo/redo
+                session.add_undo_entry(
+                    f"delete {item.get('hostname')}",
+                    f"restore {item.get('hostname')}",
+                    tcopy,
+                )
+
+                session.print(f"Successfully replaced {item['hostname']}")
+                session.print(f"{item['hostname']} left in an off state")
+                #raise NotImplementedError
             else:  # it is something that does not exist
                 raise ValueError(f"Not a valid item: {args[0]}")
 
@@ -517,8 +553,21 @@ class Parser:
                 None, dev_obj.hostname, "DeviceIsFrozen", ""
             )
         else:
-            session.add_undo_entry("set power on", f"set power {pastvalue}")
-            dev_obj.powered_on = False
+            #we are trying to turn on the device.
+            if session.puzzle.item_blows_up(dev_obj.hostname) or session.puzzle.item_needs_ups(dev_obj.hostname):
+                dev_obj.powered_on = True #make sure it is powered off
+                dev_obj.blown_up = True
+                session.print(f"{dev_obj.hostname} exploded")
+                logging.info(f"{dev_obj.hostname} exploded")
+                return
+            else:
+                session.add_undo_entry(
+                    f"set {dev_obj.hostname} power on", 
+                    f"set {dev_obj.hostname} power {pastvalue}"
+                )
+                dev_obj.powered_on = False
+
+
         session.print(
             f"Defining {dev_obj.hostname} 'poweroff' to {dev_obj.json.get('poweroff')}"
         )
