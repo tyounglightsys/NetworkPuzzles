@@ -385,8 +385,9 @@ class EditDevicePopup(AppPopup):
 class NICsRecView(AppRecView):
     def update_data(self, nics, management=True):
         self.data = [{"text": n.name} for n in nics if not n.name.startswith("lo")]
-        if not management:
-            self.data.remove({"text": "management_interface0"})
+        item = {"text": "management_interface0"}
+        if not management and item in self.data:
+            self.data.remove(item)
 
     def on_selection(self, index):
         self.root.on_nic_selection(self.data[index].get("text"))
@@ -440,7 +441,7 @@ class ChooseNicPopup(AppPopup):
         free_nics = [
             n for n in self.device.nics if device.linkConnectedToNic(n.json) is None
         ]
-        self.ids.nics_list.update_data(free_nics)
+        self.ids.nics_list.update_data(free_nics, management=False)
 
     def on_nic_selection(self, selected_nic):
         self.selected_nic = selected_nic
