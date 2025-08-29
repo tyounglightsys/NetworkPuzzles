@@ -34,7 +34,7 @@ from .device import ChooseNicPopup
 from .device import Device
 from .layouts import AppMenu
 from .link import Link
-from .popups import AppPopup
+from .popups import PuzzleChooserPopup
 from .popups import PuzzleCompletePopup
 
 
@@ -521,7 +521,8 @@ class NetworkPuzzlesApp(App):
             if self.chosen_pos:
                 # Convert pos to puzzle coords.
                 loc = pos_to_location(self.chosen_pos, self.root.ids.layout.size)
-                self.new_device_data.extend(loc)
+                loc_str = ",".join([str(e) for e in loc])
+                self.new_device_data.append(loc_str)
                 del self.chosen_pos
             Clock.schedule_once(self._new_device)
         else:
@@ -639,16 +640,6 @@ class NetworkPuzzlesApp(App):
         # raise NotImplementedError
         for d in self.devices:
             print(f"{d.nics=}")
-
-
-class PuzzleChooserPopup(AppPopup):
-    def on_cancel(self):
-        self.dismiss()
-
-    def on_load(self):
-        self.app.selected_puzzle = self.ids.puzzles_view.selected_item.get("text")
-        self.app.setup_puzzle()
-        self.dismiss()
 
 
 class PuzzlesRecView(AppRecView):

@@ -40,6 +40,16 @@ class ExceptionPopup(AppPopup):
         self.app.stop()
 
 
+class PuzzleChooserPopup(AppPopup):
+    def on_cancel(self):
+        self.dismiss()
+
+    def on_load(self):
+        self.app.selected_puzzle = self.ids.puzzles_view.selected_item.get("text")
+        self.app.setup_puzzle()
+        self.dismiss()
+
+
 class PuzzleCompletePopup(AppPopup):
     def on_cancel(self):
         self.dismiss()
