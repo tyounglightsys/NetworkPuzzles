@@ -2,6 +2,27 @@
     title_size: app.BUTTON_FONT_SIZE
     size_hint: (0.5, 0.75)
 
+
+<CommandPopup>:
+    title: _("Input command:")
+    size_hint_y: 0.25
+    ThemedBoxLayout:
+        orientation: "vertical"
+        ValueInput:
+            id: text_input
+            on_text_validate: root.on_okay()
+        ThemedBoxLayout:  # bottom buttons
+            padding: dp(5)
+            spacing: dp(5)
+            size_hint_max_y: app.BUTTON_MAX_H + dp(8)
+            PopupButton:
+                text: _("Cancel")
+                on_press: root.dismiss()
+            PopupButton:
+                text: _("Okay")
+                on_press: root.on_okay()
+
+
 <ExceptionPopup>:
     title: _("Error")
     ThemedBoxLayout:
@@ -28,3 +49,22 @@
             size_hint_y: 0.2
             text: _("Quit")
             on_release: app.stop()
+
+
+<PuzzleCompletePopup>:
+    title: _("Puzzle complete!")
+    size_hint_y: 0.25
+    ThemedBoxLayout:
+        orientation: "vertical"
+        ThemedLabel:
+            text: _("Congratulations, you have completed the puzzle!")
+        ThemedBoxLayout:  # bottom buttons
+            padding: dp(5)
+            spacing: dp(5)
+            size_hint_max_y: app.BUTTON_MAX_H + dp(8)
+            PopupButton:
+                text: _("Cancel")
+                on_press: root.on_cancel()
+            PopupButton:
+                text: _("Okay")
+                on_press: root.on_okay()

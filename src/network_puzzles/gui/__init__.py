@@ -4,6 +4,13 @@ import logging
 root_logger = logging.getLogger()
 for handler in root_logger.handlers:
     root_logger.removeHandler(handler)
+
+# Disable right-click red dot.
+from kivy.config import Config
+
+Config.set("input", "mouse", "mouse,disable_multitouch")
+
+# Continue with remaining imports.
 from kivy.app import App
 from kivy.base import ExceptionManager
 from kivy.clock import Clock
@@ -28,6 +35,7 @@ from .device import Device
 from .layouts import AppMenu
 from .link import Link
 from .popups import AppPopup
+from .popups import PuzzleCompletePopup
 
 
 class NetworkPuzzlesApp(App):
@@ -88,8 +96,7 @@ class NetworkPuzzlesApp(App):
     def check_puzzle(self, *args):
         """Checked at regular interval during kivy app loop."""
         if self.ui.is_puzzle_done():
-            # TODO: Handle puzzle complete (popup?).
-            self.ui.console_write("<-- TODO: Handle puzzle complete -->")
+            PuzzleCompletePopup().open()
 
     def add_device(self, devicew=None, dtype=None):
         # Ensure new item menus are closed.

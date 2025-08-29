@@ -24,6 +24,12 @@ class AppPopup(Popup):
         self._update_sep_color()
 
 
+class CommandPopup(AppPopup):
+    def on_okay(self):
+        self.app.ui.parse(self.ids.text_input.text)
+        self.dismiss()
+
+
 class ExceptionPopup(AppPopup):
     def __init__(self, message, **kwargs):
         super().__init__(**kwargs)
@@ -32,3 +38,12 @@ class ExceptionPopup(AppPopup):
     def on_dismiss(self):
         # Don't allow the app to continue running.
         self.app.stop()
+
+
+class PuzzleCompletePopup(AppPopup):
+    def on_cancel(self):
+        self.dismiss()
+
+    def on_okay(self):
+        # TODO: Offer to proceed to the next puzzle.
+        self.dismiss()

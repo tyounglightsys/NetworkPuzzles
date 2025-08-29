@@ -4,6 +4,7 @@ from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.textinput import TextInput
 
 from .. import session
+from .popups import CommandPopup
 
 
 class TerminalLabel(TextInput):
@@ -15,6 +16,12 @@ class TerminalLabel(TextInput):
                 max_row = i
                 max_length = len(line)
         return max_row
+
+    def on_touch_down(self, touch):
+        # Open popup on right-click within the Terminal area.
+        if touch.button == "right" and self.collide_point(*touch.pos):
+            CommandPopup().open()
+            return True
 
 
 class ThemedLabel(Label):
