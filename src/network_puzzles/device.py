@@ -238,8 +238,13 @@ def globalArpLookup(ip):
     # print("we have maclist")
     # print(session.maclist)
     if isinstance(ip, str):
+        if ip == "0.0.0.0":
+            return None # Never find a mac for this.  Possible many devices would match and it it not a valid IP
         ip = ipaddress.IPv4Address(ip)
         # print ("globalARP: Converting ip: " + str(ip))
+    else:
+        if packet.isEmpty(str(ip)):
+            return None # Never find a mac for this.  Possible many devices would match and it it not a valid IP
     for oneMac in session.maclist:
         # print ("globalARP: comparing: " + packet.justIP(oneMac['ip']) + " to " + packet.justIP(ip))
         if packet.justIP(oneMac["ip"]) == packet.justIP(ip):
@@ -266,6 +271,8 @@ def arpLookup(srcDevice, ip):
         logging.error("Error: Unable to find source for arpLookup: " + oldsrc)
     # If we are here, src should be a valid device
     if isinstance(ip, str):
+        if ip == "0.0.0.0":
+            return None #Never find a destination for this one
         ip = ipaddress.IPv4Address(ip)
         logging.info("ARP: Converting ip: " + packet.justIP(ip))
     if "maclist" not in srcDevice:
@@ -372,6 +379,9 @@ def getDeviceNicFromLinkNicRec(tLinkNicRec):
 def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     """return a routing record given a destination IP string.  The device record has the route, nic, interface, and gateway"""
     # go through the device routes.
+    if packet.isEmpty(destinationIPString):
+        return None
+    
     routeRec = {}
     if "route" not in theDeviceRec:
         theDeviceRec["route"] = []
@@ -1251,11 +1261,15 @@ def packetFromTo(src, dest):
     if "hostname" in dest:
         # print ("getting destination IP from a device")
         # If we passed in a device or hostname, convert it to an IP
-        logging.debug(f"Finding the IP for dest {dest['hostname']}")
+        logging.debug(f"Finding the IP for dest {dest['hostname']} ")
         dest = destIP(src, dest)
-    if dest is None:
+        if dest is not None:
+            logging.debug(f"Found IP {dest}")
+
+    if dest is None or packet.isEmpty(dest):
         # This means we were unable to figure out the dest.  No such host, or something
-        logging.error("Error: Not a valid target")
+        logging.info(f"Error: Not a valid target: {dest}")
+        session.print(f"Not a valid target {dest}")
         return None
     if isinstance(dest, ipaddress.IPv4Address):
         # This is what we are hoping for.
@@ -1278,10 +1292,11 @@ def Ping(src, dest):
         dest:dstDevice (also works with a hostname)
     """
     nPacket = packetFromTo(src, dest)
-    nPacket["packettype"] = "ping"
-    sendPacketOutDevice(nPacket, src)
-    # print (nPacket)
-    packet.addPacketToPacketlist(nPacket)
+    if nPacket is not None:
+        nPacket["packettype"] = "ping"
+        sendPacketOutDevice(nPacket, src)
+        # print (nPacket)
+        packet.addPacketToPacketlist(nPacket)
 
 
 def Traceroute(src, dest, newTTL=1):
