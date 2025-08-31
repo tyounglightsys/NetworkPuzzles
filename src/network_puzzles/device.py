@@ -1342,10 +1342,10 @@ def doDHCP(srcHostname):
             # This NIC can do DHCP.  Send out a request
             nPacket = packet.newPacket()
             # We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
-            nPacket["sourceIP"] = "0.0.0.0"
+            nPacket["sourceIP"] = "255.255.255.255"
             # packet['sourceMAC'] = #the MAC address of the above IP
             nPacket["sourceMAC"] = nic.get("Mac")
-            nPacket["destIP"] = "0.0.0.0"
+            nPacket["destIP"] = "255.255.255.255"
             # packet['destMAC'] = #If the IP is local, we use the MAC of the host.  Otherwise it is the MAC of the gateway
             nPacket["destMAC"] = packet.BroadcastMAC()
             nPacket["packettype"] = "DHCP-Request"
