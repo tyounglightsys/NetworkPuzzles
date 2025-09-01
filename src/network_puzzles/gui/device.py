@@ -411,9 +411,6 @@ class EditIpPopup(AppPopup):
         self.dismiss()
 
     def on_okay(self):
-        # Update IPs in IPs list.
-        self.device_popup._set_ips()
-        # self.device_popup.device.update_tooltip_text()
         # Add updating command.
         self.device_popup.puzzle_commands.append(
             f"set {self.device_popup.device.hostname} {self.device_popup.selected_nic} {self.ip_address.address}/{self.ip_address.netmask}"
