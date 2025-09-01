@@ -1,5 +1,7 @@
 import json
 import unittest
+from network_puzzles import device
+from network_puzzles import nic
 from network_puzzles import puzzle
 from network_puzzles import session
 from network_puzzles import ui
@@ -252,3 +254,24 @@ class TestXFromY(unittest.TestCase):
 
     def test_nicfromid_notfound(self):
         self.assertIsNone(session.puzzle.nic_from_uid("999"))
+
+
+class TestProperties(unittest.TestCase):
+    def setUp(self):
+        self.puzzle_name = "Level0_BrokenLink"
+
+        # Load puzzle via app into session.puzzle.
+        self.app = ui.CLI()
+        self.app.load_puzzle(self.puzzle_name)  # sets session.puzzle
+
+    def test_nic_is_connected(self):
+        for dev_data in self.app.puzzle.devices:
+            dev = device.Device(dev_data)
+            if dev.hostname == "router0":
+                for nic_data in dev.all_nics():
+                    n = nic.Nic(nic_data)
+                    if n.name == "eth0":
+                        self.assertTrue(self.app.puzzle.nic_is_connected(nic_data))
+                    elif n.name == "eth1":
+                        self.assertFalse(self.app.puzzle.nic_is_connected(nic_data))
+                break

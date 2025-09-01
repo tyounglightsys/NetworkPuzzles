@@ -270,8 +270,17 @@ class EditDevicePopup(AppPopup):
         self.device = Device(deepcopy(dev.base.json))
         super().__init__(**kwargs)
         self.selected_ip = None
-        self.selected_nic = None
+        self._selected_nic = None
         self.puzzle_commands = list()
+
+    @property
+    def selected_nic(self):
+        return self._selected_nic
+
+    @selected_nic.setter
+    def selected_nic(self, value):
+        # Remove "connected" character from displayed value.
+        self._selected_nic = value.rstrip("*")
 
     def on_gateway(self):
         raise NotImplementedError
@@ -384,7 +393,15 @@ class EditDevicePopup(AppPopup):
 
 class NICsRecView(AppRecView):
     def update_data(self, nics, management=True):
-        self.data = [{"text": n.name} for n in nics if not n.name.startswith("lo")]
+        self.data = []
+        for n in nics:
+            if n.name.startswith("lo"):
+                continue
+            text = n.name
+            # TODO: Add "*" to text if iface is connected.
+            if self.app.ui.puzzle.nic_is_connected(n.json):
+                text += "*"
+            self.data.append({"text": text})
         item = {"text": "management_interface0"}
         if not management and item in self.data:
             self.data.remove(item)
@@ -415,6 +432,8 @@ class EditIpPopup(AppPopup):
         self.device_popup.puzzle_commands.append(
             f"set {self.device_popup.device.hostname} {self.device_popup.selected_nic} {self.ip_address.address}/{self.ip_address.netmask}"
         )
+        # Update IPs in IPs list.
+        self.device_popup._set_ips()
         self.dismiss()
 
     def set_address(self, input_inst):

@@ -11,6 +11,7 @@ from packaging.version import Version
 from . import session
 from . import packet
 from . import device
+from .link import Link
 from .nic import Nic
 
 
@@ -46,7 +47,7 @@ class Puzzle:
 
     @property
     def links(self):
-        """Generator to yield all devices in puzzle."""
+        """Generator to yield all links in puzzle."""
         for lnk in self.json.get("link", []):
             if isinstance(lnk, str):
                 yield self.json.get("link")
@@ -124,7 +125,9 @@ class Puzzle:
                 ):
                     commands.append(f"ping {test.get('shost')} {test.get('dhost')}")
                 case "SuccessfullyTraceroutes":
-                    commands.append(f"traceroute {test.get('shost')} {test.get('dhost')}")
+                    commands.append(
+                        f"traceroute {test.get('shost')} {test.get('dhost')}"
+                    )
                 case "DeviceIsFrozen" | "DeviceBlowsUpWithPower" | "DeviceNeedsUPS":
                     if device.powerOff(hostname):
                         commands.append(f"set {test.get('shost')} power on")
@@ -271,7 +274,7 @@ class Puzzle:
                 # if the source (hostname) and dest (, ping_desthostname, nic, etc) also match.
                 return True
         return False
-    
+
     def item_blows_up(self, shost):
         print(f"Testing item blows up for {shost}")
         for test in self.all_tests(shost):
@@ -360,6 +363,31 @@ class Puzzle:
                 if item:
                     return item
         return None
+
+    def nic_is_connected(self, nicRec):
+        """Connected status of given interface.
+        Args: nicRec: the NIC record
+        returns: boolean
+        """
+        nic = Nic(nicRec)
+        for link_data in self.links:
+            link = Link(link_data)
+            # Check if NIC is used by host device as src or dest.
+            if nic.myid.get("hostname") == link.src and nic.name == link.json.get(
+                "SrcNic"
+            ).get("nicname"):  # NIC used as link src
+                if link.linktype == "broken":
+                    return False
+                else:
+                    return True
+            if nic.myid.get("hostname") == link.dest and nic.name == link.json.get(
+                "DstNic"
+            ).get("nicname"):  # NIC used as link dest
+                if link.linktype == "broken":
+                    return False
+                else:
+                    return True
+        return False
 
     def firstFreeNic(self, deviceRec):
         """find the first unused network card
