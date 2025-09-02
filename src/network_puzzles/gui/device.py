@@ -171,12 +171,25 @@ class Device(DragBehavior, ThemedBoxLayout):
             self.canvas.after.clear()
         else:
             if self.base.blown_up:
+                smoke = Image(
+                    source=str(self.app.IMAGES / "BurnMark.png"),
+                    allow_stretch=True,
+                    keep_ratio=False,
+                    size=(self.button.width, self.button.height / 2),
+                    center=self.button.center,
+                )
+                self.button.add_widget(smoke)
+                factor = 2
+                w = self.button.width * factor
+                h = self.button.height * factor
+                x = self.button.center_x - (w / 2)
+                y = self.button.center_y
                 gif = Image(
                     source=str(self.app.IMAGES / "animations" / "explosion.zip"),
                     anim_delay=150 / 1000,
                     anim_loop=1,
-                    pos=self.button.pos,
-                    size=self.button.size,
+                    size=(w, h),
+                    pos=(x, y),
                 )
                 self.button.add_widget(gif)
             else:
