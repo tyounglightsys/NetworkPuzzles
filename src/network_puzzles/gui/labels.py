@@ -17,7 +17,7 @@ class TerminalLabel(TextInput):
                 max_length = len(line)
         return max_row
 
-    def on_touch_down(self, touch):
+    def on_touch_up(self, touch):
         # Open popup on right-click within the Terminal area.
         if touch.button == "right" and self.collide_point(*touch.pos):
             CommandPopup().open()
