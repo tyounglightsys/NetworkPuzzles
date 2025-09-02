@@ -17,7 +17,7 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.metrics import sp
-from pathlib import Path
+from kivy.uix.image import Image
 
 from .. import messages
 from .. import nettests
@@ -25,6 +25,7 @@ from .. import session
 from .base import AppExceptionHandler
 from .base import AppRecView
 from .base import HelpHighlight
+from .base import IMAGES_DIR
 from .base import LightColorTheme
 from .base import NETWORK_ITEMS
 from .base import Packet
@@ -45,7 +46,7 @@ class NetworkPuzzlesApp(App):
     PACKET_DIMS = (dp(15), dp(15))
 
     # file paths
-    IMAGES = Path(__file__).parents[1] / "resources" / "images"
+    IMAGES = IMAGES_DIR
 
     def __init__(self, ui, **kwargs):
         # Set session `app` variable.

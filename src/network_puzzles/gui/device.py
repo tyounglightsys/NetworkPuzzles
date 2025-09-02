@@ -6,6 +6,7 @@ from kivy.graphics import Ellipse
 from kivy.metrics import dp
 from kivy.uix.behaviors import DragBehavior
 from kivy.uix.gridlayout import GridLayout
+from kivy.uix.image import Image
 
 from .. import _
 from .. import device
@@ -21,8 +22,6 @@ from .base import LockEmblem
 from .base import NETWORK_ITEMS
 from .base import pos_to_location
 from .buttons import CommandButton
-from .buttons import DeviceButton
-from .labels import DeviceLabel
 from .layouts import ThemedBoxLayout
 from .popups import AppPopup
 
@@ -171,10 +170,23 @@ class Device(DragBehavior, ThemedBoxLayout):
         if self.base.powered_on:
             self.canvas.after.clear()
         else:
-            pos = (self.button.x + self.button.width - dp(15), self.button.y + dp(5))
-            with self.canvas.after:
-                Color(rgb=(1, 0, 0))
-                Ellipse(pos=pos, size=(dp(8), dp(8)))
+            if self.base.blown_up:
+                gif = Image(
+                    source=str(self.app.IMAGES / "animations" / "explosion.zip"),
+                    anim_delay=150 / 1000,
+                    anim_loop=1,
+                    pos=self.button.pos,
+                    size=self.button.size,
+                )
+                self.button.add_widget(gif)
+            else:
+                pos = (
+                    self.button.x + self.button.width - dp(15),
+                    self.button.y + dp(5),
+                )
+                with self.canvas.after:
+                    Color(rgb=(1, 0, 0))
+                    Ellipse(pos=pos, size=(dp(8), dp(8)))
 
     def update_tooltip_text(self, help_text=None):
         info = self._extra_tooltip_text()
