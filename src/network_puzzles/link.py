@@ -1,6 +1,3 @@
-import re
-
-
 class Link:
     def __init__(self, linkrec={}):
         self.json = linkrec
@@ -13,9 +10,9 @@ class Link:
     def hostname(self):
         return self.json.get("hostname")
 
-    @hostname.setter
-    def hostname(self, name):
-        self.json["hostname"] = name
+    @property
+    def linktype(self):
+        return self.json.get("linktype")
 
     @property
     def src(self):

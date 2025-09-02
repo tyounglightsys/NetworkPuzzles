@@ -20,6 +20,10 @@ class Nic:
         return [iface for iface in data]
 
     @property
+    def myid(self):
+        return self.json.get("myid")
+
+    @property
     def name(self):
         return self.json.get("nicname")
 

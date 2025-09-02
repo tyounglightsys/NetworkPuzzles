@@ -1,4 +1,3 @@
-# import logging
 import logging
 import traceback
 from dataclasses import dataclass
@@ -9,13 +8,15 @@ from kivy.uix.checkbox import CheckBox
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.slider import Slider
 from kivy.uix.widget import Widget
+from pathlib import Path
 from typing import Tuple
 
 from .. import session
 from .popups import ExceptionPopup
 
 
-# NOTE: Puzzle size is 900x850. Using larger MAX values allows for padding.
+IMAGES_DIR = Path(__file__).parents[1] / "resources" / "images"
+# NOTE: Puzzle size is 900x850.
 PADDING = 50
 LOCATION_MAX_X = 900
 LOCATION_MAX_Y = 850
