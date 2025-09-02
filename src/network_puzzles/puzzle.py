@@ -133,6 +133,11 @@ class Puzzle:
                         commands.append(f"set {test.get('shost')} power on")
                     else:
                         commands.append(f"set {test.get('shost')} power off")
+                    if test.get("thetest") == "DeviceNeedsUPS" and self.item_needs_ups(
+                        test.get("shost")
+                    ):
+                        # FIXME: Need correct command for adding UPS.
+                        commands.append(f"replaceups {test.get('shost')}")
         tdevice = self.device_from_name(hostname)
         if tdevice is not None and device.canUseDHCP(hostname):
             commands.append(f"dhcp {hostname}")
