@@ -128,6 +128,10 @@ class Puzzle:
                     commands.append(
                         f"traceroute {test.get('shost')} {test.get('dhost')}"
                     )
+                case "DeviceNeedsUPS":
+                    commands.append(
+                        f"addups {test.get('shost')}"
+                    )
                 case "DeviceIsFrozen" | "DeviceBlowsUpWithPower" | "DeviceNeedsUPS":
                     if device.powerOff(hostname):
                         commands.append(f"set {test.get('shost')} power on")
@@ -292,7 +296,7 @@ class Puzzle:
     def item_needs_ups(self, shost):
         for test in self.all_tests(shost):
             thetest = test.get("thetest")
-            if thetest == "DeviceNeedsUPS":
+            if thetest == "DeviceNeedsUPS" and not test.get("completed", False):
                 return True
         return False
 

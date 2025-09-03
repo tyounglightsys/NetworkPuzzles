@@ -102,6 +102,8 @@ class Parser:
                     return self.try_undo()
                 case "redo":
                     return self.try_redo()
+                case "ups" | "addups":
+                    return self.add_ups(args)
                 case _:
                     session.print(f"unknown: {command}")
         else:
@@ -263,6 +265,24 @@ class Parser:
         session.print(
             "traceroute [host1] [host2] - traceroute from one host to the other.  Example: traceroute pc0 pc1"
         )
+
+    def add_ups(self, args):
+        if len(args) != 1:
+            session.print(
+                "Usage: ups [host]"
+            )
+            session.print(" example: ups pc0")
+            return False
+        #figure out the host
+        shost = session.puzzle.device_from_name(args[0])
+        if shost is None:
+            shost = session.puzzle.device_from_ip(args[0])
+        if shost is None:
+            session.print(f"No such host: {args[0]}")
+            return False
+        session.print(f"Add UPS: {args[0]}")
+        #DeviceNeedsUPS
+        session.puzzle.mark_test_as_completed(shost['hostname'],shost['hostname'],"DeviceNeedsUPS",f"Added a ups to {shost['hostname']}")
 
     def run_ping(self, args):
         if len(args) != 2:
