@@ -52,7 +52,10 @@ class Puzzle:
             if isinstance(lnk, str):
                 yield self.json.get("link")
                 break
-            yield lnk
+            elif isinstance(lnk, dict):
+                yield lnk
+            else:
+                logging.warning(f'Ignoring invalid link data, "{lnk}"')
 
     @property
     def uid(self):
@@ -129,9 +132,7 @@ class Puzzle:
                         f"traceroute {test.get('shost')} {test.get('dhost')}"
                     )
                 case "DeviceNeedsUPS":
-                    commands.append(
-                        f"addups {test.get('shost')}"
-                    )
+                    commands.append(f"addups {test.get('shost')}")
                 case "DeviceIsFrozen" | "DeviceBlowsUpWithPower" | "DeviceNeedsUPS":
                     if device.powerOff(hostname):
                         commands.append(f"set {test.get('shost')} power on")
