@@ -17,7 +17,6 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.metrics import dp
 from kivy.metrics import sp
-from kivy.uix.image import Image
 
 from .. import messages
 from .. import nettests
