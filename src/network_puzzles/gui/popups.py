@@ -41,9 +41,6 @@ class ExceptionPopup(AppPopup):
 
 
 class PuzzleChooserPopup(AppPopup):
-    def on_cancel(self):
-        self.dismiss()
-
     def on_load(self):
         self.app.selected_puzzle = self.ids.puzzles_view.selected_item.get("text")
         self.app.setup_puzzle()
@@ -51,9 +48,6 @@ class PuzzleChooserPopup(AppPopup):
 
 
 class PuzzleCompletePopup(AppPopup):
-    def on_cancel(self):
-        self.dismiss()
-
     def on_okay(self):
         # TODO: Offer to proceed to the next puzzle.
         self.dismiss()

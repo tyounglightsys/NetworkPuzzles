@@ -125,7 +125,7 @@
             size_hint_max_y: app.BUTTON_MAX_H + dp(8)
             PopupButton:
                 text: _("Cancel")
-                on_press: root.on_cancel()
+                on_press: root.dismiss()
             PopupButton:
                 text: _("Load")
                 on_press: root.on_load()
@@ -144,7 +144,7 @@
             size_hint_max_y: app.BUTTON_MAX_H + dp(8)
             PopupButton:
                 text: _("Cancel")
-                on_press: root.on_cancel()
+                on_press: root.dismiss()
             PopupButton:
                 text: _("Okay")
                 on_press: root.on_okay()
