@@ -97,7 +97,7 @@ jobs:
       #   run: |
       #     yes | buildozer -v android debug
       - name: Build with Buildozer Action
-        uses: ArtemSBulgakov/buildozer-action@v1
+        uses: ArtemSBulgakov/buildozer-action@v1.2.0
         id: buildozer
 
       # Upload artifacts
