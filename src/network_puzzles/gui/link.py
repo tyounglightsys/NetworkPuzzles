@@ -67,10 +67,12 @@ class Link(Widget):
         # Redraw the link line.
         self._draw_line()
 
-    def on_touch_down(self, touch):
+    def on_touch_up(self, touch):
         if self.collide_point(*touch.pos):
             LinkPopup(self).open()
             return True
+        else:
+            return super().on_touch_up(touch)
 
     def set_end_nic(self):
         # TODO: Set hostname once DstNic is set as:

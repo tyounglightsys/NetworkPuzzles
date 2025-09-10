@@ -22,6 +22,8 @@ class TerminalLabel(TextInput):
         if touch.button == "right" and self.collide_point(*touch.pos):
             CommandPopup().open()
             return True
+        else:
+            return super().on_touch_up(touch)
 
 
 class ThemedLabel(Label):
@@ -51,12 +53,14 @@ class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
         self.index = index
         return super(SelectableLabel, self).refresh_view_attrs(rv, index, data)
 
-    def on_touch_down(self, touch):
+    def on_touch_up(self, touch):
         """Add selection on touch down"""
-        if super(SelectableLabel, self).on_touch_down(touch):
-            return True
+        # if super(SelectableLabel, self).on_touch_down(touch):
+        #     return True
         if self.collide_point(*touch.pos) and self.selectable:
             return self.parent.select_with_touch(self.index, touch)
+        else:
+            return super(SelectableLabel, self).on_touch_up(touch)
 
     def apply_selection(self, rv, index, is_selected):
         """Respond to the selection of items in the view."""
