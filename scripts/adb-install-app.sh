@@ -11,10 +11,15 @@ function script_exit() {
     exit $1
 }
 
+# Look for package.zip in $HOME or any of its direct subfolders.
+package_zip="$(find $HOME -maxdepth 2 -name package.zip | head -n1)"
 
-# Ensure infile given.
+# Check if infile given.
 if [[ -f "$1" ]]; then
     infile="$1"
+# Check for package.zip in $HOME or any of its immediate subfolders.
+elif [[ -f "$package_zip" ]]; then
+    infile="$package_zip"
 else
     echo "Error: Must provide path to package.zip or NetworkPuzzles APK file"
     script_exit 1
