@@ -101,7 +101,7 @@ class Device:
             else:
                 value = False
             # logging.debug(f"{self.hostname}.powered_on: {value}")
-        session.print(f"Checking blown up state of {self.hostname} and found it to be {value}")
+        #session.print(f"Checking blown up state of {self.hostname} and found it to be {value}")
         return value
 
     @blown_up.setter
