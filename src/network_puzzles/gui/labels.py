@@ -59,8 +59,8 @@ class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
         #     return True
         if self.collide_point(*touch.pos) and self.selectable:
             return self.parent.select_with_touch(self.index, touch)
-        else:
-            return super(SelectableLabel, self).on_touch_up(touch)
+        elif super(SelectableLabel, self).on_touch_up(touch):
+            return True
 
     def apply_selection(self, rv, index, is_selected):
         """Respond to the selection of items in the view."""
