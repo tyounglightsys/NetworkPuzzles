@@ -1,4 +1,3 @@
-import logging
 from kivy.graphics import Color
 from kivy.graphics import Line
 from kivy.properties import ListProperty

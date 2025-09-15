@@ -1,4 +1,3 @@
-import logging
 from kivy.uix.label import Label
 from kivy.properties import BooleanProperty
 from kivy.uix.recycleview.views import RecycleDataViewBehavior

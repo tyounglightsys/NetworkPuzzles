@@ -32,7 +32,8 @@ class PuzzleLayout(RelativeLayout):
             else:
                 # NOTE: The touch has to be explicitly passed on so that other
                 # child widgets (e.g. Links) are notified.
-                super().on_touch_up(touch)
+                logging.debug(f"{touch.grab_list=}")
+                return super().on_touch_up(touch)
 
 
 class AppMenu(ThemedBoxLayout):
