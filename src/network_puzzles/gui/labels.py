@@ -17,13 +17,14 @@ class TerminalLabel(TextInput):
                 max_length = len(line)
         return max_row
 
-    def on_touch_up(self, touch):
-        # Open popup on right-click within the Terminal area.
-        if touch.button == "right" and self.collide_point(*touch.pos):
-            CommandPopup().open()
-            return True
-        else:
-            return super().on_touch_up(touch)
+    # def on_touch_up(self, touch):
+    #     # Open popup on right-click within the Terminal area.
+    #     if touch.button == "right" and self.collide_point(*touch.pos):
+    #         print(f"right-click registered in terminal area: {touch}")
+    #         CommandPopup().open()
+    #         return True
+    #     # else:
+    #     #     return super().on_touch_up(touch)
 
 
 class ThemedLabel(Label):
@@ -54,13 +55,15 @@ class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
         return super(SelectableLabel, self).refresh_view_attrs(rv, index, data)
 
     def on_touch_up(self, touch):
-        """Add selection on touch down"""
-        # if super(SelectableLabel, self).on_touch_down(touch):
-        #     return True
-        if self.collide_point(*touch.pos) and self.selectable:
-            return self.parent.select_with_touch(self.index, touch)
-        elif super(SelectableLabel, self).on_touch_up(touch):
+        """Add selection on touch up"""
+        if super(SelectableLabel, self).on_touch_up(touch):
             return True
+        elif self.collide_point(*touch.pos) and self.selectable:
+            # return self.parent.select_with_touch(self.index, touch)
+            self.parent.select_with_touch(self.index, touch)
+            return True
+        # elif super(SelectableLabel, self).on_touch_up(touch):
+        #     return True
 
     def apply_selection(self, rv, index, is_selected):
         """Respond to the selection of items in the view."""
