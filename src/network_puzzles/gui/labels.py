@@ -18,14 +18,13 @@ class TerminalLabel(TextInput):
                 max_length = len(line)
         return max_row
 
-    # def on_touch_up(self, touch):
-    #     # Open popup on right-click within the Terminal area.
-    #     if touch.button == "right" and self.collide_point(*touch.pos):
-    #         print(f"right-click registered in terminal area: {touch}")
-    #         CommandPopup().open()
-    #         return True
-    #     # else:
-    #     #     return super().on_touch_up(touch)
+    def on_touch_up(self, touch):
+        # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
+        # Open popup on right-click within the Terminal area.
+        if touch.button == "right" and touch.grab_current is self:
+            touch.ungrab(self)
+            CommandPopup().open()
+            return True
 
 
 class ThemedLabel(Label):
@@ -62,13 +61,8 @@ class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
             and self.collide_point(*touch.pos)
             and self.selectable
         ):
-            for k, v in touch.__dict__.items():
-                logging.debug(f"{k}={v}")
-            # return self.parent.select_with_touch(self.index, touch)
             self.parent.select_with_touch(self.index, touch)
             return True
-        # elif super(SelectableLabel, self).on_touch_up(touch):
-        #     return True
 
     def apply_selection(self, rv, index, is_selected):
         """Respond to the selection of items in the view."""
