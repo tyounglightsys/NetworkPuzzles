@@ -1,3 +1,4 @@
+import logging
 from kivy.uix.label import Label
 from kivy.properties import BooleanProperty
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
@@ -56,9 +57,13 @@ class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
 
     def on_touch_up(self, touch):
         """Add selection on touch up"""
-        if super(SelectableLabel, self).on_touch_up(touch):
-            return True
-        elif self.collide_point(*touch.pos) and self.selectable:
+        if (
+            touch.button == "left"
+            and self.collide_point(*touch.pos)
+            and self.selectable
+        ):
+            for k, v in touch.__dict__.items():
+                logging.debug(f"{k}={v}")
             # return self.parent.select_with_touch(self.index, touch)
             self.parent.select_with_touch(self.index, touch)
             return True
