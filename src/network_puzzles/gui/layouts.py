@@ -20,6 +20,9 @@ class PuzzleLayout(RelativeLayout):
         self.app = session.app
 
     def on_touch_up(self, touch):
+        logging.debug(f"GUI: {touch=}")
+        for k, v in touch.__dict__.items():
+            logging.debug(f"GUI: touch {k}={v}")
         if touch.button == "left" and self.collide_point(*touch.pos):
             if hasattr(self.app, "chosen_pos"):
                 # NOTE: If touch.grab_list is populated it means that a
