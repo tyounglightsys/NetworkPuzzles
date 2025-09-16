@@ -23,7 +23,10 @@ class PuzzleLayout(RelativeLayout):
         logging.debug(f"GUI: {touch=}")
         for k, v in touch.__dict__.items():
             logging.debug(f"GUI: touch {k}={v}")
-        if touch.button == "left" and self.collide_point(*touch.pos):
+        if touch.button is None:
+            # Ignore SDL touch.
+            return True
+        elif touch.button == "left" and self.collide_point(*touch.pos):
             if hasattr(self.app, "chosen_pos"):
                 # NOTE: If touch.grab_list is populated it means that a
                 # widget was touched instead of empty space. Do not set the
