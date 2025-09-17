@@ -19,7 +19,8 @@ class TerminalLabel(TextInput):
 
     def on_touch_up(self, touch):
         # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
-        # Open popup on right-click within the Terminal area.
+        # Open popup on right-click within the Terminal area (only works on
+        # desktop devices).
         if touch.button == "right" and touch.grab_current is self:
             touch.ungrab(self)
             CommandPopup().open()
@@ -56,7 +57,7 @@ class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
     def on_touch_up(self, touch):
         """Add selection on touch up"""
         if (
-            touch.button == "left"
+            (touch.button == "left" or touch.button is None)
             and self.collide_point(*touch.pos)
             and self.selectable
         ):

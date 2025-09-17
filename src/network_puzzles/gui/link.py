@@ -67,7 +67,11 @@ class Link(Widget):
         self._draw_line()
 
     def on_touch_up(self, touch):
-        if touch.button == "left" and self.collide_point(*touch.pos):
+        if (
+            (touch.button == "left" or touch.button is None)
+            and self.collide_point(*touch.pos)
+            and len(touch.grab_list) == 0  # avoids activation when under menu item
+        ):
             LinkPopup(self).open()
             return True
 

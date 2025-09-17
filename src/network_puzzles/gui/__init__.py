@@ -5,10 +5,13 @@ root_logger = logging.getLogger()
 for handler in root_logger.handlers:
     root_logger.removeHandler(handler)
 
-# Disable right-click red dot.
-from kivy.config import Config
+from .. import session
 
-Config.set("input", "mouse", "mouse,disable_multitouch")
+if session.device_type == "desktop":
+    # Disable right-click red dot.
+    from kivy.config import Config
+
+    Config.set("input", "mouse", "mouse,disable_multitouch")
 
 # Continue with remaining imports.
 from kivy.app import App
@@ -20,7 +23,6 @@ from kivy.metrics import sp
 
 from .. import messages
 from .. import nettests
-from .. import session
 from .base import AppExceptionHandler
 from .base import AppRecView
 from .base import HelpHighlight
@@ -50,7 +52,8 @@ class NetworkPuzzlesApp(App):
     def __init__(self, ui, **kwargs):
         # Set session `app` variable.
         session.app = self
-        # Set initial window size for desktop systems.
+
+        # Set device-related config.
         if session.device_type == "desktop":
             Window.minimum_width = 574
             Window.minimum_height = 270

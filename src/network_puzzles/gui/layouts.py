@@ -20,27 +20,20 @@ class PuzzleLayout(RelativeLayout):
         self.app = session.app
 
     def on_touch_up(self, touch):
-        logging.debug(f"GUI: {touch=}")
-        for k, v in touch.__dict__.items():
-            logging.debug(f"GUI: touch {k}={v}")
-        if touch.button is None:
-            # Ignore SDL touch.
-            return True
-        elif touch.button == "left" and self.collide_point(*touch.pos):
-            if hasattr(self.app, "chosen_pos"):
-                # NOTE: If touch.grab_list is populated it means that a
-                # widget was touched instead of empty space. Do not set the
-                # chosen_pos, wait instead for another touch. Either way, True
-                # should be returned so that the touch is not propagated.
-                if len(touch.grab_list) == 0:
-                    self.app.chosen_pos = self.to_widget(*touch.pos)
-                return True
-            else:
-                # NOTE: The touch has to be explicitly passed on so that other
-                # child widgets (e.g. Links) are notified.
-                logging.debug(f"{touch.grab_current=}")
-                logging.debug(f"{touch.grab_list=}")
-                return super().on_touch_up(touch)
+        if self.collide_point(*touch.pos):
+            if touch.button == "left" or touch.button is None:
+                if hasattr(self.app, "chosen_pos"):
+                    # NOTE: If touch.grab_list is populated it means that a
+                    # widget was touched instead of empty space. Do not set the
+                    # chosen_pos, wait instead for another touch. Either way, True
+                    # should be returned so that the touch is not propagated.
+                    if len(touch.grab_list) == 0:
+                        self.app.chosen_pos = self.to_widget(*touch.pos)
+                    return True
+                else:
+                    # NOTE: The touch has to be explicitly passed on so that other
+                    # child widgets (e.g. Links) are notified.
+                    return super().on_touch_up(touch)
 
 
 class AppMenu(ThemedBoxLayout):
