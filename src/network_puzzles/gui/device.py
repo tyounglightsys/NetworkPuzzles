@@ -160,10 +160,10 @@ class Device(DragBehavior, ThemedBoxLayout):
         if loc != self.loc_init:
             self.move(loc)
 
-    def on_press(self):
+    def on_release(self):
         if hasattr(self.app, "chosen_device"):
             self.app.chosen_device = self
-            return True
+            return
         self._build_commands_popup().open()
 
     def set_power_status(self, *args):

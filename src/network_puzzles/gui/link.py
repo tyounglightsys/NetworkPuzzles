@@ -1,4 +1,3 @@
-import logging
 from kivy.graphics import Color
 from kivy.graphics import Line
 from kivy.properties import ListProperty
@@ -67,8 +66,12 @@ class Link(Widget):
         # Redraw the link line.
         self._draw_line()
 
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
+    def on_touch_up(self, touch):
+        if (
+            (touch.button == "left" or touch.button is None)
+            and self.collide_point(*touch.pos)
+            and len(touch.grab_list) == 0  # avoids activation when under menu item
+        ):
             LinkPopup(self).open()
             return True
 

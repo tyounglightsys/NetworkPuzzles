@@ -1,3 +1,4 @@
+import logging
 from kivy.metrics import dp
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.boxlayout import BoxLayout
@@ -19,12 +20,20 @@ class PuzzleLayout(RelativeLayout):
         self.app = session.app
 
     def on_touch_up(self, touch):
-        if len(touch.grab_list) > 0:  # widget was touched instead of layout
-            return super().on_touch_up(touch)
-        if hasattr(self.app, "chosen_pos"):
-            # Convert touch.pos to relative layout pos.
-            self.app.chosen_pos = self.to_widget(*touch.pos)
-            return True
+        if self.collide_point(*touch.pos):
+            if touch.button == "left" or touch.button is None:
+                if hasattr(self.app, "chosen_pos"):
+                    # NOTE: If touch.grab_list is populated it means that a
+                    # widget was touched instead of empty space. Do not set the
+                    # chosen_pos, wait instead for another touch. Either way, True
+                    # should be returned so that the touch is not propagated.
+                    if len(touch.grab_list) == 0:
+                        self.app.chosen_pos = self.to_widget(*touch.pos)
+                    return True
+                else:
+                    # NOTE: The touch has to be explicitly passed on so that other
+                    # child widgets (e.g. Links) are notified.
+                    return super().on_touch_up(touch)
 
 
 class AppMenu(ThemedBoxLayout):

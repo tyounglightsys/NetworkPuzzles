@@ -13,12 +13,12 @@ class ThemedButton(Button):
     LONG_PRESS_THRESHOLD = 0.4
     info = StringProperty()
 
-    def __init__(self, on_press=None, **kwargs):
+    def __init__(self, on_release=None, **kwargs):
         super().__init__(**kwargs)
         self.app = session.app
         self.long_press = None
         self.tooltip = ToolTip()
-        self._on_press = on_press
+        self._on_release = on_release
         Window.bind(mouse_pos=self.on_mouse_pos)
 
     def on_mouse_pos(self, window, pos):
@@ -33,7 +33,7 @@ class ThemedButton(Button):
             Clock.schedule_once(self.open_tooltip, 1)
 
     def on_press(self):
-        if self._on_press is None:
+        if self._on_release is None:
             return
         # Schedule long-press callback into the future.
         self.long_press = Clock.schedule_once(
@@ -42,23 +42,27 @@ class ThemedButton(Button):
 
     def on_release(self):
         self.cancel_tooltip()
-        if self._on_press is None:
+        if self._on_release is None:
             return
         # If long-press callback hasn't run, cancel it and run the short-press
         # callback. Here ".is_triggered" means "scheduled but not yet run". It
         # resets to 0 or False after the event is processed.
         if not self.long_press or self.long_press.is_triggered:
             self.long_press.cancel()
-            self._on_press()
+            self._on_release()
 
     @property
     def tooltip_anchor(self):
+        parent = None
         if isinstance(self, DeviceButton):
-            return self.parent.parent  # puzzle layout
+            if hasattr(self, "parent") and hasattr(self.parent, "parent"):
+                parent = self.parent.parent  # puzzle layout
         elif isinstance(self, MenuButton) and self.text != "+":
-            return self.parent.parent
+            if hasattr(self, "parent") and hasattr(self.parent, "parent"):
+                parent = self.parent.parent
         else:
-            return self.parent  # menu/puzzle layout
+            parent = self.parent  # menu/puzzle layout
+        return parent
 
     @property
     def tooltip_pos(self):
@@ -93,7 +97,8 @@ class ThemedButton(Button):
         self.close_tooltip()
 
     def close_tooltip(self, *args):
-        self.tooltip_anchor.remove_widget(self.tooltip)
+        if self.tooltip_anchor:
+            self.tooltip_anchor.remove_widget(self.tooltip)
 
     def open_tooltip(self, *args):
         def no_tooltip(self):
@@ -211,7 +216,7 @@ class CommandButton(ThemedButton):
         # TODO: Parse text from passed command?
         self.text = command
 
-    def on_press(self):
+    def on_release(self):
         self.cb(self.command)
         # Find parent Popup and dismiss it.
         popup = self.parent

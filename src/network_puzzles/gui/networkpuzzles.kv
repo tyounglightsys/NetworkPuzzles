@@ -31,40 +31,40 @@ ThemedBoxLayout:
                 info: _("choose puzzle")
                 text: "+"
                 pos: self.get_pos()
-                on_press: app.on_puzzle_chooser()
+                on_release: app.on_puzzle_chooser()
             AppButton:  # save
                 info: _("save puzzle")
                 text: "\u2193"
                 pos: self.get_pos()
-                on_press: app.on_save()
+                on_release: app.on_save()
             AppButton:  # restart
                 info: _("restart puzzle")
                 text: "\u21ba"
                 pos: self.get_pos()
-                on_press: app.setup_puzzle()
+                on_release: app.setup_puzzle()
             AppButton:  # undo
                 id: undo
                 info: _("undo")
                 text: "\u2190"
                 pos: self.get_pos()
-                on_press: app.on_undo()
+                on_release: app.on_undo()
             AppButton:  # redo
                 id: redo
                 info: _("redo")
                 text: "\u2192"
                 pos: self.get_pos()
-                on_press: app.on_redo()
+                on_release: app.on_redo()
             AppButton:  # lang
                 id: lang
                 info: _("choose language")
                 text: session.lang
                 pos: self.get_pos()
-                on_press: app.on_language()
+                on_release: app.on_language()
             AppButton:  # help
                 info: _("help")
                 text: "?"
                 pos: self.get_pos()
-                on_press: app.on_help()
+                on_release: app.on_help()
         HSeparator:
         ThemedBoxLayout:
             size_hint_y: 0.08
