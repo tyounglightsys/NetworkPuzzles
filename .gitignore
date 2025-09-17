@@ -1,3 +1,7 @@
+# buildozer docker dirs
+.buildozer/
+bin/
+
 # cProfile data files
 *.prof
 
