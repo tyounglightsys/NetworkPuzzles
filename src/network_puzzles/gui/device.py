@@ -88,6 +88,14 @@ class Device(DragBehavior, ThemedBoxLayout):
     def callback(self, cmd_string):
         self.app.ui.parse(cmd_string)
 
+    def get_height(self):
+        h = self.padding[1] + self.padding[3]
+        for i, c in enumerate(self.children):
+            if i > 0:
+                h += self.spacing
+            h += c.height
+        return h
+
     def get_nic(self, name):
         for n in self.nics:
             if n.name == name:

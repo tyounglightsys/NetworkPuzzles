@@ -3,6 +3,8 @@ import traceback
 from dataclasses import dataclass
 from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
+from kivy.metrics import dp
+from kivy.metrics import sp
 from kivy.properties import StringProperty
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.recycleview import RecycleView
@@ -15,9 +17,17 @@ from .. import session
 from .popups import ExceptionPopup
 
 
+# Size limits
+BUTTON_MAX_H = dp(32)
+BUTTON_FONT_SIZE = sp(24)
+DEVICE_BUTTON_MAX_H = BUTTON_MAX_H * 1.25
+PACKET_DIMS = (dp(15), dp(15))
+
 IMAGES_DIR = Path(__file__).parents[1] / "resources" / "images"
-# NOTE: Puzzle size is 900x850.
-PADDING = 50
+# NOTE: Puzzle size is nominally 900x850. The PADDING is applied to all sides of
+# the puzzle layout area, and it should be large enough to accommodate 1/2 the
+# height of a device widget, which includes button + label + spacing & padding.
+PADDING = DEVICE_BUTTON_MAX_H
 LOCATION_MAX_X = 900
 LOCATION_MAX_Y = 850
 NETWORK_ITEMS = {
@@ -157,7 +167,7 @@ def get_effective_size(size):
     return (size[0] - 2 * PADDING, size[1] - 2 * PADDING)
 
 
-def get_layout_height(layout) -> None:
+def get_layout_height(layout) -> int:
     if isinstance(layout.spacing, int):
         spacing = layout.spacing
     else:

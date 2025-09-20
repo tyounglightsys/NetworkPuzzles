@@ -18,18 +18,20 @@ from kivy.app import App
 from kivy.base import ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.metrics import dp
-from kivy.metrics import sp
 
 from .. import messages
 from .. import nettests
 from .base import AppExceptionHandler
 from .base import AppRecView
+from .base import BUTTON_FONT_SIZE
+from .base import BUTTON_MAX_H
+from .base import DEVICE_BUTTON_MAX_H
 from .base import HelpHighlight
 from .base import IMAGES_DIR
 from .base import LightColorTheme
 from .base import NETWORK_ITEMS
 from .base import Packet
+from .base import PACKET_DIMS
 from .base import pos_to_location
 from .buttons import MenuButton
 from .device import ChooseNicPopup
@@ -42,9 +44,10 @@ from .popups import PuzzleCompletePopup
 
 class NetworkPuzzlesApp(App):
     # explicit sizes
-    BUTTON_MAX_H = dp(32)
-    BUTTON_FONT_SIZE = sp(24)
-    PACKET_DIMS = (dp(15), dp(15))
+    BUTTON_MAX_H = BUTTON_MAX_H
+    BUTTON_FONT_SIZE = BUTTON_FONT_SIZE
+    DEVICE_BUTTON_MAX_H = DEVICE_BUTTON_MAX_H
+    PACKET_DIMS = PACKET_DIMS
 
     # file paths
     IMAGES = IMAGES_DIR
@@ -60,10 +63,17 @@ class NetworkPuzzlesApp(App):
             # Force aspect ratio through explicit resolution.
             if Window.width / Window.height < 1.7:
                 Window.size = (1600, 720)
+            # NOTE: Time for packet to traverse each link is:
+            #   self.packet_tick_delay * 100 / self.packet_progress_rate
+            # However, there's also a tick limit of ~0.017 Hz for kivy.
+            self.packet_tick_delay = 0.02  # packet pos refresh rate in seconds
+            self.packet_progress_rate = 5  # % of link traveled each tick
         else:
             # Force loglevel to DEBUG.
             logger = logging.getLogger()
             logger.level = logging.DEBUG
+            self.packet_tick_delay = 0.05  # packet pos refresh rate in seconds
+            self.packet_progress_rate = 5  # % of link traveled each tick
         logging.debug(f"GUI: {session.device_type=}")
         logging.debug(f"GUI: {Window.size=}")
 
@@ -80,11 +90,6 @@ class NetworkPuzzlesApp(App):
         self.selected_puzzle = None  # used to reset puzzle after changes
         self.reset_vars()
 
-        # NOTE: Time for packet to traverse each link is:
-        #   self.packet_tick_delay * 100 / self.packet_progress_rate
-        # However, there's also a tick limit of ~0.017 Hz for kivy.
-        self.packet_tick_delay = 0.01  # packet pos refresh rate in seconds
-        self.packet_progress_rate = 2.5  # % of link traveled each tick
         self.prev_packets = []  # packets to remove from last refresh
         Clock.schedule_interval(self._update_packets, self.packet_tick_delay)
 
@@ -167,14 +172,7 @@ class NetworkPuzzlesApp(App):
             if link is None:
                 continue
             self.add_link(Link(link))
-        # Additional debug logging.
-        layout = self.root.ids.layout
-        logging.debug(f"GUI: {layout.__class__.__name__} elements:")
-        for w in layout.children:
-            if hasattr(w, "hostname"):
-                logging.debug(f"GUI: - {w.__class__.__name__}/{w.hostname}: {w.pos=}")
-            else:
-                logging.debug(f"GUI: - {w.__class__.__name__}: {w.pos=}")
+        self._print_stats()
 
     def draw_puzzle(self, *args):
         """Clear puzzle layout area; draw all elements related to current puzzle."""
@@ -577,6 +575,22 @@ class NetworkPuzzlesApp(App):
     def _open_tray(self, tray):
         self.root.ids.layout.add_widget(tray)
         tray.open()
+
+    def _print_stats(self, *args):
+        # Additional debug logging.
+        layout = self.root.ids.layout
+        logging.debug(f"GUI: {layout.__class__.__name__} size: {layout.size}")
+        logging.debug(f"GUI: {layout.__class__.__name__} elements:")
+        for w in layout.children:
+            if hasattr(w, "hostname"):
+                logging.debug(
+                    f"GUI: - {w.__class__.__name__}/{w.hostname}: {w.center=}; {w.size=}"
+                )
+                if hasattr(w, "get_height"):  # layout
+                    logging.debug(f"GUI: -- {w.get_height()=}")
+                    logging.debug(f"GUI: -- {w.drag_rectangle=}")
+            else:
+                logging.debug(f"GUI: - {w.__class__.__name__}: {w.center=}; {w.size=}")
 
     def _set_left_panel_width(self, *args):
         menu = self.root.ids.menu

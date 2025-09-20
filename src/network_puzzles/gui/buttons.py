@@ -163,7 +163,13 @@ class AppButton(ThemedButton):
 
 
 class DeviceButton(ThemedButton):
-    pass
+    def on_pos(self, *args):
+        # Update drag_rectangle for Device (parent) widget.
+        if hasattr(self, "parent"):
+            self.parent.drag_rectangle = [
+                *self.parent.drag_rectangle[:3],
+                self.parent.get_height(),
+            ]
 
 
 class MenuButton(AppButton):
