@@ -97,10 +97,6 @@ class ThemedCheckBox(CheckBox):
         self.app.on_checkbox_activate(self)
 
 
-class Packet(Widget):
-    pass
-
-
 class HelpHighlight(Widget):
     def __init__(self, base=None, **kwargs):
         self.base = base

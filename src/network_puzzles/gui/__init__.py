@@ -30,14 +30,15 @@ from .base import HelpHighlight
 from .base import IMAGES_DIR
 from .base import LightColorTheme
 from .base import NETWORK_ITEMS
-from .base import Packet
 from .base import PACKET_DIMS
+from .base import PADDING
 from .base import pos_to_location
 from .buttons import MenuButton
 from .device import ChooseNicPopup
 from .device import Device
 from .layouts import AppMenu
 from .link import Link
+from .packets import PacketManager
 from .popups import PuzzleChooserPopup
 from .popups import PuzzleCompletePopup
 
@@ -65,15 +66,15 @@ class NetworkPuzzlesApp(App):
                 Window.size = (1600, 720)
             # NOTE: Time for packet to traverse each link is:
             #   self.packet_tick_delay * 100 / self.packet_progress_rate
-            # However, there's also a tick limit of ~0.017 Hz for kivy.
+            # However, there's also a tick limit of ~60 Hz for kivy.
             self.packet_tick_delay = 0.02  # packet pos refresh rate in seconds
-            self.packet_progress_rate = 5  # % of link traveled each tick
-        else:
+            self.packet_progress_rate = 3  # % of link traveled each tick
+        else:  # mobile devices
             # Force loglevel to DEBUG.
             logger = logging.getLogger()
             logger.level = logging.DEBUG
-            self.packet_tick_delay = 0.05  # packet pos refresh rate in seconds
-            self.packet_progress_rate = 5  # % of link traveled each tick
+            self.packet_tick_delay = 0.04  # packet pos refresh rate in seconds
+            self.packet_progress_rate = 6  # % of link traveled each tick
         logging.debug(f"GUI: {session.device_type=}")
         logging.debug(f"GUI: {Window.size=}")
 
@@ -90,7 +91,7 @@ class NetworkPuzzlesApp(App):
         self.selected_puzzle = None  # used to reset puzzle after changes
         self.reset_vars()
 
-        self.prev_packets = []  # packets to remove from last refresh
+        self.packetmgr = PacketManager(self)
         Clock.schedule_interval(self._update_packets, self.packet_tick_delay)
 
     @property
@@ -100,6 +101,10 @@ class NetworkPuzzlesApp(App):
     @property
     def links(self):
         return self._get_widgets_by_class_name("Link")
+
+    @property
+    def packets(self):
+        return self._get_widgets_by_class_name("Packet")
 
     def check_puzzle(self, *args):
         """Checked at regular interval during kivy app loop."""
@@ -208,7 +213,7 @@ class NetworkPuzzlesApp(App):
         Clock.schedule_once(self.update_help)
         Clock.schedule_once(self.draw_links)
 
-    def first_link_index(self):
+    def get_first_link_index(self):
         first_index = 999
         for w in self.links:
             first_index = min([self.root.ids.layout.children.index(w), first_index])
@@ -579,7 +584,14 @@ class NetworkPuzzlesApp(App):
     def _print_stats(self, *args):
         # Additional debug logging.
         layout = self.root.ids.layout
+        logging.debug(f"GUI: {layout.__class__.__name__} corner: {layout.pos}")
         logging.debug(f"GUI: {layout.__class__.__name__} size: {layout.size}")
+        w = layout.size[0] - 2 * PADDING
+        h = layout.size[1] - 2 * PADDING
+        x = layout.x + PADDING
+        y = layout.y + PADDING
+        logging.debug(f"GUI: {layout.__class__.__name__} effective corner: [{x}, {y}]")
+        logging.debug(f"GUI: {layout.__class__.__name__} effective size: [{w}, {h}]")
         logging.debug(f"GUI: {layout.__class__.__name__} elements:")
         for w in layout.children:
             if hasattr(w, "hostname"):
@@ -616,38 +628,16 @@ class NetworkPuzzlesApp(App):
                         self._close_tray(subtray)
             self._close_tray(tray)
 
-    def _update_packets(self, dt):
+    def _update_packets(self, *args):
+        # Skip if no puzzle is loaded.
         if not self.ui.puzzle:
             return
 
         # Update backend packet info.
         self.ui.process_packets(self.packet_progress_rate)
 
-        # Remove existing packets from layout.
-        while self.prev_packets:
-            self.root.ids.layout.remove_widget(self.prev_packets.pop())
-
-        # packet draw index needs to be above link lines but below devices,
-        # which means it needs to be equal to the lowest link index.
-        packet_idx = self.first_link_index()
-
-        # Add new packet locations to layout.
-        for p in self.ui.packetlist:
-            link_data = self.ui.get_link(p.get("packetlocation"))
-            progress = p.get("packetDistance")
-            if p.get("packetDirection") == 2:
-                progress = 100 - progress
-            link = self.get_widget_by_hostname(link_data.get("hostname"))
-            # NOTE: Sometimes the layout doesn't contain the link widgets, maybe
-            # due to a race condition with a redraw? So skipping packet update
-            # if the link isn't found seems to work for now.
-            if link:
-                x, y = link.get_progress_pos(progress)
-                packet = Packet(
-                    pos=(x - self.PACKET_DIMS[0] / 2, y - self.PACKET_DIMS[1] / 2)
-                )
-                self.root.ids.layout.add_widget(packet, packet_idx)
-                self.prev_packets.append(packet)
+        # Update packets.
+        self.packetmgr.update_packets()
 
         # Update other GUI elements that depend on completed pings.
         self.check_puzzle()
