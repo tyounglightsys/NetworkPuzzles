@@ -1,4 +1,3 @@
-import logging
 from kivy.metrics import dp
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.boxlayout import BoxLayout

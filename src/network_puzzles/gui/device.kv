@@ -2,7 +2,9 @@
     orientation: 'vertical'
     spacing: dp(0)
     size_hint: (0.08, None)
-    drag_rectangle: (self.x, self.y, self.width, self.height)
+    drag_rectangle: (self.x, self.y, self.width, self.get_height())
+    drag_distance: dp(5)
+    drag_timeout: 500
     DeviceButton:
         pos_hint: {"center_x": 0.5}
         _on_release: root.on_release

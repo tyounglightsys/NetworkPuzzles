@@ -33,7 +33,7 @@
 
 <DeviceButton>:
     size_hint: (None, None)
-    size: (app.BUTTON_MAX_H * 1.5, app.BUTTON_MAX_H * 1.5)
+    size: (app.DEVICE_BUTTON_MAX_H, app.DEVICE_BUTTON_MAX_H)
     canvas.before:
         Color:
             rgba: app.theme.bg1 if self.state == 'normal' else app.theme.bg2

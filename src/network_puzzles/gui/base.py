@@ -3,6 +3,8 @@ import traceback
 from dataclasses import dataclass
 from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
+from kivy.metrics import dp
+from kivy.metrics import sp
 from kivy.properties import StringProperty
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.recycleview import RecycleView
@@ -15,9 +17,17 @@ from .. import session
 from .popups import ExceptionPopup
 
 
+# Size limits
+BUTTON_MAX_H = dp(32)
+BUTTON_FONT_SIZE = sp(24)
+DEVICE_BUTTON_MAX_H = BUTTON_MAX_H * 1.25
+PACKET_DIMS = (dp(15), dp(15))
+
 IMAGES_DIR = Path(__file__).parents[1] / "resources" / "images"
-# NOTE: Puzzle size is 900x850.
-PADDING = 50
+# NOTE: Puzzle size is nominally 900x850. The PADDING is applied to all sides of
+# the puzzle layout area, and it should be large enough to accommodate 1/2 the
+# height of a device widget, which includes button + label + spacing & padding.
+PADDING = DEVICE_BUTTON_MAX_H
 LOCATION_MAX_X = 900
 LOCATION_MAX_Y = 850
 NETWORK_ITEMS = {
@@ -87,10 +97,6 @@ class ThemedCheckBox(CheckBox):
         self.app.on_checkbox_activate(self)
 
 
-class Packet(Widget):
-    pass
-
-
 class HelpHighlight(Widget):
     def __init__(self, base=None, **kwargs):
         self.base = base
@@ -157,7 +163,7 @@ def get_effective_size(size):
     return (size[0] - 2 * PADDING, size[1] - 2 * PADDING)
 
 
-def get_layout_height(layout) -> None:
+def get_layout_height(layout) -> int:
     if isinstance(layout.spacing, int):
         spacing = layout.spacing
     else:
@@ -254,3 +260,29 @@ def rel_pos_to_pos(rel_pos, size) -> tuple:
     pos = (rel_pos[0] * size[0], rel_pos[1] * size[1])
     # logging.debug(f"GUI: {rel_pos=} -> {pos=}; {size=}")
     return pos
+
+
+def print_layout_info(app):
+    # Layout debug logging.
+    layout = app.root.ids.layout
+    logging.debug(f"GUI: {layout.__class__.__name__} corner: {layout.pos}")
+    logging.debug(f"GUI: {layout.__class__.__name__} size: {layout.size}")
+    w = layout.size[0] - 2 * PADDING
+    h = layout.size[1] - 2 * PADDING
+    x = layout.x + PADDING
+    y = layout.y + PADDING
+    logging.debug(f"GUI: {layout.__class__.__name__} effective corner: [{x}, {y}]")
+    logging.debug(f"GUI: {layout.__class__.__name__} effective size: [{w}, {h}]")
+    logging.debug(f"GUI: {layout.__class__.__name__} elements:")
+    for w in layout.children:
+        if hasattr(w, "hostname"):
+            logging.debug(
+                f"GUI: - {w.__class__.__name__}/{w.hostname}: {w.center=}; {w.pos=}; {w.size=}"
+            )
+            if hasattr(w, "get_height"):  # layout
+                logging.debug(f"GUI: -- {w.get_height()=}")
+                logging.debug(f"GUI: -- {w.drag_rectangle=}")
+        else:
+            logging.debug(
+                f"GUI: - {w.__class__.__name__}: {w.center=}; {w.pos=}; {w.size=}"
+            )
