@@ -33,11 +33,11 @@ ThemedBoxLayout:
                 text: "+"
                 pos: self.get_pos()
                 on_release: app.on_puzzle_chooser()
-            AppButton:  # save
-                info: _("save puzzle")
-                text: "\u2193"
-                pos: self.get_pos()
-                on_release: app.on_save()
+            #AppButton:  # save
+            #    info: _("save puzzle")
+            #    text: "\u2193"
+            #    pos: self.get_pos()
+            #    on_release: app.on_save()
             AppButton:  # restart
                 info: _("restart puzzle")
                 text: "\u21ba"
@@ -55,12 +55,12 @@ ThemedBoxLayout:
                 text: "\u2192"
                 pos: self.get_pos()
                 on_release: app.on_redo()
-            AppButton:  # lang
-                id: lang
-                info: _("choose language")
-                text: session.lang
-                pos: self.get_pos()
-                on_release: app.on_language()
+            #AppButton:  # lang
+            #    id: lang
+            #    info: _("choose language")
+            #    text: session.lang
+            #    pos: self.get_pos()
+            #    on_release: app.on_language()
             AppButton:  # help
                 info: _("help")
                 text: "?"
@@ -68,18 +68,19 @@ ThemedBoxLayout:
                 on_release: app.on_help()
         HSeparator:
         ThemedBoxLayout:
-            size_hint_y: 0.08
-            orientation: 'horizontal'
+            #size_hint_y: 0.08
+            size_hint_y: 0.1
+            orientation: 'vertical'
             ThemedLabel:
                 padding: dp(3)
-                size_hint_x: 0.5
+                #size_hint_x: 0.5
                 text: _("Help level:")
-                halign: "right"
+                #halign: "right"
                 valign: "center"
                 text_size: self.size
             HelpSlider:
                 id: help_slider
-                size_hint_x: 0.5
+                #size_hint_x: 0.5
         ThemedLabel:  # puzzle information
             id: info
             size_hint_y: 0.67
