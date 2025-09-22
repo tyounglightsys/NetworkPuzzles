@@ -31,8 +31,8 @@ from .base import IMAGES_DIR
 from .base import LightColorTheme
 from .base import NETWORK_ITEMS
 from .base import PACKET_DIMS
-from .base import PADDING
 from .base import pos_to_location
+from .base import print_layout_info
 from .buttons import MenuButton
 from .device import ChooseNicPopup
 from .device import Device
@@ -582,27 +582,7 @@ class NetworkPuzzlesApp(App):
         tray.open()
 
     def _print_stats(self, *args):
-        # Additional debug logging.
-        layout = self.root.ids.layout
-        logging.debug(f"GUI: {layout.__class__.__name__} corner: {layout.pos}")
-        logging.debug(f"GUI: {layout.__class__.__name__} size: {layout.size}")
-        w = layout.size[0] - 2 * PADDING
-        h = layout.size[1] - 2 * PADDING
-        x = layout.x + PADDING
-        y = layout.y + PADDING
-        logging.debug(f"GUI: {layout.__class__.__name__} effective corner: [{x}, {y}]")
-        logging.debug(f"GUI: {layout.__class__.__name__} effective size: [{w}, {h}]")
-        logging.debug(f"GUI: {layout.__class__.__name__} elements:")
-        for w in layout.children:
-            if hasattr(w, "hostname"):
-                logging.debug(
-                    f"GUI: - {w.__class__.__name__}/{w.hostname}: {w.center=}; {w.size=}"
-                )
-                if hasattr(w, "get_height"):  # layout
-                    logging.debug(f"GUI: -- {w.get_height()=}")
-                    logging.debug(f"GUI: -- {w.drag_rectangle=}")
-            else:
-                logging.debug(f"GUI: - {w.__class__.__name__}: {w.center=}; {w.size=}")
+        print_layout_info(self)
 
     def _set_left_panel_width(self, *args):
         menu = self.root.ids.menu

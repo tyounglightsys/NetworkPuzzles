@@ -260,3 +260,29 @@ def rel_pos_to_pos(rel_pos, size) -> tuple:
     pos = (rel_pos[0] * size[0], rel_pos[1] * size[1])
     # logging.debug(f"GUI: {rel_pos=} -> {pos=}; {size=}")
     return pos
+
+
+def print_layout_info(app):
+    # Layout debug logging.
+    layout = app.root.ids.layout
+    logging.debug(f"GUI: {layout.__class__.__name__} corner: {layout.pos}")
+    logging.debug(f"GUI: {layout.__class__.__name__} size: {layout.size}")
+    w = layout.size[0] - 2 * PADDING
+    h = layout.size[1] - 2 * PADDING
+    x = layout.x + PADDING
+    y = layout.y + PADDING
+    logging.debug(f"GUI: {layout.__class__.__name__} effective corner: [{x}, {y}]")
+    logging.debug(f"GUI: {layout.__class__.__name__} effective size: [{w}, {h}]")
+    logging.debug(f"GUI: {layout.__class__.__name__} elements:")
+    for w in layout.children:
+        if hasattr(w, "hostname"):
+            logging.debug(
+                f"GUI: - {w.__class__.__name__}/{w.hostname}: {w.center=}; {w.pos=}; {w.size=}"
+            )
+            if hasattr(w, "get_height"):  # layout
+                logging.debug(f"GUI: -- {w.get_height()=}")
+                logging.debug(f"GUI: -- {w.drag_rectangle=}")
+        else:
+            logging.debug(
+                f"GUI: - {w.__class__.__name__}: {w.center=}; {w.pos=}; {w.size=}"
+            )
