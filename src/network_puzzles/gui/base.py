@@ -286,3 +286,5 @@ def print_layout_info(app):
             logging.debug(
                 f"GUI: - {w.__class__.__name__}: {w.center=}; {w.pos=}; {w.size=}"
             )
+    logging.debug(f"{app.root.ids.terminal.pos=}")
+    logging.debug(f"{app.root.ids.terminal.height=}")

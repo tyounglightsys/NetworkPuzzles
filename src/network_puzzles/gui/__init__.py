@@ -34,10 +34,10 @@ from .base import PACKET_DIMS
 from .base import pos_to_location
 from .base import print_layout_info
 from .buttons import MenuButton
-from .device import ChooseNicPopup
-from .device import Device
+from .devices import ChooseNicPopup
+from .devices import Device
 from .layouts import AppMenu
-from .link import Link
+from .links import Link
 from .packets import PacketManager
 from .popups import PuzzleChooserPopup
 from .popups import PuzzleCompletePopup
