@@ -583,7 +583,7 @@ class NetworkPuzzlesApp(App):
         tray.open()
 
     def _print_stats(self, *args):
-        show_grid(self)
+        # show_grid(self)
         print_layout_info(self)
 
     def _set_left_panel_width(self, *args):

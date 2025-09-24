@@ -20,7 +20,7 @@
           "hostname": "net_switch0",
           "size": "100",
           "uniqueidentifier": "100",
-          "location": "210,410",
+          "location": "210,470",
           "mytype": "net_switch",
           "isdns": "False",
           "isdhcp": "False",
@@ -32,10 +32,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "100",
@@ -61,10 +58,7 @@
               }
             },
             {
-              "nictype": [
-                "management_interface",
-                "management_interface"
-              ],
+              "nictype": ["management_interface", "management_interface"],
               "nicname": "management_interface0",
               "myid": {
                 "hostid": "100",
@@ -90,10 +84,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port1",
               "myid": {
                 "hostid": "100",
@@ -119,10 +110,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port2",
               "myid": {
                 "hostid": "100",
@@ -148,10 +136,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port3",
               "myid": {
                 "hostid": "100",
@@ -177,10 +162,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port4",
               "myid": {
                 "hostid": "100",
@@ -206,10 +188,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port5",
               "myid": {
                 "hostid": "100",
@@ -235,10 +214,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port6",
               "myid": {
                 "hostid": "100",
@@ -264,10 +240,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port7",
               "myid": {
                 "hostid": "100",
@@ -310,10 +283,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "110",
@@ -339,10 +309,7 @@
               }
             },
             {
-              "nictype": [
-                "management_interface",
-                "management_interface"
-              ],
+              "nictype": ["management_interface", "management_interface"],
               "nicname": "management_interface0",
               "myid": {
                 "hostid": "110",
@@ -368,10 +335,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port1",
               "myid": {
                 "hostid": "110",
@@ -397,10 +361,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port2",
               "myid": {
                 "hostid": "110",
@@ -426,10 +387,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port3",
               "myid": {
                 "hostid": "110",
@@ -455,10 +413,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port4",
               "myid": {
                 "hostid": "110",
@@ -484,10 +439,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port5",
               "myid": {
                 "hostid": "110",
@@ -513,10 +465,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port6",
               "myid": {
                 "hostid": "110",
@@ -542,10 +491,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port7",
               "myid": {
                 "hostid": "110",
@@ -576,7 +522,7 @@
           "hostname": "net_switch2",
           "size": "100",
           "uniqueidentifier": "120",
-          "location": "350,480",
+          "location": "350,600",
           "mytype": "net_switch",
           "isdns": "False",
           "isdhcp": "False",
@@ -588,10 +534,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "120",
@@ -617,10 +560,7 @@
               }
             },
             {
-              "nictype": [
-                "management_interface",
-                "management_interface"
-              ],
+              "nictype": ["management_interface", "management_interface"],
               "nicname": "management_interface0",
               "myid": {
                 "hostid": "120",
@@ -646,10 +586,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port1",
               "myid": {
                 "hostid": "120",
@@ -675,10 +612,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port2",
               "myid": {
                 "hostid": "120",
@@ -704,10 +638,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port3",
               "myid": {
                 "hostid": "120",
@@ -733,10 +664,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port4",
               "myid": {
                 "hostid": "120",
@@ -762,10 +690,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port5",
               "myid": {
                 "hostid": "120",
@@ -791,10 +716,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port6",
               "myid": {
                 "hostid": "120",
@@ -820,10 +742,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port7",
               "myid": {
                 "hostid": "120",
@@ -854,7 +773,7 @@
           "hostname": "net_switch6",
           "size": "100",
           "uniqueidentifier": "160",
-          "location": "620,480",
+          "location": "620,600",
           "mytype": "net_switch",
           "isdns": "False",
           "isdhcp": "False",
@@ -866,10 +785,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "160",
@@ -895,10 +811,7 @@
               }
             },
             {
-              "nictype": [
-                "management_interface",
-                "management_interface"
-              ],
+              "nictype": ["management_interface", "management_interface"],
               "nicname": "management_interface0",
               "myid": {
                 "hostid": "160",
@@ -924,10 +837,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port1",
               "myid": {
                 "hostid": "160",
@@ -953,10 +863,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port2",
               "myid": {
                 "hostid": "160",
@@ -982,10 +889,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port3",
               "myid": {
                 "hostid": "160",
@@ -1011,10 +915,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port4",
               "myid": {
                 "hostid": "160",
@@ -1040,10 +941,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port5",
               "myid": {
                 "hostid": "160",
@@ -1069,10 +967,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port6",
               "myid": {
                 "hostid": "160",
@@ -1098,10 +993,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port7",
               "myid": {
                 "hostid": "160",
@@ -1144,10 +1036,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "170",
@@ -1173,10 +1062,7 @@
               }
             },
             {
-              "nictype": [
-                "management_interface",
-                "management_interface"
-              ],
+              "nictype": ["management_interface", "management_interface"],
               "nicname": "management_interface0",
               "myid": {
                 "hostid": "170",
@@ -1202,10 +1088,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port1",
               "myid": {
                 "hostid": "170",
@@ -1231,10 +1114,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port2",
               "myid": {
                 "hostid": "170",
@@ -1260,10 +1140,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port3",
               "myid": {
                 "hostid": "170",
@@ -1289,10 +1166,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port4",
               "myid": {
                 "hostid": "170",
@@ -1318,10 +1192,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port5",
               "myid": {
                 "hostid": "170",
@@ -1347,10 +1218,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port6",
               "myid": {
                 "hostid": "170",
@@ -1376,10 +1244,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port7",
               "myid": {
                 "hostid": "170",
@@ -1410,7 +1275,7 @@
           "hostname": "net_switch8",
           "size": "100",
           "uniqueidentifier": "180",
-          "location": "750,370",
+          "location": "750,430",
           "mytype": "net_switch",
           "isdns": "False",
           "isdhcp": "False",
@@ -1422,10 +1287,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "180",
@@ -1451,10 +1313,7 @@
               }
             },
             {
-              "nictype": [
-                "management_interface",
-                "management_interface"
-              ],
+              "nictype": ["management_interface", "management_interface"],
               "nicname": "management_interface0",
               "myid": {
                 "hostid": "180",
@@ -1480,10 +1339,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port1",
               "myid": {
                 "hostid": "180",
@@ -1509,10 +1365,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port2",
               "myid": {
                 "hostid": "180",
@@ -1538,10 +1391,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port3",
               "myid": {
                 "hostid": "180",
@@ -1567,10 +1417,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port4",
               "myid": {
                 "hostid": "180",
@@ -1596,10 +1443,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port5",
               "myid": {
                 "hostid": "180",
@@ -1625,10 +1469,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port6",
               "myid": {
                 "hostid": "180",
@@ -1654,10 +1495,7 @@
               }
             },
             {
-              "nictype": [
-                "port",
-                "port"
-              ],
+              "nictype": ["port", "port"],
               "nicname": "port7",
               "myid": {
                 "hostid": "180",
@@ -1688,7 +1526,7 @@
           "hostname": "pc0",
           "size": "100",
           "uniqueidentifier": "190",
-          "location": "880,380",
+          "location": "880,440",
           "mytype": "pc",
           "isdns": "False",
           "isdhcp": "False",
@@ -1700,10 +1538,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "190",
@@ -1729,10 +1564,7 @@
               }
             },
             {
-              "nictype": [
-                "eth",
-                "eth"
-              ],
+              "nictype": ["eth", "eth"],
               "nicname": "eth0",
               "myid": {
                 "hostid": "190",
@@ -1763,7 +1595,7 @@
           "hostname": "pc1",
           "size": "100",
           "uniqueidentifier": "193",
-          "location": "50,420",
+          "location": "50,480",
           "mytype": "pc",
           "isdns": "False",
           "isdhcp": "False",
@@ -1775,10 +1607,7 @@
           },
           "nic": [
             {
-              "nictype": [
-                "lo",
-                "lo"
-              ],
+              "nictype": ["lo", "lo"],
               "nicname": "lo0",
               "myid": {
                 "hostid": "193",
@@ -1804,10 +1633,7 @@
               }
             },
             {
-              "nictype": [
-                "eth",
-                "eth"
-              ],
+              "nictype": ["eth", "eth"],
               "nicname": "eth0",
               "myid": {
                 "hostid": "193",
