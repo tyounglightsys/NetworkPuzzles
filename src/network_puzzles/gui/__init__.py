@@ -33,6 +33,7 @@ from .base import NETWORK_ITEMS
 from .base import PACKET_DIMS
 from .base import pos_to_location
 from .base import print_layout_info
+from .base import show_grid
 from .buttons import MenuButton
 from .devices import ChooseNicPopup
 from .devices import Device
@@ -582,6 +583,7 @@ class NetworkPuzzlesApp(App):
         tray.open()
 
     def _print_stats(self, *args):
+        show_grid(self)
         print_layout_info(self)
 
     def _set_left_panel_width(self, *args):
