@@ -3,6 +3,8 @@ import traceback
 from dataclasses import dataclass
 from kivy.base import ExceptionHandler
 from kivy.base import ExceptionManager
+from kivy.graphics import Color
+from kivy.graphics import Ellipse
 from kivy.metrics import dp
 from kivy.metrics import sp
 from kivy.properties import StringProperty
@@ -286,3 +288,19 @@ def print_layout_info(app):
             logging.debug(
                 f"GUI: - {w.__class__.__name__}: {w.center=}; {w.pos=}; {w.size=}"
             )
+    logging.debug(f"{app.root.ids.terminal.pos=}")
+    logging.debug(f"{app.root.ids.terminal.height=}")
+
+
+def show_grid(app):
+    """Add grid dots at all major intersections to verify device alignment."""
+    layout = app.root.ids.layout
+    logging.debug(f"GUI: {layout.size=}")
+    with layout.canvas.after:
+        Color(1, 0, 0)
+        for x in range(0, 1000, 100):
+            for y in range(0, 900, 100):
+                local_pos = location_to_pos((x, y), layout.size)
+                pos = layout.to_window(*local_pos, initial=False)
+                logging.debug(f"GUI: loc: ({x}, {y}); abs pos: {local_pos}; pos: {pos}")
+                Ellipse(pos=pos, size=(5, 5))

@@ -231,10 +231,10 @@ class Puzzle:
                 # only check tests which are not completed
                 continue
             if (
-                (test.get("shost") == shost.get("hostname") or test.get("dhost") == shost.get("hostname"))
-                and test.get("thetest") == "NeedsLocalIPTo"
-            ):
-                #logging.debug(f"Found a localIP check. Checking with {shost.get('hostname')}")
+                test.get("shost") == shost.get("hostname")
+                or test.get("dhost") == shost.get("hostname")
+            ) and test.get("thetest") == "NeedsLocalIPTo":
+                # logging.debug(f"Found a localIP check. Checking with {shost.get('hostname')}")
                 # We have a test we want to check.
                 # verify we do not have duplicate IPs.
                 # verify that the IP is local to the one on the target device.

@@ -1,4 +1,8 @@
+import logging
+from kivy.core.window import Window
 from kivy.metrics import dp
+from kivy.metrics import sp
+from kivy.properties import NumericProperty
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
@@ -14,9 +18,27 @@ class ThemedBoxLayout(BoxLayout):
 
 
 class PuzzleLayout(RelativeLayout):
+    terminal_font_size = NumericProperty(sp(12))
+    terminal_line_height = NumericProperty(sp(12 + 4))
+    terminal_lines = NumericProperty(7)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app = session.app
+
+    def get_height(self):
+        # Window height minus terminal area height.
+        h = (
+            Window.height
+            - self.parent.padding[1]
+            - self.parent.padding[3]
+            - (
+                self.terminal_lines * self.terminal_line_height
+            )  # expicitly calculated to equal terminal height
+            - self.parent.spacing
+        )
+        logging.debug(f"GUI: PuzzleLayout height: {h}")
+        return h
 
     def on_touch_up(self, touch):
         if self.collide_point(*touch.pos):
@@ -41,16 +63,9 @@ class AppMenu(ThemedBoxLayout):
     ):
         super().__init__(**kwargs)
         self.app = session.app
-        self.size_hint = (None, None)
-        self.orientation = orientation
-        if self.orientation == "horizontal":
-            self.padding[1] = 0
-            self.padding[3] = 0
-        else:
-            self.padding[0] = 0
-            self.padding[2] = 0
         self.anchor_pos = anchor_pos  # parent_button.pos as (x, y)
         self.choices = choices
+        self.orientation = orientation
 
     def open(self):
         for c in self.choices:

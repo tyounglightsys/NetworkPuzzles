@@ -7,8 +7,8 @@
 #:include network_puzzles/gui/base.kv
 #:include network_puzzles/gui/popups.kv
 #:include network_puzzles/gui/buttons.kv
-#:include network_puzzles/gui/device.kv
-#:include network_puzzles/gui/link.kv
+#:include network_puzzles/gui/devices.kv
+#:include network_puzzles/gui/links.kv
 #:include network_puzzles/gui/packets.kv
 
 
@@ -93,12 +93,13 @@ ThemedBoxLayout:
     VSeparator:
     ThemedBoxLayout:  # right panel
         orientation: 'vertical'
-        size_hint_x: 3/4
+        size_hint_x: 0.75
         padding: dp(0)
         PuzzleLayout:
             id: layout
-            size_hint_y: 0.8
+            size_hint_y: None
+            height: self.get_height()
         TerminalLabel:
             id: terminal
-            size_hint_y: 0.2
-            max_lines: 6
+            size_hint_y: None
+            height: self.line_height * 7
