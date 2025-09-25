@@ -29,7 +29,6 @@ from .base import DEVICE_BUTTON_MAX_H
 from .base import HelpHighlight
 from .base import IMAGES_DIR
 from .base import LightColorTheme
-from .base import NETWORK_ITEMS
 from .base import PACKET_DIMS
 from .base import pos_to_location
 from .base import print_layout_info
@@ -37,7 +36,6 @@ from .base import show_grid
 from .buttons import MenuButton
 from .devices import ChooseNicPopup
 from .devices import Device
-from .layouts import AppMenu
 from .links import Link
 from .packets import PacketManager
 from .popups import PuzzleChooserPopup
@@ -114,7 +112,7 @@ class NetworkPuzzlesApp(App):
 
     def add_device(self, devicew=None, dtype=None):
         # Ensure new item menus are closed.
-        self.close_new_item_menus()
+        self.root.ids.layout.close_trays()
         # TODO: If device_inst not given, require user to choose device type
         # on the screen to instantiate a new device.
         if not isinstance(devicew, Device):
@@ -135,7 +133,7 @@ class NetworkPuzzlesApp(App):
 
     def add_link(self, linkw=None):
         # Ensure new item menus are closed.
-        self.close_new_item_menus()
+        self.root.ids.layout.close_trays()
 
         if not isinstance(linkw, Link):
             if isinstance(linkw, dict):
@@ -158,16 +156,6 @@ class NetworkPuzzlesApp(App):
         if not line.endswith("\n"):
             line += "\n"
         self.root.ids.terminal.text += f"{line}"
-
-    def close_new_item_menus(self):
-        # Close tray and subtrays if open.
-        for tray in (
-            self.new_infra_device_menu,
-            self.new_user_device_menu,
-            self.new_item_menu,
-        ):
-            if tray is not None:
-                self._close_tray(tray)
 
     def draw_devices(self, *args):
         for dev in self.ui.puzzle.devices:
@@ -244,63 +232,19 @@ class NetworkPuzzlesApp(App):
         raise NotImplementedError
 
     def on_new_infra_device(self, inst):
-        # Open "tray" to select from infrastructure devices.
-        devices = NETWORK_ITEMS.get("devices").get("infrastructure")
-        if self.new_infra_device_menu is None:
-            choices = []
-            for dtype, choice in devices.items():
-                choice["cb"] = self.add_device
-                choice["cb_kwargs"] = {"dtype": dtype}
-                choice["orientation"] = "horizontal"
-                choices.append(choice)
-            self.new_infra_device_menu = AppMenu(
-                anchor_pos=inst.pos,
-                choices=choices,
-            )
-        self._toggle_tray(self.new_infra_device_menu)
+        self._toggle_tray(self.root.ids.layout.infra_devices_tray)
 
     def on_new_item(self, inst):
-        # Open "tray" to select item type, set its properties, etc.
-        if self.new_item_menu is None:
-            choices = [
-                {"img": "link.png", "cb": self.add_link, "info": "add link"},
-                {
-                    "img": "Switch.png",
-                    "cb": self.on_new_infra_device,
-                    "info": "infrastructure devices",
-                },
-                {
-                    "img": "PC.png",
-                    "cb": self.on_new_user_device,
-                    "info": "user devices",
-                },
-            ]
-            self.new_item_menu = AppMenu(
-                anchor_pos=inst.pos,
-                choices=choices,
-                orientation="vertical",
-            )
         subtrays = [
-            self.new_infra_device_menu,
-            self.new_user_device_menu,
+            self.root.ids.layout.infra_devices_tray,
+            self.root.ids.layout.user_devices_tray,
         ]
-        self._toggle_tray(self.new_item_menu, subtrays=subtrays)
+        self.root.ids.layout._toggle_tray(
+            self.root.ids.layout.items_tray, subtrays=subtrays
+        )
 
     def on_new_user_device(self, inst):
-        # Open "tray" to select from user devices.
-        devices = NETWORK_ITEMS.get("devices").get("user")
-        if self.new_user_device_menu is None:
-            choices = []
-            for dtype, choice in devices.items():
-                choice["cb"] = self.add_device
-                choice["cb_kwargs"] = {"dtype": dtype}
-                choice["orientation"] = "horizontal"
-                choices.append(choice)
-            self.new_user_device_menu = AppMenu(
-                anchor_pos=inst.pos,
-                choices=choices,
-            )
-        self._toggle_tray(self.new_user_device_menu)
+        self._toggle_tray(self.user_devices_menu)
 
     def on_puzzle_chooser(self, *args):
         PuzzleChooserPopup().open()
@@ -313,12 +257,14 @@ class NetworkPuzzlesApp(App):
 
     def on_start(self):
         # Make widget adjustments.
+        # Set initial app button states.
+        self.update_undo_redo_states()
+        # NOTE: Has to be added once PuzzleLayout already exists.
+        self.root.ids.layout.add_items_menu_button()
+
         Clock.schedule_once(
             self._set_left_panel_width
         )  # buttons must update before panel
-        self._add_new_item_button()
-        # Set initial app button states.
-        self.update_undo_redo_states()
         # Open puzzle chooser if no puzzle is defined.
         if not self.ui.puzzle:
             Clock.schedule_once(self.on_puzzle_chooser)
@@ -345,7 +291,7 @@ class NetworkPuzzlesApp(App):
         # Remove any remaining child widgets from puzzle layout.
         self.root.ids.layout.clear_widgets()
         # Redraw the "+" button for adding new items.
-        self._add_new_item_button()
+        self.root.ids.layout.add_items_menu_button()
 
     def reset_vars(self):
         # Set variables to intial values.
@@ -430,18 +376,6 @@ class NetworkPuzzlesApp(App):
             self.chosen_pos = None
         elif self.chosen_pos:
             logging.info(f"GUI: User selected pos: {self.chosen_pos}")
-
-    def _add_new_item_button(self, *args):
-        # TODO: Add button to cycle through showing hostname and/or IPs?
-        self.new_item_button = MenuButton(
-            props={"text": "+", "cb": self.on_new_item, "info": "add new item"},
-            pos_hint={"x": 0.005, "top": 0.99},
-        )
-        self.root.ids.layout.add_widget(self.new_item_button)
-
-    def _close_tray(self, tray):
-        tray.close()
-        self.root.ids.layout.remove_widget(tray)
 
     def _get_widget_by_prop(self, prop, value):
         for w in self.root.ids.layout.children:
@@ -578,10 +512,6 @@ class NetworkPuzzlesApp(App):
             del self.new_link_data
             self.ui.parse(" ".join(cmd))
 
-    def _open_tray(self, tray):
-        self.root.ids.layout.add_widget(tray)
-        tray.open()
-
     def _print_stats(self, *args):
         # show_grid(self)
         print_layout_info(self)
@@ -596,19 +526,6 @@ class NetworkPuzzlesApp(App):
                 menu.spacing * (len(menu_buttons) - 1),
             ]
         )
-
-    def _toggle_tray(self, tray, subtrays=None):
-        # Open tray, if not open.
-        if tray not in self.root.ids.layout.children:
-            self._open_tray(tray)
-        # Close tray and subtrays if not closed.
-        else:
-            # First make sure submenu trays aren't open.
-            if subtrays:
-                for subtray in subtrays:
-                    if subtray is not None:
-                        self._close_tray(subtray)
-            self._close_tray(tray)
 
     def _update_packets(self, *args):
         # Skip if no puzzle is loaded.
