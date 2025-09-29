@@ -232,19 +232,13 @@ class NetworkPuzzlesApp(App):
         raise NotImplementedError
 
     def on_new_infra_device(self, inst):
-        self._toggle_tray(self.root.ids.layout.infra_devices_tray)
+        self.root.ids.layout.infra_devices_tray.toggle()
 
     def on_new_item(self, inst):
-        subtrays = [
-            self.root.ids.layout.infra_devices_tray,
-            self.root.ids.layout.user_devices_tray,
-        ]
-        self.root.ids.layout._toggle_tray(
-            self.root.ids.layout.items_tray, subtrays=subtrays
-        )
+        self.root.ids.layout.items_tray.toggle()
 
     def on_new_user_device(self, inst):
-        self._toggle_tray(self.user_devices_menu)
+        self.root.ids.layout.user_devices_tray.toggle()
 
     def on_puzzle_chooser(self, *args):
         PuzzleChooserPopup().open()
@@ -297,10 +291,6 @@ class NetworkPuzzlesApp(App):
         # Set variables to intial values.
         self.filtered_puzzles = []
         self.filters = []
-
-        self.new_item_menu = None
-        self.new_infra_device_menu = None
-        self.new_user_device_menu = None
 
         # Delete temporary variables.
         if hasattr(self, "new_device_data"):

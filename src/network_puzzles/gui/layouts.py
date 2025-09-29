@@ -20,19 +20,25 @@ class ThemedBoxLayout(BoxLayout):
 
 class AppTray(ThemedBoxLayout):
     def __init__(
-        self, anchor_pos=None, choices=list(), orientation="horizontal", **kwargs
+        self, choices=list(), orientation="horizontal", parent_button=None, **kwargs
     ):
         super().__init__(**kwargs)
         self.app = session.app
-        self.anchor_pos = anchor_pos  # parent_button.pos as (x, y)
+        self.parent_button = parent_button
         self.choices = choices
         self.buttons = [MenuButton(c) for c in self.choices]
         self.orientation = orientation
 
+    @property
+    def is_open(self):
+        return len(self.children) > 0
+
     def close(self):
         self.clear_widgets()
+        self.app.root.ids.layout.remove_widget(self)
 
     def open(self):
+        self.app.root.ids.layout.add_widget(self)
         for b in self.buttons:
             self.add_widget(b)
         self._set_size()
@@ -41,14 +47,20 @@ class AppTray(ThemedBoxLayout):
     def _set_pos(self):
         if self.orientation == "horizontal":
             # NOTE: The tray's pos is immediately adjacent to the anchor button.
-            x = self.anchor_pos[0] + self.height
-            y = self.anchor_pos[1]
+            x = self.parent_button.pos[0] + self.height
+            y = self.parent_button.pos[1]
         else:
             # NOTE: The tray's pos is offset down from the anchor button by the
             # tray's height.
-            x = self.anchor_pos[0]
-            y = self.anchor_pos[1] - self.height
+            x = self.parent_button.pos[0]
+            y = self.parent_button.pos[1] - self.height
         self.pos = (x, y)
+
+    def toggle(self):
+        if self.is_open:
+            self.close()
+        else:
+            self.open()
 
     def _set_size(self):
         length = len(self.children)
@@ -84,16 +96,16 @@ class PuzzleLayout(RelativeLayout):
 
         # Define button trays.
         self.items_tray = AppTray(
-            anchor_pos=self.pos,
+            parent_button=self.items_menu_button,
             choices=self._get_items_choices(),
             orientation="vertical",
         )
         self.infra_devices_tray = AppTray(
-            anchor_pos=self.pos,
+            parent_button=self.items_tray.buttons[1],
             choices=self._get_infra_devices_choices(),
         )
         self.user_devices_tray = AppTray(
-            anchor_pos=self.pos,
+            parent_button=self.items_tray.buttons[2],
             choices=self._get_user_devices_choices(),
         )
 
@@ -107,8 +119,7 @@ class PuzzleLayout(RelativeLayout):
             self.user_devices_tray,
             self.items_tray,
         ):
-            if tray is not None:
-                self._close_tray(tray)
+            tray.close()
 
     def get_height(self):
         # Window height minus terminal area height.
@@ -172,24 +183,3 @@ class PuzzleLayout(RelativeLayout):
             choice["orientation"] = "horizontal"
             choices.append(choice)
         return choices
-
-    def _close_tray(self, tray):
-        tray.close()
-        self.remove_widget(tray)
-
-    def _open_tray(self, tray):
-        self.add_widget(tray)
-        tray.open()
-
-    def _toggle_tray(self, tray, subtrays=None):
-        # Open tray, if not open.
-        if tray not in self.children:
-            self._open_tray(tray)
-        # Close tray and subtrays if not closed.
-        else:
-            # First make sure submenu trays aren't open.
-            if subtrays:
-                for subtray in subtrays:
-                    if subtray is not None:
-                        self._close_tray(subtray)
-            self._close_tray(tray)
