@@ -285,6 +285,27 @@ def justIP(ip):
     ip = re.sub("/.*", "", ip)
     return ip
 
+def get_ip_range(start_ip, end_ip):
+    """
+    Generates a list of IP addresses between a start and end IP address (inclusive).
+    """
+    try:
+        start = ipaddress.IPv4Address(start_ip)
+        end = ipaddress.IPv4Address(end_ip)
+    except ipaddress.AddressValueError:
+        session.print("Invalid IP address format.")
+        return []
+
+    if start > end:
+        session.print("Start IP address must be less than or equal to End IP address.")
+        return []
+
+    ip_list = []
+    current_ip = start
+    while current_ip <= end:
+        ip_list.append(str(current_ip))
+        current_ip += 1
+    return ip_list
 
 def isLocal(packetIP: str, interfaceIP: str):
     """Determine if the packet IP is considered local by the subnet/netmask on the interface IP

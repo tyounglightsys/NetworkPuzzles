@@ -3,6 +3,8 @@
 import logging
 import sys
 import copy
+import ipaddress
+
 from . import device
 from . import puzzle
 from . import session
@@ -399,6 +401,9 @@ class Parser:
                     session.print(f"poweroff: {thedevice['poweroff']}")
                 if "isdhcp" in thedevice and thedevice["isdhcp"].lower() == "true":
                     session.print(f"DHCP server: {thedevice['isdhcp']}")
+                    if thedevice.get('dhcprange') is not None:
+                        for item in thedevice.get('dhcprange'):
+                            session.print(f"  Range: {item['ip']} {item['mask']}-{item['gateway']}")
                 session.print(f"gateway: {thedevice['gateway']['ip']}")
                 for onestring in device.allIPStrings(thedevice, True, True):
                     session.print(onestring)
@@ -470,6 +475,80 @@ class Parser:
         session.print(
             f"Defining {dev_obj.hostname} 'isdhcp' to {dev_obj.json.get('isdhcp')}"
         )
+
+    def set_dhcp_range(self, dev_obj, value):
+        if not device.servesDHCP(dev_obj.json):
+            #The device is incapable of being a DHCP server 
+            session.print(f"{dev_obj.hostname} is not a dhcp server")
+            return False
+        if not dev_obj.is_dhcp:
+            #The device is capable of being a DHCP server, but that ability is not turned on 
+            session.print(f"{dev_obj.hostname} is not a dhcp server")
+            return False
+        #Now, we need to ensure we have the right settings.
+        #   Value should be a range LowIp-HighIp
+        #   or Value should be a range ethIP LowIp-HighIp
+        #   or Value should be a range ethIP LowIp HighIp
+        if len(value) == 0:
+            session.print("You must supply a value-range for the DHCP range")
+            return False
+        startip=""
+        endip=""
+        ethip=""
+        session.print(f"Setting DHCP: {len(value)} items:{value}")
+        if len(value) == 1:
+            values = value[0].split('-')            
+            if len(values) != 2:
+                session.print("You must specify a beginning and ending range:  eg. 192.168.1.10-192.168.1.20")
+                return False
+            startip=values[0]
+            endip=values[1]
+        if len(value) == 2:
+            if ('-' in value[1]):
+                session.print("DHCP has two items - second has minus")
+                #we have an ip,rangestart-rangeend
+                values = value[1].split('-')            
+                if len(values) != 2:
+                    session.print("You must specify a beginning and ending range:  eg. 192.168.1.10-192.168.1.20")
+                    return False
+                startip=values[0]
+                endip=values[1]
+                ethip=value[0]
+            else:
+                #we have a rangestart, rangeend
+                startip=value[0]
+                endip=value[1]
+        if len(value) == 3:
+            ethip=value[0]
+            startip=value[1]
+            endip=value[2]
+        ip_list = packet.get_ip_range(startip, endip)
+            #If we got here, it worked as a valid IP range.  Accept it.
+        if len(ip_list) < 1:
+            session.print(f"Invalid DHCP range: {startip} {endip}")
+            return False
+        #If we get here, it was a valid range.
+        #Now we create a new DHCP entry.  It looks like: {ip:[ip of nic], mask:[rangestart],gateway:[range-end],type:"dhcp}
+        if ethip == "":
+            #We need to figure out the IP address of the ethernet belonging to the range
+            localIP = device.sourceIP(dev_obj.json, ipaddress.IPv4Address(startip))
+            if localIP is not None and localIP != "":
+                ethip =  packet.justIP(localIP)
+        if ethip == "":
+            session.print("Could not find local IP connected to the ip range specified")
+            return False
+        #remove the previous record, if one existed
+        itemlist = [ record for record in dev_obj.json.get('dhcprange') if record['ip'] != ethip]
+        #Now, we create a record and store it.
+        newitem = { 
+            'ip':ethip,
+            'mask':startip,
+            'gateway':endip,
+            'type':"dhcp"
+        }
+        itemlist.append(newitem)
+        dev_obj.json['dhcprange'] = itemlist
+        session.print(f"Setting DHCP range on {dev_obj.hostname} to: {ethip} {startip}-{endip}")
 
     def set_gateway_value(self, dev_obj, value):
         # we really need to do some type checking.  It should be a valid ipv4 or ipv6 address
@@ -639,8 +718,10 @@ class Parser:
                     self.set_power_value(dev_obj, values[0])
             case "poweron":
                 self.set_power_value(dev_obj, "on")
-            case "dhcp" | "isdhcp":
+            case "isdhcp":
                 self.set_dhcp_value(dev_obj, values[0])
+            case "dhcp":
+                self.set_dhcp_range(dev_obj, values)
             case "gateway" | "gw":
                 self.set_gateway_value(dev_obj, values[0])
             case "location" | "position" | "pos":
