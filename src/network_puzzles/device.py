@@ -1083,7 +1083,8 @@ def makeDHCPResponse(packRec, thisDevice, nicRec):
         rangeend = int(
             iprange["gateway"].split(".")[3]
         )  # they were stored a bit oddly in the original json
-        iparr = iprange["ip"].split(".")
+        #use the starting portion of the range, to allow for broken ranges.
+        iparr = iprange["mask"].split(".")
         ipprepend = f"{iparr[0]}.{iparr[1]}.{iparr[2]}."
         for i in range(rangestart, rangeend):
             newip = ipprepend + str(i)
