@@ -121,9 +121,9 @@ def damagePacketIfNeeded(packetrec, packetnumber, pointlist):
                 px, py = onepoint
                 # calculate distance
                 dist = int(distance(px, py, dx, dy))
-                if dist <= 32:
-                    packetrec["health"] = packetrec["health"] - 5
-                    totdamage = totdamage + 5
+                if dist <= 43:
+                    packetrec["health"] = packetrec["health"] - 1
+                    totdamage = totdamage + 1
                     if packetrec["health"] <= 0:
                         packetrec["status"] = "done"  # the packet dies silently
             if totdamage > 0:
