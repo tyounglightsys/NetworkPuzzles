@@ -1,0 +1,3 @@
+load Level1_BadDHCP
+dhcp pc0
+dhcp pc1
