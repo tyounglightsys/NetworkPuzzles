@@ -929,6 +929,8 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             # print(dest)
             # we need to generate a ping response
             nPacket = packetFromTo(thisDevice, dest)
+            if nPacket is None:
+                return False
             nPacket["packettype"] = "ping-response"
             sendPacketOutDevice(nPacket, thisDevice)
             # print (nPacket)
