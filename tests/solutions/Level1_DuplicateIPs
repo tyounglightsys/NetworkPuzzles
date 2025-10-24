@@ -1,0 +1,5 @@
+load Level1_DuplicateIPs
+dhcp pc3
+set pc0 eth0 192.168.1.5
+set pc1 eth0 192.168.1.6
+set pc2 eth0 192.168.1.7
