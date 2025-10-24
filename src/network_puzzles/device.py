@@ -158,15 +158,19 @@ class Device:
                 if not isinstance(onenic.get("interface"), list):
                     onenic["interface"] = [onenic.get("interface")]
                 for oneinterface in onenic.get("interface"):
-                    onemac = {
-                        "ip": ipaddress.ip_interface(
-                            oneinterface["myip"]["ip"]
-                            + "/"
-                            + oneinterface["myip"]["mask"]
-                        ),
-                        "mac": onenic["Mac"],
-                    }
-                maclist.append(onemac)
+                    try:
+                        onemac = {
+                            "ip": ipaddress.ip_interface(
+                                oneinterface["myip"]["ip"]
+                                + "/"
+                                + oneinterface["myip"]["mask"]
+                            ),
+                            "mac": onenic["Mac"],
+                        }
+                        maclist.append(onemac)
+                    except ValueError:
+                        #If the IP is invalid, do not add it
+                        continue
         return maclist
 
     def nic_from_name(self, nicname):
