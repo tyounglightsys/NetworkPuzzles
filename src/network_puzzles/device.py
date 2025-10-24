@@ -910,7 +910,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                 packRec["status"] = "done"
                 return True
 
-    if deviceHasIP(thisDevice, packRec["destIP"]):
+    if not packet.isEmpty(packRec["destIP"]) and deviceHasIP(thisDevice, packRec["destIP"]) :
         packRec["status"] = "done"
         logging.info("Packet arrived at destination")
         #        print ("packet type: -" + packRec['packettype'] + "-")
