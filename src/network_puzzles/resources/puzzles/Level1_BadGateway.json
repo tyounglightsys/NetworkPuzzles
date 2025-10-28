@@ -1404,7 +1404,7 @@
           "SrcNic": {
             "hostid": "152",
             "nicid": "154",
-            "hostname": "pc2",
+            "hostname": "pc0",
             "nicname": "eth0"
           },
           "DstNic": {
