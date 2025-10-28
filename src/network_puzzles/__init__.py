@@ -42,6 +42,7 @@ if args.debug:
     log_level = logging.DEBUG
 if args.filename:
     session.startinglevel = args.filename
+    session.history.append(f"load {args.filename}")
 
 logging.basicConfig(
     level=log_level,
