@@ -690,7 +690,7 @@
               "myid": {
                 "hostid": "152",
                 "nicid": "153",
-                "hostname": "pc2",
+                "hostname": "pc0",
                 "nicname": "lo0"
               },
               "uniqueidentifier": "153",
@@ -720,7 +720,7 @@
               "myid": {
                 "hostid": "152",
                 "nicid": "154",
-                "hostname": "pc2",
+                "hostname": "pc0",
                 "nicname": "eth0"
               },
               "uniqueidentifier": "154",
