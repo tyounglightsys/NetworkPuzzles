@@ -793,6 +793,10 @@ def beginIngressOnNIC(packRec, nicRec):
     # in certain cases we track inbound traffic; remembering where it came from.
     trackPackets = False
     theDevice = session.puzzle.device_from_name(nicRec.get("myid").get("hostname"))
+    if theDevice is None:
+        #This is a problem.  We need to exit gracefully
+        packRec["status"] = "done"
+        return False
     # if it is a port (swicth/hub) or wport (wireless devices)
     if nictype == "port" or nictype == "wport":
         trackPackets = True
