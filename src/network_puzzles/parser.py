@@ -452,6 +452,19 @@ class Parser:
                     session.print(oneline["backwards"])
                 return
             session.print(f"No such host {args[0]}")
+        if len(args) == 2:
+            #hopefully show pc0 eth0 or something like that
+            thedevice = session.puzzle.device_from_name(args[0])
+            if thedevice is not None:
+                #right now, we are hoping it is a hostname and a nic name. Later we may have vlans, etc.
+                for onenic in thedevice["nic"]:
+                    #print the nic info
+                    if(onenic.get('nicname') == args[1]):
+                        for oneinterface in onenic.get('interface'):
+                            session.print(f"{oneinterface.get('nicname')} - {oneinterface.get('myip').get('ip')}/{oneinterface.get('myip').get('mask')} - {onenic.get('Mac')}")
+            else:
+                session.print(f"No such host {args[0]}")
+
 
     def set_dhcp_value(self, dev_obj, value):
         if not device.servesDHCP(dev_obj.json):
@@ -505,7 +518,6 @@ class Parser:
             endip=values[1]
         if len(value) == 2:
             if ('-' in value[1]):
-                session.print("DHCP has two items - second has minus")
                 #we have an ip,rangestart-rangeend
                 values = value[1].split('-')            
                 if len(values) != 2:
