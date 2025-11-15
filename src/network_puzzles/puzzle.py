@@ -489,6 +489,11 @@ class Puzzle:
             count = count + 1
         newnicname = f"{nictype}{count}"
         newid = self.issueUniqueIdentifier()
+        newip="0.0.0.0"
+        newmask="0.0.0.0"
+        if newnicname == 'lo0':
+            newip="127.0.0.1"
+            newmask="255.255.255.0"
         newnic = {
             "nictype": [f"{nictype}", f"{nictype}"],
             "nicname": newnicname,
@@ -506,8 +511,8 @@ class Puzzle:
                 {
                     "nicname": newnicname,
                     "myip": {
-                        "ip": "0.0.0.0",
-                        "mask": "0.0.0.0",
+                        "ip": newip,
+                        "mask": newmask,
                         "gateway": "0.0.0.0",
                     },
                 }
@@ -578,6 +583,10 @@ class Puzzle:
             self.createNIC(newdevice, "wan")
         if device_type in {"cellphone", "tablet"}:
             self.createNIC(newdevice, "wlan")
+        if device_type == "ip_phone":
+            #an IP phone has one nic that is DHCP enabled
+            newnic=self.createNIC(newdevice, "eth")
+            newnic['usesdhcp']="True"
 
         self.json["device"].append(newdevice)
         session.print(f"Creating new device: {newdevicename}")

@@ -493,23 +493,6 @@
           "hostname": "pc0_link_net_switch0",
           "linktype": "normal",
           "uniqueidentifier": "117"
-        },
-        {
-          "SrcNic": {
-            "hostid": "121",
-            "nicid": "123",
-            "hostname": "ip_phone0",
-            "nicname": "eth0"
-          },
-          "DstNic": {
-            "hostid": "103",
-            "nicid": "108",
-            "hostname": "net_switch0",
-            "nicname": "port3"
-          },
-          "hostname": null,
-          "linktype": "normal",
-          "uniqueidentifier": "124"
         }
       ],
       "nettest": [
