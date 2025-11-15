@@ -9,6 +9,7 @@ from . import device
 from . import puzzle
 from . import session
 from . import packet
+from . import nic
 
 
 class Parser:
@@ -236,6 +237,21 @@ class Parser:
                 session.print(f"Successfully replaced {item['hostname']}")
                 session.print(f"{item['hostname']} left in an off state")
                 #raise NotImplementedError
+            else:  # it is something that does not exist
+                raise ValueError(f"Not a valid item: {args[0]}")
+        if len(args) == 2:
+            #We are hopefully finding something like replace pc0 eth0
+            item = session.puzzle.device_from_name(args[0])
+            if item is not None:
+                for onenic in device.Device(item).all_nics():
+                    if onenic.get('nicname') == args[1] and onenic['nicname'] != "lo0":
+                        #We found the nic to replace.
+                        onenic.pop('Mac',None)
+                        nic.Nic(onenic).ensure_mac()
+                        for oneint in onenic['interface']:
+                                oneint['myip']['ip'] = "0.0.0.0" #reset them all to nothing - the default
+                                oneint['myip']['mask'] = "0.0.0.0" #reset them all to nothing - the default
+
             else:  # it is something that does not exist
                 raise ValueError(f"Not a valid item: {args[0]}")
 
