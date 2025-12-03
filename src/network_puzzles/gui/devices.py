@@ -56,6 +56,11 @@ class Device(DragBehavior, ThemedBoxLayout):
             return self.base.hostname
 
     @property
+    def is_dhcp(self):
+        if hasattr(self, "base") and self.base:
+            return self.base.is_dhcp
+
+    @property
     def links(self):
         links = list()
         for lnk in self.app.links:
@@ -79,6 +84,11 @@ class Device(DragBehavior, ThemedBoxLayout):
             return [nic.Nic(n) for n in self.base.all_nics()]
         else:
             return list()
+
+    @property
+    def type(self):
+        if hasattr(self, "base") and self.base:
+            return self.base.type
 
     @property
     def uniqueidentifier(self):
@@ -305,6 +315,7 @@ class EditDevicePopup(AppPopup):
         self.selected_ip = None
         self._selected_nic = None
         self.puzzle_commands = list()
+        self._add_conditional_widgets()
 
     @property
     def selected_nic(self):
@@ -314,6 +325,12 @@ class EditDevicePopup(AppPopup):
     def selected_nic(self, value):
         # Remove "connected" character from displayed value.
         self._selected_nic = value.rstrip("*")
+
+    def on_dhcp_button(self):
+        raise NotImplementedError
+
+    def on_dhcp_chkbox(self):
+        raise NotImplementedError
 
     def on_gateway(self):
         raise NotImplementedError
@@ -384,6 +401,30 @@ class EditDevicePopup(AppPopup):
         # b/c IP data has likely changed.
         self.app.update_help()
         self.dismiss()
+
+    def _add_conditional_widgets(self):
+        if self.device.type in ["server"]:
+            # Handle DHCP checkbox, label, and button.
+            l_cb = ThemedBoxLayout(
+                size_hint_max_y=self.app.BUTTON_MAX_H,
+                padding=0,
+            )
+            if self.device.is_dhcp:
+                state = "down"
+            else:
+                state = "normal"
+            c = ThemedCheckBox(size_hint_x=0.1, state=state)
+            t = ThemedLabel(text=f"{_('DHCP Server')}", size_hint_x=0.4)
+            b = ThemedButton(text=f"{_('Edit DHCP')}", on_release=self.on_dhcp_button)
+            for w in [c, t, b]:
+                l_cb.add_widget(w)
+            self.root.ids.left_panel.add_widget(l_cb)
+        if self.device.type in ["router", "switch"]:
+            # Handle VLANs button.
+            b = ThemedButton(text=f"{_('VLANs')}", on_release=self.on_vlans)
+            self.root.ids.left_panel.add_widget(b)
+        # Add empty widget at end to push all other widgets to the top.
+        self.root.ids.left_panel.add_widget(Widget())
 
     def _get_ip_config_from_nic(self, nic_obj, value):
         """Return IP config object from NIC.

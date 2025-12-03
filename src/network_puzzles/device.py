@@ -112,7 +112,11 @@ class Device:
             if isinstance(value, bool):
                 value = str(value)
             self.json["blownup"] = value
-            self.powered_on = True #when it blows up, the power gets turned off
+            self.powered_on = True  # when it blows up, the power gets turned off
+
+    @property
+    def type(self):
+        return self.json.get("mytype")
 
     @property
     def uniqueidentifier(self):
