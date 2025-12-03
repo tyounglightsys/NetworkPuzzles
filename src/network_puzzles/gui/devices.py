@@ -1,27 +1,28 @@
 import logging
 from copy import deepcopy
+
 from kivy.clock import Clock
-from kivy.graphics import Color
-from kivy.graphics import Ellipse
+from kivy.graphics import Color, Ellipse
 from kivy.metrics import dp
 from kivy.uix.behaviors import DragBehavior
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
+from kivy.uix.widget import Widget
 
-from .. import _
-from .. import device
-from .. import interface
-from .. import nic
-from .. import session
-from .base import AppRecView
-from .base import get_layout_height
-from .base import HelpHighlight
-from .base import hide_widget
-from .base import location_to_pos
-from .base import LockEmblem
-from .base import NETWORK_ITEMS
-from .base import pos_to_location
-from .buttons import CommandButton
+from .. import _, device, interface, nic, session
+from .base import (
+    NETWORK_ITEMS,
+    AppRecView,
+    HelpHighlight,
+    LockEmblem,
+    ThemedCheckBox,
+    get_layout_height,
+    hide_widget,
+    location_to_pos,
+    pos_to_location,
+)
+from .buttons import CommandButton, ThemedButton
+from .labels import ThemedLabel
 from .layouts import ThemedBoxLayout
 from .popups import AppPopup
 
