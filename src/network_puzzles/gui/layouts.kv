@@ -2,6 +2,15 @@
     padding: dp(5)
     spacing: dp(3)
 
+<ActionPopupButtons>:
+    size_hint_max_y: app.BUTTON_MAX_H + dp(8)
+    PopupButton:
+        text: root.cancel_text
+        on_release: root.cancel()
+    PopupButton:
+        text: root.okay_text
+        on_release: root.okay()
+
 <AppTray>:
     size_hint: (None, None)
     padding: [self.padding[0], 0, self.padding[2], 0] if self.orientation == "horizontal" else [0, self.padding[1], 0, self.padding[3]]

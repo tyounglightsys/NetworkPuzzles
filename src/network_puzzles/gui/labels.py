@@ -1,5 +1,5 @@
-from kivy.uix.label import Label
 from kivy.properties import BooleanProperty
+from kivy.uix.label import Label
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 from kivy.uix.textinput import TextInput
 
@@ -31,6 +31,10 @@ class ThemedLabel(Label):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app = session.app
+
+
+class CheckBoxLabel(ThemedLabel):
+    pass
 
 
 class DeviceLabel(ThemedLabel):

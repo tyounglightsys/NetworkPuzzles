@@ -1,29 +1,31 @@
 import logging
 from copy import deepcopy
+
 from kivy.clock import Clock
-from kivy.graphics import Color
-from kivy.graphics import Ellipse
+from kivy.graphics import Color, Ellipse
 from kivy.metrics import dp
 from kivy.uix.behaviors import DragBehavior
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
+from kivy.uix.widget import Widget
 
-from .. import _
-from .. import device
-from .. import interface
-from .. import nic
-from .. import session
-from .base import AppRecView
-from .base import get_layout_height
-from .base import HelpHighlight
-from .base import hide_widget
-from .base import location_to_pos
-from .base import LockEmblem
-from .base import NETWORK_ITEMS
-from .base import pos_to_location
-from .buttons import CommandButton
+from .. import _, device, interface, nic, session
+from .base import (
+    NETWORK_ITEMS,
+    AppRecView,
+    HelpHighlight,
+    LockEmblem,
+    ThemedCheckBox,
+    ValueInput,
+    get_layout_height,
+    hide_widget,
+    location_to_pos,
+    pos_to_location,
+)
+from .buttons import CommandButton, ThemedButton
+from .labels import CheckBoxLabel
 from .layouts import ThemedBoxLayout
-from .popups import AppPopup
+from .popups import ActionPopup, ThemedPopup
 
 
 class Device(DragBehavior, ThemedBoxLayout):
@@ -56,6 +58,11 @@ class Device(DragBehavior, ThemedBoxLayout):
             return self.base.hostname
 
     @property
+    def is_dhcp(self):
+        if hasattr(self, "base") and self.base:
+            return self.base.is_dhcp
+
+    @property
     def links(self):
         links = list()
         for lnk in self.app.links:
@@ -79,6 +86,11 @@ class Device(DragBehavior, ThemedBoxLayout):
             return [nic.Nic(n) for n in self.base.all_nics()]
         else:
             return list()
+
+    @property
+    def type(self):
+        if hasattr(self, "base") and self.base:
+            return self.base.type
 
     @property
     def uniqueidentifier(self):
@@ -282,21 +294,21 @@ class Device(DragBehavior, ThemedBoxLayout):
             lnk.hide(False)
 
 
-class CommandsPopup(AppPopup):
+class CommandsPopup(ThemedPopup):
     pass
 
 
-class PingHostPopup(AppPopup):
+class PingHostPopup(ActionPopup):
     def __init__(self, dev, **kwargs):
         self.device = dev
         super().__init__(**kwargs)
 
     def on_okay(self, dest):
         self.app.ui.parse(f"ping {self.device.hostname} {dest}")
-        self.dismiss()
+        super().on_okay()
 
 
-class EditDevicePopup(AppPopup):
+class EditDevicePopup(ActionPopup):
     def __init__(self, dev, **kwargs):
         # Use copy of data for displaying in UI b/c real changes will be
         # applied via parser commands when "Okay" is clicked.
@@ -305,6 +317,7 @@ class EditDevicePopup(AppPopup):
         self.selected_ip = None
         self._selected_nic = None
         self.puzzle_commands = list()
+        self._add_conditional_widgets()
 
     @property
     def selected_nic(self):
@@ -314,6 +327,12 @@ class EditDevicePopup(AppPopup):
     def selected_nic(self, value):
         # Remove "connected" character from displayed value.
         self._selected_nic = value.rstrip("*")
+
+    def on_dhcp_button(self):
+        EditDhcpPopup(self.device).open()
+
+    def on_dhcp_chkbox(self):
+        raise NotImplementedError
 
     def on_gateway(self):
         raise NotImplementedError
@@ -372,9 +391,6 @@ class EditDevicePopup(AppPopup):
         self.root.ids.remove_ip.disabled = False
         self.root.ids.edit_ip.disabled = False
 
-    def on_cancel(self):
-        self.dismiss()
-
     def on_okay(self):
         logging.info(f"GUI: Updating {self.device.hostname}:")
         for cmd in self.puzzle_commands:
@@ -383,7 +399,31 @@ class EditDevicePopup(AppPopup):
         # Update GUI helps b/c it will trigger tooltip updates, which are needed
         # b/c IP data has likely changed.
         self.app.update_help()
-        self.dismiss()
+        super().on_okay()
+
+    def _add_conditional_widgets(self):
+        if self.device.type in ["server"]:
+            # Handle DHCP checkbox, label, and button.
+            l_cb = ThemedBoxLayout(
+                size_hint_max_y=self.app.BUTTON_MAX_H,
+                padding=0,
+            )
+            if self.device.is_dhcp:
+                state = "down"
+            else:
+                state = "normal"
+            c = ThemedCheckBox(size_hint_x=0.1, state=state)
+            t = CheckBoxLabel(text=f"{_('DHCP Server')}", size_hint_x=0.4)
+            b = ThemedButton(text=f"{_('Edit DHCP')}", on_release=self.on_dhcp_button)
+            for w in [c, t, b]:
+                l_cb.add_widget(w)
+            self.root.ids.left_panel.add_widget(l_cb)
+        if self.device.type in ["router", "switch"]:
+            # Handle VLANs button.
+            b = ThemedButton(text=f"{_('VLANs')}", on_release=self.on_vlans)
+            self.root.ids.left_panel.add_widget(b)
+        # Add empty widget at end to push all other widgets to the top.
+        self.root.ids.left_panel.add_widget(Widget())
 
     def _get_ip_config_from_nic(self, nic_obj, value):
         """Return IP config object from NIC.
@@ -410,18 +450,9 @@ class EditDevicePopup(AppPopup):
         return "/" in value
 
     def _set_ips(self):
-        ips = list()
         n = self.device.get_nic(self.selected_nic)
         logging.debug(f"GUI: {n.name} ifaces: {n.interfaces}")
-        for iface_data in n.interfaces:
-            iface = interface.Interface(iface_data)
-            if iface.nicname == n.name:
-                ip_addr = interface.IpAddress(iface.ip_data)
-                if not ip_addr.address.startswith("0"):
-                    ips.append(iface.ip_data)
-                break
-        logging.debug(f"GUI: IPs for {self.device.hostname}: {ips}")
-        self.ids.ips_list.update_data(ips)
+        self.ids.ips_list.update_data(n.ip_addresses)
 
 
 class NICsRecView(AppRecView):
@@ -451,14 +482,11 @@ class IPsRecView(AppRecView):
         self.root.on_ip_selection(self.data[index].get("text"))
 
 
-class EditIpPopup(AppPopup):
+class EditIpPopup(ActionPopup):
     def __init__(self, device_popup, ip_address, **kwargs):
         self.device_popup = device_popup
         self.ip_address = ip_address
         super().__init__(**kwargs)
-
-    def on_cancel(self):
-        self.dismiss()
 
     def on_okay(self):
         # Add updating command.
@@ -467,7 +495,7 @@ class EditIpPopup(AppPopup):
         )
         # Update IPs in IPs list.
         self.device_popup._set_ips()
-        self.dismiss()
+        super().on_okay()
 
     def set_address(self, input_inst):
         if not input_inst.focus:
@@ -482,7 +510,7 @@ class EditIpPopup(AppPopup):
             self.ip_address.gateway = input_inst.text
 
 
-class ChooseNicPopup(AppPopup):
+class ChooseNicPopup(ActionPopup):
     def __init__(self, devicew, **kwargs):
         self.device = devicew
         super().__init__(**kwargs)
@@ -497,4 +525,48 @@ class ChooseNicPopup(AppPopup):
 
     def on_okay(self):
         self.app.chosen_nic = self.selected_nic
-        self.dismiss()
+        super().on_okay()
+
+
+class EditDhcpPopup(ActionPopup):
+    def __init__(self, devicew, **kwargs):
+        self.device = devicew
+        super().__init__(**kwargs)
+        self.dhcp_configs = [
+            ip_data
+            for ip_data in self.device.base.json.get("dhcprange", list())
+            if ip_data.get("ip") != "127.0.0.1"
+        ]
+        self._add_dhcp_configs()
+
+    def on_okay(self):
+        for c in self.dhcp_configs:
+            ip = c.get("ip")
+            row = self._get_dhcp_row(ip)
+            if row:
+                start = row.children[-2].text
+                end = row.children[-3].text
+                if start != c.get("mask") or end != c.get("gateway"):
+                    cmd = f"set {self.device.hostname} dhcp {ip} {start}-{end}"
+                    logging.info(f"GUI: > {cmd}")
+                    self.app.ui.parse(cmd)
+
+        # Update GUI helps b/c it will trigger tooltip updates, which are needed
+        # b/c IP data has likely changed.
+        self.app.update_help()
+        super().on_okay()
+
+    def _add_dhcp_configs(self):
+        for config in self.dhcp_configs:
+            bl = ThemedBoxLayout()
+            ip = CheckBoxLabel(text=config.get("ip"))
+            start = ValueInput(text=config.get("mask"))
+            end = ValueInput(text=config.get("gateway"))
+            for w in [ip, start, end]:
+                bl.add_widget(w)
+        self.ids.dhcp_configs_layout.add_widget(bl)
+
+    def _get_dhcp_row(self, ip):
+        for row in self.ids.dhcp_configs_layout.children:
+            if row.children[-1].text == ip:
+                return row

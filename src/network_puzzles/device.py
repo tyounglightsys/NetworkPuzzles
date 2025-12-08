@@ -1,10 +1,9 @@
-import ipaddress
 import copy
+import ipaddress
 import logging
 
+from . import packet, session
 from .nic import Nic
-from . import session
-from . import packet
 
 
 class Device:
@@ -95,24 +94,30 @@ class Device:
     @property
     def blown_up(self):
         value = False
-        if 'blownup' in self.json:
+        if "blownup" in self.json:
             if self.json.get("blownup", "").lower() in ("true", "yes"):
                 value = True
             else:
                 value = False
             # logging.debug(f"{self.hostname}.powered_on: {value}")
-        #session.print(f"Checking blown up state of {self.hostname} and found it to be {value}")
+        # session.print(f"Checking blown up state of {self.hostname} and found it to be {value}")
         return value
 
     @blown_up.setter
     def blown_up(self, value):
-        #we can only set it to true.  We cannot unset this value.
-        #to make it 'false', we need to replace the device
-        if (isinstance(value,bool) and value) or (isinstance(value,str) and value.lower() == 'true'): 
+        # we can only set it to true.  We cannot unset this value.
+        # to make it 'false', we need to replace the device
+        if (isinstance(value, bool) and value) or (
+            isinstance(value, str) and value.lower() == "true"
+        ):
             if isinstance(value, bool):
                 value = str(value)
             self.json["blownup"] = value
-            self.powered_on = True #when it blows up, the power gets turned off
+            self.powered_on = True  # when it blows up, the power gets turned off
+
+    @property
+    def type(self):
+        return self.json.get("mytype")
 
     @property
     def uniqueidentifier(self):
@@ -169,7 +174,7 @@ class Device:
                         }
                         maclist.append(onemac)
                     except ValueError:
-                        #If the IP is invalid, do not add it
+                        # If the IP is invalid, do not add it
                         continue
         return maclist
 
@@ -243,12 +248,12 @@ def globalArpLookup(ip):
     # print(session.maclist)
     if isinstance(ip, str):
         if ip == "0.0.0.0":
-            return None # Never find a mac for this.  Possible many devices would match and it it not a valid IP
+            return None  # Never find a mac for this.  Possible many devices would match and it it not a valid IP
         ip = ipaddress.IPv4Address(ip)
         # print ("globalARP: Converting ip: " + str(ip))
     else:
         if packet.isEmpty(str(ip)):
-            return None # Never find a mac for this.  Possible many devices would match and it it not a valid IP
+            return None  # Never find a mac for this.  Possible many devices would match and it it not a valid IP
     for oneMac in session.maclist:
         # print ("globalARP: comparing: " + packet.justIP(oneMac['ip']) + " to " + packet.justIP(ip))
         if packet.justIP(oneMac["ip"]) == packet.justIP(ip):
@@ -276,7 +281,7 @@ def arpLookup(srcDevice, ip):
     # If we are here, src should be a valid device
     if isinstance(ip, str):
         if ip == "0.0.0.0":
-            return None #Never find a destination for this one
+            return None  # Never find a destination for this one
         ip = ipaddress.IPv4Address(ip)
         logging.info("ARP: Converting ip: " + packet.justIP(ip))
     if "maclist" not in srcDevice:
@@ -352,8 +357,8 @@ def linkConnectedToNic(nicRec):
     """Find a link connected to the specified network card"""
     if nicRec is None:
         return None
-    logging.debug("looking for link connecting to nicid: "+ nicRec['myid']['nicid'])
-    logging.debug("  Looking at nic: " + nicRec['nicname'])
+    logging.debug("looking for link connecting to nicid: " + nicRec["myid"]["nicid"])
+    logging.debug("  Looking at nic: " + nicRec["nicname"])
     for one in session.puzzle.links:
         if one:
             # print ("   link - " + one['hostname'])
@@ -385,7 +390,7 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     # go through the device routes.
     if packet.isEmpty(destinationIPString):
         return None
-    
+
     routeRec = {}
     if "route" not in theDeviceRec:
         theDeviceRec["route"] = []
@@ -794,7 +799,7 @@ def beginIngressOnNIC(packRec, nicRec):
     trackPackets = False
     theDevice = session.puzzle.device_from_name(nicRec.get("myid").get("hostname"))
     if theDevice is None:
-        #This is a problem.  We need to exit gracefully
+        # This is a problem.  We need to exit gracefully
         packRec["status"] = "done"
         return False
     # if it is a port (swicth/hub) or wport (wireless devices)
@@ -918,7 +923,9 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                 packRec["status"] = "done"
                 return True
 
-    if not packet.isEmpty(packRec["destIP"]) and deviceHasIP(thisDevice, packRec["destIP"]) :
+    if not packet.isEmpty(packRec["destIP"]) and deviceHasIP(
+        thisDevice, packRec["destIP"]
+    ):
         packRec["status"] = "done"
         logging.info("Packet arrived at destination")
         #        print ("packet type: -" + packRec['packettype'] + "-")
@@ -1035,46 +1042,42 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     packRec["status"] = "done"
 
 
-def send_out_hubswitch(thisDevice, packRec, nicRec = None):
+def send_out_hubswitch(thisDevice, packRec, nicRec=None):
     # We loop through all nics. (minus the one we came in from)
-        onlyport = ""
-        if thisDevice.get("mytype") == "net_switch":
-            if packRec.get("destMAC") in thisDevice.get("port_arps", {}):
-                # we just send this out the one port.
-                onlyport = thisDevice.get("port_arps").get(packRec.get("destMAC"))
-        # print("We are forwarding.")
-        for onenic in thisDevice["nic"]:
-            # we duplicate the packet and send it out each port-type
-            # find the link connected to the port
-            # print ("Should we send out port: " + onenic['nicname'])
-            tlink = linkConnectedToNic(onenic)
-            if (
-                tlink is not None
-                and 
-                ( nicRec is None
-                 or
-                 nicRec["uniqueidentifier"] != onenic["uniqueidentifier"]
+    onlyport = ""
+    if thisDevice.get("mytype") == "net_switch":
+        if packRec.get("destMAC") in thisDevice.get("port_arps", {}):
+            # we just send this out the one port.
+            onlyport = thisDevice.get("port_arps").get(packRec.get("destMAC"))
+    # print("We are forwarding.")
+    for onenic in thisDevice["nic"]:
+        # we duplicate the packet and send it out each port-type
+        # find the link connected to the port
+        # print ("Should we send out port: " + onenic['nicname'])
+        tlink = linkConnectedToNic(onenic)
+        if tlink is not None and (
+            nicRec is None or nicRec["uniqueidentifier"] != onenic["uniqueidentifier"]
+        ):
+            # We have a network wire connected to the NIC.  Send the packet out
+            # if it is a switch-port, then we check first if we know where the packet goes - undone
+            if onlyport == "" or onlyport == onenic.get("nicname"):
+                tpacket = copy.deepcopy(packRec)
+                tpacket["packetlocation"] = tlink["hostname"]
+                tpacket["packetDistance"] = (
+                    0  # reset it to the beginning of the next link
                 )
-            ):
-                # We have a network wire connected to the NIC.  Send the packet out
-                # if it is a switch-port, then we check first if we know where the packet goes - undone
-                if onlyport == "" or onlyport == onenic.get("nicname"):
-                    tpacket = copy.deepcopy(packRec)
-                    tpacket["packetlocation"] = tlink["hostname"]
-                    tpacket["packetDistance"] = (
-                        0  # reset it to the beginning of the next link
-                    )
-                    if tlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
-                        tpacket["packetDirection"] = 1  # Src to Dest
-                    else:
-                        tpacket["packetDirection"] = 2  # Dest to Source
-                    tpacket["packetDistance"] = 0  # start at the beginning.
-                    packet.addPacketToPacketlist(tpacket)
-                    # print (" Sending packet out a port: " + tpacket['packetlocation'])
-        # we set this packet as done.
-        packRec["status"] = (
-            "done"  # The packet that came in gets killed since it was replicated everywhere else
-        )
+                if tlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
+                    tpacket["packetDirection"] = 1  # Src to Dest
+                else:
+                    tpacket["packetDirection"] = 2  # Dest to Source
+                tpacket["packetDistance"] = 0  # start at the beginning.
+                packet.addPacketToPacketlist(tpacket)
+                # print (" Sending packet out a port: " + tpacket['packetlocation'])
+    # we set this packet as done.
+    packRec["status"] = (
+        "done"  # The packet that came in gets killed since it was replicated everywhere else
+    )
+
 
 def makeDHCPResponse(packRec, thisDevice, nicRec):
     if "dhcplist" not in thisDevice:
@@ -1093,7 +1096,7 @@ def makeDHCPResponse(packRec, thisDevice, nicRec):
         rangeend = int(
             iprange["gateway"].split(".")[3]
         )  # they were stored a bit oddly in the original json
-        #use the starting portion of the range, to allow for broken ranges.
+        # use the starting portion of the range, to allow for broken ranges.
         iparr = iprange["mask"].split(".")
         ipprepend = f"{iparr[0]}.{iparr[1]}.{iparr[2]}."
         for i in range(rangestart, rangeend):
@@ -1177,7 +1180,7 @@ def sendPacketOutDevice(packRec, theDevice):
                 packRec["destMAC"] = globalArpLookup(packRec.get("destIP"))
 
         if routeRec["nic"]["nicname"] == "management_interface0":
-            #If we are exiting a switch / hub; we go out the ports
+            # If we are exiting a switch / hub; we go out the ports
             send_out_hubswitch(theDevice, packRec)
             return
         else:

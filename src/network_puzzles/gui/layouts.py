@@ -1,21 +1,47 @@
 import logging
+
 from kivy.core.window import Window
-from kivy.metrics import dp
-from kivy.metrics import sp
-from kivy.properties import NumericProperty
+from kivy.metrics import dp, sp
+from kivy.properties import NumericProperty, StringProperty
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.relativelayout import RelativeLayout
 from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
+from kivy.uix.relativelayout import RelativeLayout
 
-from .. import session
+from .. import _, session
 from .base import NETWORK_ITEMS
 from .buttons import MenuButton
 
 
 class ThemedBoxLayout(BoxLayout):
     pass
+
+
+class ActionPopupButtons(ThemedBoxLayout):
+    cancel_text = StringProperty(f"{_('Cancel')}")
+    okay_text = StringProperty(f"{_('Okay')}")
+
+    # Register custom events to be passed onto root popup, etc.
+    # ref: https://stackoverflow.com/questions/65551226/kivy-reusing-a-toggle-button-layout-but-assigning-different-functions-to-the-b/66181173#66181173
+    def __init__(self, **kwargs):
+        self.register_event_type("on_cancel")
+        self.register_event_type("on_okay")
+        super().__init__(**kwargs)
+
+    def cancel(self):
+        # self.on_cancel()
+        self.dispatch("on_cancel")
+
+    def okay(self):
+        # self.on_okay()
+        self.dispatch("on_okay")
+
+    def on_cancel(self):
+        pass
+
+    def on_okay(self):
+        pass
 
 
 class AppTray(ThemedBoxLayout):

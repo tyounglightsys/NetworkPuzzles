@@ -1,5 +1,7 @@
 import random
 
+from . import interface
+
 
 class Nic:
     def __init__(self, nicrec):
@@ -20,6 +22,18 @@ class Nic:
         return [iface for iface in data]
 
     @property
+    def ip_addresses(self):
+        ips = list()
+        for iface_data in self.interfaces:
+            iface = interface.Interface(iface_data)
+            if iface.nicname == self.name:
+                ip_addr = interface.IpAddress(iface.ip_data)
+                if not ip_addr.address.startswith("0"):
+                    ips.append(iface.ip_data)
+                break
+        return ips
+
+    @property
     def myid(self):
         return self.json.get("myid")
 
@@ -30,6 +44,10 @@ class Nic:
     @property
     def type(self):
         return self.json.get("nictype")
+
+    @property
+    def uses_dhcp(self):
+        return self.json.get("usesdhcp").lower() in ["true", "yes"]
 
     def ensure_mac(self, data=None):
         if data is not None:

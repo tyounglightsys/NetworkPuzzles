@@ -1,23 +1,21 @@
 import logging
 import traceback
 from dataclasses import dataclass
-from kivy.base import ExceptionHandler
-from kivy.base import ExceptionManager
-from kivy.graphics import Color
-from kivy.graphics import Ellipse
-from kivy.metrics import dp
-from kivy.metrics import sp
+from pathlib import Path
+from typing import Tuple
+
+from kivy.base import ExceptionHandler, ExceptionManager
+from kivy.graphics import Color, Ellipse
+from kivy.metrics import dp, sp
 from kivy.properties import StringProperty
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.slider import Slider
+from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
-from pathlib import Path
-from typing import Tuple
 
 from .. import session
 from .popups import ExceptionPopup
-
 
 # Size limits
 BUTTON_MAX_H = dp(32)
@@ -117,6 +115,10 @@ class HelpSlider(Slider):
         self.app = session.app
         self.value = HelpLevel.FULL
         self.bind(value=self.app.update_help)
+
+
+class ValueInput(TextInput):
+    pass
 
 
 @dataclass

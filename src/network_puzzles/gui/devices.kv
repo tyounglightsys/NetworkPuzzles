@@ -28,36 +28,29 @@
                 size: self.size
         spacing: dp(20)
         ThemedBoxLayout:  # left 1/3
+            id: left_panel
             size_hint_x: 0.3
             orientation: "vertical"
             ThemedBoxLayout:
                 size_hint_y: 0.16
                 size_hint_max_y: root.app.BUTTON_MAX_H + self.padding[1] + self.padding[3]
-                ThemedLabel:  # Hostname
+                CheckBoxLabel:  # Hostname
                     text: _("Hostname")
                 TextInput:  # device.hostname
                     multiline: False
                     text: root.device.hostname
             PopupButton:  # Gateway
-                size_hint_y: 0.28
                 text: _("Gateway")
                 on_release: root.on_gateway()
             PopupButton:  # Routes
-                size_hint_y: 0.28
                 text: _("Routes")
                 on_release: root.on_routes()
-            PopupButton:  # VLANs
-                size_hint_y: 0.28
-                text: _("VLANs")
-                on_release: root.on_vlans()
-            Widget:
-                size_hint_y: 0.28
         ThemedBoxLayout:  # center 1/3
             size_hint_x: 0.3
             orientation: "vertical"
             ThemedBoxLayout:  # NICs label/button
                 size_hint_y: 0.15
-                ThemedLabel:  # NICs
+                CheckBoxLabel:  # NICs
                     size_hint_x: 0.45
                     text: _("NICs")
                 PopupButton:  # Edit
@@ -72,7 +65,7 @@
                 on_parent: self.update_data(root.device.nics, management=True)
             ThemedBoxLayout:  # IPs label/buttons
                 size_hint_y: 0.15
-                ThemedLabel:  # IPs
+                CheckBoxLabel:  # IPs
                     size_hint_x: 0.15
                     text: _("IPs")
                 PopupButton:  # +
@@ -102,14 +95,10 @@
             orientation: "vertical"
             TextInput:  # ARP table
                 text: "XXXXXXXX"
-            ThemedBoxLayout:
-                orientation: "vertical"
-                PopupButton:  # Cancel
-                    text: _("Cancel")
-                    on_release: root.on_cancel()
-                PopupButton:  # OK
-                    text: _("Okay")
-                    on_release: root.on_okay()
+            ActionPopupButtons:
+                on_cancel: root.on_cancel()
+                on_okay: root.on_okay()
+
 
 <PingHostPopup>:
     size_hint: (0.5, 0.4)
@@ -119,17 +108,32 @@
             id: host
             hint_text: _("hostname or IP")
             on_text_validate: root.on_okay(root.ids.host.text)
+        Widget:
+        ActionPopupButtons:
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay(root.ids.host.text)
+
+
+<EditDhcpPopup>:
+    title: _("Edit DHCP configuration")
+    ThemedBoxLayout:
+        orientation: "vertical"
         ThemedBoxLayout:
-            size_hint_y: 1
-            ypads: self.padding[1] + self.padding[3]
-            size_hint_max_y: self.ypads + app.BUTTON_MAX_H
-            size_hint_min_y: self.ypads + app.BUTTON_MAX_H - dp(4)
-            PopupButton:
-                text: _("Cancel")
-                on_release: root.dismiss()
-            PopupButton:
-                text: _("Okay")
-                on_release: root.on_okay(root.ids.host.text)
+            size_hint_y: 0.2
+            CheckBoxLabel:
+                text: _("IP Address")
+            CheckBoxLabel:
+                text: _("Range Start")
+            CheckBoxLabel:
+                text: _("Range End")
+        ThemedBoxLayout:
+            size_hint_y: 0.2
+            id: dhcp_configs_layout
+            orientation: "vertical"
+        Widget:
+        ActionPopupButtons:
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()
 
 
 <EditIpPopup>:
@@ -157,13 +161,9 @@
                 on_focus: root.set_gateway(self)
                 disabled: True
         Widget:
-        ThemedBoxLayout:
-            PopupButton:
-                text: _("Cancel")
-                on_release: root.on_cancel()
-            PopupButton:
-                text: _("Okay")
-                on_release: root.on_okay()
+        ActionPopupButtons:
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()
 
 
 <ChooseNicPopup>:
@@ -175,12 +175,7 @@
             size_hint_y: 0.8
             root: root
             id: nics_list
-        ThemedBoxLayout:
+        ActionPopupButtons:
             size_hint_y: 0.2
-            size_hint_max_y: root.app.BUTTON_MAX_H + self.padding[1] + self.padding[3]
-            PopupButton:
-                text: _("Cancel")
-                on_release: root.dismiss()
-            PopupButton:
-                text: _("Okay")
-                on_release: root.on_okay()
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()

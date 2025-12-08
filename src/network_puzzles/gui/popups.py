@@ -1,11 +1,10 @@
-from kivy.graphics import Color
-from kivy.graphics import Rectangle
+from kivy.graphics import Color, Rectangle
 from kivy.uix.popup import Popup
 
 from .. import session
 
 
-class AppPopup(Popup):
+class ThemedPopup(Popup):
     def __init__(self, **kwargs):
         # TODO: This popup automatically generates a GridLayout with 3 child
         # widgets: BoxLayout, Widget, Label. Better to set the content
@@ -20,17 +19,23 @@ class AppPopup(Popup):
             Color(rgba=self.app.theme.detail)
             Rectangle(pos=w.pos, size=w.size)
 
-    def on_open(self):
-        self._update_sep_color()
 
+class ActionPopup(ThemedPopup):
+    def on_cancel(self):
+        self.dismiss()
 
-class CommandPopup(AppPopup):
     def on_okay(self):
-        self.app.ui.parse(self.ids.text_input.text)
         self.dismiss()
 
 
-class ExceptionPopup(AppPopup):
+class CommandPopup(ActionPopup):
+    def on_okay(self):
+        self.app.ui.parse(self.ids.text_input.text)
+        super().on_okay()
+        # self.dismiss()
+
+
+class ExceptionPopup(ThemedPopup):
     def __init__(self, message, **kwargs):
         super().__init__(**kwargs)
         self.ids.exception.text = message
@@ -40,14 +45,16 @@ class ExceptionPopup(AppPopup):
         self.app.stop()
 
 
-class PuzzleChooserPopup(AppPopup):
+class PuzzleChooserPopup(ActionPopup):
     def on_load(self):
         self.app.selected_puzzle = self.ids.puzzles_view.selected_item.get("text")
         self.app.setup_puzzle()
-        self.dismiss()
+        super().on_okay()
 
 
-class PuzzleCompletePopup(AppPopup):
-    def on_okay(self):
-        # TODO: Offer to proceed to the next puzzle.
-        self.dismiss()
+class PuzzleCompletePopup(ActionPopup):
+    pass
+
+#     def on_okay(self):
+#         # TODO: Offer to proceed to the next puzzle.
+#         self.dismiss()

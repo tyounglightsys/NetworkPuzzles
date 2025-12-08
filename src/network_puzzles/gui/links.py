@@ -1,12 +1,10 @@
-from kivy.graphics import Color
-from kivy.graphics import Line
+from kivy.graphics import Color, Line
 from kivy.properties import ListProperty
 from kivy.uix.widget import Widget
 
-from .. import link
-from .. import session
+from .. import link, session
 from .base import hide_widget
-from .popups import AppPopup
+from .popups import ThemedPopup
 
 
 class Link(Widget):
@@ -124,7 +122,7 @@ class Link(Widget):
         self.height = h
 
 
-class LinkPopup(AppPopup):
+class LinkPopup(ThemedPopup):
     def __init__(self, widget, **kwargs):
         super().__init__(**kwargs)
         self.link = widget
