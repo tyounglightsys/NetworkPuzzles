@@ -23,7 +23,7 @@ from .base import (
     pos_to_location,
 )
 from .buttons import CommandButton, ThemedButton
-from .labels import CheckBoxLabel, ThemedLabel
+from .labels import CheckBoxLabel
 from .layouts import ThemedBoxLayout
 from .popups import ActionPopup, ThemedPopup
 
@@ -540,10 +540,17 @@ class EditDhcpPopup(ActionPopup):
         self._add_dhcp_configs()
 
     def on_okay(self):
-        logging.info(f"GUI: Setting DHCP for {self.device.hostname}:")
-        cmd = f"set {self.device.hostname} dhcp 192.168.1.1 192.168.1.10-192.168.1.20"
-        logging.info(f"GUI: > {cmd}")
-        self.app.ui.parse(cmd)
+        for c in self.dhcp_configs:
+            ip = c.get("ip")
+            row = self._get_dhcp_row(ip)
+            if row:
+                start = row.children[-2].text
+                end = row.children[-3].text
+                if start != c.get("mask") or end != c.get("gateway"):
+                    cmd = f"set {self.device.hostname} dhcp {ip} {start}-{end}"
+                    logging.info(f"GUI: > {cmd}")
+                    self.app.ui.parse(cmd)
+
         # Update GUI helps b/c it will trigger tooltip updates, which are needed
         # b/c IP data has likely changed.
         self.app.update_help()
@@ -553,8 +560,13 @@ class EditDhcpPopup(ActionPopup):
         for config in self.dhcp_configs:
             bl = ThemedBoxLayout()
             ip = CheckBoxLabel(text=config.get("ip"))
-            r_start = ValueInput(text=config.get("mask"))
-            r_end = ValueInput(text=config.get("gateway"))
-            for w in [ip, r_start, r_end]:
+            start = ValueInput(text=config.get("mask"))
+            end = ValueInput(text=config.get("gateway"))
+            for w in [ip, start, end]:
                 bl.add_widget(w)
         self.ids.dhcp_configs_layout.add_widget(bl)
+
+    def _get_dhcp_row(self, ip):
+        for row in self.ids.dhcp_configs_layout.children:
+            if row.children[-1].text == ip:
+                return row
