@@ -114,6 +114,28 @@
             on_okay: root.on_okay(root.ids.host.text)
 
 
+<EditDhcpPopup>:
+    title: _("Edit DHCP configuration")
+    ThemedBoxLayout:
+        orientation: "vertical"
+        ThemedBoxLayout:
+            size_hint_y: 0.2
+            ThemedLabel:
+                text: _("IP Address")
+            ThemedLabel:
+                text: _("Range Start")
+            ThemedLabel:
+                text: _("Range End")
+        ThemedBoxLayout:
+            size_hint_y: 0.2
+            id: dhcp_configs_layout
+            orientation: "vertical"
+        Widget:
+        ActionPopupButtons:
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()
+
+
 <EditIpPopup>:
     size_hint_x: 0.5
     title: _("Edit IP configuration")

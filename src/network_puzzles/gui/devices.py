@@ -16,6 +16,7 @@ from .base import (
     HelpHighlight,
     LockEmblem,
     ThemedCheckBox,
+    ValueInput,
     get_layout_height,
     hide_widget,
     location_to_pos,
@@ -328,7 +329,7 @@ class EditDevicePopup(ActionPopup):
         self._selected_nic = value.rstrip("*")
 
     def on_dhcp_button(self):
-        raise NotImplementedError
+        EditDhcpPopup(self.device).open()
 
     def on_dhcp_chkbox(self):
         raise NotImplementedError
@@ -449,18 +450,9 @@ class EditDevicePopup(ActionPopup):
         return "/" in value
 
     def _set_ips(self):
-        ips = list()
         n = self.device.get_nic(self.selected_nic)
         logging.debug(f"GUI: {n.name} ifaces: {n.interfaces}")
-        for iface_data in n.interfaces:
-            iface = interface.Interface(iface_data)
-            if iface.nicname == n.name:
-                ip_addr = interface.IpAddress(iface.ip_data)
-                if not ip_addr.address.startswith("0"):
-                    ips.append(iface.ip_data)
-                break
-        logging.debug(f"GUI: IPs for {self.device.hostname}: {ips}")
-        self.ids.ips_list.update_data(ips)
+        self.ids.ips_list.update_data(n.ip_addresses)
 
 
 class NICsRecView(AppRecView):
@@ -534,3 +526,35 @@ class ChooseNicPopup(ActionPopup):
     def on_okay(self):
         self.app.chosen_nic = self.selected_nic
         super().on_okay()
+
+
+class EditDhcpPopup(ActionPopup):
+    def __init__(self, devicew, **kwargs):
+        self.device = devicew
+        super().__init__(**kwargs)
+        self.dhcp_configs = [
+            ip_data
+            for ip_data in self.device.base.json.get("dhcprange", list())
+            if ip_data.get("ip") != "127.0.0.1"
+        ]
+        self._add_dhcp_configs()
+
+    def on_okay(self):
+        logging.info(f"GUI: Setting DHCP for {self.device.hostname}:")
+        cmd = f"set {self.device.hostname} dhcp 192.168.1.1 192.168.1.10-192.168.1.20"
+        logging.info(f"GUI: > {cmd}")
+        self.app.ui.parse(cmd)
+        # Update GUI helps b/c it will trigger tooltip updates, which are needed
+        # b/c IP data has likely changed.
+        self.app.update_help()
+        super().on_okay()
+
+    def _add_dhcp_configs(self):
+        for config in self.dhcp_configs:
+            bl = ThemedBoxLayout()
+            ip = ThemedLabel(text=config.get("ip"))
+            r_start = ValueInput(text=config.get("mask"))
+            r_end = ValueInput(text=config.get("gateway"))
+            for w in [ip, r_start, r_end]:
+                bl.add_widget(w)
+        self.ids.dhcp_configs_layout.add_widget(bl)
