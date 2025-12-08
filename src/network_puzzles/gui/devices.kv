@@ -34,7 +34,7 @@
             ThemedBoxLayout:
                 size_hint_y: 0.16
                 size_hint_max_y: root.app.BUTTON_MAX_H + self.padding[1] + self.padding[3]
-                ThemedLabel:  # Hostname
+                CheckBoxLabel:  # Hostname
                     text: _("Hostname")
                 TextInput:  # device.hostname
                     multiline: False
@@ -50,7 +50,7 @@
             orientation: "vertical"
             ThemedBoxLayout:  # NICs label/button
                 size_hint_y: 0.15
-                ThemedLabel:  # NICs
+                CheckBoxLabel:  # NICs
                     size_hint_x: 0.45
                     text: _("NICs")
                 PopupButton:  # Edit
@@ -65,7 +65,7 @@
                 on_parent: self.update_data(root.device.nics, management=True)
             ThemedBoxLayout:  # IPs label/buttons
                 size_hint_y: 0.15
-                ThemedLabel:  # IPs
+                CheckBoxLabel:  # IPs
                     size_hint_x: 0.15
                     text: _("IPs")
                 PopupButton:  # +
@@ -120,11 +120,11 @@
         orientation: "vertical"
         ThemedBoxLayout:
             size_hint_y: 0.2
-            ThemedLabel:
+            CheckBoxLabel:
                 text: _("IP Address")
-            ThemedLabel:
+            CheckBoxLabel:
                 text: _("Range Start")
-            ThemedLabel:
+            CheckBoxLabel:
                 text: _("Range End")
         ThemedBoxLayout:
             size_hint_y: 0.2

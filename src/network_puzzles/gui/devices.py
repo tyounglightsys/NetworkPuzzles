@@ -23,7 +23,7 @@ from .base import (
     pos_to_location,
 )
 from .buttons import CommandButton, ThemedButton
-from .labels import ThemedLabel
+from .labels import CheckBoxLabel, ThemedLabel
 from .layouts import ThemedBoxLayout
 from .popups import ActionPopup, ThemedPopup
 
@@ -413,7 +413,7 @@ class EditDevicePopup(ActionPopup):
             else:
                 state = "normal"
             c = ThemedCheckBox(size_hint_x=0.1, state=state)
-            t = ThemedLabel(text=f"{_('DHCP Server')}", size_hint_x=0.4)
+            t = CheckBoxLabel(text=f"{_('DHCP Server')}", size_hint_x=0.4)
             b = ThemedButton(text=f"{_('Edit DHCP')}", on_release=self.on_dhcp_button)
             for w in [c, t, b]:
                 l_cb.add_widget(w)
@@ -552,7 +552,7 @@ class EditDhcpPopup(ActionPopup):
     def _add_dhcp_configs(self):
         for config in self.dhcp_configs:
             bl = ThemedBoxLayout()
-            ip = ThemedLabel(text=config.get("ip"))
+            ip = CheckBoxLabel(text=config.get("ip"))
             r_start = ValueInput(text=config.get("mask"))
             r_end = ValueInput(text=config.get("gateway"))
             for w in [ip, r_start, r_end]:

@@ -6,12 +6,13 @@
             pos: self.pos
             size: self.size
     color: app.theme.fg3
-    halign: 'left'
-    valign: 'top'
+    padding: [dp(5), dp(5), dp(5), dp(5)]
+    halign: "left"
+    valign: "center"
     font_size: sp(16)
 
-<CheckBoxLabel@ThemedLabel>:
-    valign: 'center'
+<CheckBoxLabel>:
+    valign: "center"
     text_size: self.size
 
 <EditDeviceLabel@ThemedLabel>:
@@ -19,8 +20,7 @@
 
 <DeviceLabel>:
     size_hint: (None, None)
-    padding: [dp(5), dp(5), dp(5), dp(5)]
-    halign: 'center'
+    halign: "center"
 
 <SelectableLabel>:
     canvas.before:
