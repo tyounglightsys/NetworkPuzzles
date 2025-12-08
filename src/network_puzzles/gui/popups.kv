@@ -1,6 +1,7 @@
-<AppPopup>:
+<ThemedPopup>:
     title_size: app.BUTTON_FONT_SIZE
     size_hint: (0.5, 0.75)
+    on_open: self._update_sep_color()
 
 
 <CommandPopup>:
@@ -11,16 +12,9 @@
         ValueInput:
             id: text_input
             on_text_validate: root.on_okay()
-        ThemedBoxLayout:  # bottom buttons
-            padding: dp(5)
-            spacing: dp(5)
-            size_hint_max_y: app.BUTTON_MAX_H + dp(8)
-            PopupButton:
-                text: _("Cancel")
-                on_release: root.dismiss()
-            PopupButton:
-                text: _("Okay")
-                on_release: root.on_okay()
+        ActionPopupButtons:  # cancel/okay
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()
 
 
 <ExceptionPopup>:
@@ -118,33 +112,19 @@
             PuzzlesRecView:
                 id: puzzles_view
         HSeparator:
-        ThemedBoxLayout:  # bottom buttons
-            padding: dp(5)
-            spacing: dp(5)
-            size_hint_y: 0.1
-            size_hint_max_y: app.BUTTON_MAX_H + dp(8)
-            PopupButton:
-                text: _("Cancel")
-                on_release: root.dismiss()
-            PopupButton:
-                text: _("Load")
-                on_release: root.on_load()
+        ActionPopupButtons:  # cancel/okay
+            okay_text: _("Load")
+            on_cancel: root.on_cancel()
+            on_okay: root.on_load()
 
 
-<PuzzleCompletePopup>:
+<PuzzleCompletePopup@ActionPopup>:
     title: _("Puzzle complete!")
     size_hint_y: 0.5
     ThemedBoxLayout:
         orientation: "vertical"
         ThemedLabel:
             text: _("Congratulations, you have completed the puzzle!")
-        ThemedBoxLayout:  # bottom buttons
-            padding: dp(5)
-            spacing: dp(5)
-            size_hint_max_y: app.BUTTON_MAX_H + dp(8)
-            PopupButton:
-                text: _("Cancel")
-                on_release: root.dismiss()
-            PopupButton:
-                text: _("Okay")
-                on_release: root.on_okay()
+        ActionPopupButtons:  # cancel/okay
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()

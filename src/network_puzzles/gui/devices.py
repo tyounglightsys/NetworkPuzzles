@@ -24,7 +24,7 @@ from .base import (
 from .buttons import CommandButton, ThemedButton
 from .labels import ThemedLabel
 from .layouts import ThemedBoxLayout
-from .popups import AppPopup
+from .popups import ActionPopup, ThemedPopup
 
 
 class Device(DragBehavior, ThemedBoxLayout):
@@ -293,21 +293,21 @@ class Device(DragBehavior, ThemedBoxLayout):
             lnk.hide(False)
 
 
-class CommandsPopup(AppPopup):
+class CommandsPopup(ThemedPopup):
     pass
 
 
-class PingHostPopup(AppPopup):
+class PingHostPopup(ActionPopup):
     def __init__(self, dev, **kwargs):
         self.device = dev
         super().__init__(**kwargs)
 
     def on_okay(self, dest):
         self.app.ui.parse(f"ping {self.device.hostname} {dest}")
-        self.dismiss()
+        super().on_okay()
 
 
-class EditDevicePopup(AppPopup):
+class EditDevicePopup(ActionPopup):
     def __init__(self, dev, **kwargs):
         # Use copy of data for displaying in UI b/c real changes will be
         # applied via parser commands when "Okay" is clicked.
@@ -390,9 +390,6 @@ class EditDevicePopup(AppPopup):
         self.root.ids.remove_ip.disabled = False
         self.root.ids.edit_ip.disabled = False
 
-    def on_cancel(self):
-        self.dismiss()
-
     def on_okay(self):
         logging.info(f"GUI: Updating {self.device.hostname}:")
         for cmd in self.puzzle_commands:
@@ -401,7 +398,7 @@ class EditDevicePopup(AppPopup):
         # Update GUI helps b/c it will trigger tooltip updates, which are needed
         # b/c IP data has likely changed.
         self.app.update_help()
-        self.dismiss()
+        super().on_okay()
 
     def _add_conditional_widgets(self):
         if self.device.type in ["server"]:
@@ -493,14 +490,11 @@ class IPsRecView(AppRecView):
         self.root.on_ip_selection(self.data[index].get("text"))
 
 
-class EditIpPopup(AppPopup):
+class EditIpPopup(ActionPopup):
     def __init__(self, device_popup, ip_address, **kwargs):
         self.device_popup = device_popup
         self.ip_address = ip_address
         super().__init__(**kwargs)
-
-    def on_cancel(self):
-        self.dismiss()
 
     def on_okay(self):
         # Add updating command.
@@ -509,7 +503,7 @@ class EditIpPopup(AppPopup):
         )
         # Update IPs in IPs list.
         self.device_popup._set_ips()
-        self.dismiss()
+        super().on_okay()
 
     def set_address(self, input_inst):
         if not input_inst.focus:
@@ -524,7 +518,7 @@ class EditIpPopup(AppPopup):
             self.ip_address.gateway = input_inst.text
 
 
-class ChooseNicPopup(AppPopup):
+class ChooseNicPopup(ActionPopup):
     def __init__(self, devicew, **kwargs):
         self.device = devicew
         super().__init__(**kwargs)
@@ -539,4 +533,4 @@ class ChooseNicPopup(AppPopup):
 
     def on_okay(self):
         self.app.chosen_nic = self.selected_nic
-        self.dismiss()
+        super().on_okay()
