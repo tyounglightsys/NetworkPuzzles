@@ -28,6 +28,22 @@ class Device:
             self.json = {}
 
     @property
+    def gateway(self):
+        if self.json.get("gateway") and self.json.get("gateway").get("type") == "gw":
+            return self.json.get("gateway").get("ip")
+
+    @gateway.setter
+    def gateway(self, ip):
+        if not self.json.get("gateway"):
+            self.json["gateway"] = {
+                "ip": "0.0.0.0",
+                "mask": "0.0.0.0",
+                "gateway": "0.0.0.0",
+                "type": "gw",
+            }
+        self.json["gateway"]["ip"] = ip
+
+    @property
     def hostname(self):
         return self.json.get("hostname")
 

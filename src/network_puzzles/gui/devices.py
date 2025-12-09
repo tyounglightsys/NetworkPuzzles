@@ -16,13 +16,13 @@ from .base import (
     HelpHighlight,
     LockEmblem,
     ThemedCheckBox,
-    ValueInput,
     get_layout_height,
     hide_widget,
     location_to_pos,
     pos_to_location,
 )
 from .buttons import CommandButton, ThemedButton
+from .inputs import ValueInput
 from .labels import CheckBoxLabel
 from .layouts import ThemedBoxLayout
 from .popups import ActionPopup, ThemedPopup
@@ -51,9 +51,12 @@ class Device(DragBehavior, ThemedBoxLayout):
                 return c
 
     @property
+    def gateway(self):
+        if hasattr(self, "base") and self.base:
+            return self.base.gateway
+
+    @property
     def hostname(self):
-        # NOTE: @properties seem to be evaluated during super(), which is before
-        # self.base is defined.
         if hasattr(self, "base") and self.base:
             return self.base.hostname
 
@@ -335,7 +338,10 @@ class EditDevicePopup(ActionPopup):
         raise NotImplementedError
 
     def on_gateway(self):
-        raise NotImplementedError
+        if not self.ids.gateway.focus:
+            self.puzzle_commands.append(
+                f"set {self.device.hostname} gateway {self.ids.gateway.text}"
+            )
 
     def on_routes(self):
         raise NotImplementedError
