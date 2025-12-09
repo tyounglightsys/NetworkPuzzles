@@ -11,7 +11,6 @@ from kivy.properties import StringProperty
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.recycleview import RecycleView
 from kivy.uix.slider import Slider
-from kivy.uix.textinput import TextInput
 from kivy.uix.widget import Widget
 
 from .. import session
@@ -115,10 +114,6 @@ class HelpSlider(Slider):
         self.app = session.app
         self.value = HelpLevel.FULL
         self.bind(value=self.app.update_help)
-
-
-class ValueInput(TextInput):
-    pass
 
 
 @dataclass

@@ -41,6 +41,10 @@ class DeviceLabel(ThemedLabel):
     pass
 
 
+class InfoLabel(ThemedLabel):
+    pass
+
+
 class ToolTip(ThemedLabel):
     # Added here import access.
     pass
