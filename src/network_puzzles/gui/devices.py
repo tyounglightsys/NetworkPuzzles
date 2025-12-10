@@ -24,7 +24,7 @@ from .base import (
 from .buttons import CommandButton, ThemedButton
 from .inputs import ValueInput
 from .labels import CheckBoxLabel
-from .layouts import ThemedBoxLayout
+from .layouts import SingleRowLayout, ThemedBoxLayout
 from .popups import ActionPopup, ThemedPopup
 
 
@@ -410,8 +410,7 @@ class EditDevicePopup(ActionPopup):
     def _add_conditional_widgets(self):
         if self.device.type in ["server"]:
             # Handle DHCP checkbox, label, and button.
-            l_cb = ThemedBoxLayout(
-                size_hint_max_y=self.app.BUTTON_MAX_H,
+            l_cb = SingleRowLayout(
                 padding=0,
             )
             if self.device.is_dhcp:
@@ -564,7 +563,7 @@ class EditDhcpPopup(ActionPopup):
 
     def _add_dhcp_configs(self):
         for config in self.dhcp_configs:
-            bl = ThemedBoxLayout()
+            bl = SingleRowLayout()
             ip = CheckBoxLabel(text=config.get("ip"))
             start = ValueInput(text=config.get("mask"))
             end = ValueInput(text=config.get("gateway"))

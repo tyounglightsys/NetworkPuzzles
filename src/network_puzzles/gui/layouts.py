@@ -18,7 +18,11 @@ class ThemedBoxLayout(BoxLayout):
     pass
 
 
-class ActionPopupButtons(ThemedBoxLayout):
+class SingleRowLayout(ThemedBoxLayout):
+    pass
+
+
+class ActionPopupButtons(SingleRowLayout):
     cancel_text = StringProperty(f"{_('Cancel')}")
     okay_text = StringProperty(f"{_('Okay')}")
 
