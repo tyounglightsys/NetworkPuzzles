@@ -150,19 +150,22 @@
     ThemedBoxLayout:
         orientation: "vertical"
         ThemedBoxLayout:
-            ThemedLabel:
+            size_hint_max_y: app.BUTTON_MAX_H + dp(8)
+            CheckBoxLabel:
                 text: _("IP Address:")
             ValueInput:
                 text: root.ip_address.address
                 on_focus: root.set_address(self)
         ThemedBoxLayout:
-            ThemedLabel:
+            size_hint_max_y: app.BUTTON_MAX_H + dp(8)
+            CheckBoxLabel:
                 text: _("Netmask:")
             ValueInput:
                 text: root.ip_address.netmask
                 on_focus: root.set_netmask(self)
         ThemedBoxLayout:
-            ThemedLabel:
+            size_hint_max_y: app.BUTTON_MAX_H + dp(8)
+            CheckBoxLabel:
                 text: _("Gateway:")
             ValueInput:
                 text: root.ip_address.gateway
