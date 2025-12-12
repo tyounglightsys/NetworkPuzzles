@@ -406,11 +406,6 @@ class EditDevicePopup(ActionPopup):
         raise NotImplementedError
 
     def on_nics_replace(self):
-        # ## Add command to be applied.
-        # self.puzzle_commands.append(
-        #     f"replace {self.device.hostname} {self.selected_nic}"
-        # )
-        ## Immediately replace NIC.
         # De-select label.
         for c in self.ids.nics_list.children[0].children:
             if c.text.startswith(self.selected_nic):
