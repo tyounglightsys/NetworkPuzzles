@@ -14,18 +14,7 @@ usage(){
 
 if [[ $1 == po ]]; then
     xgettext -L python -o "$messages_temp" -D "$pkg_dir" messages.py -D "$gui_dir" \
-        __init__.py \
-        base.kv \
-        base.py \
-        buttons.kv \
-        buttons.py \
-        labels.kv \
-        labels.py \
-        layouts.kv \
-        layouts.py \
-        networkpuzzles.kv \
-        popups.kv \
-        popups.py
+        $(find "$gui_dir" \( -name "*.kv" -o -name "*.py" \) -printf "%f ")
     for lang in "en" "fr"; do
         msgmerge --update --no-fuzzy-matching --backup=off "${locale_dir}/${lang}.po" "$messages_temp"
     done
