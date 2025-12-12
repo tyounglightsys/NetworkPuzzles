@@ -56,7 +56,7 @@ msgstr ""
 
 #: messages.py:17
 msgid "No Switch"
-msgstr ""
+msgstr "Commutateur manquant"
 
 #: messages.py:18
 msgid ""
@@ -78,7 +78,7 @@ msgstr ""
 
 #: messages.py:25
 msgid "DHCP Request"
-msgstr ""
+msgstr "Demande de DHCP"
 
 #: messages.py:26
 msgid ""
@@ -305,8 +305,8 @@ msgid "Duplicate IPs"
 msgstr "Duplication d'adresses IP"
 
 #: messages.py:90
-msgid "Get the PCs so they are happy"
-msgstr ""
+msgid "Get the PCs so they are happy."
+msgstr "Régler les PCs afin qu'ils soient contents."
 
 #: messages.py:93
 msgid "Two Subnets, Shared Network"

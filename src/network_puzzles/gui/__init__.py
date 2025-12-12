@@ -19,27 +19,26 @@ from kivy.base import ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
 
-from .. import messages
-from .. import nettests
-from .base import AppExceptionHandler
-from .base import AppRecView
-from .base import BUTTON_FONT_SIZE
-from .base import BUTTON_MAX_H
-from .base import DEVICE_BUTTON_MAX_H
-from .base import HelpHighlight
-from .base import IMAGES_DIR
-from .base import LightColorTheme
-from .base import PACKET_DIMS
-from .base import pos_to_location
-from .base import print_layout_info
-from .base import show_grid
+from .. import messages, nettests
+from .base import (
+    BUTTON_FONT_SIZE,
+    BUTTON_MAX_H,
+    DEVICE_BUTTON_MAX_H,
+    IMAGES_DIR,
+    PACKET_DIMS,
+    AppExceptionHandler,
+    AppRecView,
+    HelpHighlight,
+    LightColorTheme,
+    pos_to_location,
+    print_layout_info,
+    show_grid,
+)
 from .buttons import MenuButton
-from .devices import ChooseNicPopup
-from .devices import Device
+from .devices import ChooseNicPopup, Device
 from .links import Link
 from .packets import PacketManager
-from .popups import PuzzleChooserPopup
-from .popups import PuzzleCompletePopup
+from .popups import PuzzleChooserPopup, PuzzleCompletePopup
 
 
 class NetworkPuzzlesApp(App):
@@ -182,6 +181,7 @@ class NetworkPuzzlesApp(App):
         # Get puzzle text from localized messages, if possible, but fallback to
         # English text in JSON data.
         puzzle_data = self.ui.puzzle.json
+        logging.debug(f"GUI: {self.ui.puzzle.uid=}")
         puzzle_messages = messages.puzzles.get(self.ui.puzzle.uid)
         if puzzle_messages:
             title = puzzle_messages.get("title")

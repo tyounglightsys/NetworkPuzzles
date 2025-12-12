@@ -294,7 +294,7 @@ msgid "Duplicate IPs"
 msgstr ""
 
 #: messages.py:90
-msgid "Get the PCs so they are happy"
+msgid "Get the PCs so they are happy."
 msgstr ""
 
 #: messages.py:93

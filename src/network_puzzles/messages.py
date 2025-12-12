@@ -49,7 +49,7 @@ puzzles = {
             "This puzzle shows you what happens when there is a network loop. A loop is made when you have your switches connected to themselves or to another one that is connected back to the first one. \n\nPing from pc0 to pc1 to see what happens. You do not need to fix the problem, but removing one of the offending links from one of the switches would do it."
         ),
     },
-    "0.3.5": {
+    "0.3.5.1": {
         "title": _("Network Loop 2"),
         "info": _(
             "Managed Switches can use Spanning Tree Protocol (STP), which intelligently figures out the least distance path to a point. STP lets you have network loops and survive. \n\nTry pinging pc1 twice from pc0. The first time, some packets are lost. But the second time the packet goes where it should."
@@ -129,7 +129,7 @@ puzzles = {
     },
     "1.4": {
         "title": _("Duplicate IPs"),
-        "info": _("Get the PCs so they are happy"),
+        "info": _("Get the PCs so they are happy."),
     },
     "1.4.1": {
         "title": _("Two Subnets, Shared Network"),
