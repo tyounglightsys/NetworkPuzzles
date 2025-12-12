@@ -1,4 +1,3 @@
-from kivy.graphics import Color, Rectangle
 from kivy.uix.popup import Popup
 
 from .. import session
@@ -11,13 +10,6 @@ class ThemedPopup(Popup):
         # explicitly when the popup is instantiated elsewhere.
         self.app = session.app
         super().__init__(**kwargs)
-
-    def _update_sep_color(self):
-        # Set separator color according to theme.
-        w = self.children[0].children[1]
-        with w.canvas:
-            Color(rgba=self.app.theme.detail)
-            Rectangle(pos=w.pos, size=w.size)
 
 
 class ActionPopup(ThemedPopup):
@@ -54,6 +46,7 @@ class PuzzleChooserPopup(ActionPopup):
 
 class PuzzleCompletePopup(ActionPopup):
     pass
+
 
 #     def on_okay(self):
 #         # TODO: Offer to proceed to the next puzzle.

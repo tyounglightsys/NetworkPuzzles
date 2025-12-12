@@ -24,7 +24,7 @@ from .base import (
 from .buttons import CommandButton, ThemedButton
 from .inputs import ValueInput
 from .labels import CheckBoxLabel
-from .layouts import ThemedBoxLayout
+from .layouts import SingleRowLayout, ThemedBoxLayout
 from .popups import ActionPopup, ThemedPopup
 
 
@@ -328,8 +328,8 @@ class EditDevicePopup(ActionPopup):
 
     @selected_nic.setter
     def selected_nic(self, value):
-        # Remove "connected" character from displayed value.
-        self._selected_nic = value.rstrip("*")
+        # Remove "connected" character & MAC address from displayed value.
+        self._selected_nic = value.replace("*", ";").split(";")[0]
 
     def on_dhcp_button(self):
         EditDhcpPopup(self.device).open()
@@ -349,22 +349,25 @@ class EditDevicePopup(ActionPopup):
     def on_vlans(self):
         raise NotImplementedError
 
-    def on_nics_edit(self):
-        raise NotImplementedError
-
-    def on_nic_selection(self, selected_nic):
-        self.selected_ip = None
-        self.root.ids.edit_ip.disabled = True
-        self.root.ids.remove_ip.disabled = True
-        self.selected_nic = selected_nic
-        self.root.ids.edit_nic.disabled = False
-        self.root.ids.add_ip.disabled = False
-        self._set_ips()
+    def on_ip_selection(self, selected_ip):
+        self.selected_ip = selected_ip
+        self.root.ids.remove_ip.disabled = False
+        self.root.ids.edit_ip.disabled = False
 
     def on_ips_add(self):
         # Send correct NIC and interface data to IP Popup.
         n = self.device.get_nic(self.selected_nic)
         ip_config = self._get_ip_config_from_nic(n, n.name)
+        if ip_config:
+            EditIpPopup(self, ip_config).open()
+
+    def on_ips_edit(self):
+        if not self.selected_ip:
+            logging.warning("GUI: No IP selected for editing.")
+            return
+        ip_config = self._get_ip_config_from_nic(
+            self.device.get_nic(self.selected_nic), self.selected_ip
+        )
         if ip_config:
             EditIpPopup(self, ip_config).open()
 
@@ -382,20 +385,38 @@ class EditDevicePopup(ActionPopup):
                 f"set {self.device.hostname} {self.selected_nic} {ip_config.address}/{ip_config.netmask}"
             )
 
-    def on_ips_edit(self):
-        if not self.selected_ip:
-            logging.warning("GUI: No IP selected for editing.")
-            return
-        ip_config = self._get_ip_config_from_nic(
-            self.device.get_nic(self.selected_nic), self.selected_ip
-        )
-        if ip_config:
-            EditIpPopup(self, ip_config).open()
+    def on_nic_selection(self, selected_nic):
+        self.selected_ip = None
+        self.selected_nic = selected_nic
+        self.root.ids.add_ip.disabled = False
+        self.root.ids.edit_ip.disabled = True
+        self.root.ids.remove_ip.disabled = True
+        self.root.ids.edit_nic.disabled = False
+        self.root.ids.remove_nic.disabled = False
+        self._set_ips()
 
-    def on_ip_selection(self, selected_ip):
-        self.selected_ip = selected_ip
-        self.root.ids.remove_ip.disabled = False
-        self.root.ids.edit_ip.disabled = False
+    def on_nics_add(self):
+        raise NotImplementedError
+        # # Add command to be applied.
+        # self.puzzle_commands.append(
+        #     f"create {self.device.hostname} {self.selected_nic}"
+        # )
+
+    def on_nics_edit(self):
+        raise NotImplementedError
+
+    def on_nics_replace(self):
+        # De-select label.
+        for c in self.ids.nics_list.children[0].children:
+            if c.text.startswith(self.selected_nic):
+                c.selected = False
+                break
+        # Replace NIC.
+        self.app.ui.parse(f"replace {self.device.hostname} {self.selected_nic}")
+        # Update device with new data.
+        self.device = Device(deepcopy(self.app.ui.get_device(self.device.hostname)))
+        # Update NIC list.
+        self.ids.nics_list.update_data(self.device.nics, management=True)
 
     def on_okay(self):
         logging.info(f"GUI: Updating {self.device.hostname}:")
@@ -410,8 +431,7 @@ class EditDevicePopup(ActionPopup):
     def _add_conditional_widgets(self):
         if self.device.type in ["server"]:
             # Handle DHCP checkbox, label, and button.
-            l_cb = ThemedBoxLayout(
-                size_hint_max_y=self.app.BUTTON_MAX_H,
+            l_cb = SingleRowLayout(
                 padding=0,
             )
             if self.device.is_dhcp:
@@ -463,18 +483,21 @@ class EditDevicePopup(ActionPopup):
 
 class NICsRecView(AppRecView):
     def update_data(self, nics, management=True):
-        self.data = []
+        data = []
         for n in nics:
             if n.name.startswith("lo"):
                 continue
             text = n.name
-            # TODO: Add "*" to text if iface is connected.
+            # Add "*" to text if iface is connected.
             if self.app.ui.puzzle.nic_is_connected(n.json):
                 text += "*"
-            self.data.append({"text": text})
+            # Add MAC address to NIC description.
+            text += f"; {n.mac}"
+            data.append({"text": text})
         item = {"text": "management_interface0"}
-        if not management and item in self.data:
-            self.data.remove(item)
+        if not management and item in data:
+            data.remove(item)
+        self.data = data
 
     def on_selection(self, index):
         self.root.on_nic_selection(self.data[index].get("text"))
@@ -564,7 +587,7 @@ class EditDhcpPopup(ActionPopup):
 
     def _add_dhcp_configs(self):
         for config in self.dhcp_configs:
-            bl = ThemedBoxLayout()
+            bl = SingleRowLayout()
             ip = CheckBoxLabel(text=config.get("ip"))
             start = ValueInput(text=config.get("mask"))
             end = ValueInput(text=config.get("gateway"))

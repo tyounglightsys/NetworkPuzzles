@@ -2,8 +2,12 @@
     padding: dp(5)
     spacing: dp(3)
 
-<ActionPopupButtons>:
+<SingleRowLayout>:
     size_hint_max_y: app.BUTTON_MAX_H + dp(8)
+    padding: (dp(1), dp(1), dp(1), dp(1))
+    spacing: dp(2)
+
+<ActionPopupButtons>:
     PopupButton:
         text: root.cancel_text
         on_release: root.cancel()

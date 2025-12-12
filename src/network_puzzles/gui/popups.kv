@@ -1,7 +1,7 @@
 <ThemedPopup>:
     title_size: app.BUTTON_FONT_SIZE
     size_hint: (0.5, 0.75)
-    on_open: self._update_sep_color()
+    separator_color: app.theme.detail
 
 
 <CommandPopup>:
@@ -65,49 +65,51 @@
             ThemedBoxLayout:
                 orientation: 'vertical'
                 CheckBoxLabel:
+                    size_hint_y: 0.1
                     text: _("Filter the puzzles by level:")
-                ThemedBoxLayout:
+                SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level0'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 0")
-                ThemedBoxLayout:
+                SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level1'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 1")
-                ThemedBoxLayout:
+                SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level2'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 2")
-                ThemedBoxLayout:
+                SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level3'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 3")
-                ThemedBoxLayout:
+                SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level4'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 4")
-                ThemedBoxLayout:
+                SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level5'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 5")
-                ThemedBoxLayout:
+                SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level6'
                     CheckBoxLabel:
                         size_hint_x: 0.85
                         text: _("Level 6")
+                Widget:
             VSeparator:
             PuzzlesRecView:
                 id: puzzles_view
