@@ -19,28 +19,23 @@
 
 <ExceptionPopup>:
     title: _("Error")
+    size_hint: (0.75, 0.75)
     ThemedBoxLayout:
         orientation: 'vertical'
-        ScrollView:
+        ThemedScrollView:
             size_hint_y: 0.8
-            bar_width: dp(5)
-            scroll_type: ['bars', 'content']
-            do_scroll_x: True
-            do_scroll_y: True
-            effect_cls: 'ScrollEffect'
             TerminalLabel:
                 id: exception
                 padding: dp(3)
                 size_hint: (None, None)
-                height: self.line_height * len(self.text.split('\n'))
-                width: self._get_row_width(self.get_max_row(self.text))
-                text_size: (self.width, None)
+                text_size: (self.parent.parent.width, None)
+                height: self.line_height * len(self.text.split('\n')) + dp(2)
+                width: self.parent.parent.width - self.padding[1] - self.padding[3]
+
         HSeparator:
         PopupButton:
             pos_hint: {"center_x": 0.5}
-            size_hint_x: None
-            size_hint_max_x: None
-            size_hint_y: 0.2
+            size_hint: (None, 0.2)
             text: _("Quit")
             on_release: app.stop()
 
@@ -120,7 +115,7 @@
             on_okay: root.on_load()
 
 
-<PuzzleCompletePopup@ActionPopup>:
+<PuzzleCompletePopup>:
     title: _("Puzzle complete!")
     size_hint_y: 0.5
     ThemedBoxLayout:
