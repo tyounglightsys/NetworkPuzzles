@@ -34,6 +34,10 @@ class Nic:
         return ips
 
     @property
+    def mac(self):
+        return self.json.get("Mac")
+
+    @property
     def myid(self):
         return self.json.get("myid")
 

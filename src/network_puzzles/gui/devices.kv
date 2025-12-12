@@ -59,22 +59,35 @@
             SingleRowLayout:  # NICs label/button
                 size_hint_y: 0.15
                 CheckBoxLabel:  # NICs
-                    size_hint_x: 0.45
+                    size_hint_x: 0.2
                     text: _("NICs")
+                PopupButton:  # +
+                    id: add_nic
+                    size_hint_x: 0.15
+                    text: "+"
+                    #disabled: True
+                    on_release: root.on_nics_add()
+                PopupButton:  # replace
+                    id: remove_nic
+                    size_hint_x: 0.15
+                    text: "\u21ba"
+                    disabled: True
+                    on_release: root.on_nics_replace()
                 PopupButton:  # Edit
                     id: edit_nic
-                    size_hint_x: 0.55
+                    size_hint_x: 0.5
                     text: _("Edit")
                     disabled: True
                     on_release: root.on_nics_edit()
             NICsRecView:
+                id: nics_list
                 size_hint_y: 0.35
                 root: root
                 on_parent: self.update_data(root.device.nics, management=True)
             SingleRowLayout:  # IPs label/buttons
                 size_hint_y: 0.15
                 CheckBoxLabel:  # IPs
-                    size_hint_x: 0.15
+                    size_hint_x: 0.2
                     text: _("IPs")
                 PopupButton:  # +
                     id: add_ip
@@ -90,7 +103,7 @@
                     on_release: root.on_ips_remove()
                 PopupButton:  # Edit
                     id: edit_ip
-                    size_hint_x: 0.55
+                    size_hint_x: 0.5
                     text: _("Edit")
                     disabled: True
                     on_release: root.on_ips_edit()
