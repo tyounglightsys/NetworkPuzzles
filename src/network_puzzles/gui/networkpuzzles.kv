@@ -69,18 +69,20 @@ ThemedBoxLayout:
                 on_release: app.on_help()
         HSeparator:
         ThemedBoxLayout:
-            #size_hint_y: 0.08
-            size_hint_y: 0.1
+            size_hint_y: 0.15
             orientation: 'vertical'
             InfoLabel:
                 text: _("Help level:")
                 text_size: self.size
             HelpSlider:
                 id: help_slider
-        InfoLabel:  # puzzle information
-            id: info
-            size_hint_y: 0.67
-            text_size: (self.parent.width, self.height)
+        ThemedScrollView:
+            size_hint_y: 0.75
+            InfoLabel:  # puzzle information
+                id: info
+                size_hint_y: None
+                text_size: (self.parent.parent.width, None)
+                height: self.texture_size[1]
 
     VSeparator:
     ThemedBoxLayout:  # right panel

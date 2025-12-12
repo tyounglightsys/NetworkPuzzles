@@ -88,7 +88,7 @@ class Device:
         if loc:
             location = loc.split(",")
             location = (int(location[0]), int(location[1]))
-            logging.debug(f"{self.hostname} {location=}")
+            logging.debug(f"GUI: {self.hostname} {location=}")
             return location
         raise ValueError(f"Invalid JSON location data for '{self.hostname}'")
 
@@ -413,8 +413,6 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     if not isinstance(theDeviceRec["route"], list):
         theDeviceRec["route"] = [theDeviceRec["route"]]  # turn it into a list
     for oneroute in theDeviceRec["route"]:
-        tstring = oneroute["ip"] + "/" + oneroute["mask"]
-        # logging.debug(f" the string is {tstring}")
         staticroute = ipaddress.ip_network(
             oneroute["ip"] + "/" + oneroute["mask"], strict=False
         )
