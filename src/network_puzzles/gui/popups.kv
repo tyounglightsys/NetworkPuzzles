@@ -41,7 +41,7 @@
 
 
 <PuzzleChooserPopup>:
-    size_hint: (0.5, 1.0)
+    size_hint: (0.6, 1.0)
     title: _("Load Puzzle")
     ThemedBoxLayout:
         padding: dp(0)
@@ -60,49 +60,43 @@
             ThemedBoxLayout:
                 orientation: 'vertical'
                 CheckBoxLabel:
-                    size_hint_y: 0.1
+                    size_hint_y: None
+                    height: self.texture_size[1]
                     text: _("Filter the puzzles by level:")
                 SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level0'
                     CheckBoxLabel:
-                        size_hint_x: 0.85
                         text: _("Level 0")
                 SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level1'
                     CheckBoxLabel:
-                        size_hint_x: 0.85
                         text: _("Level 1")
                 SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level2'
                     CheckBoxLabel:
-                        size_hint_x: 0.85
                         text: _("Level 2")
                 SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level3'
                     CheckBoxLabel:
-                        size_hint_x: 0.85
                         text: _("Level 3")
                 SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level4'
                     CheckBoxLabel:
-                        size_hint_x: 0.85
                         text: _("Level 4")
                 SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level5'
                     CheckBoxLabel:
-                        size_hint_x: 0.85
                         text: _("Level 5")
                 SingleRowLayout:
                     FiltersCheckBox:
                         name: 'Level6'
                     CheckBoxLabel:
-                        size_hint_x: 0.85
                         text: _("Level 6")
                 Widget:
             VSeparator:
