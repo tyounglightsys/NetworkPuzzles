@@ -217,7 +217,7 @@ class GUI(UI):
             # First check if completed tests have been acknowledged.
             self.acknowledge_any_tests()
             # Check if puzzle is complete.
-            if not self.puzzle.json.get("completed"):
+            if not self.puzzle.completed:
                 if self.puzzle.is_puzzle_done():
                     session.print("Congratulations. You solved the whole puzzle!")
                     # self.parser.parse("show tests", False)

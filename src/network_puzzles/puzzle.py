@@ -22,6 +22,17 @@ class Puzzle:
         if not isinstance(data, dict):
             raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
         self.json = data
+        self._completed = False
+
+    @property
+    def completed(self):
+        return self._completed
+
+    @completed.setter
+    def completed(self, value):
+        if not isinstance(value, bool):
+            raise TypeError(f"Must be boolean: {value}")
+        self._completed = value
 
     @property
     def default_help_level(self):
