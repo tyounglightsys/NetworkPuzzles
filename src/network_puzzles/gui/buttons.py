@@ -1,4 +1,5 @@
 import logging
+
 from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.metrics import dp
@@ -15,41 +16,14 @@ class ThemedButton(Button):
 
     def __init__(self, on_release=None, **kwargs):
         super().__init__(**kwargs)
-        self.app = session.app
         self.long_press = None
         self.tooltip = ToolTip()
         self._on_release = on_release
         Window.bind(mouse_pos=self.on_mouse_pos)
 
-    def on_mouse_pos(self, window, pos):
-        if not self.get_root_window():
-            return
-        w_pos = self.to_widget(*pos)
-        # Close tooltip if already open.
-        self.cancel_tooltip()
-        # Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event
-        # self.close_tooltip()  # close if it's opened
-        if self.collide_point(*w_pos):
-            Clock.schedule_once(self.open_tooltip, 1)
-
-    def on_press(self):
-        if self._on_release is None:
-            return
-        # Schedule long-press callback into the future.
-        self.long_press = Clock.schedule_once(
-            self._on_long_press, self.LONG_PRESS_THRESHOLD
-        )
-
-    def on_release(self):
-        self.cancel_tooltip()
-        if self._on_release is None:
-            return
-        # If long-press callback hasn't run, cancel it and run the short-press
-        # callback. Here ".is_triggered" means "scheduled but not yet run". It
-        # resets to 0 or False after the event is processed.
-        if not self.long_press or self.long_press.is_triggered:
-            self.long_press.cancel()
-            self._on_release()
+    @property
+    def app(self):
+        return session.app
 
     @property
     def tooltip_anchor(self):
@@ -89,8 +63,35 @@ class ThemedButton(Button):
         self.tooltip.text = text
         self._update_tooltip_props()
 
-    def _on_long_press(self, *args):
-        self.open_tooltip()
+    def on_mouse_pos(self, window, pos):
+        if not self.get_root_window():
+            return
+        w_pos = self.to_widget(*pos)
+        # Close tooltip if already open.
+        self.cancel_tooltip()
+        # Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event
+        # self.close_tooltip()  # close if it's opened
+        if self.collide_point(*w_pos):
+            Clock.schedule_once(self.open_tooltip, 1)
+
+    def on_press(self):
+        if self._on_release is None:
+            return
+        # Schedule long-press callback into the future.
+        self.long_press = Clock.schedule_once(
+            self._on_long_press, self.LONG_PRESS_THRESHOLD
+        )
+
+    def on_release(self):
+        self.cancel_tooltip()
+        if self._on_release is None:
+            return
+        # If long-press callback hasn't run, cancel it and run the short-press
+        # callback. Here ".is_triggered" means "scheduled but not yet run". It
+        # resets to 0 or False after the event is processed.
+        if not self.long_press or self.long_press.is_triggered:
+            self.long_press.cancel()
+            self._on_release()
 
     def cancel_tooltip(self):
         Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event
@@ -135,6 +136,9 @@ class ThemedButton(Button):
     def _calc_tooltip_size(self):
         self.tooltip.texture_update()
         return self.tooltip.texture_size
+
+    def _on_long_press(self, *args):
+        self.open_tooltip()
 
     def _update_tooltip_props(self):
         self.tooltip.texture_update()  # depends on text value

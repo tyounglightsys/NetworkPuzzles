@@ -32,7 +32,6 @@ class Device(DragBehavior, ThemedBoxLayout):
     def __init__(self, init_data=None, **kwargs):
         self.base = device.Device(init_data)
         super().__init__(**kwargs)
-        self.app = session.app
         self.help_text = None
         self.highlighting = None
         self.lock_icon = None
@@ -43,6 +42,10 @@ class Device(DragBehavior, ThemedBoxLayout):
         self.center = location_to_pos(self.base.location, self.app.root.ids.layout.size)
         # Updates that rely on Device's pos already being set.
         Clock.schedule_once(self.set_power_status)
+
+    @property
+    def app(self):
+        return session.app
 
     @property
     def button(self):

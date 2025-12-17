@@ -1,10 +1,7 @@
 import logging
 import sys
 
-from . import parser
-from . import puzzle
-from . import session
-from . import packet
+from . import packet, parser, puzzle, session
 
 
 class UI:
@@ -20,6 +17,7 @@ class UI:
 
     @property
     def puzzle(self):
+        """Convenience attribute."""
         return session.puzzle
 
     def console_write(self, line):
@@ -64,10 +62,10 @@ class UI:
         try:
             # if it is just a number, use it as an ID
             int(what)
-            item = session.puzzle.device_from_uid(what)
+            item = self.puzzle.device_from_uid(what)
         except ValueError:
             # if it is not a number, use it as a name
-            item = session.puzzle.device_from_name(what)
+            item = self.puzzle.device_from_name(what)
         return item
 
     def get_link(self, what: str) -> dict | None:
@@ -80,23 +78,23 @@ class UI:
         try:
             # if it is just a number, use it as an ID
             int(what)
-            item = session.puzzle.link_from_uid(what)
+            item = self.puzzle.link_from_uid(what)
         except ValueError:
             # if it is not a number, use it as a name
-            item = session.puzzle.link_from_name(what)
+            item = self.puzzle.link_from_name(what)
         return item
 
     def all_devices(self):
         """return a list of all the devices - good for iterating"""
-        return [d for d in session.puzzle.devices]
+        return [d for d in self.puzzle.devices]
 
     def all_links(self):
         """return a list of all the links - good for iterating"""
-        return [k for k in session.puzzle.links]
+        return [k for k in self.puzzle.links]
 
     def all_tests(self):
         """return a list of all tests in the current puzzle"""
-        return session.puzzle.all_tests()
+        return self.puzzle.all_tests()
 
     def redraw(self):
         pass
@@ -150,16 +148,16 @@ class CLI(UI):
                     2
                 )  # the cli does not need much time to know packets are going to loop forever.
             self.acknowledge_any_tests()
-            if not session.puzzle.json.get("completed", False):
-                if session.puzzle.is_puzzle_done():
+            if not self.puzzle.json.get("completed", False):
+                if self.puzzle.is_puzzle_done():
                     session.print("Congratulations. You solved the whole puzzle!")
                     self.parser.parse("show tests", False)
-                    session.puzzle.json["completed"] = True
+                    self.puzzle.json["completed"] = True
         except EOFError:
             sys.exit()
 
     def acknowledge_any_tests(self):
-        for test in session.puzzle.all_tests():
+        for test in self.puzzle.all_tests():
             if (
                 test.get("thetest", "") == "SuccessfullyPingsWithoutLoop"
                 and session.packetstorm
@@ -190,7 +188,7 @@ class GUI(UI):
         session.ui = self
 
     def acknowledge_any_tests(self):
-        for test in session.puzzle.all_tests():
+        for test in self.puzzle.all_tests():
             if (
                 test.get("thetest", "") == "SuccessfullyPingsWithoutLoop"
                 and session.packetstorm
@@ -219,11 +217,11 @@ class GUI(UI):
             # First check if completed tests have been acknowledged.
             self.acknowledge_any_tests()
             # Check if puzzle is complete.
-            if not session.puzzle.json.get("completed"):
-                if session.puzzle.is_puzzle_done():
+            if not self.puzzle.json.get("completed"):
+                if self.puzzle.is_puzzle_done():
                     session.print("Congratulations. You solved the whole puzzle!")
                     # self.parser.parse("show tests", False)
-                    session.puzzle.json["completed"] = True
+                    self.puzzle.json["completed"] = True
                     return True
                 else:
                     return False

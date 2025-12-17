@@ -53,11 +53,14 @@ class AppTray(ThemedBoxLayout):
         self, choices=list(), orientation="horizontal", parent_button=None, **kwargs
     ):
         super().__init__(**kwargs)
-        self.app = session.app
         self.parent_button = parent_button
         self.choices = choices
         self.buttons = [MenuButton(c) for c in self.choices]
         self.orientation = orientation
+
+    @property
+    def app(self):
+        return session.app
 
     @property
     def is_open(self):
@@ -118,7 +121,6 @@ class PuzzleLayout(RelativeLayout):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app = session.app
         self.items_menu_button = MenuButton(
             props={"text": "+", "cb": self.app.on_new_item, "info": "add new item"},
             pos_hint={"x": 0.005, "top": 0.99},
@@ -138,6 +140,10 @@ class PuzzleLayout(RelativeLayout):
             parent_button=self.items_tray.buttons[2],
             choices=self._get_user_devices_choices(),
         )
+
+    @property
+    def app(self):
+        return session.app
 
     def add_items_menu_button(self):
         self.add_widget(self.items_menu_button)
