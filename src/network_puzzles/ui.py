@@ -179,11 +179,6 @@ class CLI(UI):
     def quit(self):
         self.parser.parse.exit_app()
 
-    def load_puzzle(self, puzzle, filter_str: str = None):
-        """Load and set up the UI based on the data in the puzzle file."""
-        super().load_puzzle(puzzle, filter_str)
-        # do any aftermath.  Probably display the loaded puzzle when we have that functionality
-
 
 class GUI(UI):
     def __init__(self, kivyapp):
