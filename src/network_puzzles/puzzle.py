@@ -21,17 +21,7 @@ class Puzzle:
         if not isinstance(data, dict):
             raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
         self.json = data
-        self._completed = False
-
-    @property
-    def completed(self):
-        return self._completed
-
-    @completed.setter
-    def completed(self, value):
-        if not isinstance(value, bool):
-            raise TypeError(f"Must be boolean: {value}")
-        self._completed = value
+        self.completion_notified = False
 
     @property
     def default_help_level(self):
@@ -262,6 +252,16 @@ class Puzzle:
                                 f"{shost.get('hostname')} has local IP to {dhost.get('hostname')}"
                             )
 
+    def is_solved(self):
+        """Report back to see if all the tests have been completed."""
+        for onetest in self.all_tests():
+            if onetest.get("thetest", "").startswith("Lock"):
+                # These do not count as unfinished tests
+                continue
+            if not onetest.get("completed", False):
+                return False
+        return True
+
     def item_from_uid(self, uid):
         """Return the item matching the ID.  Could be a device, a link, or a nic"""
         result = self.device_from_uid(uid)
@@ -429,34 +429,6 @@ class Puzzle:
                     oneDevice["nic"] = [oneDevice["nic"]]
                 for oneNic in oneDevice["nic"]:
                     oneNic = Nic(oneNic).ensure_mac()
-
-    def _get_items(self, item_type: str):
-        """
-        Return a list of the given item_type ('link', 'device', 'nettest').
-        """
-        items = []
-        only_one_item = False
-        for item in self.json.get(item_type, []):
-            # Some item attribs are single-item dicts. Convert if necessary.
-            if not isinstance(item, dict):
-                only_one_item = True
-                item = self.json.get(item_type)
-            match item_type:
-                case "link" | "device":
-                    if "hostname" in item:
-                        items.append(item)
-                case "nettest":
-                    items.append(item)
-            if only_one_item:
-                break  # stop iterating through dict keys
-        return items
-
-    def _item_by_attrib(self, items: iter, attrib: str, value: str) -> dict | None:
-        # Returns first match; i.e. assumes only one item in list matches given
-        # attribute. It also assumes that 'items' is a list of dicts or json data.
-        for item in items:
-            if item and item.get(attrib) == value:
-                return item
 
     def deleteItem(self, itemToDelete: str):
         existing_device = self.device_from_name(itemToDelete)
@@ -726,15 +698,33 @@ class Puzzle:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
             return False
 
-    def is_done(self):
-        """Report back to see if all the tests have been completed."""
-        for onetest in self.all_tests():
-            if onetest.get("thetest", "").startswith("Lock"):
-                # These do not count as unfinished tests
-                continue
-            if not onetest.get("completed", False):
-                return False
-        return True
+    def _get_items(self, item_type: str):
+        """
+        Return a list of the given item_type ('link', 'device', 'nettest').
+        """
+        items = []
+        only_one_item = False
+        for item in self.json.get(item_type, []):
+            # Some item attribs are single-item dicts. Convert if necessary.
+            if not isinstance(item, dict):
+                only_one_item = True
+                item = self.json.get(item_type)
+            match item_type:
+                case "link" | "device":
+                    if "hostname" in item:
+                        items.append(item)
+                case "nettest":
+                    items.append(item)
+            if only_one_item:
+                break  # stop iterating through dict keys
+        return items
+
+    def _item_by_attrib(self, items: iter, attrib: str, value: str) -> dict | None:
+        # Returns first match; i.e. assumes only one item in list matches given
+        # attribute. It also assumes that 'items' is a list of dicts or json data.
+        for item in items:
+            if item and item.get(attrib) == value:
+                return item
 
 
 class PuzzleTest:
@@ -756,14 +746,6 @@ class PuzzleTest:
         self.json["acknowledged"] = value
 
     @property
-    def message(self):
-        return self.json.get("message")
-
-    @property
-    def name(self):
-        return self.json.get("thetest")
-
-    @property
     def completed(self):
         return self.json.get("completed")
 
@@ -772,6 +754,22 @@ class PuzzleTest:
         if not isinstance(value, bool):
             raise ValueError(f"Must be boolean: {value}")
         self.json["completed"] = value
+
+    @property
+    def dhost(self):
+        return self.json.get("dhost")
+
+    @property
+    def message(self):
+        return self.json.get("message")
+
+    @property
+    def name(self):
+        return self.json.get("thetest")
+
+    @property
+    def shost(self):
+        return self.json.get("shost")
 
 
 def read_json_file(file_path):

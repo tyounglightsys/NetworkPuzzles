@@ -55,12 +55,25 @@ class UI:
         # Save selected puzzle to session variable.
         session.puzzle = puzzle.Puzzle(val.get("value"))
 
+    def notify_if_puzzle_completed(self):
+        if self.puzzle.is_solved():
+            session.print("Congratulations. You solved the whole puzzle!")
+            self.puzzle.completion_notified = True
+
     def quit(self):
         raise NotImplementedError
 
     def run(self):
         """Startup the app when first launched."""
         raise NotImplementedError
+
+    def update_puzzle_completion_status(self):
+        if self.puzzle and not self.puzzle.completion_notified:
+            self.acknowledge_any_tests()
+            self.notify_if_puzzle_completed()
+            if self.puzzle.is_solved():
+                self.parser.parse("show tests", False)
+            return self.puzzle.is_solved()
 
     def getAllPuzzleNames(self, filter=None):
         """return a list of all the puzzle names
@@ -159,12 +172,7 @@ class CLI(UI):
                 packet.processPackets(
                     2
                 )  # the cli does not need much time to know packets are going to loop forever.
-            self.acknowledge_any_tests()
-            if not self.puzzle.json.get("completed", False):
-                if self.puzzle.is_done():
-                    session.print("Congratulations. You solved the whole puzzle!")
-                    self.parser.parse("show tests", False)
-                    self.puzzle.json["completed"] = True
+            self.update_puzzle_completion_status()
         except EOFError:
             sys.exit()
 
@@ -187,25 +195,6 @@ class GUI(UI):
     def console_write(self, line):
         self.app.add_terminal_line(line)
         logging.info(f"GUI: terminal: {line}")
-
-    def is_puzzle_done(self, *args) -> bool | None:
-        """
-        Determine if puzzle has been solved.
-
-        Return None if no puzzle is active, or True|False according to active
-        puzzle's solved state.
-        """
-        if self.puzzle:
-            # First check if completed tests have been acknowledged.
-            self.acknowledge_any_tests()
-            # Check if puzzle is complete.
-            if not self.puzzle.completed:
-                if self.puzzle.is_done():
-                    session.print("Congratulations. You solved the whole puzzle!")
-                    self.puzzle.completed = True
-                return self.puzzle.completed
-        else:
-            return None
 
     def parse(self, command: str):
         self.parser.parse(command)

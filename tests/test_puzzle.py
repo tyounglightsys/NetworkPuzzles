@@ -166,11 +166,11 @@ class TestPuzzleClass(unittest.TestCase):
         self.assertTrue(session.puzzle.deleteItem("pc1"))
 
     def test_ispuzzledone_false(self):
-        self.assertFalse(session.puzzle.is_done())
+        self.assertFalse(session.puzzle.is_solved())
 
     def test_ispuzzledone_true(self):
         session.puzzle.createLink(["pc0", "net_switch0"])
-        self.assertTrue(session.puzzle.is_done())
+        self.assertTrue(session.puzzle.is_solved())
 
 
 class TestXFromY(unittest.TestCase):
