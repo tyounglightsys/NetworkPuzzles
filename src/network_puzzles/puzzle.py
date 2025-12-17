@@ -49,6 +49,9 @@ class Puzzle:
     def links(self):
         """Generator to yield all links in puzzle."""
         for lnk in self.json.get("link", []):
+            if lnk is None:
+                # TODO: Why would "None" be added as link data?
+                continue
             if isinstance(lnk, str):
                 yield self.json.get("link")
                 break
