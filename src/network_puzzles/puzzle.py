@@ -71,9 +71,11 @@ class Puzzle:
     def tests(self):
         """Generator to yield all tests in puzzle as PuzzleTest objects."""
         for data in self.json.get("nettest", []):
+            if isinstance(data, str):
+                yield self.json.get("nettest")
+                break
             if isinstance(data, dict):
-                test = PuzzleTest(data)
-                yield test
+                yield data
             else:
                 logging.warning(f"Ignoring invalid test data: {data}")
 
@@ -169,27 +171,6 @@ class Puzzle:
         if device.Device(tdevice).blown_up:
             commands.append(f"replace {hostname}")
         return commands
-
-    def _get_items(self, item_type: str):
-        """
-        Return a list of the given item_type ('link', 'device', 'nettest').
-        """
-        items = []
-        only_one_item = False
-        for item in self.json.get(item_type, []):
-            # Some item attribs are single-item dicts. Convert if necessary.
-            if not isinstance(item, dict):
-                only_one_item = True
-                item = self.json.get(item_type)
-            match item_type:
-                case "link" | "device":
-                    if "hostname" in item:
-                        items.append(item)
-                case "nettest":
-                    items.append(item)
-            if only_one_item:
-                break  # stop iterating through dict keys
-        return items
 
     def arp_lookup(self, ipaddr):
         return device.globalArpLookup(ipaddr)
@@ -448,6 +429,27 @@ class Puzzle:
                     oneDevice["nic"] = [oneDevice["nic"]]
                 for oneNic in oneDevice["nic"]:
                     oneNic = Nic(oneNic).ensure_mac()
+
+    def _get_items(self, item_type: str):
+        """
+        Return a list of the given item_type ('link', 'device', 'nettest').
+        """
+        items = []
+        only_one_item = False
+        for item in self.json.get(item_type, []):
+            # Some item attribs are single-item dicts. Convert if necessary.
+            if not isinstance(item, dict):
+                only_one_item = True
+                item = self.json.get(item_type)
+            match item_type:
+                case "link" | "device":
+                    if "hostname" in item:
+                        items.append(item)
+                case "nettest":
+                    items.append(item)
+            if only_one_item:
+                break  # stop iterating through dict keys
+        return items
 
     def _item_by_attrib(self, items: iter, attrib: str, value: str) -> dict | None:
         # Returns first match; i.e. assumes only one item in list matches given
@@ -724,7 +726,7 @@ class Puzzle:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
             return False
 
-    def is_puzzle_done(self):
+    def is_done(self):
         """Report back to see if all the tests have been completed."""
         for onetest in self.all_tests():
             if onetest.get("thetest", "").startswith("Lock"):

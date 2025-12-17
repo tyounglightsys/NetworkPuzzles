@@ -21,7 +21,8 @@ class UI:
         return session.puzzle
 
     def acknowledge_any_tests(self):
-        for test in self.puzzle.tests:
+        for test_data in self.puzzle.tests:
+            test = puzzle.PuzzleTest(test_data)
             if (
                 test.name == "SuccessfullyPingsWithoutLoop"
                 and session.packetstorm
@@ -160,7 +161,7 @@ class CLI(UI):
                 )  # the cli does not need much time to know packets are going to loop forever.
             self.acknowledge_any_tests()
             if not self.puzzle.json.get("completed", False):
-                if self.puzzle.is_puzzle_done():
+                if self.puzzle.is_done():
                     session.print("Congratulations. You solved the whole puzzle!")
                     self.parser.parse("show tests", False)
                     self.puzzle.json["completed"] = True
@@ -199,7 +200,7 @@ class GUI(UI):
             self.acknowledge_any_tests()
             # Check if puzzle is complete.
             if not self.puzzle.completed:
-                if self.puzzle.is_puzzle_done():
+                if self.puzzle.is_done():
                     session.print("Congratulations. You solved the whole puzzle!")
                     self.puzzle.completed = True
                 return self.puzzle.completed

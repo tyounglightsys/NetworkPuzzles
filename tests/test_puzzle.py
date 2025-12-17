@@ -1,10 +1,8 @@
 import json
 import unittest
-from network_puzzles import device
-from network_puzzles import nic
-from network_puzzles import puzzle
-from network_puzzles import session
-from network_puzzles import ui
+
+from network_puzzles import device, nic, puzzle, session, ui
+
 from . import PUZZLES_DIR
 
 
@@ -168,11 +166,11 @@ class TestPuzzleClass(unittest.TestCase):
         self.assertTrue(session.puzzle.deleteItem("pc1"))
 
     def test_ispuzzledone_false(self):
-        self.assertFalse(session.puzzle.is_puzzle_done())
+        self.assertFalse(session.puzzle.is_done())
 
     def test_ispuzzledone_true(self):
         session.puzzle.createLink(["pc0", "net_switch0"])
-        self.assertTrue(session.puzzle.is_puzzle_done())
+        self.assertTrue(session.puzzle.is_done())
 
 
 class TestXFromY(unittest.TestCase):
