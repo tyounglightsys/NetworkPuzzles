@@ -20,6 +20,7 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 
 from .. import messages, nettests
+from ..puzzle import PuzzleTest
 from .base import (
     BUTTON_FONT_SIZE,
     BUTTON_MAX_H,
@@ -106,7 +107,7 @@ class NetworkPuzzlesApp(App):
 
     def check_puzzle(self, *args):
         """Checked at regular interval during kivy app loop."""
-        if self.ui.is_puzzle_done():
+        if self.ui.update_puzzle_completion_status():
             PuzzleCompletePopup().open()
 
     def add_device(self, devicew=None, dtype=None):
@@ -396,11 +397,13 @@ class NetworkPuzzlesApp(App):
         if help_level > 0:
             # TODO: This only highlights layout devices. We still need to work
             # in highlighting of other on-screen elements.
-            for n, t in (
-                (e.get("shost"), e.get("thetest"))
-                for e in self.ui.all_tests()
-                if not e.get("completed")
-            ):
+            uncompleted_tests = []
+            for test_data in self.ui.all_tests():
+                test = PuzzleTest(test_data)
+                if not test.completed:
+                    uncompleted_tests.append(test)
+
+            for n, t in ((test.shost, test.name) for test in uncompleted_tests):
                 d = self.ui.get_device(n)
                 if d is None:
                     logging.info(f'Ignoring highlight of non-device "{n}"')

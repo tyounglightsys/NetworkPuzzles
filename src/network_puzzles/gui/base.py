@@ -72,9 +72,12 @@ class AppExceptionHandler(ExceptionHandler):
 class AppRecView(RecycleView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app = session.app
         self.data = list()
         self.selected_item = None
+
+    @property
+    def app(self):
+        return session.app
 
     def on_selection(self, idx):
         self.selected_item = self.data[idx]
@@ -85,7 +88,10 @@ class ThemedCheckBox(CheckBox):
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app = session.app
+
+    @property
+    def app(self):
+        return session.app
 
     def get_popup(self):
         for win in self.get_parent_window().children:
@@ -116,9 +122,12 @@ class LockEmblem(Widget):
 class HelpSlider(Slider):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app = session.app
         self.value = HelpLevel.FULL
         self.bind(value=self.app.update_help)
+
+    @property
+    def app(self):
+        return session.app
 
 
 @dataclass

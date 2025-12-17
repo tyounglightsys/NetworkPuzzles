@@ -1,16 +1,15 @@
 #!/usr/bin/python3
 # All the functions needed for reading the EduNetwork Puzzle file
 # And getting information from it
-import json
 import copy
-import re
+import json
 import logging
+import re
+
 from packaging.version import Version
 
 # define the global network list
-from . import session
-from . import packet
-from . import device
+from . import device, packet, session
 from .link import Link
 from .nic import Nic
 
@@ -22,6 +21,7 @@ class Puzzle:
         if not isinstance(data, dict):
             raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
         self.json = data
+        self.completion_notified = False
 
     @property
     def default_help_level(self):
@@ -49,13 +49,28 @@ class Puzzle:
     def links(self):
         """Generator to yield all links in puzzle."""
         for lnk in self.json.get("link", []):
+            if lnk is None:
+                # TODO: Why would "None" be added as link data?
+                continue
             if isinstance(lnk, str):
                 yield self.json.get("link")
                 break
             elif isinstance(lnk, dict):
                 yield lnk
             else:
-                logging.warning(f'Ignoring invalid link data, "{lnk}"')
+                logging.warning(f"Ignoring invalid link data, {lnk}")
+
+    @property
+    def tests(self):
+        """Generator to yield all tests in puzzle as PuzzleTest objects."""
+        for data in self.json.get("nettest", []):
+            if isinstance(data, str):
+                yield self.json.get("nettest")
+                break
+            if isinstance(data, dict):
+                yield data
+            else:
+                logging.warning(f"Ignoring invalid test data: {data}")
 
     @property
     def uid(self):
@@ -150,27 +165,6 @@ class Puzzle:
             commands.append(f"replace {hostname}")
         return commands
 
-    def _get_items(self, item_type: str):
-        """
-        Return a list of the given item_type ('link', 'device', 'nettest').
-        """
-        items = []
-        only_one_item = False
-        for item in self.json.get(item_type, []):
-            # Some item attribs are single-item dicts. Convert if necessary.
-            if not isinstance(item, dict):
-                only_one_item = True
-                item = self.json.get(item_type)
-            match item_type:
-                case "link" | "device":
-                    if "hostname" in item:
-                        items.append(item)
-                case "nettest":
-                    items.append(item)
-            if only_one_item:
-                break  # stop iterating through dict keys
-        return items
-
     def arp_lookup(self, ipaddr):
         return device.globalArpLookup(ipaddr)
 
@@ -260,6 +254,16 @@ class Puzzle:
                             test["message"] = (
                                 f"{shost.get('hostname')} has local IP to {dhost.get('hostname')}"
                             )
+
+    def is_solved(self):
+        """Report back to see if all the tests have been completed."""
+        for onetest in self.all_tests():
+            if onetest.get("thetest", "").startswith("Lock"):
+                # These do not count as unfinished tests
+                continue
+            if not onetest.get("completed", False):
+                return False
+        return True
 
     def item_from_uid(self, uid):
         """Return the item matching the ID.  Could be a device, a link, or a nic"""
@@ -429,13 +433,6 @@ class Puzzle:
                 for oneNic in oneDevice["nic"]:
                     oneNic = Nic(oneNic).ensure_mac()
 
-    def _item_by_attrib(self, items: iter, attrib: str, value: str) -> dict | None:
-        # Returns first match; i.e. assumes only one item in list matches given
-        # attribute. It also assumes that 'items' is a list of dicts or json data.
-        for item in items:
-            if item and item.get(attrib) == value:
-                return item
-
     def deleteItem(self, itemToDelete: str):
         existing_device = self.device_from_name(itemToDelete)
         if existing_device:
@@ -489,11 +486,11 @@ class Puzzle:
             count = count + 1
         newnicname = f"{nictype}{count}"
         newid = self.issueUniqueIdentifier()
-        newip="0.0.0.0"
-        newmask="0.0.0.0"
-        if newnicname == 'lo0':
-            newip="127.0.0.1"
-            newmask="255.255.255.0"
+        newip = "0.0.0.0"
+        newmask = "0.0.0.0"
+        if newnicname == "lo0":
+            newip = "127.0.0.1"
+            newmask = "255.255.255.0"
         newnic = {
             "nictype": [f"{nictype}", f"{nictype}"],
             "nicname": newnicname,
@@ -584,9 +581,9 @@ class Puzzle:
         if device_type in {"cellphone", "tablet"}:
             self.createNIC(newdevice, "wlan")
         if device_type == "ip_phone":
-            #an IP phone has one nic that is DHCP enabled
-            newnic=self.createNIC(newdevice, "eth")
-            newnic['usesdhcp']="True"
+            # an IP phone has one nic that is DHCP enabled
+            newnic = self.createNIC(newdevice, "eth")
+            newnic["usesdhcp"] = "True"
 
         self.json["device"].append(newdevice)
         session.print(f"Creating new device: {newdevicename}")
@@ -704,15 +701,78 @@ class Puzzle:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
             return False
 
-    def is_puzzle_done(self):
-        """Report back to see if all the tests have been completed."""
-        for onetest in self.all_tests():
-            if onetest.get("thetest", "").startswith("Lock"):
-                # These do not count as unfinished tests
-                continue
-            if not onetest.get("completed", False):
-                return False
-        return True
+    def _get_items(self, item_type: str):
+        """
+        Return a list of the given item_type ('link', 'device', 'nettest').
+        """
+        items = []
+        only_one_item = False
+        for item in self.json.get(item_type, []):
+            # Some item attribs are single-item dicts. Convert if necessary.
+            if not isinstance(item, dict):
+                only_one_item = True
+                item = self.json.get(item_type)
+            match item_type:
+                case "link" | "device":
+                    if "hostname" in item:
+                        items.append(item)
+                case "nettest":
+                    items.append(item)
+            if only_one_item:
+                break  # stop iterating through dict keys
+        return items
+
+    def _item_by_attrib(self, items: iter, attrib: str, value: str) -> dict | None:
+        # Returns first match; i.e. assumes only one item in list matches given
+        # attribute. It also assumes that 'items' is a list of dicts or json data.
+        for item in items:
+            if item and item.get(attrib) == value:
+                return item
+
+
+class PuzzleTest:
+    def __init__(self, data):
+        self.json = data
+        if not isinstance(self.acknowledged, bool):
+            self.acknowledged = False
+        if not isinstance(self.completed, bool):
+            self.completed = False
+
+    @property
+    def acknowledged(self):
+        return self.json.get("acknowledged")
+
+    @acknowledged.setter
+    def acknowledged(self, value):
+        if not isinstance(value, bool):
+            raise ValueError(f"Must be boolean: {value}")
+        self.json["acknowledged"] = value
+
+    @property
+    def completed(self):
+        return self.json.get("completed")
+
+    @completed.setter
+    def completed(self, value):
+        if not isinstance(value, bool):
+            raise ValueError(f"Must be boolean: {value}")
+        self.json["completed"] = value
+
+    @property
+    def dhost(self):
+        return self.json.get("dhost")
+
+    @property
+    def message(self):
+        return self.json.get("message")
+
+    @property
+    def name(self):
+        return self.json.get("thetest")
+
+    @property
+    def shost(self):
+        return self.json.get("shost")
 
 
 def read_json_file(file_path):

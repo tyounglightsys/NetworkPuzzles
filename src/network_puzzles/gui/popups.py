@@ -8,8 +8,11 @@ class ThemedPopup(Popup):
         # TODO: This popup automatically generates a GridLayout with 3 child
         # widgets: BoxLayout, Widget, Label. Better to set the content
         # explicitly when the popup is instantiated elsewhere.
-        self.app = session.app
         super().__init__(**kwargs)
+
+    @property
+    def app(self):
+        return session.app
 
 
 class ActionPopup(ThemedPopup):

@@ -30,7 +30,10 @@ class TerminalLabel(TextInput):
 class ThemedLabel(Label):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.app = session.app
+
+    @property
+    def app(self):
+        return session.app
 
 
 class CheckBoxLabel(ThemedLabel):

@@ -1,10 +1,7 @@
 import logging
 import sys
 
-from . import parser
-from . import puzzle
-from . import session
-from . import packet
+from . import packet, parser, puzzle, session
 
 
 class UI:
@@ -20,7 +17,23 @@ class UI:
 
     @property
     def puzzle(self):
+        """Convenience attribute."""
         return session.puzzle
+
+    def acknowledge_any_tests(self):
+        for test_data in self.puzzle.tests:
+            test = puzzle.PuzzleTest(test_data)
+            if (
+                test.name == "SuccessfullyPingsWithoutLoop"
+                and session.packetstorm
+                and not test.acknowledged
+            ):
+                test.completed = False
+            if test.completed and not test.acknowledged:
+                # we have something completed, but not acknowledged
+                if test.message:
+                    session.print(test.message)
+                test.acknowledged = True
 
     def console_write(self, line):
         """Used to show terminal output to the user."""
@@ -42,12 +55,25 @@ class UI:
         # Save selected puzzle to session variable.
         session.puzzle = puzzle.Puzzle(val.get("value"))
 
+    def notify_if_puzzle_completed(self):
+        if self.puzzle.is_solved():
+            session.print("Congratulations. You solved the whole puzzle!")
+            self.puzzle.completion_notified = True
+
     def quit(self):
         raise NotImplementedError
 
     def run(self):
         """Startup the app when first launched."""
         raise NotImplementedError
+
+    def update_puzzle_completion_status(self):
+        if self.puzzle and not self.puzzle.completion_notified:
+            self.acknowledge_any_tests()
+            self.notify_if_puzzle_completed()
+            if self.puzzle.is_solved():
+                self.parser.parse("show tests", False)
+            return self.puzzle.is_solved()
 
     def getAllPuzzleNames(self, filter=None):
         """return a list of all the puzzle names
@@ -64,10 +90,10 @@ class UI:
         try:
             # if it is just a number, use it as an ID
             int(what)
-            item = session.puzzle.device_from_uid(what)
+            item = self.puzzle.device_from_uid(what)
         except ValueError:
             # if it is not a number, use it as a name
-            item = session.puzzle.device_from_name(what)
+            item = self.puzzle.device_from_name(what)
         return item
 
     def get_link(self, what: str) -> dict | None:
@@ -80,29 +106,26 @@ class UI:
         try:
             # if it is just a number, use it as an ID
             int(what)
-            item = session.puzzle.link_from_uid(what)
+            item = self.puzzle.link_from_uid(what)
         except ValueError:
             # if it is not a number, use it as a name
-            item = session.puzzle.link_from_name(what)
+            item = self.puzzle.link_from_name(what)
         return item
 
     def all_devices(self):
         """return a list of all the devices - good for iterating"""
-        return [d for d in session.puzzle.devices]
+        return [d for d in self.puzzle.devices]
 
     def all_links(self):
         """return a list of all the links - good for iterating"""
-        return [k for k in session.puzzle.links]
+        return [k for k in self.puzzle.links]
 
     def all_tests(self):
         """return a list of all tests in the current puzzle"""
-        return session.puzzle.all_tests()
+        return self.puzzle.all_tests()
 
     def redraw(self):
         pass
-
-    def acknowledge_any_tests():
-        raise NotImplementedError
 
     def redo(self):
         raise NotImplementedError
@@ -149,37 +172,12 @@ class CLI(UI):
                 packet.processPackets(
                     2
                 )  # the cli does not need much time to know packets are going to loop forever.
-            self.acknowledge_any_tests()
-            if not session.puzzle.json.get("completed", False):
-                if session.puzzle.is_puzzle_done():
-                    session.print("Congratulations. You solved the whole puzzle!")
-                    self.parser.parse("show tests", False)
-                    session.puzzle.json["completed"] = True
+            self.update_puzzle_completion_status()
         except EOFError:
             sys.exit()
 
-    def acknowledge_any_tests(self):
-        for test in session.puzzle.all_tests():
-            if (
-                test.get("thetest", "") == "SuccessfullyPingsWithoutLoop"
-                and session.packetstorm
-                and not test.get("acknowledged", False)
-            ):
-                # The ping was successful, but the storm did happen.  Mark it as false
-                test["completed"] = False
-            if test.get("completed", False) and not test.get("acknowledged", False):
-                # we have something completed, but not acknowledged
-                if test.get("message", "") != "":
-                    session.print(test.get("message", ""))
-                    test["acknowledged"] = True
-
     def quit(self):
         self.parser.parse.exit_app()
-
-    def load_puzzle(self, puzzle, filter_str: str = None):
-        """Load and set up the UI based on the data in the puzzle file."""
-        super().load_puzzle(puzzle, filter_str)
-        # do any aftermath.  Probably display the loaded puzzle when we have that functionality
 
 
 class GUI(UI):
@@ -189,46 +187,9 @@ class GUI(UI):
         session.print = self.console_write
         session.ui = self
 
-    def acknowledge_any_tests(self):
-        for test in session.puzzle.all_tests():
-            if (
-                test.get("thetest", "") == "SuccessfullyPingsWithoutLoop"
-                and session.packetstorm
-                and not test.get("acknowledged", False)
-            ):
-                # The ping was successful, but the storm did happen.  Mark it as false
-                test["completed"] = False
-            if test.get("completed", False) and not test.get("acknowledged", False):
-                # we have something completed, but not acknowledged
-                if test.get("message") is not None:
-                    session.print(test.get("message", ""))
-                    test["acknowledged"] = True
-
     def console_write(self, line):
         self.app.add_terminal_line(line)
         logging.info(f"GUI: terminal: {line}")
-
-    def is_puzzle_done(self, *args) -> bool | None:
-        """
-        Determine if puzzle has been solved.
-
-        Return None if no puzzle is active, or True|False according to active
-        puzzle's solved state.
-        """
-        if self.puzzle:
-            # First check if completed tests have been acknowledged.
-            self.acknowledge_any_tests()
-            # Check if puzzle is complete.
-            if not session.puzzle.json.get("completed"):
-                if session.puzzle.is_puzzle_done():
-                    session.print("Congratulations. You solved the whole puzzle!")
-                    # self.parser.parse("show tests", False)
-                    session.puzzle.json["completed"] = True
-                    return True
-                else:
-                    return False
-        else:
-            return None
 
     def parse(self, command: str):
         self.parser.parse(command)

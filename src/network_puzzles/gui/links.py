@@ -12,7 +12,6 @@ class Link(Widget):
     start = ListProperty(None)
 
     def __init__(self, init_data=None, **kwargs):
-        self.app = session.app
         super().__init__(**kwargs)
         self.base = link.Link(init_data)
 
@@ -21,6 +20,10 @@ class Link(Widget):
 
         self.background_normal = ""
         self._draw_line()
+
+    @property
+    def app(self):
+        return session.app
 
     @property
     def hostname(self):
