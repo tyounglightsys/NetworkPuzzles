@@ -20,6 +20,20 @@ class UI:
         """Convenience attribute."""
         return session.puzzle
 
+    def acknowledge_any_tests(self):
+        for test in self.puzzle.tests:
+            if (
+                test.name == "SuccessfullyPingsWithoutLoop"
+                and session.packetstorm
+                and not test.acknowledged
+            ):
+                test.completed = False
+            if test.completed and not test.acknowledged:
+                # we have something completed, but not acknowledged
+                if test.message:
+                    session.print(test.message)
+                test.acknowledged = True
+
     def console_write(self, line):
         """Used to show terminal output to the user."""
         raise NotImplementedError
@@ -99,9 +113,6 @@ class UI:
     def redraw(self):
         pass
 
-    def acknowledge_any_tests():
-        raise NotImplementedError
-
     def redo(self):
         raise NotImplementedError
 
@@ -156,21 +167,6 @@ class CLI(UI):
         except EOFError:
             sys.exit()
 
-    def acknowledge_any_tests(self):
-        for test in self.puzzle.all_tests():
-            if (
-                test.get("thetest", "") == "SuccessfullyPingsWithoutLoop"
-                and session.packetstorm
-                and not test.get("acknowledged", False)
-            ):
-                # The ping was successful, but the storm did happen.  Mark it as false
-                test["completed"] = False
-            if test.get("completed", False) and not test.get("acknowledged", False):
-                # we have something completed, but not acknowledged
-                if test.get("message", "") != "":
-                    session.print(test.get("message", ""))
-                    test["acknowledged"] = True
-
     def quit(self):
         self.parser.parse.exit_app()
 
@@ -186,21 +182,6 @@ class GUI(UI):
         self.parser = parser.Parser()
         session.print = self.console_write
         session.ui = self
-
-    def acknowledge_any_tests(self):
-        for test in self.puzzle.all_tests():
-            if (
-                test.get("thetest", "") == "SuccessfullyPingsWithoutLoop"
-                and session.packetstorm
-                and not test.get("acknowledged", False)
-            ):
-                # The ping was successful, but the storm did happen.  Mark it as false
-                test["completed"] = False
-            if test.get("completed", False) and not test.get("acknowledged", False):
-                # we have something completed, but not acknowledged
-                if test.get("message") is not None:
-                    session.print(test.get("message", ""))
-                    test["acknowledged"] = True
 
     def console_write(self, line):
         self.app.add_terminal_line(line)
@@ -220,11 +201,8 @@ class GUI(UI):
             if not self.puzzle.completed:
                 if self.puzzle.is_puzzle_done():
                     session.print("Congratulations. You solved the whole puzzle!")
-                    # self.parser.parse("show tests", False)
-                    self.puzzle.json["completed"] = True
-                    return True
-                else:
-                    return False
+                    self.puzzle.completed = True
+                return self.puzzle.completed
         else:
             return None
 

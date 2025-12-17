@@ -1,16 +1,15 @@
 #!/usr/bin/python3
 # All the functions needed for reading the EduNetwork Puzzle file
 # And getting information from it
-import json
 import copy
-import re
+import json
 import logging
+import re
+
 from packaging.version import Version
 
 # define the global network list
-from . import session
-from . import packet
-from . import device
+from . import device, packet, session
 from .link import Link
 from .nic import Nic
 
@@ -66,7 +65,17 @@ class Puzzle:
             elif isinstance(lnk, dict):
                 yield lnk
             else:
-                logging.warning(f'Ignoring invalid link data, "{lnk}"')
+                logging.warning(f"Ignoring invalid link data, {lnk}")
+
+    @property
+    def tests(self):
+        """Generator to yield all tests in puzzle as PuzzleTest objects."""
+        for data in self.json.get("nettest", []):
+            if isinstance(data, dict):
+                test = PuzzleTest(data)
+                yield test
+            else:
+                logging.warning(f"Ignoring invalid test data: {data}")
 
     @property
     def uid(self):
@@ -500,11 +509,11 @@ class Puzzle:
             count = count + 1
         newnicname = f"{nictype}{count}"
         newid = self.issueUniqueIdentifier()
-        newip="0.0.0.0"
-        newmask="0.0.0.0"
-        if newnicname == 'lo0':
-            newip="127.0.0.1"
-            newmask="255.255.255.0"
+        newip = "0.0.0.0"
+        newmask = "0.0.0.0"
+        if newnicname == "lo0":
+            newip = "127.0.0.1"
+            newmask = "255.255.255.0"
         newnic = {
             "nictype": [f"{nictype}", f"{nictype}"],
             "nicname": newnicname,
@@ -595,9 +604,9 @@ class Puzzle:
         if device_type in {"cellphone", "tablet"}:
             self.createNIC(newdevice, "wlan")
         if device_type == "ip_phone":
-            #an IP phone has one nic that is DHCP enabled
-            newnic=self.createNIC(newdevice, "eth")
-            newnic['usesdhcp']="True"
+            # an IP phone has one nic that is DHCP enabled
+            newnic = self.createNIC(newdevice, "eth")
+            newnic["usesdhcp"] = "True"
 
         self.json["device"].append(newdevice)
         session.print(f"Creating new device: {newdevicename}")
@@ -724,6 +733,43 @@ class Puzzle:
             if not onetest.get("completed", False):
                 return False
         return True
+
+
+class PuzzleTest:
+    def __init__(self, data):
+        self.json = data
+        if not isinstance(self.acknowledged, bool):
+            self.acknowledged = False
+        if not isinstance(self.completed, bool):
+            self.completed = False
+
+    @property
+    def acknowledged(self):
+        return self.json.get("acknowledged")
+
+    @acknowledged.setter
+    def acknowledged(self, value):
+        if not isinstance(value, bool):
+            raise ValueError(f"Must be boolean: {value}")
+        self.json["acknowledged"] = value
+
+    @property
+    def message(self):
+        return self.json.get("message")
+
+    @property
+    def name(self):
+        return self.json.get("thetest")
+
+    @property
+    def completed(self):
+        return self.json.get("completed")
+
+    @completed.setter
+    def completed(self, value):
+        if not isinstance(value, bool):
+            raise ValueError(f"Must be boolean: {value}")
+        self.json["completed"] = value
 
 
 def read_json_file(file_path):
