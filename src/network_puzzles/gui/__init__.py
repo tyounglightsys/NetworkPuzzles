@@ -28,12 +28,11 @@ from .base import (
     IMAGES_DIR,
     PACKET_DIMS,
     AppExceptionHandler,
-    AppRecView,
     HelpHighlight,
     LightColorTheme,
     pos_to_location,
     print_layout_info,
-    show_grid,
+    show_grid,  # noqa: F401
 )
 from .buttons import MenuButton
 from .devices import ChooseNicPopup, Device
@@ -539,14 +538,3 @@ class NetworkPuzzlesApp(App):
         # raise NotImplementedError
         for d in self.devices:
             print(f"{d.nics=}")
-
-
-class PuzzlesRecView(AppRecView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app.update_puzzle_list()
-        self.selected_item = None
-        self.update_data()
-
-    def update_data(self):
-        self.data = [{"text": n} for n in self.app.filtered_puzzlelist]

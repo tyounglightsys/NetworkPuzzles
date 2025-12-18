@@ -12,7 +12,6 @@ from kivy.uix.widget import Widget
 from .. import _, device, interface, nic, session
 from .base import (
     NETWORK_ITEMS,
-    AppRecView,
     HelpHighlight,
     LockEmblem,
     ThemedCheckBox,
@@ -482,36 +481,6 @@ class EditDevicePopup(ActionPopup):
         n = self.device.get_nic(self.selected_nic)
         logging.debug(f"GUI: {n.name} ifaces: {n.interfaces}")
         self.ids.ips_list.update_data(n.ip_addresses)
-
-
-class NICsRecView(AppRecView):
-    def update_data(self, nics, management=True):
-        data = []
-        for n in nics:
-            if n.name.startswith("lo"):
-                continue
-            text = n.name
-            # Add "*" to text if iface is connected.
-            if self.app.ui.puzzle.nic_is_connected(n.json):
-                text += "*"
-            # Add MAC address to NIC description.
-            text += f"; {n.mac}"
-            data.append({"text": text})
-        item = {"text": "management_interface0"}
-        if not management and item in data:
-            data.remove(item)
-        self.data = data
-
-    def on_selection(self, index):
-        self.root.on_nic_selection(self.data[index].get("text"))
-
-
-class IPsRecView(AppRecView):
-    def update_data(self, ips):
-        self.data = [{"text": f"{d.get('ip')}/{d.get('mask')}"} for d in ips]
-
-    def on_selection(self, index):
-        self.root.on_ip_selection(self.data[index].get("text"))
 
 
 class EditIpPopup(ActionPopup):

@@ -9,8 +9,6 @@ from kivy.graphics import Color, Ellipse
 from kivy.metrics import dp, sp
 from kivy.properties import StringProperty
 from kivy.uix.checkbox import CheckBox
-from kivy.uix.recycleview import RecycleView
-from kivy.uix.scrollview import ScrollView
 from kivy.uix.slider import Slider
 from kivy.uix.widget import Widget
 
@@ -69,20 +67,6 @@ class AppExceptionHandler(ExceptionHandler):
         return ExceptionManager.PASS
 
 
-class AppRecView(RecycleView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.data = list()
-        self.selected_item = None
-
-    @property
-    def app(self):
-        return session.app
-
-    def on_selection(self, idx):
-        self.selected_item = self.data[idx]
-
-
 class ThemedCheckBox(CheckBox):
     name = StringProperty
 
@@ -101,10 +85,6 @@ class ThemedCheckBox(CheckBox):
 
     def on_activate(self):
         self.app.on_checkbox_activate(self)
-
-
-class ThemedScrollView(ScrollView):
-    pass
 
 
 class HelpHighlight(Widget):

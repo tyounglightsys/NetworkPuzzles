@@ -1,6 +1,7 @@
 from kivy.uix.popup import Popup
 
 from .. import session
+from .views import PuzzlesRecView  # needed by PuzzleChooserPopup #  noqa: F401
 
 
 class ThemedPopup(Popup):
@@ -49,8 +50,3 @@ class PuzzleChooserPopup(ActionPopup):
 
 class PuzzleCompletePopup(ActionPopup):
     pass
-
-
-#     def on_okay(self):
-#         # TODO: Offer to proceed to the next puzzle.
-#         self.dismiss()

@@ -2,15 +2,18 @@
 #:import _ network_puzzles._
 #:import session network_puzzles.session
 # Order of "include" directives seems to matter.
-#:include network_puzzles/gui/popups.kv
+# Add independent modules.
 #:include network_puzzles/gui/base.kv
+#:include network_puzzles/gui/buttons.kv
 #:include network_puzzles/gui/inputs.kv
 #:include network_puzzles/gui/labels.kv
-#:include network_puzzles/gui/buttons.kv
-#:include network_puzzles/gui/layouts.kv
-#:include network_puzzles/gui/devices.kv
-#:include network_puzzles/gui/links.kv
 #:include network_puzzles/gui/packets.kv
+# Add dependent modules.
+#:include network_puzzles/gui/layouts.kv
+#:include network_puzzles/gui/links.kv
+#:include network_puzzles/gui/views.kv
+#:include network_puzzles/gui/devices.kv
+#:include network_puzzles/gui/popups.kv
 
 
 ThemedBoxLayout:

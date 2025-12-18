@@ -49,7 +49,6 @@ class InfoLabel(ThemedLabel):
 
 
 class ToolTip(ThemedLabel):
-    # Added here import access.
     pass
 
 

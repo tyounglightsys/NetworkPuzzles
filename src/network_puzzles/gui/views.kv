@@ -1,0 +1,16 @@
+<AppRecView>:
+    viewclass: 'SelectableLabel'
+    bar_color: app.theme.detail
+    bar_inactive_color: self.bar_color
+    bar_width: dp(3)
+    SelectableRecycleBoxLayout:
+        orientation: 'vertical'
+        default_size: None, dp(56)
+        default_size_hint: 1, None
+        size_hint_y: None
+        height: self.minimum_height
+
+<ThemedScrollView@ScrollView>:
+    bar_width: dp(5)
+    effect_cls: "ScrollEffect"
+    scroll_type: ['bars', 'content']
