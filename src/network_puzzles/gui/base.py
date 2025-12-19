@@ -1,10 +1,8 @@
 import logging
-import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple
 
-from kivy.base import ExceptionHandler, ExceptionManager
 from kivy.graphics import Color, Ellipse
 from kivy.metrics import dp, sp
 from kivy.properties import StringProperty
@@ -13,7 +11,6 @@ from kivy.uix.slider import Slider
 from kivy.uix.widget import Widget
 
 from .. import session
-from .popups import ExceptionPopup
 
 # Size limits
 BUTTON_MAX_H = dp(32)
@@ -58,13 +55,6 @@ NETWORK_ITEMS = {
         },
     },
 }
-
-
-class AppExceptionHandler(ExceptionHandler):
-    def handle_exception(self, exception):
-        ExceptionPopup(message=traceback.format_exc()).open()
-        # return ExceptionManager.RAISE  # kills app right away
-        return ExceptionManager.PASS
 
 
 class ThemedCheckBox(CheckBox):

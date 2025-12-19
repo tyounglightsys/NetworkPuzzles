@@ -1,4 +1,5 @@
 import logging
+import traceback
 
 # Remove root logger b/c kivy's logger will handle all logging.
 root_logger = logging.getLogger()
@@ -15,9 +16,10 @@ if session.device_type == "desktop":
 
 # Continue with remaining imports.
 from kivy.app import App
-from kivy.base import ExceptionManager
+from kivy.base import ExceptionHandler, ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.uix.textinput import TextInput
 
 from .. import messages, nettests
 from ..puzzle import PuzzleTest
@@ -27,7 +29,6 @@ from .base import (
     DEVICE_BUTTON_MAX_H,
     IMAGES_DIR,
     PACKET_DIMS,
-    AppExceptionHandler,
     HelpHighlight,
     LightColorTheme,
     pos_to_location,
@@ -38,7 +39,12 @@ from .buttons import MenuButton
 from .devices import ChooseNicPopup, Device
 from .links import Link
 from .packets import PacketManager
-from .popups import PuzzleChooserPopup, PuzzleCompletePopup
+from .popups import (
+    CommandPopup,
+    ExceptionPopup,
+    PuzzleChooserPopup,
+    PuzzleCompletePopup,
+)
 
 
 class NetworkPuzzlesApp(App):
@@ -538,3 +544,30 @@ class NetworkPuzzlesApp(App):
         # raise NotImplementedError
         for d in self.devices:
             print(f"{d.nics=}")
+
+
+class TerminalLabel(TextInput):
+    def get_max_row(self, text):
+        max_row = 0
+        max_length = 0
+        for i, line in enumerate(text.split("\n")):
+            if len(line) > max_length:
+                max_row = i
+                max_length = len(line)
+        return max_row
+
+    def on_touch_up(self, touch):
+        # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
+        # Open popup on right-click within the Terminal area (only works on
+        # desktop devices).
+        if touch.button == "right" and touch.grab_current is self:
+            touch.ungrab(self)
+            CommandPopup().open()
+            return True
+
+
+class AppExceptionHandler(ExceptionHandler):
+    def handle_exception(self, exception):
+        ExceptionPopup(message=traceback.format_exc()).open()
+        # return ExceptionManager.RAISE  # kills app right away
+        return ExceptionManager.PASS

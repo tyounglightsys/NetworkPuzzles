@@ -3,6 +3,19 @@
     size_hint: (0.5, 0.75)
     separator_color: app.theme.detail
 
+<ChooseNicPopup>:
+    size_hint_x: 0.5
+    title: f"{self.device.hostname} | {_('Choose NIC')}"
+    ThemedBoxLayout:
+        orientation: "vertical"
+        NICsRecView:
+            size_hint_y: 0.8
+            root: root
+            id: nics_list
+        ActionPopupButtons:
+            size_hint_y: 0.2
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()
 
 <CommandPopup>:
     title: _("Input command:")
@@ -16,6 +29,59 @@
             on_cancel: root.on_cancel()
             on_okay: root.on_okay()
 
+<DeviceCommandsPopup>:
+    size_hint_x: 0.4
+
+<EditDhcpPopup>:
+    title: _("Edit DHCP configuration")
+    ThemedBoxLayout:
+        orientation: "vertical"
+        SingleRowLayout:
+            size_hint_y: 0.2
+            CheckBoxLabel:
+                text: _("IP Address")
+            CheckBoxLabel:
+                text: _("Range Start")
+            CheckBoxLabel:
+                text: _("Range End")
+        ThemedBoxLayout:
+            padding: (dp(0), dp(0), dp(0), dp(0))
+            size_hint_y: 0.2
+            id: dhcp_configs_layout
+            orientation: "vertical"
+        Widget:
+        ActionPopupButtons:
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()
+
+<EditIpPopup>:
+    size_hint_x: 0.5
+    title: _("Edit IP configuration")
+    ThemedBoxLayout:
+        orientation: "vertical"
+        SingleRowLayout:
+            CheckBoxLabel:
+                text: _("IP Address:")
+            ValueInput:
+                text: root.ip_address.address
+                on_focus: root.set_address(self)
+        SingleRowLayout:
+            CheckBoxLabel:
+                text: _("Netmask:")
+            ValueInput:
+                text: root.ip_address.netmask
+                on_focus: root.set_netmask(self)
+        SingleRowLayout:
+            CheckBoxLabel:
+                text: _("Gateway:")
+            ValueInput:
+                text: root.ip_address.gateway
+                on_focus: root.set_gateway(self)
+                disabled: True
+        Widget:
+        ActionPopupButtons:
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()
 
 <ExceptionPopup>:
     title: _("Error")
@@ -39,6 +105,18 @@
             text: _("Quit")
             on_release: app.stop()
 
+<PingHostPopup>:
+    size_hint: (0.5, 0.4)
+    ThemedBoxLayout:
+        orientation: 'vertical'
+        ValueInput:
+            id: host
+            hint_text: _("hostname or IP")
+            on_text_validate: root.on_okay(root.ids.host.text)
+        Widget:
+        ActionPopupButtons:
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay(root.ids.host.text)
 
 <PuzzleChooserPopup>:
     size_hint: (0.6, 1.0)
