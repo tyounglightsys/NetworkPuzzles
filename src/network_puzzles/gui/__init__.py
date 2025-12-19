@@ -331,13 +331,12 @@ class NetworkPuzzlesApp(App):
         self._help_highlight_devices(self.root.ids.help_slider.value)
 
     def update_puzzle_list(self, popup=None):
-        # TODO: At the moment self.filter is a list that can include 0 or more
-        # puzzle names, but getAllPuzzleNames only accepts a single string. So
-        # we currenly just accept the first item in the list as the filter.
         pfilter = None
         if isinstance(self.filters, list) and len(self.filters) > 0:
-            pfilter = f"{self.filters[0]}"
+            # Create OR regex string with all filter items.
+            pfilter = f"({'|'.join(self.filters)})"
         elif isinstance(self.filters, str):
+            # Use filter string directly.
             pfilter = self.filters
         self.filtered_puzzlelist = self.ui.getAllPuzzleNames(pfilter)
         if popup:
