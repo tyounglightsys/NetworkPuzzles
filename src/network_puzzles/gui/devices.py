@@ -12,7 +12,6 @@ from kivy.uix.widget import Widget
 from .. import _, device, interface, nic, session
 from .base import (
     NETWORK_ITEMS,
-    AppRecView,
     HelpHighlight,
     LockEmblem,
     ThemedCheckBox,
@@ -22,10 +21,16 @@ from .base import (
     pos_to_location,
 )
 from .buttons import CommandButton, ThemedButton
-from .inputs import ValueInput
 from .labels import CheckBoxLabel
 from .layouts import SingleRowLayout, ThemedBoxLayout
-from .popups import ActionPopup, ThemedPopup
+from .popups import (
+    ActionPopup,
+    ChooseNicPopup,  # noqa: F401
+    DeviceCommandsPopup,
+    EditDhcpPopup,
+    EditIpPopup,
+    PingHostPopup,
+)
 
 
 class Device(DragBehavior, ThemedBoxLayout):
@@ -257,7 +262,7 @@ class Device(DragBehavior, ThemedBoxLayout):
         content.size_hint_y = None
         content.height = get_layout_height(content)
         # Setup the Popup.
-        popup = CommandsPopup(content=content, title=self.base.hostname)
+        popup = DeviceCommandsPopup(content=content, title=self.base.hostname)
         rootgrid = popup.children[0]
         box = rootgrid.children[0]
         grid = box.children[0]
@@ -298,20 +303,6 @@ class Device(DragBehavior, ThemedBoxLayout):
         # Show hidden links.
         for lnk in self.links:
             lnk.hide(False)
-
-
-class CommandsPopup(ThemedPopup):
-    pass
-
-
-class PingHostPopup(ActionPopup):
-    def __init__(self, dev, **kwargs):
-        self.device = dev
-        super().__init__(**kwargs)
-
-    def on_okay(self, dest):
-        self.app.ui.parse(f"ping {self.device.hostname} {dest}")
-        super().on_okay()
 
 
 class EditDevicePopup(ActionPopup):
@@ -482,123 +473,3 @@ class EditDevicePopup(ActionPopup):
         n = self.device.get_nic(self.selected_nic)
         logging.debug(f"GUI: {n.name} ifaces: {n.interfaces}")
         self.ids.ips_list.update_data(n.ip_addresses)
-
-
-class NICsRecView(AppRecView):
-    def update_data(self, nics, management=True):
-        data = []
-        for n in nics:
-            if n.name.startswith("lo"):
-                continue
-            text = n.name
-            # Add "*" to text if iface is connected.
-            if self.app.ui.puzzle.nic_is_connected(n.json):
-                text += "*"
-            # Add MAC address to NIC description.
-            text += f"; {n.mac}"
-            data.append({"text": text})
-        item = {"text": "management_interface0"}
-        if not management and item in data:
-            data.remove(item)
-        self.data = data
-
-    def on_selection(self, index):
-        self.root.on_nic_selection(self.data[index].get("text"))
-
-
-class IPsRecView(AppRecView):
-    def update_data(self, ips):
-        self.data = [{"text": f"{d.get('ip')}/{d.get('mask')}"} for d in ips]
-
-    def on_selection(self, index):
-        self.root.on_ip_selection(self.data[index].get("text"))
-
-
-class EditIpPopup(ActionPopup):
-    def __init__(self, device_popup, ip_address, **kwargs):
-        self.device_popup = device_popup
-        self.ip_address = ip_address
-        super().__init__(**kwargs)
-
-    def on_okay(self):
-        # Add updating command.
-        self.device_popup.puzzle_commands.append(
-            f"set {self.device_popup.device.hostname} {self.device_popup.selected_nic} {self.ip_address.address}/{self.ip_address.netmask}"
-        )
-        # Update IPs in IPs list.
-        self.device_popup._set_ips()
-        super().on_okay()
-
-    def set_address(self, input_inst):
-        if not input_inst.focus:
-            self.ip_address.address = input_inst.text
-
-    def set_netmask(self, input_inst):
-        if not input_inst.focus:
-            self.ip_address.netmask = input_inst.text
-
-    def set_gateway(self, input_inst):
-        if not input_inst.focus:
-            self.ip_address.gateway = input_inst.text
-
-
-class ChooseNicPopup(ActionPopup):
-    def __init__(self, devicew, **kwargs):
-        self.device = devicew
-        super().__init__(**kwargs)
-        self.selected_nic = None
-        free_nics = [
-            n for n in self.device.nics if device.linkConnectedToNic(n.json) is None
-        ]
-        self.ids.nics_list.update_data(free_nics, management=False)
-
-    def on_nic_selection(self, selected_nic):
-        self.selected_nic = selected_nic
-
-    def on_okay(self):
-        self.app.chosen_nic = self.selected_nic
-        super().on_okay()
-
-
-class EditDhcpPopup(ActionPopup):
-    def __init__(self, devicew, **kwargs):
-        self.device = devicew
-        super().__init__(**kwargs)
-        self.dhcp_configs = [
-            ip_data
-            for ip_data in self.device.base.json.get("dhcprange", list())
-            if ip_data.get("ip") != "127.0.0.1"
-        ]
-        self._add_dhcp_configs()
-
-    def on_okay(self):
-        for c in self.dhcp_configs:
-            ip = c.get("ip")
-            row = self._get_dhcp_row(ip)
-            if row:
-                start = row.children[-2].text
-                end = row.children[-3].text
-                if start != c.get("mask") or end != c.get("gateway"):
-                    cmd = f"set {self.device.hostname} dhcp {ip} {start}-{end}"
-                    logging.info(f"GUI: > {cmd}")
-                    self.app.ui.parse(cmd)
-
-        # Update GUI helps b/c it will trigger tooltip updates, which are needed
-        # b/c IP data has likely changed.
-        self.app.update_help()
-        super().on_okay()
-
-    def _add_dhcp_configs(self):
-        for config in self.dhcp_configs:
-            bl = SingleRowLayout()
-            ip = CheckBoxLabel(text=config.get("ip"))
-            start = ValueInput(text=config.get("mask"))
-            end = ValueInput(text=config.get("gateway"))
-            for w in [ip, start, end]:
-                bl.add_widget(w)
-        self.ids.dhcp_configs_layout.add_widget(bl)
-
-    def _get_dhcp_row(self, ip):
-        for row in self.ids.dhcp_configs_layout.children:
-            if row.children[-1].text == ip:
-                return row

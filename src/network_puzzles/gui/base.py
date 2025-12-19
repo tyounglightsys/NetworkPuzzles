@@ -1,21 +1,16 @@
 import logging
-import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple
 
-from kivy.base import ExceptionHandler, ExceptionManager
 from kivy.graphics import Color, Ellipse
 from kivy.metrics import dp, sp
 from kivy.properties import StringProperty
 from kivy.uix.checkbox import CheckBox
-from kivy.uix.recycleview import RecycleView
-from kivy.uix.scrollview import ScrollView
 from kivy.uix.slider import Slider
 from kivy.uix.widget import Widget
 
 from .. import session
-from .popups import ExceptionPopup
 
 # Size limits
 BUTTON_MAX_H = dp(32)
@@ -62,27 +57,6 @@ NETWORK_ITEMS = {
 }
 
 
-class AppExceptionHandler(ExceptionHandler):
-    def handle_exception(self, exception):
-        ExceptionPopup(message=traceback.format_exc()).open()
-        # return ExceptionManager.RAISE  # kills app right away
-        return ExceptionManager.PASS
-
-
-class AppRecView(RecycleView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.data = list()
-        self.selected_item = None
-
-    @property
-    def app(self):
-        return session.app
-
-    def on_selection(self, idx):
-        self.selected_item = self.data[idx]
-
-
 class ThemedCheckBox(CheckBox):
     name = StringProperty
 
@@ -101,10 +75,6 @@ class ThemedCheckBox(CheckBox):
 
     def on_activate(self):
         self.app.on_checkbox_activate(self)
-
-
-class ThemedScrollView(ScrollView):
-    pass
 
 
 class HelpHighlight(Widget):

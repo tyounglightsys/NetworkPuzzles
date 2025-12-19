@@ -1,4 +1,5 @@
 import logging
+import traceback
 
 # Remove root logger b/c kivy's logger will handle all logging.
 root_logger = logging.getLogger()
@@ -15,9 +16,10 @@ if session.device_type == "desktop":
 
 # Continue with remaining imports.
 from kivy.app import App
-from kivy.base import ExceptionManager
+from kivy.base import ExceptionHandler, ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.uix.textinput import TextInput
 
 from .. import messages, nettests
 from ..puzzle import PuzzleTest
@@ -27,19 +29,22 @@ from .base import (
     DEVICE_BUTTON_MAX_H,
     IMAGES_DIR,
     PACKET_DIMS,
-    AppExceptionHandler,
-    AppRecView,
     HelpHighlight,
     LightColorTheme,
     pos_to_location,
     print_layout_info,
-    show_grid,
+    show_grid,  # noqa: F401
 )
 from .buttons import MenuButton
 from .devices import ChooseNicPopup, Device
 from .links import Link
 from .packets import PacketManager
-from .popups import PuzzleChooserPopup, PuzzleCompletePopup
+from .popups import (
+    CommandPopup,
+    ExceptionPopup,
+    PuzzleChooserPopup,
+    PuzzleCompletePopup,
+)
 
 
 class NetworkPuzzlesApp(App):
@@ -326,13 +331,12 @@ class NetworkPuzzlesApp(App):
         self._help_highlight_devices(self.root.ids.help_slider.value)
 
     def update_puzzle_list(self, popup=None):
-        # TODO: At the moment self.filter is a list that can include 0 or more
-        # puzzle names, but getAllPuzzleNames only accepts a single string. So
-        # we currenly just accept the first item in the list as the filter.
         pfilter = None
         if isinstance(self.filters, list) and len(self.filters) > 0:
-            pfilter = f"{self.filters[0]}"
+            # Create OR regex string with all filter items.
+            pfilter = f"({'|'.join(self.filters)})"
         elif isinstance(self.filters, str):
+            # Use filter string directly.
             pfilter = self.filters
         self.filtered_puzzlelist = self.ui.getAllPuzzleNames(pfilter)
         if popup:
@@ -541,12 +545,28 @@ class NetworkPuzzlesApp(App):
             print(f"{d.nics=}")
 
 
-class PuzzlesRecView(AppRecView):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.app.update_puzzle_list()
-        self.selected_item = None
-        self.update_data()
+class TerminalLabel(TextInput):
+    def get_max_row(self, text):
+        max_row = 0
+        max_length = 0
+        for i, line in enumerate(text.split("\n")):
+            if len(line) > max_length:
+                max_row = i
+                max_length = len(line)
+        return max_row
 
-    def update_data(self):
-        self.data = [{"text": n} for n in self.app.filtered_puzzlelist]
+    def on_touch_up(self, touch):
+        # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
+        # Open popup on right-click within the Terminal area (only works on
+        # desktop devices).
+        if touch.button == "right" and touch.grab_current is self:
+            touch.ungrab(self)
+            CommandPopup().open()
+            return True
+
+
+class AppExceptionHandler(ExceptionHandler):
+    def handle_exception(self, exception):
+        ExceptionPopup(message=traceback.format_exc()).open()
+        # return ExceptionManager.RAISE  # kills app right away
+        return ExceptionManager.PASS

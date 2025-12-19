@@ -1,30 +1,8 @@
 from kivy.properties import BooleanProperty
 from kivy.uix.label import Label
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
-from kivy.uix.textinput import TextInput
 
 from .. import session
-from .popups import CommandPopup
-
-
-class TerminalLabel(TextInput):
-    def get_max_row(self, text):
-        max_row = 0
-        max_length = 0
-        for i, line in enumerate(text.split("\n")):
-            if len(line) > max_length:
-                max_row = i
-                max_length = len(line)
-        return max_row
-
-    def on_touch_up(self, touch):
-        # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
-        # Open popup on right-click within the Terminal area (only works on
-        # desktop devices).
-        if touch.button == "right" and touch.grab_current is self:
-            touch.ungrab(self)
-            CommandPopup().open()
-            return True
 
 
 class ThemedLabel(Label):
@@ -49,7 +27,6 @@ class InfoLabel(ThemedLabel):
 
 
 class ToolTip(ThemedLabel):
-    # Added here import access.
     pass
 
 
