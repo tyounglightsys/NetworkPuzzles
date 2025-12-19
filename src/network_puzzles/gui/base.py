@@ -180,13 +180,13 @@ def location_to_pos(location: iter, size) -> tuple:
         location[0] / LOCATION_MAX_X,
         1 - (location[1] / LOCATION_MAX_Y),
     )
-    # logging.debug(f"GUI: effective area rel pos: {effective_rel_pos}")
+    logging.debug(f"L2P: effective area rel pos: {effective_rel_pos}")
     # Calculate proportial pos within non-padded puzzle area.
     effective_pos = rel_pos_to_pos(effective_rel_pos, get_effective_size(size))
-    # logging.debug(f"GUI: effective area pos: {effective_pos}")
+    logging.debug(f"L2P: effective area pos: {effective_pos}")
     # Calculate abs pos by taking padding into account.
     pos = (PADDING + effective_pos[0], PADDING + effective_pos[1])
-    logging.debug(f"GUI: {location=} -> {pos=}")
+    logging.debug(f"L2P: {location=} -> {pos=}")
     return pos
 
 
