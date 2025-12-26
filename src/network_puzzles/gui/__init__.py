@@ -74,6 +74,8 @@ class NetworkPuzzlesApp(App):
             self.packet_tick_delay = 0.02  # packet pos refresh rate in seconds
             self.packet_progress_rate = 3  # % of link traveled each tick
         else:  # mobile devices
+            # Force orientation to landscape.
+            Window.orientation = 0
             # Force loglevel to DEBUG.
             logger = logging.getLogger()
             logger.level = logging.DEBUG
