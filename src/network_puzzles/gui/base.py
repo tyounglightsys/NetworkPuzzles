@@ -174,8 +174,8 @@ def location_to_pos(location: iter, size) -> tuple:
     """Converts EduNetworkBuilder's location coords to relative layout's position."""
     if len(location) != 2:
         raise ValueError(f"GUI: location length != 2: {location}")
+    logging.debug(f"L2P: input location: {location}")
     # Get relative location (invert y-coord).
-    # logging.debug(f"GUI: input location: {location}")
     effective_rel_pos = (
         location[0] / LOCATION_MAX_X,
         1 - (location[1] / LOCATION_MAX_Y),

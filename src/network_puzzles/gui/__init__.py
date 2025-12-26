@@ -292,6 +292,10 @@ class NetworkPuzzlesApp(App):
         self.title = self.app_title
         # Remove any remaining child widgets from puzzle layout.
         self.root.ids.layout.clear_widgets()
+        logging.debug(f"GUI: display: window size: {Window.size}")
+        # logging.debug(f"GUI: puzzle layout width: {self.root.ids.layout.width}")
+        logging.debug(f"GUI: display: layout height: {self.root.ids.layout.height}")
+        logging.debug(f"GUI: display: terminal height: {self.root.ids.terminal.height}")
         # Redraw the "+" button for adding new items.
         self.root.ids.layout.add_items_menu_button()
 
