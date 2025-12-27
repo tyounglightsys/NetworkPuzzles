@@ -157,20 +157,6 @@ class PuzzleLayout(RelativeLayout):
         ):
             tray.close()
 
-    def get_height(self):
-        # Window height minus terminal area height.
-        h = (
-            Window.height
-            - self.parent.padding[1]
-            - self.parent.padding[3]
-            - (
-                self.terminal_lines * self.terminal_line_height
-            )  # expicitly calculated to equal terminal height
-            - self.parent.spacing
-        )
-        logging.debug(f"GUI: PuzzleLayout height: {h}")
-        return h
-
     def on_touch_up(self, touch):
         if self.collide_point(*touch.pos):
             if touch.button == "left" or touch.button is None:
