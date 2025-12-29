@@ -162,10 +162,7 @@ class NetworkPuzzlesApp(App):
     def add_terminal_line(self, line):
         if not line.endswith("\n"):
             line += "\n"
-        logging.debug(
-            f"GUI: scroll_from_swipe: {self.root.ids.terminal.scroll_from_swipe}"
-        )
-        self.root.ids.terminal.text += f"{line}"
+        self.root.ids.terminal.text += f"{self.ui.PS1} {line}"
 
     def draw_devices(self, *args):
         for dev in self.ui.puzzle.devices:

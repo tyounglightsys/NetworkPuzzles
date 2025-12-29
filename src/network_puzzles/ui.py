@@ -6,6 +6,7 @@ from . import packet, parser, puzzle, session
 
 class UI:
     TITLE = "NetworkPuzzles"
+    PS1 = "->"
 
     def __init__(self):
         self.parser = parser.Parser()
@@ -160,7 +161,7 @@ class CLI(UI):
     def prompt(self):
         """A CLI only function.  Prompt for imput and process it"""
         try:
-            answer = input("-> ")
+            answer = input(f"{self.PS1} ")
             self.parser.parse(answer, True)
             # if we created packets, process them until done.
             count = 0
