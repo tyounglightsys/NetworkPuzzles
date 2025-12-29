@@ -26,25 +26,14 @@ class Session:
         self.ui = None
         self.startinglevel = ""
         self.package_dir = Path(__file__).parent
-        self.device_type = self.get_device_type()
 
-    def print(self, message):
-        print("<default print method>")
-        print(message)
+    @property
+    def device_type(self) -> str:
+        """Returns device type: 'desktop' or 'mobile'.
 
-    def add_undo_entry(self, forwards_cmd: str, backwards_cmd: str, payload=None):
-        """Add a record to the undo list.
-        The forwards command is used for redo,
-        the backwards command is used for undo.
-        the payload is used if we delete something and need to recover it."""
-        newrec = {}
-        newrec["forwards"] = forwards_cmd
-        newrec["backwards"] = backwards_cmd
-        newrec["payload"] = payload
-        self.undolist.append(newrec)
-
-    def get_device_type(self) -> str:
-        """Returns device type: 'desktop' or 'mobile'."""
+        Generally, the app will assume a touch interface on mobile devices and a
+        mouse interface on desktop devices.
+        """
         if hasattr(sys, "getandroidapilevel"):
             # Android
             return "mobile"
@@ -60,3 +49,18 @@ class Session:
         else:
             # Fallback
             return "mobile"
+
+    def print(self, message):
+        print("<default print method>")
+        print(message)
+
+    def add_undo_entry(self, forwards_cmd: str, backwards_cmd: str, payload=None):
+        """Add a record to the undo list.
+        The forwards command is used for redo,
+        the backwards command is used for undo.
+        the payload is used if we delete something and need to recover it."""
+        newrec = {}
+        newrec["forwards"] = forwards_cmd
+        newrec["backwards"] = backwards_cmd
+        newrec["payload"] = payload
+        self.undolist.append(newrec)
