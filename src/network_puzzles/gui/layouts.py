@@ -1,6 +1,3 @@
-import logging
-
-from kivy.core.window import Window
 from kivy.metrics import dp, sp
 from kivy.properties import NumericProperty, StringProperty
 from kivy.uix.behaviors import FocusBehavior
