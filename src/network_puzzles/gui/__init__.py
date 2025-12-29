@@ -162,6 +162,9 @@ class NetworkPuzzlesApp(App):
     def add_terminal_line(self, line):
         if not line.endswith("\n"):
             line += "\n"
+        logging.debug(
+            f"GUI: scroll_from_swipe: {self.root.ids.terminal.scroll_from_swipe}"
+        )
         self.root.ids.terminal.text += f"{line}"
 
     def draw_devices(self, *args):
@@ -552,15 +555,6 @@ class NetworkPuzzlesApp(App):
 
 
 class TerminalLabel(TextInput):
-    def get_max_row(self, text):
-        max_row = 0
-        max_length = 0
-        for i, line in enumerate(text.split("\n")):
-            if len(line) > max_length:
-                max_row = i
-                max_length = len(line)
-        return max_row
-
     def on_touch_up(self, touch):
         # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
         # Open popup on right-click within the Terminal area (only works on
