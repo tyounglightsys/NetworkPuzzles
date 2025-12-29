@@ -19,7 +19,7 @@ class ThemedButton(Button):
         self.long_press = None
         self.tooltip = ToolTip()
         self._on_release = on_release
-        # Window.bind(mouse_pos=self.on_mouse_pos)
+        Window.bind(mouse_pos=self.on_mouse_pos)
 
     @property
     def app(self):
@@ -68,9 +68,9 @@ class ThemedButton(Button):
             return
         # Close tooltip if already open.
         self.cancel_tooltip()
-        # w_pos = self.to_widget(*pos)
+        # Open trigger button's toolip if mouse is over button.
         if self.collide_point(*self.to_widget(*pos)):
-            Clock.schedule_once(self.open_tooltip, 1)
+            Clock.schedule_once(self.open_tooltip, self.LONG_PRESS_THRESHOLD)
 
     def on_press(self):
         if self._on_release is None:

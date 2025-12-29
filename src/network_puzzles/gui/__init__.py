@@ -271,6 +271,10 @@ class NetworkPuzzlesApp(App):
         if not self.ui.puzzle:
             Clock.schedule_once(self.on_puzzle_chooser)
 
+    def on_touch_down(self, touch):
+        logging.debug(f"GUI: touch registered at: {touch.pos}")
+        super().on_touch_down(touch)
+
     def on_undo(self):
         self.ui.undo()
 
