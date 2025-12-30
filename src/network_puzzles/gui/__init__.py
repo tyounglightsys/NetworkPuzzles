@@ -6,12 +6,12 @@ root_logger = logging.getLogger()
 for handler in root_logger.handlers:
     root_logger.removeHandler(handler)
 
+from kivy.config import Config
+
 from .. import session
 
 if session.device_type == "desktop":
     # Disable right-click red dot.
-    from kivy.config import Config
-
     Config.set("input", "mouse", "mouse,disable_multitouch")
 
 # Continue with remaining imports.
@@ -82,7 +82,6 @@ class NetworkPuzzlesApp(App):
             self.packet_tick_delay = 0.04  # packet pos refresh rate in seconds
             self.packet_progress_rate = 6  # % of link traveled each tick
         logging.debug(f"GUI: {session.device_type=}")
-        logging.debug(f"GUI: {Window.size=}")
 
         super().__init__(**kwargs)
         ExceptionManager.add_handler(AppExceptionHandler())
@@ -99,6 +98,12 @@ class NetworkPuzzlesApp(App):
 
         self.packetmgr = PacketManager(self)
         Clock.schedule_interval(self._update_packets, self.packet_tick_delay)
+
+        # Log config details.
+        for sect, data in Config._sections.items():
+            logging.debug(f"CONFIG: {sect}:")
+            for k, v in data.items():
+                logging.debug(f"CONFIG:  {k} = {v}")
 
     @property
     def devices(self):
