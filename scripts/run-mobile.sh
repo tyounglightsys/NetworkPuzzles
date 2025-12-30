@@ -7,5 +7,6 @@
 # Values used here are based on comparing with a Samsung Galaxy A13.
 export KIVY_METRICS_DENSITY=1
 export KIVY_METRICS_FONTSCALE=1
+export NETWORKPUZZLES_DEVICE_TYPE="mobile"
 # export KIVY_DPI=640
 scripts/run-desktop.sh $@ --size 952x448  # 1148x540

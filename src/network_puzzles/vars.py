@@ -34,7 +34,16 @@ class Session:
         Generally, the app will assume a touch interface on mobile devices and a
         mouse interface on desktop devices.
         """
-        if hasattr(sys, "getandroidapilevel"):
+        default = "mobile"
+
+        if os.getenv("NETWORKPUZZLES_DEVICE_TYPE"):
+            # Dev override
+            value = os.getenv("NETWORKPUZZLES_DEVICE_TYPE").lower()
+            if value in ("desktop", "mobile"):
+                return value
+            else:
+                return default
+        elif hasattr(sys, "getandroidapilevel"):
             # Android
             return "mobile"
         elif os.getenv("DISPLAY"):
@@ -48,7 +57,7 @@ class Session:
             return "mobile"
         else:
             # Fallback
-            return "mobile"
+            return default
 
     def print(self, message):
         print("<default print method>")
