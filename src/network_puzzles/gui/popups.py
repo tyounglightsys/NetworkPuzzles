@@ -39,8 +39,9 @@ class ChooseNicPopup(ActionPopup):
         ]
         self.ids.nics_list.update_data(free_nics, management=False)
 
-    def on_nic_selection(self, selected_nic):
-        self.selected_nic = selected_nic
+    def on_nic_selection(self, selected_nic_text):
+        # Strip MAC info from NIC text.
+        self.selected_nic = selected_nic_text.split(";")[0]
 
     def on_okay(self):
         self.app.chosen_nic = self.selected_nic

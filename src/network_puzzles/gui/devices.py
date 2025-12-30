@@ -379,9 +379,9 @@ class EditDevicePopup(ActionPopup):
                 f"set {self.device.hostname} {self.selected_nic} {ip_config.address}/{ip_config.netmask}"
             )
 
-    def on_nic_selection(self, selected_nic):
+    def on_nic_selection(self, selected_nic_text):
         self.selected_ip = None
-        self.selected_nic = selected_nic
+        self.selected_nic = selected_nic_text
         self.root.ids.add_ip.disabled = False
         self.root.ids.edit_ip.disabled = True
         self.root.ids.remove_ip.disabled = True

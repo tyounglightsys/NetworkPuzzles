@@ -13,6 +13,8 @@ from .. import session
 if session.device_type == "desktop":
     # Disable right-click red dot.
     Config.set("input", "mouse", "mouse,disable_multitouch")
+elif session.device_type == "mobile":
+    Config.set("kivy", "desktop", "0")
 
 # Continue with remaining imports.
 from kivy.app import App
@@ -562,9 +564,10 @@ class NetworkPuzzlesApp(App):
 
 class TerminalLabel(TextInput):
     def on_touch_up(self, touch):
+        logging.debug(f"App: {touch.pos=}; {touch.profile=}")
         # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
         # Open popup on right-click within the Terminal area (only works on
-        # desktop devices).
+        # desktop devices, where touch.button is not None).
         if touch.button == "right" and touch.grab_current is self:
             touch.ungrab(self)
             CommandPopup().open()
