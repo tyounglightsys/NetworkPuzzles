@@ -561,6 +561,11 @@ class NetworkPuzzlesApp(App):
 class TerminalLabel(TextInput):
     def on_touch_down(self, touch):
         logging.debug(f"App: touch down at: {touch.pos}; {touch.__dict__}")
+        logging.debug(f"App: {self.use_handles=}")
+        logging.debug(f"App: {self.__class__.__name__=}")
+        for a in sorted(self.__dir__()):
+            if hasattr(self, a) and not a.startswith("_"):
+                logging.debug(f"App:  {a} = {getattr(self, a)}")
         return super().on_touch_down(touch)
 
     def on_touch_up(self, touch):
@@ -572,7 +577,7 @@ class TerminalLabel(TextInput):
             touch.ungrab(self)
             CommandPopup().open()
             return True
-        return super().on_touch_down(touch)
+        return super().on_touch_up(touch)
 
 
 class AppExceptionHandler(ExceptionHandler):
