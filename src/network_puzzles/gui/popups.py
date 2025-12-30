@@ -78,7 +78,7 @@ class EditDhcpPopup(ActionPopup):
                 end = row.children[-3].text
                 if start != c.get("mask") or end != c.get("gateway"):
                     cmd = f"set {self.device.hostname} dhcp {ip} {start}-{end}"
-                    logging.info(f"GUI: > {cmd}")
+                    logging.info(f"Popups: > {cmd}")
                     self.app.ui.parse(cmd)
 
         # Update GUI helps b/c it will trigger tooltip updates, which are needed

@@ -81,7 +81,7 @@ class NetworkPuzzlesApp(App):
             logger.level = logging.DEBUG
             self.packet_tick_delay = 0.04  # packet pos refresh rate in seconds
             self.packet_progress_rate = 6  # % of link traveled each tick
-        logging.debug(f"GUI: {session.device_type=}")
+        logging.debug(f"App: {session.device_type=}")
 
         super().__init__(**kwargs)
         ExceptionManager.add_handler(AppExceptionHandler())
@@ -101,9 +101,9 @@ class NetworkPuzzlesApp(App):
 
         # Log config details.
         for sect, data in Config._sections.items():
-            logging.debug(f"CONFIG: {sect}:")
+            logging.debug(f"Config: {sect}:")
             for k, v in data.items():
-                logging.debug(f"CONFIG:  {k} = {v}")
+                logging.debug(f"Config:  {k} = {v}")
 
     @property
     def devices(self):
@@ -183,7 +183,7 @@ class NetworkPuzzlesApp(App):
     def draw_puzzle(self, *args):
         """Clear puzzle layout area; draw all elements related to current puzzle."""
         logging.debug(
-            f"GUI: {self.root.ids.layout.__class__.__name__}: pos={self.root.ids.layout.pos}; size={self.root.ids.layout.size}"
+            f"App: {self.root.ids.layout.__class__.__name__}: pos={self.root.ids.layout.pos}; size={self.root.ids.layout.size}"
         )
         if not self.ui.puzzle:
             logging.warning("GUI: No puzzle is loaded.")
@@ -194,7 +194,7 @@ class NetworkPuzzlesApp(App):
         # Get puzzle text from localized messages, if possible, but fallback to
         # English text in JSON data.
         puzzle_data = self.ui.puzzle.json
-        logging.debug(f"GUI: {self.ui.puzzle.uid=}")
+        logging.debug(f"App: {self.ui.puzzle.uid=}")
         puzzle_messages = messages.puzzles.get(self.ui.puzzle.uid)
         if puzzle_messages:
             title = puzzle_messages.get("title")
@@ -277,7 +277,7 @@ class NetworkPuzzlesApp(App):
             Clock.schedule_once(self.on_puzzle_chooser)
 
     def on_touch_down(self, touch):
-        logging.debug(f"GUI: touch registered at: {touch.pos}")
+        logging.debug(f"App: touch registered at: {touch.pos}")
         super().on_touch_down(touch)
 
     def on_undo(self):
@@ -301,10 +301,10 @@ class NetworkPuzzlesApp(App):
         self.title = self.app_title
         # Remove any remaining child widgets from puzzle layout.
         self.root.ids.layout.clear_widgets()
-        logging.debug(f"GUI: display: window size: {Window.size}")
-        # logging.debug(f"GUI: puzzle layout width: {self.root.ids.layout.width}")
-        logging.debug(f"GUI: display: layout height: {self.root.ids.layout.height}")
-        logging.debug(f"GUI: display: terminal height: {self.root.ids.terminal.height}")
+        logging.debug(f"App: window size: {Window.size}")
+        # logging.debug(f"App: puzzle layout width: {self.root.ids.layout.width}")
+        logging.debug(f"App: layout height: {self.root.ids.layout.height}")
+        logging.debug(f"App: terminal height: {self.root.ids.terminal.height}")
         # Redraw the "+" button for adding new items.
         self.root.ids.layout.add_items_menu_button()
 
@@ -372,20 +372,20 @@ class NetworkPuzzlesApp(App):
         if not hasattr(self, "chosen_device"):
             self.chosen_device = None
         elif self.chosen_device:
-            logging.info(f"GUI: User selected device: {self.chosen_device.hostname}")
+            logging.info(f"App: User selected device: {self.chosen_device.hostname}")
 
     def user_select_nic(self, devicew):
         if not hasattr(self, "chosen_nic"):
             self.chosen_nic = None
             ChooseNicPopup(devicew).open()
         elif self.chosen_nic:
-            logging.info(f"GUI: User selected NIC: {self.chosen_nic}")
+            logging.info(f"App: User selected NIC: {self.chosen_nic}")
 
     def user_select_position(self):
         if not hasattr(self, "chosen_pos"):
             self.chosen_pos = None
         elif self.chosen_pos:
-            logging.info(f"GUI: User selected pos: {self.chosen_pos}")
+            logging.info(f"App: User selected pos: {self.chosen_pos}")
 
     def _get_widget_by_prop(self, prop, value):
         for w in self.root.ids.layout.children:
@@ -425,7 +425,7 @@ class NetworkPuzzlesApp(App):
             for n, t in ((test.shost, test.name) for test in uncompleted_tests):
                 d = self.ui.get_device(n)
                 if d is None:
-                    logging.info(f'Ignoring highlight of non-device "{n}"')
+                    logging.info(f'App: Ignoring highlight of non-device "{n}"')
                     continue
                 w = self.get_widget_by_hostname(n)
                 if isinstance(w, Device) and not w.base.is_invisible:

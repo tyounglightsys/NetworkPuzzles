@@ -113,7 +113,7 @@ class ThemedButton(Button):
             return
         self.tooltip_text = self.info
         if self.tooltip_anchor is None:
-            logging.warning(f"GUI: {self} has no tooltip_anchor!")
+            logging.warning(f"Buttons: {self} has no tooltip_anchor!")
             return
         if self.tooltip not in self.tooltip_anchor.children:
             self.tooltip_anchor.add_widget(self.tooltip)
@@ -124,7 +124,7 @@ class ThemedButton(Button):
         x = self.x + self.width + sp
         y = self.y + self.height - self.tooltip.height
         if self.tooltip_anchor is None:
-            logging.warning(f"GUI: {self} has no tooltip_anchor!")
+            logging.warning(f"Buttons: {self} has no tooltip_anchor!")
             return (x, y)
         if x + self.tooltip.width > self.tooltip_anchor.width:
             # Put the tooltip to the left if not enough room to the right.

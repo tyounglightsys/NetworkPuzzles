@@ -161,7 +161,7 @@ def get_layout_height(layout) -> int:
 
 
 def hide_widget(wid, do_hide=True):
-    # logging.debug(f"GUI: hide {wid.hostname}={do_hide}")
+    # logging.debug(f"Base: hide {wid.hostname}={do_hide}")
     if hasattr(wid, "opacity_prev") and not do_hide:
         wid.opacity = wid.opacity_prev
         del wid.opacity_prev
@@ -174,34 +174,34 @@ def location_to_pos(location: iter, size) -> tuple:
     """Converts EduNetworkBuilder's location coords to relative layout's position."""
     if len(location) != 2:
         raise ValueError(f"GUI: location length != 2: {location}")
-    logging.debug(f"L2P: input location: {location}")
+    logging.debug(f"Base: input location: {location}")
     # Get relative location (invert y-coord).
     effective_rel_pos = (
         location[0] / LOCATION_MAX_X,
         1 - (location[1] / LOCATION_MAX_Y),
     )
-    logging.debug(f"L2P: effective area rel pos: {effective_rel_pos}")
+    logging.debug(f"Base: effective area rel pos: {effective_rel_pos}")
     # Calculate proportial pos within non-padded puzzle area.
     effective_pos = rel_pos_to_pos(effective_rel_pos, get_effective_size(size))
-    logging.debug(f"L2P: effective area pos: {effective_pos}")
+    logging.debug(f"Base: effective area pos: {effective_pos}")
     # Calculate abs pos by taking padding into account.
     pos = (PADDING + effective_pos[0], PADDING + effective_pos[1])
-    logging.debug(f"L2P: {location=} -> {pos=}")
+    logging.debug(f"Base: {location=} -> {pos=}")
     return pos
 
 
 def location_to_rel_pos(location: iter, size) -> tuple:
     if len(location) != 2:
-        raise ValueError(f"GUI: location length != 2: {location}")
+        raise ValueError(f"Base: location length != 2: {location}")
     pos = location_to_pos(location, size)
     rel_pos = pos_to_rel_pos(pos, size)
-    logging.debug(f"GUI: {location=} -> {rel_pos=}")
+    logging.debug(f"Base: {location=} -> {rel_pos=}")
     return rel_pos
 
 
 def pos_to_location(pos, size) -> tuple:
     """Converts relative layout's position to EduNetworkBuilder's location coords."""
-    # logging.debug(f"GUI: input pos: {pos}")
+    # logging.debug(f"Base: input pos: {pos}")
     x = pos[0]
     y = pos[1]
 
@@ -214,72 +214,74 @@ def pos_to_location(pos, size) -> tuple:
         y = PADDING
     if y > size[1] - PADDING:
         y = size[1] - PADDING
-    # logging.debug(f"GUI: limited pos: ({x}, {y})")
+    # logging.debug(f"Base: limited pos: ({x}, {y})")
 
     # Subtract padding to get pos in effective puzzle area.
     effective_pos = (x - PADDING, y - PADDING)
-    # logging.debug(f"GUI: effective area pos: {effective_pos}")
+    # logging.debug(f"Base: effective area pos: {effective_pos}")
     # Divide by effective area l/w to get relative pos in effective area.
     effective_rel_pos = pos_to_rel_pos(effective_pos, get_effective_size(size))
-    # logging.debug(f"GUI: effective area rel pos: {effective_rel_pos}")
+    # logging.debug(f"Base: effective area rel pos: {effective_rel_pos}")
     # Multiply by location max values to get location value (invert y-axis).
     loc = (
         round(effective_rel_pos[0] * LOCATION_MAX_X),
         round((1 - effective_rel_pos[1]) * LOCATION_MAX_Y),
     )
-    logging.debug(f"GUI: {pos=} -> {loc=}")
+    logging.debug(f"Base: {pos=} -> {loc=}")
     return loc
 
 
 def pos_to_rel_pos(pos, size) -> tuple:
     """Convert absolute position to relative decimal values from 0 to 1."""
     rel_pos = (pos[0] / size[0], pos[1] / size[1])
-    # logging.debug(f"GUI: {size=}; {pos=} -> {rel_pos=}")
+    # logging.debug(f"Base: {size=}; {pos=} -> {rel_pos=}")
     return rel_pos
 
 
 def rel_pos_to_pos(rel_pos, size) -> tuple:
     """Convert relative decimal value position to absolute position."""
     pos = (rel_pos[0] * size[0], rel_pos[1] * size[1])
-    # logging.debug(f"GUI: {rel_pos=} -> {pos=}; {size=}")
+    # logging.debug(f"Base: {rel_pos=} -> {pos=}; {size=}")
     return pos
 
 
 def print_layout_info(app):
     # Layout debug logging.
     layout = app.root.ids.layout
-    logging.debug(f"GUI: {layout.__class__.__name__} corner: {layout.pos}")
-    logging.debug(f"GUI: {layout.__class__.__name__} size: {layout.size}")
+    logging.debug(f"Base: {layout.__class__.__name__} corner: {layout.pos}")
+    logging.debug(f"Base: {layout.__class__.__name__} size: {layout.size}")
     w = layout.size[0] - 2 * PADDING
     h = layout.size[1] - 2 * PADDING
     x = layout.x + PADDING
     y = layout.y + PADDING
-    logging.debug(f"GUI: {layout.__class__.__name__} effective corner: [{x}, {y}]")
-    logging.debug(f"GUI: {layout.__class__.__name__} effective size: [{w}, {h}]")
-    logging.debug(f"GUI: {layout.__class__.__name__} elements:")
+    logging.debug(f"Base: {layout.__class__.__name__} effective corner: [{x}, {y}]")
+    logging.debug(f"Base: {layout.__class__.__name__} effective size: [{w}, {h}]")
+    logging.debug(f"Base: {layout.__class__.__name__} elements:")
     for w in layout.children:
         if hasattr(w, "hostname"):
             logging.debug(
-                f"GUI: - {w.__class__.__name__}/{w.hostname}: {w.center=}; {w.pos=}; {w.size=}"
+                f"Base: - {w.__class__.__name__}/{w.hostname}: {w.center=}; {w.pos=}; {w.size=}"
             )
             if hasattr(w, "get_height"):  # layout
-                logging.debug(f"GUI: -- {w.get_height()=}")
-                logging.debug(f"GUI: -- {w.drag_rectangle=}")
+                logging.debug(f"Base: -- {w.get_height()=}")
+                logging.debug(f"Base: -- {w.drag_rectangle=}")
         else:
             logging.debug(
-                f"GUI: - {w.__class__.__name__}: {w.center=}; {w.pos=}; {w.size=}"
+                f"Base: - {w.__class__.__name__}: {w.center=}; {w.pos=}; {w.size=}"
             )
 
 
 def show_grid(app):
     """Add grid dots at all major intersections to verify device alignment."""
     layout = app.root.ids.layout
-    logging.debug(f"GUI: {layout.size=}")
+    logging.debug(f"Base: {layout.size=}")
     with layout.canvas.after:
         Color(1, 0, 0)
         for x in range(0, 1000, 100):
             for y in range(0, 900, 100):
                 local_pos = location_to_pos((x, y), layout.size)
                 pos = layout.to_window(*local_pos, initial=False)
-                logging.debug(f"GUI: loc: ({x}, {y}); abs pos: {local_pos}; pos: {pos}")
+                logging.debug(
+                    f"Base: loc: ({x}, {y}); abs pos: {local_pos}; pos: {pos}"
+                )
                 Ellipse(pos=pos, size=(5, 5))
