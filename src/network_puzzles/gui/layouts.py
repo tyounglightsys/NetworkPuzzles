@@ -165,10 +165,10 @@ class PuzzleLayout(RelativeLayout):
                     if len(touch.grab_list) == 0:
                         self.app.chosen_pos = self.to_widget(*touch.pos)
                     return True
-                else:
-                    # NOTE: The touch has to be explicitly passed on so that other
-                    # child widgets (e.g. Links) are notified.
-                    return super().on_touch_up(touch)
+                # NOTE: The touch has to be explicitly passed on so that child
+                # widgets can receive it; e.g. so that Device buttons are able
+                # to be "pressed".
+                return super().on_touch_up(touch)
 
     def _get_infra_devices_choices(self):
         choices = []

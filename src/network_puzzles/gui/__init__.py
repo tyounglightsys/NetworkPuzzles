@@ -278,10 +278,6 @@ class NetworkPuzzlesApp(App):
         if not self.ui.puzzle:
             Clock.schedule_once(self.on_puzzle_chooser)
 
-    def on_touch_down(self, touch):
-        logging.debug(f"App: touch registered at: {touch.pos}")
-        super().on_touch_down(touch)
-
     def on_undo(self):
         self.ui.undo()
 
@@ -563,8 +559,12 @@ class NetworkPuzzlesApp(App):
 
 
 class TerminalLabel(TextInput):
+    def on_touch_down(self, touch):
+        logging.debug(f"App: touch down at: {touch.pos}; {touch.__dict__}")
+        return super().on_touch_down(touch)
+
     def on_touch_up(self, touch):
-        logging.debug(f"App: {touch.pos=}; {touch.profile=}")
+        logging.debug(f"App: touch up at: {touch.pos}; {touch.__dict__}")
         # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
         # Open popup on right-click within the Terminal area (only works on
         # desktop devices, where touch.button is not None).
@@ -572,6 +572,7 @@ class TerminalLabel(TextInput):
             touch.ungrab(self)
             CommandPopup().open()
             return True
+        return super().on_touch_down(touch)
 
 
 class AppExceptionHandler(ExceptionHandler):
