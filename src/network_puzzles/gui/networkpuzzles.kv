@@ -98,6 +98,8 @@ ThemedBoxLayout:
             id: terminal
             size_hint_y: None
             height: self.line_height * 7
+        TextInput:
+            text: " ".join([str(i) for i in range(1000)])
 
 <TerminalLabel>:
     background_color: app.theme.bg3
