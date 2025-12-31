@@ -560,6 +560,17 @@ class NetworkPuzzlesApp(App):
 
 class TerminalLabel(TextInput):
     def on_touch_down(self, touch):
+        if self.collide_point(*touch.pos):
+            # NOTE: On mobile (touchscreen device) when TextInput is readonly
+            # touch.grab(self) seems to fail in super().on_touch_down(touch).
+            # Workaround is to run super().on_touch_down(touch), then check for
+            # grab status and re-grab if needed.
+            super().on_touch_down(touch)
+            if touch.button is None and touch.grab_current is not self:
+                touch.grab(self)
+            return True
+
+    def on_touch_move(self, touch):
         logging.debug(f"App: {self.__class__.__name__=}")
         for a in sorted(self.__dir__()):
             if hasattr(self, a) and not a.startswith("__"):
@@ -569,12 +580,8 @@ class TerminalLabel(TextInput):
             if hasattr(touch, a) and not a.startswith("__"):
                 logging.debug(f"App: {a} = {getattr(touch, a)}")
 
-        ret = super().on_touch_down(touch)
+        ret = super().on_touch_move(touch)
 
-        logging.debug(f"App: {self.__class__.__name__=}")
-        for a in sorted(self.__dir__()):
-            if hasattr(self, a) and not a.startswith("__"):
-                logging.debug(f"App:  {a} = {getattr(self, a)}")
         logging.debug(f"App: {touch.__class__.__name__=}")
         for a in sorted(touch.__dir__()):
             if hasattr(touch, a) and not a.startswith("__"):
