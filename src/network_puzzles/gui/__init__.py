@@ -567,25 +567,17 @@ class TerminalLabel(TextInput):
             # grab status and re-grab if needed.
             super().on_touch_down(touch)
             if touch.button is None and touch.grab_current is not self:
+                logging.debug(f"App: {touch.grab_current=}")
                 touch.grab(self)
+                logging.debug(f"App: (after grab) {touch.grab_current=}")
             return True
 
     def on_touch_move(self, touch):
-        logging.debug(f"App: {self.__class__.__name__=}")
-        for a in sorted(self.__dir__()):
-            if hasattr(self, a) and not a.startswith("__"):
-                logging.debug(f"App:  {a} = {getattr(self, a)}")
-        logging.debug(f"App: {touch.__class__.__name__=}")
-        for a in sorted(touch.__dir__()):
-            if hasattr(touch, a) and not a.startswith("__"):
-                logging.debug(f"App: {a} = {getattr(touch, a)}")
-
+        logging.debug(f"App: {touch.grab_list=}")
+        logging.debug(f"App: {touch.grab_current=}")
         ret = super().on_touch_move(touch)
-
-        logging.debug(f"App: {touch.__class__.__name__=}")
-        for a in sorted(touch.__dir__()):
-            if hasattr(touch, a) and not a.startswith("__"):
-                logging.debug(f"App: {a} = {getattr(touch, a)}")
+        logging.debug(f"App: (after super) {touch.grab_list=}")
+        logging.debug(f"App: (after super) {touch.grab_current=}")
         if ret:
             return ret
 
