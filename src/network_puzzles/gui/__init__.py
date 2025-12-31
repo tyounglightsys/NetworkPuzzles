@@ -567,9 +567,10 @@ class TerminalLabel(TextInput):
             # grab status and re-grab if needed.
             super().on_touch_down(touch)
             if touch.button is None and touch.grab_current is not self:
-                logging.debug(f"App: {touch.grab_current=}")
-                touch.grab(self)
-                logging.debug(f"App: (after grab) {touch.grab_current=}")
+                logging.debug(f"App: pre-grab: {touch.grab_current=}")
+                # touch.grab(self)
+                touch.grab_current = self
+                logging.debug(f"App: post-grab: {touch.grab_current=}")
             return True
 
     def on_touch_move(self, touch):
