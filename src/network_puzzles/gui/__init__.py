@@ -559,26 +559,30 @@ class NetworkPuzzlesApp(App):
 
 
 class TerminalLabel(TextInput):
-    def on_touch_down(self, touch):
-        if self.collide_point(*touch.pos):
-            # NOTE: On mobile (touchscreen device) when TextInput is readonly
-            # touch.grab(self) seems to fail in super().on_touch_down(touch).
-            # Workaround is to run super().on_touch_down(touch), then check for
-            # grab status and re-grab if needed.
-            super().on_touch_down(touch)
-            if touch.button is None and touch.grab_current is not self:
-                logging.debug(f"App: pre-grab: {touch.grab_current=}")
-                # touch.grab(self)
-                touch.grab_current = self
-                logging.debug(f"App: post-grab: {touch.grab_current=}")
-            return True
+    # def on_touch_down(self, touch):
+    #     if self.collide_point(*touch.pos):
+    #         # NOTE: On mobile (touchscreen device) when TextInput is readonly
+    #         # touch.grab(self) seems to fail in super().on_touch_down(touch).
+    #         # Workaround is to run super().on_touch_down(touch), then check for
+    #         # grab status and re-grab if needed.
+    #         super().on_touch_down(touch)
+    #         if touch.button is None and touch.grab_current is not self:
+    #             logging.debug(f"App: pre-grab: {self.focus=}")
+    #             logging.debug(f"App: pre-grab: {touch.grab_current=}")
+    #             # touch.grab(self)
+    #             touch.grab_current = self
+    #             logging.debug(f"App: post-grab: {self.focus=}")
+    #             logging.debug(f"App: post-grab: {touch.grab_current=}")
+    #         return True
 
     def on_touch_move(self, touch):
-        logging.debug(f"App: {touch.grab_list=}")
-        logging.debug(f"App: {touch.grab_current=}")
+        logging.debug(f"App: pre-super: {self.focus=}")
+        logging.debug(f"App: pre-super: {touch.grab_list=}")
+        logging.debug(f"App: pre-super: {touch.grab_current=}")
         ret = super().on_touch_move(touch)
-        logging.debug(f"App: (after super) {touch.grab_list=}")
-        logging.debug(f"App: (after super) {touch.grab_current=}")
+        logging.debug(f"App: post-super: {self.focus=}")
+        logging.debug(f"App: post-super {touch.grab_list=}")
+        logging.debug(f"App: post-super {touch.grab_current=}")
         if ret:
             return ret
 
