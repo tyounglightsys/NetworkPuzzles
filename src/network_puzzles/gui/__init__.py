@@ -560,16 +560,27 @@ class NetworkPuzzlesApp(App):
 
 class TerminalLabel(TextInput):
     def on_touch_down(self, touch):
-        # logging.debug(f"App: touch down at: {touch.pos}; {touch.__dict__}")
         logging.debug(f"App: {self.__class__.__name__=}")
         for a in sorted(self.__dir__()):
             if hasattr(self, a) and not a.startswith("__"):
                 logging.debug(f"App:  {a} = {getattr(self, a)}")
-        # if touch.button is None and self.collide_point(*touch.pos):
-        #     touch.grab(self)
-        #     return True
-        # if super().on_touch_down(touch):
-        #     return True
+        logging.debug(f"App: {touch.__class__.__name__=}")
+        for a in sorted(touch.__dir__()):
+            if hasattr(touch, a) and not a.startswith("__"):
+                logging.debug(f"App: {a} = {getattr(touch, a)}")
+
+        ret = super().on_touch_down(touch)
+
+        logging.debug(f"App: {self.__class__.__name__=}")
+        for a in sorted(self.__dir__()):
+            if hasattr(self, a) and not a.startswith("__"):
+                logging.debug(f"App:  {a} = {getattr(self, a)}")
+        logging.debug(f"App: {touch.__class__.__name__=}")
+        for a in sorted(touch.__dir__()):
+            if hasattr(touch, a) and not a.startswith("__"):
+                logging.debug(f"App: {a} = {getattr(touch, a)}")
+        if ret:
+            return ret
 
     def on_touch_up(self, touch):
         logging.debug(f"App: touch up at: {touch.pos}; {touch.__dict__}")
