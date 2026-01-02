@@ -21,6 +21,7 @@ from kivy.app import App
 from kivy.base import ExceptionHandler, ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.textinput import TextInput
 
 from .. import messages, nettests
@@ -564,24 +565,27 @@ class TerminalLabel(TextInput):
             # NOTE: On mobile (touchscreen device) when TextInput is readonly
             # touch.grab_current fails in super().on_touch_down(touch) because
             # readonly attrib forces self.is_focusable = False during
-            # FocusBehavior.on_touch_down(touch).
-            # Workaround is to manually set self.is_focusable before
-            # super().on_touch_down(touch).
-            self.is_focusable = True
-            super().on_touch_down(touch)
-            self.is_focusable = False
-            return True
-
-    # def on_touch_move(self, touch):
-    #     logging.debug(f"App: pre-super: {self.focus=}")
-    #     logging.debug(f"App: pre-super: {touch.grab_list=}")
-    #     logging.debug(f"App: pre-super: {touch.grab_current=}")
-    #     ret = super().on_touch_move(touch)
-    #     logging.debug(f"App: post-super: {self.focus=}")
-    #     logging.debug(f"App: post-super {touch.grab_list=}")
-    #     logging.debug(f"App: post-super {touch.grab_current=}")
-    #     if ret:
-    #         return ret
+            # FocusBehavior.on_touch_down(touch):
+            # Ref: https://github.com/kivy/kivy/blob/8d6ce56d6233b40f74608b33f4dc7ded14869d1d/kivy/uix/behaviors/focus.py#L464C1-L472C63
+            # class FocusBehavior:
+            # [...]
+            #     def on_touch_down(self, touch):
+            #         if not self.collide_point(*touch.pos):
+            #             return
+            #         if (not self.disabled and self.is_focusable and
+            #             ('button' not in touch.profile or
+            #                 not touch.button.startswith('scroll'))):
+            #             self.focus = True
+            #             FocusBehavior.ignored_touch.append(touch)
+            #         return super(FocusBehavior, self).on_touch_down(touch)
+            # Workaround: preempt FocusBehavior.on_touch_down.
+            if "button" not in touch.profile:
+                self.focus = True
+                FocusBehavior.ignored_touch.append(touch)
+                super(FocusBehavior, self).on_touch_down(touch)
+                return True
+            else:
+                return super().on_touch_down(touch)
 
     def on_touch_up(self, touch):
         logging.debug(f"App: touch up at: {touch.pos}; {touch.__dict__}")
