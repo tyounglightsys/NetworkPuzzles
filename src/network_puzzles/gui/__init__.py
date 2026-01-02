@@ -585,9 +585,9 @@ class TerminalLabel(TextInput):
                 FocusBehavior.ignored_touch.append(touch)
                 super(FocusBehavior, self).on_touch_down(touch)
                 logging.debug("App: Post-override:")
-                for k, v in self.__dir__().items():
-                    if not k.startswith("__"):
-                        logging.debug(f"App:  {k} = {v}")
+                for attrib in self.__dir__():
+                    if not attrib.startswith("__"):
+                        logging.debug(f"App:  {attrib} = {getattr(self, attrib)}")
                 return True
             else:
                 return super().on_touch_down(touch)
