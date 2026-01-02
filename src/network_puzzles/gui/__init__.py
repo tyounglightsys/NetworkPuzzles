@@ -580,15 +580,19 @@ class TerminalLabel(TextInput):
             #         return super(FocusBehavior, self).on_touch_down(touch)
             # Workaround: preempt FocusBehavior.on_touch_down.
             if "button" not in touch.profile:
+                logging.debug("App: Overriding FocusBehvaior.on_touch_down(touch)")
                 self.focus = True
                 FocusBehavior.ignored_touch.append(touch)
                 super(FocusBehavior, self).on_touch_down(touch)
+                logging.debug("App: Post-override:")
+                for k, v in self.__dir__().items():
+                    if not k.startswith("__"):
+                        logging.debug(f"App:  {k} = {v}")
                 return True
             else:
                 return super().on_touch_down(touch)
 
     def on_touch_up(self, touch):
-        logging.debug(f"App: touch up at: {touch.pos}; {touch.__dict__}")
         # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
         # Open popup on right-click within the Terminal area (only works on
         # desktop devices, where touch.button is not None).
