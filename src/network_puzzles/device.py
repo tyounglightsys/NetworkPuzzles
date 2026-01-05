@@ -143,6 +143,11 @@ class Device:
         if not isinstance(self.json.get("nic"), list):
             self.json["nic"] = [self.json["nic"]]
         return self.json.get("nic")
+    
+    def disable_nic_dhcp(self):
+        for onenic in self.all_nics():
+            #these come in json format.  Convert to a nic and define it
+            Nic(onenic).uses_dhcp(False)
 
     def all_tests(self):
         tests = []

@@ -578,6 +578,9 @@ class Puzzle:
         if device_type == "firewall":
             self.createNIC(newdevice, "eth")
             self.createNIC(newdevice, "wan")
+        if device_type in {"server"}:
+            newdevice['isdhcp'] = "True" #servers can serve DHCP.  They may or may not have DHCP configured
+            device.Device(newdevice).disable_nic_dhcp()   
         if device_type in {"cellphone", "tablet"}:
             self.createNIC(newdevice, "wlan")
         if device_type == "ip_phone":
