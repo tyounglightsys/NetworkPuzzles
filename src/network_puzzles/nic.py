@@ -52,6 +52,13 @@ class Nic:
     @property
     def uses_dhcp(self):
         return self.json.get("usesdhcp").lower() in ["true", "yes"]
+    
+    @uses_dhcp.setter
+    def uses_dhcp(self, value):
+        if isinstance(value, bool):
+            value = str(value)
+        self.json["usesdhcp"] = value
+
 
     def ensure_mac(self, data=None):
         if data is not None:
