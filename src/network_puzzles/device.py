@@ -147,7 +147,7 @@ class Device:
     def disable_nic_dhcp(self):
         for onenic in self.all_nics():
             #these come in json format.  Convert to a nic and define it
-            Nic(onenic).uses_dhcp(False)
+            Nic(onenic).uses_dhcp = False
 
     def all_tests(self):
         tests = []
@@ -586,8 +586,9 @@ def sourceIP(src, dstIP):
             logging.debug(oneip.ip)
             return oneip
     # if we get here, we do not have a nic that is local to the destination.  Return the nic that the GW is on
-    tmpval = f"{srcDevice['gateway']['ip']}/{srcDevice['gateway']['mask']}"
-    GW = ipaddress.IPv4Interface(tmpval)
+    #tmpval = f"{srcDevice['gateway']['ip']}/{srcDevice['gateway']['mask']}"
+    tmpval = f"{srcDevice['gateway']['ip']}"
+    GW = ipaddress.ip_address(tmpval)
     for oneip in allIPs:
         if GW in oneip.network:
             # print("The gateway is the way forward ")

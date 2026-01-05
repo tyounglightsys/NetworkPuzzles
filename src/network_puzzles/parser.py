@@ -566,6 +566,8 @@ class Parser:
             session.print("Could not find local IP connected to the ip range specified")
             return False
         #remove the previous record, if one existed
+        if dev_obj.json.get('dhcprange') is None:
+            dev_obj.json['dhcprange'] = {}
         itemlist = [ record for record in dev_obj.json.get('dhcprange') if record['ip'] != ethip]
         #Now, we create a record and store it.
         newitem = { 
@@ -586,6 +588,15 @@ class Parser:
                 f"set {dev_obj.hostname} gateway {dev_obj.json['gateway']['ip']}",
             )
             dev_obj.json["gateway"]["ip"] = value
+            tmp_obj = session.puzzle.device_from_ip(value)
+            if tmp_obj is not None and 'hostname' in tmp_obj:
+                logging.debug(f"setting {dev_obj.hostname} NeedsDefaultGW to {tmp_obj['hostname']} as solved")
+                session.puzzle.mark_test_as_completed(
+                        dev_obj.hostname,
+                        tmp_obj['hostname'],
+                        "NeedsDefaultGW",
+                        f"{dev_obj.hostname} has default gateway set",
+                    )
             session.print(
                 f"Setting {dev_obj.hostname} gateway: {dev_obj.json['gateway']['ip']}"
             )

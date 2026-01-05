@@ -515,6 +515,7 @@ class Puzzle:
                 }
             ],
         }
+        Nic(newnic).ensure_mac()
         thedevicejson["nic"].append(newnic)
         return newnic
 
@@ -579,6 +580,7 @@ class Puzzle:
             self.createNIC(newdevice, "eth")
             self.createNIC(newdevice, "wan")
         if device_type in {"server"}:
+            self.createNIC(newdevice, "eth")
             newdevice['isdhcp'] = "True" #servers can serve DHCP.  They may or may not have DHCP configured
             device.Device(newdevice).disable_nic_dhcp()   
         if device_type in {"cellphone", "tablet"}:

@@ -1,0 +1,8 @@
+load Level1_MidDHCP
+create device server 200,200
+create link server0 net_switch0
+set server0 eth0 192.168.1.2/24
+set server0 gateway 192.168.1.1
+set server0 dhcp 192.168.1.2 192.168.1.10-192.168.1.20
+dhcp ip_phone0
+ping ip_phone0 pc0
