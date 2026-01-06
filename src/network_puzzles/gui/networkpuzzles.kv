@@ -109,3 +109,6 @@ ThemedBoxLayout:
     text_size: self.size
     readonly: True
     do_wrap: False
+    # Override readonly-dependent attribs:
+    keyboard_mode: "managed"  # block automatic on-screen keyboard
+    is_focusable: True  # allow scrolling
