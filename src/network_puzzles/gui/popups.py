@@ -39,8 +39,9 @@ class ChooseNicPopup(ActionPopup):
         ]
         self.ids.nics_list.update_data(free_nics, management=False)
 
-    def on_nic_selection(self, selected_nic):
-        self.selected_nic = selected_nic
+    def on_nic_selection(self, selected_nic_text):
+        # Strip MAC info from NIC text.
+        self.selected_nic = selected_nic_text.split(";")[0]
 
     def on_okay(self):
         self.app.chosen_nic = self.selected_nic
@@ -78,7 +79,7 @@ class EditDhcpPopup(ActionPopup):
                 end = row.children[-3].text
                 if start != c.get("mask") or end != c.get("gateway"):
                     cmd = f"set {self.device.hostname} dhcp {ip} {start}-{end}"
-                    logging.info(f"GUI: > {cmd}")
+                    logging.info(f"Popups: > {cmd}")
                     self.app.ui.parse(cmd)
 
         # Update GUI helps b/c it will trigger tooltip updates, which are needed

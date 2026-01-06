@@ -26,7 +26,38 @@ class Session:
         self.ui = None
         self.startinglevel = ""
         self.package_dir = Path(__file__).parent
-        self.device_type = self.get_device_type()
+
+    @property
+    def device_type(self) -> str:
+        """Returns device type: 'desktop' or 'mobile'.
+
+        Generally, the app will assume a touch interface on mobile devices and a
+        mouse interface on desktop devices.
+        """
+        default = "mobile"
+
+        if os.getenv("NETWORKPUZZLES_DEVICE_TYPE"):
+            # Dev override
+            value = os.getenv("NETWORKPUZZLES_DEVICE_TYPE").lower()
+            if value in ("desktop", "mobile"):
+                return value
+            else:
+                return default
+        elif hasattr(sys, "getandroidapilevel"):
+            # Android
+            return "mobile"
+        elif os.getenv("DISPLAY"):
+            # Linux or Mac desktop
+            return "desktop"
+        elif os.getenv("COMPUTERNAME"):
+            # Windows desktop
+            return "desktop"
+        elif platform.system() in ("iOS", "iPadOS"):
+            # iPhone or IPad
+            return "mobile"
+        else:
+            # Fallback
+            return default
 
     def print(self, message):
         print("<default print method>")
@@ -42,21 +73,3 @@ class Session:
         newrec["backwards"] = backwards_cmd
         newrec["payload"] = payload
         self.undolist.append(newrec)
-
-    def get_device_type(self) -> str:
-        """Returns device type: 'desktop' or 'mobile'."""
-        if hasattr(sys, "getandroidapilevel"):
-            # Android
-            return "mobile"
-        elif os.getenv("DISPLAY"):
-            # Linux or Mac desktop
-            return "desktop"
-        elif os.getenv("COMPUTERNAME"):
-            # Windows desktop
-            return "desktop"
-        elif platform.system() in ("iOS", "iPadOS"):
-            # iPhone or IPad
-            return "mobile"
-        else:
-            # Fallback
-            return "mobile"

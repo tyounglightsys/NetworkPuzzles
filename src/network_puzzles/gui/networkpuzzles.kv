@@ -1,4 +1,4 @@
-#:kivy 2.0
+#:kivy 2.1
 #:import _ network_puzzles._
 #:import session network_puzzles.session
 # Order of "include" directives seems to matter.
@@ -94,8 +94,6 @@ ThemedBoxLayout:
         padding: dp(0)
         PuzzleLayout:
             id: layout
-            size_hint_y: None
-            height: self.get_height()
         TerminalLabel:
             id: terminal
             size_hint_y: None
@@ -111,3 +109,6 @@ ThemedBoxLayout:
     text_size: self.size
     readonly: True
     do_wrap: False
+    # Override readonly-dependent attribs:
+    keyboard_mode: "managed"  # block automatic on-screen keyboard
+    is_focusable: True  # allow scrolling

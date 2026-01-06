@@ -6,19 +6,22 @@ root_logger = logging.getLogger()
 for handler in root_logger.handlers:
     root_logger.removeHandler(handler)
 
+from kivy.config import Config
+
 from .. import session
 
 if session.device_type == "desktop":
     # Disable right-click red dot.
-    from kivy.config import Config
-
     Config.set("input", "mouse", "mouse,disable_multitouch")
+elif session.device_type == "mobile":
+    Config.set("kivy", "desktop", "0")
 
 # Continue with remaining imports.
 from kivy.app import App
 from kivy.base import ExceptionHandler, ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
+from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.textinput import TextInput
 
 from .. import messages, nettests
@@ -74,13 +77,14 @@ class NetworkPuzzlesApp(App):
             self.packet_tick_delay = 0.02  # packet pos refresh rate in seconds
             self.packet_progress_rate = 3  # % of link traveled each tick
         else:  # mobile devices
+            # Force orientation to landscape.
+            Window.orientation = 0
             # Force loglevel to DEBUG.
             logger = logging.getLogger()
             logger.level = logging.DEBUG
             self.packet_tick_delay = 0.04  # packet pos refresh rate in seconds
             self.packet_progress_rate = 6  # % of link traveled each tick
-        logging.debug(f"GUI: {session.device_type=}")
-        logging.debug(f"GUI: {Window.size=}")
+        logging.debug(f"App: {session.device_type=}")
 
         super().__init__(**kwargs)
         ExceptionManager.add_handler(AppExceptionHandler())
@@ -97,6 +101,12 @@ class NetworkPuzzlesApp(App):
 
         self.packetmgr = PacketManager(self)
         Clock.schedule_interval(self._update_packets, self.packet_tick_delay)
+
+        # Log config details.
+        for sect, data in Config._sections.items():
+            logging.debug(f"Config: {sect}:")
+            for k, v in data.items():
+                logging.debug(f"Config:  {k} = {v}")
 
     @property
     def devices(self):
@@ -160,7 +170,7 @@ class NetworkPuzzlesApp(App):
     def add_terminal_line(self, line):
         if not line.endswith("\n"):
             line += "\n"
-        self.root.ids.terminal.text += f"{line}"
+        self.root.ids.terminal.text += f"{self.ui.PS1} {line}"
 
     def draw_devices(self, *args):
         for dev in self.ui.puzzle.devices:
@@ -176,7 +186,7 @@ class NetworkPuzzlesApp(App):
     def draw_puzzle(self, *args):
         """Clear puzzle layout area; draw all elements related to current puzzle."""
         logging.debug(
-            f"GUI: {self.root.ids.layout.__class__.__name__}: pos={self.root.ids.layout.pos}; size={self.root.ids.layout.size}"
+            f"App: {self.root.ids.layout.__class__.__name__}: pos={self.root.ids.layout.pos}; size={self.root.ids.layout.size}"
         )
         if not self.ui.puzzle:
             logging.warning("GUI: No puzzle is loaded.")
@@ -187,7 +197,7 @@ class NetworkPuzzlesApp(App):
         # Get puzzle text from localized messages, if possible, but fallback to
         # English text in JSON data.
         puzzle_data = self.ui.puzzle.json
-        logging.debug(f"GUI: {self.ui.puzzle.uid=}")
+        logging.debug(f"App: {self.ui.puzzle.uid=}")
         puzzle_messages = messages.puzzles.get(self.ui.puzzle.uid)
         if puzzle_messages:
             title = puzzle_messages.get("title")
@@ -290,6 +300,10 @@ class NetworkPuzzlesApp(App):
         self.title = self.app_title
         # Remove any remaining child widgets from puzzle layout.
         self.root.ids.layout.clear_widgets()
+        logging.debug(f"App: window size: {Window.size}")
+        # logging.debug(f"App: puzzle layout width: {self.root.ids.layout.width}")
+        logging.debug(f"App: layout height: {self.root.ids.layout.height}")
+        logging.debug(f"App: terminal height: {self.root.ids.terminal.height}")
         # Redraw the "+" button for adding new items.
         self.root.ids.layout.add_items_menu_button()
 
@@ -357,20 +371,20 @@ class NetworkPuzzlesApp(App):
         if not hasattr(self, "chosen_device"):
             self.chosen_device = None
         elif self.chosen_device:
-            logging.info(f"GUI: User selected device: {self.chosen_device.hostname}")
+            logging.info(f"App: User selected device: {self.chosen_device.hostname}")
 
     def user_select_nic(self, devicew):
         if not hasattr(self, "chosen_nic"):
             self.chosen_nic = None
             ChooseNicPopup(devicew).open()
         elif self.chosen_nic:
-            logging.info(f"GUI: User selected NIC: {self.chosen_nic}")
+            logging.info(f"App: User selected NIC: {self.chosen_nic}")
 
     def user_select_position(self):
         if not hasattr(self, "chosen_pos"):
             self.chosen_pos = None
         elif self.chosen_pos:
-            logging.info(f"GUI: User selected pos: {self.chosen_pos}")
+            logging.info(f"App: User selected pos: {self.chosen_pos}")
 
     def _get_widget_by_prop(self, prop, value):
         for w in self.root.ids.layout.children:
@@ -410,7 +424,7 @@ class NetworkPuzzlesApp(App):
             for n, t in ((test.shost, test.name) for test in uncompleted_tests):
                 d = self.ui.get_device(n)
                 if d is None:
-                    logging.info(f'Ignoring highlight of non-device "{n}"')
+                    logging.info(f'App: Ignoring highlight of non-device "{n}"')
                     continue
                 w = self.get_widget_by_hostname(n)
                 if isinstance(w, Device) and not w.base.is_invisible:
@@ -546,19 +560,20 @@ class NetworkPuzzlesApp(App):
 
 
 class TerminalLabel(TextInput):
-    def get_max_row(self, text):
-        max_row = 0
-        max_length = 0
-        for i, line in enumerate(text.split("\n")):
-            if len(line) > max_length:
-                max_row = i
-                max_length = len(line)
-        return max_row
+    def on_touch_down(self, touch):
+        if not self.collide_point(*touch.pos):  # touch outside of Terminal
+            # Cancel any text selection.
+            self.cancel_selection()
+            # Hide the Cut/Copy/Paste bubble.
+            self._hide_cut_copy_paste()
+            # Hide the selection handles.
+            self._hide_handles()
+        return super().on_touch_down(touch)
 
     def on_touch_up(self, touch):
-        # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
         # Open popup on right-click within the Terminal area (only works on
-        # desktop devices).
+        # desktop devices, where touch.button is not None).
+        # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
         if touch.button == "right" and touch.grab_current is self:
             touch.ungrab(self)
             CommandPopup().open()

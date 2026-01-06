@@ -1,6 +1,7 @@
 import logging
-from kivy.uix.widget import Widget
+
 from kivy.properties import NumericProperty
+from kivy.uix.widget import Widget
 
 
 class PacketManager:
@@ -61,7 +62,7 @@ class PacketManager:
             # due to a race condition with a redraw? So skipping packet update
             # if the link isn't found seems to work for now.
             if not link:
-                logging.warning(f"GUI: link not found: {p.get('packetlocation')}")
+                logging.warning(f"Packets: link not found: {p.get('packetlocation')}")
                 continue
 
             # Search for existing packet in layout.

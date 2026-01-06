@@ -13,7 +13,6 @@
             root: root
             id: nics_list
         ActionPopupButtons:
-            size_hint_y: 0.2
             on_cancel: root.on_cancel()
             on_okay: root.on_okay()
 
@@ -101,7 +100,7 @@
         HSeparator:
         PopupButton:
             pos_hint: {"center_x": 0.5}
-            size_hint: (None, 0.2)
+            size_hint_x: 0.2
             text: _("Quit")
             on_release: app.stop()
 
@@ -138,45 +137,43 @@
             ThemedBoxLayout:
                 orientation: 'vertical'
                 CheckBoxLabel:
-                    size_hint_y: None
-                    height: self.texture_size[1]
                     text: _("Filter the puzzles by level:")
                 SingleRowLayout:
                     FiltersCheckBox:
-                        name: 'Level0'
+                        name: "Level0"
                     CheckBoxLabel:
                         text: _("Level 0")
                 SingleRowLayout:
                     FiltersCheckBox:
-                        name: 'Level1'
+                        name: "Level1"
                     CheckBoxLabel:
                         text: _("Level 1")
                 SingleRowLayout:
                     FiltersCheckBox:
-                        name: 'Level2'
+                        name: "Level2"
                     CheckBoxLabel:
                         text: _("Level 2")
                 SingleRowLayout:
                     FiltersCheckBox:
-                        name: 'Level3'
+                        name: "Level3"
                     CheckBoxLabel:
                         text: _("Level 3")
                 SingleRowLayout:
                     FiltersCheckBox:
-                        name: 'Level4'
+                        name: "Level4"
                     CheckBoxLabel:
                         text: _("Level 4")
                 SingleRowLayout:
                     FiltersCheckBox:
-                        name: 'Level5'
+                        name: "Level5"
                     CheckBoxLabel:
                         text: _("Level 5")
                 SingleRowLayout:
                     FiltersCheckBox:
-                        name: 'Level6'
+                        name: "Level6"
                     CheckBoxLabel:
                         text: _("Level 6")
-                Widget:
+                Widget: # spacer to keep other widgets at the top
             VSeparator:
             PuzzlesRecView:
                 id: puzzles_view

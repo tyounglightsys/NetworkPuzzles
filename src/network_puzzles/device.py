@@ -88,7 +88,6 @@ class Device:
         if loc:
             location = loc.split(",")
             location = (int(location[0]), int(location[1]))
-            logging.debug(f"GUI: {self.hostname} {location=}")
             return location
         raise ValueError(f"Invalid JSON location data for '{self.hostname}'")
 

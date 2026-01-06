@@ -1,6 +1,3 @@
-import logging
-
-from kivy.core.window import Window
 from kivy.metrics import dp, sp
 from kivy.properties import NumericProperty, StringProperty
 from kivy.uix.behaviors import FocusBehavior
@@ -157,20 +154,6 @@ class PuzzleLayout(RelativeLayout):
         ):
             tray.close()
 
-    def get_height(self):
-        # Window height minus terminal area height.
-        h = (
-            Window.height
-            - self.parent.padding[1]
-            - self.parent.padding[3]
-            - (
-                self.terminal_lines * self.terminal_line_height
-            )  # expicitly calculated to equal terminal height
-            - self.parent.spacing
-        )
-        logging.debug(f"GUI: PuzzleLayout height: {h}")
-        return h
-
     def on_touch_up(self, touch):
         if self.collide_point(*touch.pos):
             if touch.button == "left" or touch.button is None:
@@ -182,10 +165,10 @@ class PuzzleLayout(RelativeLayout):
                     if len(touch.grab_list) == 0:
                         self.app.chosen_pos = self.to_widget(*touch.pos)
                     return True
-                else:
-                    # NOTE: The touch has to be explicitly passed on so that other
-                    # child widgets (e.g. Links) are notified.
-                    return super().on_touch_up(touch)
+                # NOTE: The touch has to be explicitly passed on so that child
+                # widgets can receive it; e.g. so that Device buttons are able
+                # to be "pressed".
+                return super().on_touch_up(touch)
 
     def _get_infra_devices_choices(self):
         choices = []

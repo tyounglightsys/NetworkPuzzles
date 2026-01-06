@@ -66,13 +66,11 @@ class ThemedButton(Button):
     def on_mouse_pos(self, window, pos):
         if not self.get_root_window():
             return
-        w_pos = self.to_widget(*pos)
         # Close tooltip if already open.
         self.cancel_tooltip()
-        # Clock.unschedule(self.open_tooltip)  # cursor moved, cancel scheduled event
-        # self.close_tooltip()  # close if it's opened
-        if self.collide_point(*w_pos):
-            Clock.schedule_once(self.open_tooltip, 1)
+        # Open trigger button's toolip if mouse is over button.
+        if self.collide_point(*self.to_widget(*pos)):
+            Clock.schedule_once(self.open_tooltip, self.LONG_PRESS_THRESHOLD)
 
     def on_press(self):
         if self._on_release is None:
@@ -115,7 +113,7 @@ class ThemedButton(Button):
             return
         self.tooltip_text = self.info
         if self.tooltip_anchor is None:
-            logging.warning(f"GUI: {self} has no tooltip_anchor!")
+            logging.warning(f"Buttons: {self} has no tooltip_anchor!")
             return
         if self.tooltip not in self.tooltip_anchor.children:
             self.tooltip_anchor.add_widget(self.tooltip)
@@ -126,7 +124,7 @@ class ThemedButton(Button):
         x = self.x + self.width + sp
         y = self.y + self.height - self.tooltip.height
         if self.tooltip_anchor is None:
-            logging.warning(f"GUI: {self} has no tooltip_anchor!")
+            logging.warning(f"Buttons: {self} has no tooltip_anchor!")
             return (x, y)
         if x + self.tooltip.width > self.tooltip_anchor.width:
             # Put the tooltip to the left if not enough room to the right.

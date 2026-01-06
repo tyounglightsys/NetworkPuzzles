@@ -127,7 +127,7 @@ class Device(DragBehavior, ThemedBoxLayout):
     def highlight(self, do_highlight=True):
         if do_highlight:
             # Add highlight.
-            # logging.debug(f"GUI: Add highlight for {self.hostname}")
+            # logging.debug(f"Devices: Add highlight for {self.hostname}")
             if not self.highlighting:
                 self.highlighting = HelpHighlight(base=self)
             if self.highlighting not in self.app.root.ids.layout.children:
@@ -136,7 +136,7 @@ class Device(DragBehavior, ThemedBoxLayout):
                 self.app.root.ids.layout.add_widget(self.highlighting, idx)
         else:
             # Remove highlight.
-            # logging.debug(f"GUI: Remove highlight for {self.hostname}")
+            # logging.debug(f"Devices: Remove highlight for {self.hostname}")
             if (
                 self.highlighting
                 and self.highlighting in self.app.root.ids.layout.children
@@ -148,11 +148,11 @@ class Device(DragBehavior, ThemedBoxLayout):
         # Ensure base object state matches GUI object state.
         self.base.is_invisible = do_hide
         if do_hide:
-            logging.debug(f"GUI: Hide {self.hostname} & dependent items.")
+            logging.debug(f"Devices: Hide {self.hostname} & dependent items.")
             # Hide any help highlight.
             self.highlight(False)
         elif do_hide is False:
-            logging.debug(f"GUI: Show {self.hostname} & dependent items.")
+            logging.debug(f"Devices: Show {self.hostname} & dependent items.")
             # Show help highlight if relevant.
             self.app.update_help_highlight_devices()
         # Hide/show any links.
@@ -357,7 +357,7 @@ class EditDevicePopup(ActionPopup):
 
     def on_ips_edit(self):
         if not self.selected_ip:
-            logging.warning("GUI: No IP selected for editing.")
+            logging.warning("Devices: No IP selected for editing.")
             return
         ip_config = self._get_ip_config_from_nic(
             self.device.get_nic(self.selected_nic), self.selected_ip
@@ -379,9 +379,9 @@ class EditDevicePopup(ActionPopup):
                 f"set {self.device.hostname} {self.selected_nic} {ip_config.address}/{ip_config.netmask}"
             )
 
-    def on_nic_selection(self, selected_nic):
+    def on_nic_selection(self, selected_nic_text):
         self.selected_ip = None
-        self.selected_nic = selected_nic
+        self.selected_nic = selected_nic_text
         self.root.ids.add_ip.disabled = False
         self.root.ids.edit_ip.disabled = True
         self.root.ids.remove_ip.disabled = True
@@ -413,9 +413,9 @@ class EditDevicePopup(ActionPopup):
         self.ids.nics_list.update_data(self.device.nics, management=True)
 
     def on_okay(self):
-        logging.info(f"GUI: Updating {self.device.hostname}:")
+        logging.info(f"Devices: Updating {self.device.hostname}:")
         for cmd in self.puzzle_commands:
-            logging.info(f"GUI: > {cmd}")
+            logging.info(f"Devices: > {cmd}")
             self.app.ui.parse(cmd)
         # Update GUI helps b/c it will trigger tooltip updates, which are needed
         # b/c IP data has likely changed.
@@ -471,5 +471,5 @@ class EditDevicePopup(ActionPopup):
 
     def _set_ips(self):
         n = self.device.get_nic(self.selected_nic)
-        logging.debug(f"GUI: {n.name} ifaces: {n.interfaces}")
+        logging.debug(f"Devices: {n.name} ifaces: {n.interfaces}")
         self.ids.ips_list.update_data(n.ip_addresses)
