@@ -560,43 +560,16 @@ class NetworkPuzzlesApp(App):
 
 
 class TerminalLabel(TextInput):
-    # def on_touch_down(self, touch):
-    #     if self.collide_point(*touch.pos):
-    #         # NOTE: On mobile (touchscreen device) when TextInput is readonly
-    #         # touch.grab_current fails in super().on_touch_down(touch) because
-    #         # readonly attrib forces self.is_focusable = False during
-    #         # FocusBehavior.on_touch_down(touch):
-    #         # Ref: https://github.com/kivy/kivy/blob/8d6ce56d6233b40f74608b33f4dc7ded14869d1d/kivy/uix/behaviors/focus.py#L464C1-L472C63
-    #         # class FocusBehavior:
-    #         # [...]
-    #         #     def on_touch_down(self, touch):
-    #         #         if not self.collide_point(*touch.pos):
-    #         #             return
-    #         #         if (not self.disabled and self.is_focusable and
-    #         #             ('button' not in touch.profile or
-    #         #                 not touch.button.startswith('scroll'))):
-    #         #             self.focus = True
-    #         #             FocusBehavior.ignored_touch.append(touch)
-    #         #         return super(FocusBehavior, self).on_touch_down(touch)
-    #         # Workaround: preempt FocusBehavior.on_touch_down.
-    #         if "button" not in touch.profile:
-    #             logging.debug("App: Overriding FocusBehvaior.on_touch_down(touch)")
-    #             self.focus = True
-    #             FocusBehavior.ignored_touch.append(touch)
-    #             # result = super(FocusBehavior, self).on_touch_down(touch) # no need to propagate touch
-    #             # logging.debug(f"App: super(FocusBehavior) {result=}")
-    #             logging.debug("App: Post-override:")
-    #             for attrib in sorted(self.__dir__()):
-    #                 if not attrib.startswith("__"):
-    #                     logging.debug(f"App:  {attrib} = {getattr(self, attrib)}")
-    #             return True
-    #         else:
-    #             return super().on_touch_down(touch)
+    def on_touch_down(self, touch):
+        if not self.collide_point(*touch.pos):  # touch outside of Terminal
+            # Cancel any text selection.
+            self.cancel_selection()
+        return super().on_touch_down(touch)
 
     def on_touch_up(self, touch):
-        # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
         # Open popup on right-click within the Terminal area (only works on
         # desktop devices, where touch.button is not None).
+        # REF: https://kivy.org/doc/master/guide/inputs.html#grabbing-touch-events
         if touch.button == "right" and touch.grab_current is self:
             touch.ungrab(self)
             CommandPopup().open()
