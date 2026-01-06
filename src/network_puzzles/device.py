@@ -1002,6 +1002,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             if nPacket is None:
                 return False
             #logging.debug("new packet was not None")
+            nPacket["origPingDest"] = packRec.get("origPingDest")
             nPacket["packettype"] = "ping-response"
             sendPacketOutDevice(nPacket, thisDevice)
             #logging.debug("new packet sent out of device")
@@ -1025,6 +1026,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             pingdest = deviceFromIP(pingdestip)
             logging.info(f"sourceip is {srcip}")
             logging.info(f"dest host is {pingdest.get('hostname')}")
+            #logging.debug(f"Showing orig dest as: {packRec["origPingDest"]}")
             if packRec["health"] < 100:
                 logging.info(
                     f"Packet was damaged during transit.  Not complete success: Health={packRec['health']}"
@@ -1035,6 +1037,22 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             else:
                 session.print(f"PING: {pingsrcip} -> {pingdestip}: Success!")
             if pingdest is not None and packRec["health"] == 100:
+                #deal with broadcast pings.
+                if (packRec.get("origPingDest") is not None and packRec.get("origPingDest") != "" and packRec.get("origPingDest") != packRec.get("destIP")):
+                    mark_test_as_completed(
+                        thisDevice.get("hostname"),
+                        packRec.get("origPingDest"),
+                        "SuccessfullyPings",
+                        f"Successfully pinged from {thisDevice.get('hostname')} to {packRec.get("origPingDest")}",
+                    )
+                    # We mark this as complete too, but the test for 'WithoutLoop' happens later
+                    mark_test_as_completed(
+                        thisDevice.get("hostname"),
+                        packRec.get("origPingDest"),
+                        "SuccessfullyPingsWithoutLoop",
+                        f"Successfully pinged from {thisDevice.get('hostname')} to {packRec.get("origPingDest")} without a network loop.",
+                    )
+
                 mark_test_as_completed(
                     thisDevice.get("hostname"),
                     pingdest.get("hostname"),
@@ -1389,6 +1407,7 @@ def Ping(src, dest):
     nPacket = packetFromTo(src, dest)
     if nPacket is not None:
         nPacket["packettype"] = "ping"
+        nPacket["origPingDest"] = dest
         sendPacketOutDevice(nPacket, src)
         # print (nPacket)
         packet.addPacketToPacketlist(nPacket)
