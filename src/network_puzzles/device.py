@@ -1117,9 +1117,11 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     logging.debug(f"We made it through.  Now seeing if we need to keep going. {packRec["status"]}")
 
     # If the packet is not done and we forward, forward. Basically, a switch/hub
-    if packRec["status"] != "done" and forwardsPackets(thisDevice):
+    if (packRec["status"] != "done" or packet.isBroadcastMAC(packRec.get("destMAC"))) and forwardsPackets(thisDevice):
         logging.debug("About to forward packet out switch")
+        packRec["status"] = "good"
         send_out_hubswitch(thisDevice, packRec, nicRec)
+        packRec["status"] = "done"
         return
     # if the packet is not done and we route, route
     if packRec["status"] != "done" and routesPackets(thisDevice):
