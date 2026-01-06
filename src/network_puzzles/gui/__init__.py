@@ -564,6 +564,10 @@ class TerminalLabel(TextInput):
         if not self.collide_point(*touch.pos):  # touch outside of Terminal
             # Cancel any text selection.
             self.cancel_selection()
+            # Hide the Cut/Copy/Paste bubble.
+            self._hide_cut_copy_paste()
+            # Hide the selection handles.
+            self._hide_handles()
         return super().on_touch_down(touch)
 
     def on_touch_up(self, touch):
