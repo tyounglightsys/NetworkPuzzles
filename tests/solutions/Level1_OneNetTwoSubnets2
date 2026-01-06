@@ -1,0 +1,13 @@
+load Level1_OneNetTwoSubnets2
+#source: pc0 test: SuccessfullyPings  dest: pc1 status: False
+#source: pc0 test: SuccessfullyPings  dest: pc2 status: False
+#source: pc3 test: SuccessfullyPings  dest: pc1 status: False
+#source: pc3 test: SuccessfullyPings  dest: pc2 status: False
+#source: pc0 test: SuccessfullyPings  dest: 192.168.1.255 status: False
+#source: pc3 test: SuccessfullyPings  dest: 192.168.2.255 status: False
+ping pc0 pc1
+ping pc0 pc2
+ping pc3 pc1
+ping pc3 pc2
+ping pc0 192.168.1.255
+ping pc3 192.168.2.255
