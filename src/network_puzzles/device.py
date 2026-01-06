@@ -729,8 +729,46 @@ def deviceHasIP(deviceRec, IPString: str):
     for oneIP in allIPStrings(deviceRec):
         if tocheck == packet.justIP(oneIP):
             return True
+        try:
+            device_IP = ipaddress.IPv4Interface(oneIP)
+            logging.debug(f"checking if device has IP {device_IP.network.broadcast_address} {IPString}")
+            if (str(device_IP.network.broadcast_address) == str(IPString)):
+                return True
+        except ValueError:
+            continue
     return False
 
+def ip_is_broadcast_for_device(deviceRec, ipstr: str):
+    '''Return True if the specified ipstring is a broadcast IP for any of the interfaces defined on the device'''
+    #logging.debug("Checking to see if our device has a broadcast IP")
+    if not isinstance(deviceRec["nic"], list):
+        # If it is not a list, turn it into a list so we can iterate it
+        deviceRec["nic"] = [deviceRec["nic"]]
+    for onenic in deviceRec["nic"]:
+        #logging.debug(f"    Checking {onenic} {ipstr}")
+        if ip_is_broadcast_for_nic(onenic, ipstr):
+            #logging.debug("    SUCCESS! It is a broadcast!")
+            return True
+    return False
+
+def ip_is_broadcast_for_nic(nicRec, ipstr: str): 
+    '''Return True if the specified ipstring is a broadcast IP for the specified NIC'''
+    #logging.debug("Checking to see if our nic has broadcast IP")
+    if nicRec is None:
+        return False
+    if nicRec["nictype"][0] == "port":
+        return False  # Ports have no IP address
+    # loop through all the interfaces and return any that might be local.
+    if not isinstance(nicRec["interface"], list):
+        nicRec["interface"] = [
+            nicRec["interface"]
+        ]  # turn it into a list if needed.
+    for oneIF in nicRec["interface"]:
+        #logging.debug(f"    Checking {ipstr} with {str(interfaceIP(oneIF))}")
+        if packet.isBroadcast(ipstr, str(interfaceIP(oneIF))):
+            return True
+    return False
+    
 
 def findLocalNICInterface(targetIPstring: str, networkCardRec):
     """Return the network interface record that has an IP address that is local to the IP specified as the target
@@ -1264,7 +1302,7 @@ def packetFromTo(src, dest):
         dest:dstDevice (also works with a hostname)
     """
     # src should be a device, not just a name.  Sanity check.
-    # logging.debug(f"starting a packet from {src} to {dest}")
+    #logging.debug(f"starting a packet from {src} to {dest}")
     if "hostname" not in src:
         # The function is being improperly used. Can we fix it?
         newsrc = session.puzzle.device_from_name(src)
@@ -1305,6 +1343,9 @@ def packetFromTo(src, dest):
         logging.info(f"Error: Not a valid target: {dest}")
         session.print(f"Not a valid target {dest}")
         return None
+    if(isinstance(dest,str)): #It is a string of an IP.  We should try it.
+        dest = ipaddress.IPv4Address(dest)
+    #logging.debug(f"We are about to make a packet: {dest} {type(dest)}")
     if isinstance(dest, ipaddress.IPv4Address):
         # This is what we are hoping for.
         nPacket = packet.newPacket()  # make an empty packet
@@ -1315,6 +1356,9 @@ def packetFromTo(src, dest):
         nPacket["destIP"] = dest  # this should now be the IP
         # packet['destMAC'] = #If the IP is local, we use the MAC of the host.  Otherwise it is the MAC of the gateway
         nPacket["destMAC"] = globalArpLookup(dest)
+        if ip_is_broadcast_for_device(src, dest):
+            logging.debug("It is a broadcast, using broadcast MAC")
+            nPacket["destMAC"] = packet.BroadcastMAC() #it is a broadcast, use the broadcast MAC
         nPacket["packettype"] = ""
         return nPacket
 

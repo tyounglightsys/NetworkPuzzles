@@ -318,6 +318,8 @@ class Parser:
             shost = session.puzzle.device_from_ip(args[0])
         if dhost is None:
             dhost = session.puzzle.device_from_ip(args[1])
+        if dhost is None and packet.is_ipv4(args[1]):
+            dhost = args[1] #it is a valid IP address.  Try it.
         if shost is None:
             session.print(f"No such host: {args[0]}")
             return False

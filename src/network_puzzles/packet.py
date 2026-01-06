@@ -323,6 +323,22 @@ def isLocal(packetIP: str, interfaceIP: str):
         # Handle invalid IP address or subnet format
         return False
 
+def isBroadcast(packetIP: str, interfaceIP: str):
+    """Determine if the packet IP is considered broadcast by the subnet/netmask on the interface IP
+    Args:
+        packetIP:str - a string IP (ipv6/ipv4); just an IP - no subnet
+        interfaceIP:str - an IP/subnet, either iPv4 or ipv6"""
+    t_packetIP = justIP(packetIP)
+    try:
+        ip = ipaddress.ip_address(t_packetIP)
+        network = ipaddress.ip_network(
+            interfaceIP, strict=False
+        )  # The interface will have host bits set, so we choose false
+        logging.debug(f" Checking packet: {str(ip)} {str(network.broadcast_address)}")
+        return str(ip) == str(network.broadcast_address)
+    except ValueError:
+        # Handle invalid IP address or subnet format
+        return False
 
 def BroadcastMAC():
     """ "return the broadcast MAC address: FFFFFFFFFFFF"""
