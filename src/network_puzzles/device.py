@@ -142,10 +142,10 @@ class Device:
         if not isinstance(self.json.get("nic"), list):
             self.json["nic"] = [self.json["nic"]]
         return self.json.get("nic")
-    
+
     def disable_nic_dhcp(self):
         for onenic in self.all_nics():
-            #these come in json format.  Convert to a nic and define it
+            # these come in json format.  Convert to a nic and define it
             Nic(onenic).uses_dhcp = False
 
     def all_tests(self):
@@ -585,7 +585,7 @@ def sourceIP(src, dstIP):
             logging.debug(oneip.ip)
             return oneip
     # if we get here, we do not have a nic that is local to the destination.  Return the nic that the GW is on
-    #tmpval = f"{srcDevice['gateway']['ip']}/{srcDevice['gateway']['mask']}"
+    # tmpval = f"{srcDevice['gateway']['ip']}/{srcDevice['gateway']['mask']}"
     tmpval = f"{srcDevice['gateway']['ip']}"
     GW = ipaddress.ip_address(tmpval)
     for oneip in allIPs:
@@ -730,44 +730,46 @@ def deviceHasIP(deviceRec, IPString: str):
             return True
         try:
             device_IP = ipaddress.IPv4Interface(oneIP)
-            logging.debug(f"checking if device has IP {device_IP.network.broadcast_address} {IPString}")
-            if (str(device_IP.network.broadcast_address) == str(IPString)):
+            logging.debug(
+                f"checking if device has IP {device_IP.network.broadcast_address} {IPString}"
+            )
+            if str(device_IP.network.broadcast_address) == str(IPString):
                 return True
         except ValueError:
             continue
     return False
 
+
 def ip_is_broadcast_for_device(deviceRec, ipstr: str):
-    '''Return True if the specified ipstring is a broadcast IP for any of the interfaces defined on the device'''
-    #logging.debug("Checking to see if our device has a broadcast IP")
+    """Return True if the specified ipstring is a broadcast IP for any of the interfaces defined on the device"""
+    # logging.debug("Checking to see if our device has a broadcast IP")
     if not isinstance(deviceRec["nic"], list):
         # If it is not a list, turn it into a list so we can iterate it
         deviceRec["nic"] = [deviceRec["nic"]]
     for onenic in deviceRec["nic"]:
-        #logging.debug(f"    Checking {onenic} {ipstr}")
+        # logging.debug(f"    Checking {onenic} {ipstr}")
         if ip_is_broadcast_for_nic(onenic, ipstr):
-            #logging.debug("    SUCCESS! It is a broadcast!")
+            # logging.debug("    SUCCESS! It is a broadcast!")
             return True
     return False
 
-def ip_is_broadcast_for_nic(nicRec, ipstr: str): 
-    '''Return True if the specified ipstring is a broadcast IP for the specified NIC'''
-    #logging.debug("Checking to see if our nic has broadcast IP")
+
+def ip_is_broadcast_for_nic(nicRec, ipstr: str):
+    """Return True if the specified ipstring is a broadcast IP for the specified NIC"""
+    # logging.debug("Checking to see if our nic has broadcast IP")
     if nicRec is None:
         return False
     if nicRec["nictype"][0] == "port":
         return False  # Ports have no IP address
     # loop through all the interfaces and return any that might be local.
     if not isinstance(nicRec["interface"], list):
-        nicRec["interface"] = [
-            nicRec["interface"]
-        ]  # turn it into a list if needed.
+        nicRec["interface"] = [nicRec["interface"]]  # turn it into a list if needed.
     for oneIF in nicRec["interface"]:
-        #logging.debug(f"    Checking {ipstr} with {str(interfaceIP(oneIF))}")
+        # logging.debug(f"    Checking {ipstr} with {str(interfaceIP(oneIF))}")
         if packet.isBroadcast(ipstr, str(interfaceIP(oneIF))):
             return True
     return False
-    
+
 
 def findLocalNICInterface(targetIPstring: str, networkCardRec):
     """Return the network interface record that has an IP address that is local to the IP specified as the target
@@ -989,32 +991,34 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
 
         # ping, send ping packet back
         if packRec["packettype"] == "ping":
-            #logging.debug(f"Returning packet: {packRec}")
+            # logging.debug(f"Returning packet: {packRec}")
             # logging.debug(f"Returning packet: {packRec['sourceIP']} - {packet.justIP(str(packRec["sourceIP"]))}")
             dest = deviceFromIP(packet.justIP(str(packRec["sourceIP"])))
-            #logging.info(f"A ping came.  Making a return packet going to {dest}")
+            # logging.info(f"A ping came.  Making a return packet going to {dest}")
             # print (packet.justIP(str(packRec['sourceIP'])))
             # print(dest)
             # we need to generate a ping response
             nPacket = packetFromTo(thisDevice, dest)
-            #logging.debug(f"Created new packet : {dest}")
+            # logging.debug(f"Created new packet : {dest}")
             if nPacket is None:
                 return False
-            #logging.debug("new packet was not None")
+            # logging.debug("new packet was not None")
             nPacket["origPingDest"] = packRec.get("origPingDest")
             nPacket["packettype"] = "ping-response"
             sendPacketOutDevice(nPacket, thisDevice)
-            #logging.debug("new packet sent out of device")
+            # logging.debug("new packet sent out of device")
             # print (nPacket)
             packet.addPacketToPacketlist(nPacket)
-            #if we are a hub/switch, do not end broadcast pings here; pass them on
-            if  ( not forwardsPackets(thisDevice) and not packet.isBroadcastMAC(packRec.get("destMAC"))):
+            # if we are a hub/switch, do not end broadcast pings here; pass them on
+            if not forwardsPackets(thisDevice) and not packet.isBroadcastMAC(
+                packRec.get("destMAC")
+            ):
                 logging.debug("decided packet is finished.  Marking it done")
                 packRec["status"] = "done"
                 return True
             else:
-                #we continue.  This packet is not stopping here.
-                packRec['status'] = "good"
+                # we continue.  This packet is not stopping here.
+                packRec["status"] = "good"
 
         # ping response, mark it as done
         if packRec["packettype"] == "ping-response":
@@ -1025,7 +1029,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             pingdest = deviceFromIP(pingdestip)
             logging.info(f"sourceip is {srcip}")
             logging.info(f"dest host is {pingdest.get('hostname')}")
-            #logging.debug(f"Showing orig dest as: {packRec["origPingDest"]}")
+            # logging.debug(f"Showing orig dest as: {packRec["origPingDest"]}")
             if packRec["health"] < 100:
                 logging.info(
                     f"Packet was damaged during transit.  Not complete success: Health={packRec['health']}"
@@ -1036,20 +1040,24 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             else:
                 session.print(f"PING: {pingsrcip} -> {pingdestip}: Success!")
             if pingdest is not None and packRec["health"] == 100:
-                #deal with broadcast pings.
-                if (packRec.get("origPingDest") is not None and packRec.get("origPingDest") != "" and packRec.get("origPingDest") != packRec.get("destIP")):
+                # deal with broadcast pings.
+                if (
+                    packRec.get("origPingDest") is not None
+                    and packRec.get("origPingDest") != ""
+                    and packRec.get("origPingDest") != packRec.get("destIP")
+                ):
                     mark_test_as_completed(
                         thisDevice.get("hostname"),
                         packRec.get("origPingDest"),
                         "SuccessfullyPings",
-                        f"Successfully pinged from {thisDevice.get('hostname')} to {packRec.get("origPingDest")}",
+                        f"Successfully pinged from {thisDevice.get('hostname')} to {packRec.get('origPingDest')}",
                     )
                     # We mark this as complete too, but the test for 'WithoutLoop' happens later
                     mark_test_as_completed(
                         thisDevice.get("hostname"),
                         packRec.get("origPingDest"),
                         "SuccessfullyPingsWithoutLoop",
-                        f"Successfully pinged from {thisDevice.get('hostname')} to {packRec.get("origPingDest")} without a network loop.",
+                        f"Successfully pinged from {thisDevice.get('hostname')} to {packRec.get('origPingDest')} without a network loop.",
                     )
 
                 mark_test_as_completed(
@@ -1113,10 +1121,14 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                     )
             return True
 
-    logging.debug(f"We made it through.  Now seeing if we need to keep going. {packRec["status"]}")
+    logging.debug(
+        f"We made it through.  Now seeing if we need to keep going. {packRec['status']}"
+    )
 
     # If the packet is not done and we forward, forward. Basically, a switch/hub
-    if (packRec["status"] != "done" or packet.isBroadcastMAC(packRec.get("destMAC"))) and forwardsPackets(thisDevice):
+    if (
+        packRec["status"] != "done" or packet.isBroadcastMAC(packRec.get("destMAC"))
+    ) and forwardsPackets(thisDevice):
         logging.debug("About to forward packet out switch")
         packRec["status"] = "good"
         send_out_hubswitch(thisDevice, packRec, nicRec)
@@ -1125,12 +1137,12 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
     # if the packet is not done and we route, route
     if packRec["status"] != "done" and routesPackets(thisDevice):
         # print("routing")
-        if (not packet.isBroadcastMAC(packRec.get("destMAC"))):
-            #we do not route broadcast packets
+        if not packet.isBroadcastMAC(packRec.get("destMAC")):
+            # we do not route broadcast packets
             sendPacketOutDevice(packRec, thisDevice)
         else:
-            #if it is a broadcast, the packet stops here.
-            packRec['status'] = "done"
+            # if it is a broadcast, the packet stops here.
+            packRec["status"] = "done"
         return
     # If we get here, we might have forwarded.  If so, we mark the old packet as done.
     packRec["status"] = "done"
@@ -1338,7 +1350,7 @@ def packetFromTo(src, dest):
         dest:dstDevice (also works with a hostname)
     """
     # src should be a device, not just a name.  Sanity check.
-    #logging.debug(f"starting a packet from {src} to {dest}")
+    # logging.debug(f"starting a packet from {src} to {dest}")
     if "hostname" not in src:
         # The function is being improperly used. Can we fix it?
         newsrc = session.puzzle.device_from_name(src)
@@ -1379,9 +1391,9 @@ def packetFromTo(src, dest):
         logging.info(f"Error: Not a valid target: {dest}")
         session.print(f"Not a valid target {dest}")
         return None
-    if(isinstance(dest,str)): #It is a string of an IP.  We should try it.
+    if isinstance(dest, str):  # It is a string of an IP.  We should try it.
         dest = ipaddress.IPv4Address(dest)
-    #logging.debug(f"We are about to make a packet: {dest} {type(dest)}")
+    # logging.debug(f"We are about to make a packet: {dest} {type(dest)}")
     if isinstance(dest, ipaddress.IPv4Address):
         # This is what we are hoping for.
         nPacket = packet.newPacket()  # make an empty packet
@@ -1394,7 +1406,9 @@ def packetFromTo(src, dest):
         nPacket["destMAC"] = globalArpLookup(dest)
         if ip_is_broadcast_for_device(src, dest):
             logging.debug("It is a broadcast, using broadcast MAC")
-            nPacket["destMAC"] = packet.BroadcastMAC() #it is a broadcast, use the broadcast MAC
+            nPacket["destMAC"] = (
+                packet.BroadcastMAC()
+            )  # it is a broadcast, use the broadcast MAC
         nPacket["packettype"] = ""
         return nPacket
 
