@@ -990,22 +990,31 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
 
         # ping, send ping packet back
         if packRec["packettype"] == "ping":
-            # logging.debug(f"Returning packet: {packRec}")
+            #logging.debug(f"Returning packet: {packRec}")
             # logging.debug(f"Returning packet: {packRec['sourceIP']} - {packet.justIP(str(packRec["sourceIP"]))}")
             dest = deviceFromIP(packet.justIP(str(packRec["sourceIP"])))
-            # logging.info(f"A ping came.  Making a return packet going to {dest}")
+            #logging.info(f"A ping came.  Making a return packet going to {dest}")
             # print (packet.justIP(str(packRec['sourceIP'])))
             # print(dest)
             # we need to generate a ping response
             nPacket = packetFromTo(thisDevice, dest)
+            #logging.debug(f"Created new packet : {dest}")
             if nPacket is None:
                 return False
+            #logging.debug("new packet was not None")
             nPacket["packettype"] = "ping-response"
             sendPacketOutDevice(nPacket, thisDevice)
+            #logging.debug("new packet sent out of device")
             # print (nPacket)
             packet.addPacketToPacketlist(nPacket)
-            packRec["status"] = "done"
-            return True
+            #if we are a hub/switch, do not end broadcast pings here; pass them on
+            if  ( not forwardsPackets(thisDevice) and not packet.isBroadcastMAC(packRec.get("destMAC"))):
+                logging.debug("decided packet is finished.  Marking it done")
+                packRec["status"] = "done"
+                return True
+            else:
+                #we continue.  This packet is not stopping here.
+                packRec['status'] = "good"
 
         # ping response, mark it as done
         if packRec["packettype"] == "ping-response":
@@ -1087,14 +1096,22 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                     )
             return True
 
+    logging.debug(f"We made it through.  Now seeing if we need to keep going. {packRec["status"]}")
+
     # If the packet is not done and we forward, forward. Basically, a switch/hub
     if packRec["status"] != "done" and forwardsPackets(thisDevice):
+        logging.debug("About to forward packet out switch")
         send_out_hubswitch(thisDevice, packRec, nicRec)
         return
     # if the packet is not done and we route, route
     if packRec["status"] != "done" and routesPackets(thisDevice):
         # print("routing")
-        sendPacketOutDevice(packRec, thisDevice)
+        if (not packet.isBroadcastMAC(packRec.get("destMAC"))):
+            #we do not route broadcast packets
+            sendPacketOutDevice(packRec, thisDevice)
+        else:
+            #if it is a broadcast, the packet stops here.
+            packRec['status'] = "done"
         return
     # If we get here, we might have forwarded.  If so, we mark the old packet as done.
     packRec["status"] = "done"
