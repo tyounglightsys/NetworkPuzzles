@@ -21,7 +21,6 @@ from kivy.app import App
 from kivy.base import ExceptionHandler, ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.textinput import TextInput
 
 from .. import messages, nettests
@@ -289,7 +288,7 @@ class NetworkPuzzlesApp(App):
         """Remove widget from layout by widget or item JSON data."""
         # TODO: Add parser command to also remove widget from puzzle JSON.
         widget = None
-        if isinstance(item, Link) or isinstance(item, GuiDevice):
+        if isinstance(item, GuiLink) or isinstance(item, GuiDevice):
             widget = item
         elif isinstance(item, dict):
             widget = self.get_widget_by_hostname(item.get("hostname"))

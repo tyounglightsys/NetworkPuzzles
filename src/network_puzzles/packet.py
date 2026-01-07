@@ -1,10 +1,11 @@
-import time
 import ipaddress
-import re
 import logging
+import re
+import time
 
-from . import session
-from . import device
+from . import device, session
+
+# TODO: Create Packet class & subclass it in GUI.
 
 
 def getPacketLocation(packetrec):
@@ -285,6 +286,7 @@ def justIP(ip):
     ip = re.sub("/.*", "", ip)
     return ip
 
+
 def get_ip_range(start_ip, end_ip):
     """
     Generates a list of IP addresses between a start and end IP address (inclusive).
@@ -307,6 +309,7 @@ def get_ip_range(start_ip, end_ip):
         current_ip += 1
     return ip_list
 
+
 def isLocal(packetIP: str, interfaceIP: str):
     """Determine if the packet IP is considered local by the subnet/netmask on the interface IP
     Args:
@@ -322,6 +325,7 @@ def isLocal(packetIP: str, interfaceIP: str):
     except ValueError:
         # Handle invalid IP address or subnet format
         return False
+
 
 def isBroadcast(packetIP: str, interfaceIP: str):
     """Determine if the packet IP is considered broadcast by the subnet/netmask on the interface IP
@@ -340,6 +344,7 @@ def isBroadcast(packetIP: str, interfaceIP: str):
         # Handle invalid IP address or subnet format
         return False
 
+
 def BroadcastMAC():
     """ "return the broadcast MAC address: FFFFFFFFFFFF"""
     return "FFFFFFFFFFFF"
@@ -357,16 +362,15 @@ def isBroadcastMAC(macToCheck: str):
 
 
 def isEmpty(iptocheck: str):
-    #logging.debug(f"Checking if empty: {iptocheck} type of variable {type(iptocheck)}")
+    # logging.debug(f"Checking if empty: {iptocheck} type of variable {type(iptocheck)}")
     if isinstance(iptocheck, str) and justIP(iptocheck) == "0.0.0.0":
         logging.debug("  Is empty")
         return True
-    if isinstance(iptocheck,ipaddress.IPv4Address ) and (
-        iptocheck == ipaddress.IPv4Interface('0.0.0.0/0') 
-        or iptocheck == ipaddress.IPv4Address('0.0.0.0')
-        ):
-        #logging.debug("  Is empty")
+    if isinstance(iptocheck, ipaddress.IPv4Address) and (
+        iptocheck == ipaddress.IPv4Interface("0.0.0.0/0")
+        or iptocheck == ipaddress.IPv4Address("0.0.0.0")
+    ):
+        # logging.debug("  Is empty")
         return True
-    #logging.debug("  Not empty")
+    # logging.debug("  Not empty")
     return False
-
