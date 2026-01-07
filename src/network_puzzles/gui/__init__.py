@@ -40,7 +40,7 @@ from .base import (
 )
 from .buttons import MenuButton
 from .devices import ChooseNicPopup, GuiDevice
-from .links import Link
+from .links import GuiLink
 from .packets import PacketManager
 from .popups import (
     CommandPopup,
@@ -153,16 +153,16 @@ class NetworkPuzzlesApp(App):
         # Ensure new item menus are closed.
         self.root.ids.layout.close_trays()
 
-        if not isinstance(linkw, Link):
+        if not isinstance(linkw, GuiLink):
             if isinstance(linkw, dict):
-                linkw = Link(linkw)
+                linkw = GuiLink(linkrec=linkw)
             elif isinstance(linkw, MenuButton):
                 # Initiate new link creation sequence.
                 Clock.schedule_once(self._new_link)
                 return
 
         # Hide liks connected to invisible devices.
-        for host in (linkw.base.src, linkw.base.dest):
+        for host in (linkw.src, linkw.dest):
             w = self.get_widget_by_hostname(host)
             if w.is_invisible:
                 linkw.hide()
@@ -183,7 +183,7 @@ class NetworkPuzzlesApp(App):
         for link in self.ui.puzzle.links:
             if link is None:
                 continue
-            self.add_link(Link(link))
+            self.add_link(GuiLink(linkrec=link))
         self._print_stats()
 
     def draw_puzzle(self, *args):
@@ -412,7 +412,7 @@ class NetworkPuzzlesApp(App):
         # NOTE: Invariant emblems don't get removed.
         for c in self.root.ids.layout.children:
             if isinstance(c, HelpHighlight):
-                # print(f"Removing highlight for {c.base.hostname}")
+                # print(f"Removing highlight for {c.hostname}")
                 self.root.ids.layout.remove_widget(c)
         # Add any required highlights.
         if help_level > 0:
