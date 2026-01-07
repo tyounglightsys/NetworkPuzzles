@@ -397,7 +397,7 @@ class EditDevicePopup(ActionPopup):
         super().on_okay()
 
     def _add_conditional_widgets(self):
-        if self.device.type in ["server"]:
+        if self.device.mytype in ["server"]:
             # Handle DHCP checkbox, label, and button.
             l_cb = SingleRowLayout(
                 padding=0,
@@ -412,7 +412,7 @@ class EditDevicePopup(ActionPopup):
             for w in [c, t, b]:
                 l_cb.add_widget(w)
             self.root.ids.left_panel.add_widget(l_cb)
-        if self.device.type in ["router", "switch"]:
+        if self.device.mytype in ["router", "switch"]:
             # Handle VLANs button.
             b = ThemedButton(text=f"{_('VLANs')}", on_release=self.on_vlans)
             self.root.ids.left_panel.add_widget(b)

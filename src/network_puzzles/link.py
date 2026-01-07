@@ -4,20 +4,28 @@ class Link:
 
     @property
     def dest(self):
-        return self.json.get("DstNic").get("hostname")
+        return self.json.get("DstNic").get("hostname", "")
+
+    @property
+    def dest_nic(self):
+        return self.json.get("DstNic", "")
 
     @property
     def hostname(self):
-        return self.json.get("hostname")
+        return self.json.get("hostname", "")
 
     @property
     def linktype(self):
-        return self.json.get("linktype")
+        return self.json.get("linktype", "")
 
     @property
     def src(self):
-        return self.json.get("SrcNic").get("hostname")
+        return self.json.get("SrcNic").get("hostname", "")
+
+    @property
+    def src_nic(self):
+        return self.json.get("SrcNic", "")
 
     @property
     def uniqueidentifier(self):
-        return self.json.get("uniqueidentifier")
+        return self.json.get("uniqueidentifier", "")

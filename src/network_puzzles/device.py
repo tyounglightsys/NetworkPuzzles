@@ -28,9 +28,8 @@ class Device:
             self.json = {}
 
     @property
-    def gateway(self):
-        if self.json.get("gateway") and self.json.get("gateway").get("type") == "gw":
-            return self.json.get("gateway").get("ip")
+    def gateway(self) -> str:
+        return self.json.get("gateway").get("ip", "")
 
     @gateway.setter
     def gateway(self, ip):
@@ -44,20 +43,20 @@ class Device:
         self.json["gateway"]["ip"] = ip
 
     @property
-    def hostname(self):
-        return self.json.get("hostname")
+    def hostname(self) -> str:
+        return self.json.get("hostname", "")
 
     @hostname.setter
     def hostname(self, name):
         self.json["hostname"] = name
 
     @property
-    def is_dhcp(self):
+    def is_dhcp(self) -> bool:
         if self.json.get("isdhcp", "").lower() in ("true", "yes"):
             value = True
         else:
             value = False
-        logging.debug(f"{self.hostname}.is_dhcp {value=}")
+        # logging.debug(f"{self.hostname}.is_dhcp {value=}")
         return value
 
     @is_dhcp.setter
@@ -67,7 +66,7 @@ class Device:
         self.json["isdhcp"] = value
 
     @property
-    def is_invisible(self):
+    def is_invisible(self) -> bool:
         if self.json.get("isinvisible", "").lower() in ("true", "yes"):
             # The device is hidden.
             value = True
@@ -83,7 +82,7 @@ class Device:
         self.json["isinvisible"] = value
 
     @property
-    def location(self):
+    def location(self) -> tuple:
         loc = self.json.get("location")
         if loc:
             location = loc.split(",")
@@ -92,11 +91,11 @@ class Device:
         raise ValueError(f"Invalid JSON location data for '{self.hostname}'")
 
     @property
-    def mytype(self):
-        return self.json.get("mytype")
+    def mytype(self) -> str:
+        return self.json.get("mytype", "")
 
     @property
-    def powered_on(self):
+    def powered_on(self) -> bool:
         if self.json.get("poweroff", "").lower() in ("true", "yes"):
             value = False
         else:
@@ -111,7 +110,7 @@ class Device:
         self.json["poweroff"] = value
 
     @property
-    def blown_up(self):
+    def blown_up(self) -> bool:
         value = False
         if "blownup" in self.json:
             if self.json.get("blownup", "").lower() in ("true", "yes"):
@@ -119,7 +118,6 @@ class Device:
             else:
                 value = False
             # logging.debug(f"{self.hostname}.powered_on: {value}")
-        # session.print(f"Checking blown up state of {self.hostname} and found it to be {value}")
         return value
 
     @blown_up.setter
@@ -135,14 +133,10 @@ class Device:
             self.powered_on = True  # when it blows up, the power gets turned off
 
     @property
-    def type(self):
-        return self.json.get("mytype")
+    def uniqueidentifier(self) -> str:
+        return self.json.get("uniqueidentifier", "")
 
-    @property
-    def uniqueidentifier(self):
-        return self.json.get("uniqueidentifier")
-
-    def all_nics(self):
+    def all_nics(self) -> list:
         if not isinstance(self.json.get("nic"), list):
             self.json["nic"] = [self.json["nic"]]
         return self.json.get("nic")
