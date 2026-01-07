@@ -39,7 +39,7 @@ from .base import (
     show_grid,  # noqa: F401
 )
 from .buttons import MenuButton
-from .devices import ChooseNicPopup, Device
+from .devices import ChooseNicPopup, GuiDevice
 from .links import Link
 from .packets import PacketManager
 from .popups import (
@@ -110,7 +110,7 @@ class NetworkPuzzlesApp(App):
 
     @property
     def devices(self):
-        return self._get_widgets_by_class_name("Device")
+        return self._get_widgets_by_class_name("GuiDevice")
 
     @property
     def links(self):
@@ -130,9 +130,9 @@ class NetworkPuzzlesApp(App):
         self.root.ids.layout.close_trays()
         # TODO: If device_inst not given, require user to choose device type
         # on the screen to instantiate a new device.
-        if not isinstance(devicew, Device):
+        if not isinstance(devicew, GuiDevice):
             if isinstance(devicew, dict):
-                devicew = Device(devicew)
+                devicew = GuiDevice(value=devicew)
             elif isinstance(devicew, MenuButton):
                 # Initiate new device creation sequence.
                 self._new_device_type = dtype
@@ -140,10 +140,13 @@ class NetworkPuzzlesApp(App):
                 return
 
         # Hide invisible devices.
-        if devicew.base.is_invisible:
+        if devicew.is_invisible:
             devicew.hide()
 
         # Add device to layout.
+        for attr in sorted(devicew.__dir__()):
+            if not attr.startswith("__"):
+                print(f"{attr} = {getattr(devicew, attr)}")
         self.root.ids.layout.add_widget(devicew)
 
     def add_link(self, linkw=None):
@@ -161,7 +164,7 @@ class NetworkPuzzlesApp(App):
         # Hide liks connected to invisible devices.
         for host in (linkw.base.src, linkw.base.dest):
             w = self.get_widget_by_hostname(host)
-            if w.base.is_invisible:
+            if w.is_invisible:
                 linkw.hide()
 
         # Add link to z-index = 99 to ensure it's drawn under devices.
@@ -174,7 +177,7 @@ class NetworkPuzzlesApp(App):
 
     def draw_devices(self, *args):
         for dev in self.ui.puzzle.devices:
-            self.add_device(Device(dev))
+            self.add_device(GuiDevice(value=dev))
 
     def draw_links(self, *args):
         for link in self.ui.puzzle.links:
@@ -286,7 +289,7 @@ class NetworkPuzzlesApp(App):
         """Remove widget from layout by widget or item JSON data."""
         # TODO: Add parser command to also remove widget from puzzle JSON.
         widget = None
-        if isinstance(item, Link) or isinstance(item, Device):
+        if isinstance(item, Link) or isinstance(item, GuiDevice):
             widget = item
         elif isinstance(item, dict):
             widget = self.get_widget_by_hostname(item.get("hostname"))
@@ -427,7 +430,7 @@ class NetworkPuzzlesApp(App):
                     logging.info(f'App: Ignoring highlight of non-device "{n}"')
                     continue
                 w = self.get_widget_by_hostname(n)
-                if isinstance(w, Device) and not w.base.is_invisible:
+                if isinstance(w, GuiDevice) and not w.is_invisible:
                     match t:
                         case "LockAll":
                             # Ignore. Used for fluorescent light in packet

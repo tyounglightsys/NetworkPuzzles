@@ -65,7 +65,7 @@ class EditDhcpPopup(ActionPopup):
         super().__init__(**kwargs)
         self.dhcp_configs = [
             ip_data
-            for ip_data in self.device.base.json.get("dhcprange", list())
+            for ip_data in self.device.json.get("dhcprange", list())
             if ip_data.get("ip") != "127.0.0.1"
         ]
         self._add_dhcp_configs()

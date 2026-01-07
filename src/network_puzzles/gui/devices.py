@@ -9,7 +9,8 @@ from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 from kivy.uix.widget import Widget
 
-from .. import _, device, interface, nic, session
+from .. import _, interface, nic, session
+from ..device import Device
 from .base import (
     NETWORK_ITEMS,
     HelpHighlight,
@@ -33,18 +34,17 @@ from .popups import (
 )
 
 
-class Device(DragBehavior, ThemedBoxLayout):
-    def __init__(self, init_data=None, **kwargs):
-        self.base = device.Device(init_data)
+class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.help_text = None
         self.highlighting = None
         self.lock_icon = None
-        self.loc_init = self.base.location
+        self.loc_init = self.location
         self._location_locked = False
         # Set final attributes.
         self._set_image()
-        self.center = location_to_pos(self.base.location, self.app.root.ids.layout.size)
+        self.center = location_to_pos(self.location, self.app.root.ids.layout.size)
         # Updates that rely on Device's pos already being set.
         Clock.schedule_once(self.set_power_status)
 
@@ -57,21 +57,6 @@ class Device(DragBehavior, ThemedBoxLayout):
         for c in self.children:
             if c.__class__.__name__ == "DeviceButton":
                 return c
-
-    @property
-    def gateway(self):
-        if hasattr(self, "base") and self.base:
-            return self.base.gateway
-
-    @property
-    def hostname(self):
-        if hasattr(self, "base") and self.base:
-            return self.base.hostname
-
-    @property
-    def is_dhcp(self):
-        if hasattr(self, "base") and self.base:
-            return self.base.is_dhcp
 
     @property
     def links(self):
@@ -93,20 +78,7 @@ class Device(DragBehavior, ThemedBoxLayout):
 
     @property
     def nics(self):
-        if hasattr(self, "base") and self.base:
-            return [nic.Nic(n) for n in self.base.all_nics()]
-        else:
-            return list()
-
-    @property
-    def type(self):
-        if hasattr(self, "base") and self.base:
-            return self.base.type
-
-    @property
-    def uniqueidentifier(self):
-        if hasattr(self, "base") and self.base:
-            return self.base.uniqueidentifier
+        return [nic.Nic(n) for n in self.all_nics()]
 
     def callback(self, cmd_string):
         self.app.ui.parse(cmd_string)
@@ -146,7 +118,7 @@ class Device(DragBehavior, ThemedBoxLayout):
 
     def hide(self, do_hide=True):
         # Ensure base object state matches GUI object state.
-        self.base.is_invisible = do_hide
+        self.is_invisible = do_hide
         if do_hide:
             logging.debug(f"Devices: Hide {self.hostname} & dependent items.")
             # Hide any help highlight.
@@ -198,10 +170,10 @@ class Device(DragBehavior, ThemedBoxLayout):
         self._build_commands_popup().open()
 
     def set_power_status(self, *args):
-        if self.base.powered_on:
+        if self.powered_on:
             self.canvas.after.clear()
         else:
-            if self.base.blown_up:
+            if self.blown_up:
                 smoke = Image(
                     source=str(self.app.IMAGES / "BurnMark.png"),
                     allow_stretch=True,
@@ -244,7 +216,7 @@ class Device(DragBehavior, ThemedBoxLayout):
         # Build commands list (might change if state changes).
         commands = [_("Ping [host]")]
         commands.extend(session.puzzle.commands_from_tests(self.hostname))
-        commands.extend(self.base.get_nontest_commands())
+        commands.extend(self.get_nontest_commands())
         commands.append(_("Edit"))
 
         # Setup the content.
@@ -262,7 +234,7 @@ class Device(DragBehavior, ThemedBoxLayout):
         content.size_hint_y = None
         content.height = get_layout_height(content)
         # Setup the Popup.
-        popup = DeviceCommandsPopup(content=content, title=self.base.hostname)
+        popup = DeviceCommandsPopup(content=content, title=self.hostname)
         rootgrid = popup.children[0]
         box = rootgrid.children[0]
         grid = box.children[0]
@@ -294,9 +266,9 @@ class Device(DragBehavior, ThemedBoxLayout):
         devices = NETWORK_ITEMS.get("devices").get("user") | NETWORK_ITEMS.get(
             "devices"
         ).get("infrastructure")
-        img = devices.get(self.base.json.get("mytype")).get("img")
+        img = devices.get(self.mytype).get("img")
         if img is None:
-            raise TypeError(f"Unhandled device type: {self.base.json.get('mytype')}")
+            raise TypeError(f"Unhandled device type: {self.mytype}")
         self.button.background_normal = str(self.app.IMAGES / img)
 
     def _post_move(self, *args):
@@ -309,7 +281,7 @@ class EditDevicePopup(ActionPopup):
     def __init__(self, dev, **kwargs):
         # Use copy of data for displaying in UI b/c real changes will be
         # applied via parser commands when "Okay" is clicked.
-        self.device = Device(deepcopy(dev.base.json))
+        self.device = GuiDevice(value=deepcopy(dev.json))
         super().__init__(**kwargs)
         self.selected_ip = None
         self._selected_nic = None
@@ -408,7 +380,9 @@ class EditDevicePopup(ActionPopup):
         # Replace NIC.
         self.app.ui.parse(f"replace {self.device.hostname} {self.selected_nic}")
         # Update device with new data.
-        self.device = Device(deepcopy(self.app.ui.get_device(self.device.hostname)))
+        self.device = GuiDevice(
+            value=deepcopy(self.app.ui.get_device(self.device.hostname))
+        )
         # Update NIC list.
         self.ids.nics_list.update_data(self.device.nics, management=True)
 

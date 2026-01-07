@@ -92,6 +92,10 @@ class Device:
         raise ValueError(f"Invalid JSON location data for '{self.hostname}'")
 
     @property
+    def mytype(self):
+        return self.json.get("mytype")
+
+    @property
     def powered_on(self):
         if self.json.get("poweroff", "").lower() in ("true", "yes"):
             value = False
