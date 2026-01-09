@@ -231,6 +231,15 @@ class Device:
     
     #firewall pieces
     @property
+    def CanDoFirewall(self):
+        #If it does not exist at all
+        if self.type == "firewall":
+            return True
+        if self.type == "wrouter":
+            return True
+        return False
+
+    @property
     def HasAdvancedFirewall(self):
         #If it does not exist at all
         if 'firewallrule' not in self.json:
