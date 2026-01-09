@@ -228,7 +228,39 @@ class Device:
                 if oneinterface.get("nicname") == interfacename:
                     return oneinterface
         return None
+    
+    #firewall pieces
+    @property
+    def HasAdvancedFirewall(self):
+        #If it does not exist at all
+        if 'firewallrule' not in self.json:
+            return False
+        if (len(self.json.get('firewallrule') == 0)):
+            return False
+        return True
+    
+    def AllFirewallRules(self):
+        if (not self.HasAdvancedFirewall):
+            #it is an empty list
+            return []
+        if not isinstance(self.json.get('firewallrule'), list):
+            #make sure it is a list.
+            self.json['firewallrule'] = [self.json.get('firewallrule')]
+        return self.json['firewallrule']
+    
+    def AdvFirewallAllows(self,InInterface: str, OutInterface: str):
+        if (not self.HasAdvancedFirewall):
+            return True #We can go out the firewall if no rules
+        for onerule in self.AllFirewallRules():
+            if onerule.get('source') == InInterface and onerule.get('sestination') == OutInterface:
+                if onerule.get('action') == "Drop" or onerule.get('action') == "drop":
+                    return False
+                if onerule.get('action') == "Allow" or onerule.get('action') == "allow":
+                    return True
+        #If no rules prohibit it, allow it.  Default policy
+        return True
 
+    # Generic functions
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict | None:
         # Returns first match; i.e. assumes only one item in list matches given
         # attribute. It also assumes that 'items' is a list of dicts or json data.
