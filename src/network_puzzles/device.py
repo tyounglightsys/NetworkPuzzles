@@ -235,7 +235,7 @@ class Device:
         #If it does not exist at all
         if 'firewallrule' not in self.json:
             return False
-        if (len(self.json.get('firewallrule') == 0)):
+        if (len(self.json.get('firewallrule')) == 0):
             return False
         return True
     
@@ -819,7 +819,9 @@ def findLocalNICInterface(targetIPstring: str, networkCardRec):
             networkCardRec["interface"]
         ]  # turn it into a list if needed.
     for oneIF in networkCardRec["interface"]:
+        #logging.debug(f"Looking for local interface.  Comparing: {targetIPstring} {interfaceIP(oneIF)}")
         if packet.isLocal(targetIPstring, interfaceIP(oneIF)):
+            #logging.debug(f"   Found it: {oneIF}")
             return oneIF
     return None
 
@@ -832,8 +834,13 @@ def findPrimaryNICInterface(networkCardRec):
 
 
 def doInputFromLink(packRec, nicRec):
+    #zero these out.  We will set them below
+    packRec['inhost'] = ""
+    packRec['ininterface'] = ""
     # figure out what device belongs to the nic
     thisDevice = session.puzzle.device_from_uid(nicRec["myid"]["hostid"])
+    if thisDevice is not None:
+        packRec['inhost'] = Device(thisDevice).hostname
 
     # Do the simple stuff
     if powerOff(thisDevice):
@@ -856,10 +863,18 @@ def doInputFromLink(packRec, nicRec):
     # the interface still might be none if we are a switch/hub port
     # Verify the interface.  This is mainly to work with SSIDs, VLANs, VPNs, etc.
     if tInterface is not None:
+        #we track where it came in on.  We do it it here to track vlan info too.
+        if isinstance(tInterface, str):
+            packRec['ininterface'] = tInterface
+        else:
+            packRec['ininterface'] = tInterface.get('nicname')
+
         beginIngressOnInterface(packRec, tInterface)
 
     # the packet status should show dropped or something if we have a problem.
     # but for now, pass it onto the NIC
+    #logging.debug(f"We are routing.  Here is the packet: {packRec}")
+    #logging.debug(f"We are routing.  Here is the nic: {nicRec}")
     return beginIngressOnNIC(packRec, nicRec)
     # The NIC passes it onto the device if needed.  We are done with this.
 
@@ -1304,6 +1319,7 @@ def sendPacketOutDevice(packRec, theDevice):
         logging.debug("Found a route rec.")
         routeRec["nic"] = Nic(routeRec["nic"]).ensure_mac()
         packRec["sourceMAC"] = routeRec["nic"]["Mac"]
+        packRec['tdestIP'] = routeRec.get('gateway') #track when we use a gateway
         # set the destination MAC to be the GW MAC if the destination is not local
         # this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
         if (
@@ -1332,7 +1348,14 @@ def sendPacketOutDevice(packRec, theDevice):
             packRec["packetDirection"] = 1  # Src to Dest
         else:
             packRec["packetDirection"] = 2  # Dest to Source
-        return True
+        #If we get here, we know which interface the packet is going out of.
+        #logging.debug(f"Came in from: {packRec.get('inhost')}-{packRec.get('ininterface')} Going Out: {theDevice["hostname"]}-{routeRec.get('interface').get('nicname')}")
+        if Device(theDevice).AdvFirewallAllows(packRec.get('ininterface'),routeRec.get('interface').get('nicname')):
+            return True
+        else:
+            logging.debug(f"Packet dropped by firewall: {packRec.get('inhost')} {packRec.get('ininterface')}-{routeRec.get('interface').get('nicname')}")
+            packRec['status'] = "done"
+            return False
     # If we get here, it did not work.  No route to host.
     # right now, we blow up.  We need to deal with this with a bit more grace.  Passing the error back to the user
     packRec["status"] = "failed"
