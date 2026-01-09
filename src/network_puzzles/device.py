@@ -251,8 +251,10 @@ class Device:
     def AdvFirewallAllows(self,InInterface: str, OutInterface: str):
         if (not self.HasAdvancedFirewall):
             return True #We can go out the firewall if no rules
+        logging.debug("Testing firewall rule. in {InInterface} - out {OutInterface}")
         for onerule in self.AllFirewallRules():
-            if onerule.get('source') == InInterface and onerule.get('sestination') == OutInterface:
+            if onerule.get('source') == InInterface and onerule.get('destination') == OutInterface:
+                logging.debug("Found match.")
                 if onerule.get('action') == "Drop" or onerule.get('action') == "drop":
                     return False
                 if onerule.get('action') == "Allow" or onerule.get('action') == "allow":
@@ -1349,11 +1351,16 @@ def sendPacketOutDevice(packRec, theDevice):
         else:
             packRec["packetDirection"] = 2  # Dest to Source
         #If we get here, we know which interface the packet is going out of.
-        #logging.debug(f"Came in from: {packRec.get('inhost')}-{packRec.get('ininterface')} Going Out: {theDevice["hostname"]}-{routeRec.get('interface').get('nicname')}")
+        #If we are an originating packet, check firewall.  A reply gets allowed.
+        if packRec.get("packettype") == "traceroute-response" or packRec["packettype"] == "ping-response":
+            return True
+        
+        #This works for originating packets
         if Device(theDevice).AdvFirewallAllows(packRec.get('ininterface'),routeRec.get('interface').get('nicname')):
             return True
         else:
             logging.debug(f"Packet dropped by firewall: {packRec.get('inhost')} {packRec.get('ininterface')}-{routeRec.get('interface').get('nicname')}")
+            session.print("Packet dropped by firewall")
             packRec['status'] = "done"
             return False
     # If we get here, it did not work.  No route to host.
