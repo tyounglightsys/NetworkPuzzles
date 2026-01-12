@@ -293,7 +293,7 @@ class Device:
         #if we have a rule with the same src/dest/targer, we drop it
         #if not, we return "false"
         for onerule in self.AllFirewallRules():
-            if onerule.get('source') == InInterface and onerule.get('destination') == OutInterface and onerule.get('action') == dropallow:
+            if onerule.get('source') == InInterface and onerule.get('destination') == OutInterface and onerule.get('action').lower() == dropallow.lower():
                 self.json['firewallrule'].remove(onerule)
                 return True
         #If we get here, nothing yet matched.  Add a new record

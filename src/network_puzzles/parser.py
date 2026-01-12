@@ -466,6 +466,11 @@ class Parser:
                 session.print(f"gateway: {thedevice['gateway']['ip']}")
                 for onestring in device.allIPStrings(thedevice, True, True):
                     session.print(onestring)
+                d_thedevice = device.Device(thedevice)
+                if len(d_thedevice.AllFirewallRules()) > 0:
+                    session.print('Firewall Rules:')
+                    for onerule in d_thedevice.AllFirewallRules():
+                        session.print(f"  {onerule.get('source')} - {onerule.get('destination')} -> {onerule.get('action')}")
                 return
             thedevice = session.puzzle.link_from_name(args[0])
             if thedevice is not None:
