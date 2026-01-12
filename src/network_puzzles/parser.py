@@ -91,6 +91,8 @@ class Parser:
                     return self.do_dhcp(args)
                 case "exit" | "quit" | "stop":
                     self.exit_app()
+                case "firewall" | "fw":
+                    return self.process_firewall(args)
                 case "ping":
                     return self.run_ping(args)
                 case "replace":
@@ -264,6 +266,9 @@ class Parser:
         session.print(
             "dhcp [item] - have that device do a DHCP or all devices do a DHCP request"
         )
+        session.print(
+            "firewall device add|del in-interface out-interface drop|allow - Add or remove a firewall rule.  example: firewall pc0 add eth0 eth1 drop"
+        )
         session.print("help - show this page")
         session.print("history - see the commands you typed this session")
         session.print("load - load a puzzle.  Example: load 1 | load Level0_Ping")
@@ -390,6 +395,42 @@ class Parser:
         # check to see if we are able to delete.  Is it locked?
         # We will need to check for that later after the tests are done.
         return session.puzzle.deleteItem(args[0])
+    
+    def process_firewall(self, args):
+        if len(args) != 5:
+            session.print("invalid firewall command: usage: firewall device add|del in-interface out-interface drop|allow")
+            session.print(" example: firewall wrouter0 add eth0:1 eth1 drop")
+            session.print(" example: firewall wrouter0 remove eth0:1 eth1 drop")
+            return False
+        logging.debug(f"parser.Parser.process_firewall({args[0]})")
+        target_device = session.puzzle.device_from_name(args[0])
+        if target_device is None:
+            session.print(f"Cannot process firewall instruction: No such device {args[0]}")
+            return False
+        d_target_device = device.Device(target_device)
+        if not d_target_device.CanDoFirewall:
+            session.print(f"invalid device: {args[0]} not allowed to have a firewall")
+            return False
+        if args[1] not in [ "add", "del", "remove" ]:
+            session.print(f"invalid firewall command: {args[1]}  Only add/delete/remove allowed")
+            return False
+        ininterface = d_target_device.interface_from_name(args[2])
+        if ininterface is None:
+            session.print(f"invalid interface: {args[2]}")
+            return False
+        outinterface = d_target_device.interface_from_name(args[3])
+        if outinterface is None:
+            session.print(f"invalid interface: {args[3]}")
+            return False
+        if args[4] not in [ "drop", "allow" ]:
+            session.print(f"invalid firewall command: {args[4]}  Only allow/drop")
+            return False
+        #if we get here, we have a valid command.  Determine if we are removing an existing rule, or making a new one
+        if args[1] == "add":
+            d_target_device.AdvFirewallAdd(args[2],args[3],args[4])
+        else:
+            d_target_device.AdvFirewallDel(args[2],args[3],args[4])
+        
 
     def show_info(self, args):
         # list the hosts.  Or, show information about a specifici host

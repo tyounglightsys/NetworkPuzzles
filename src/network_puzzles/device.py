@@ -260,16 +260,45 @@ class Device:
     def AdvFirewallAllows(self,InInterface: str, OutInterface: str):
         if (not self.HasAdvancedFirewall):
             return True #We can go out the firewall if no rules
-        logging.debug("Testing firewall rule. in {InInterface} - out {OutInterface}")
+        #logging.debug("Testing firewall rule. in {InInterface} - out {OutInterface}")
         for onerule in self.AllFirewallRules():
             if onerule.get('source') == InInterface and onerule.get('destination') == OutInterface:
-                logging.debug("Found match.")
+                #logging.debug("Found match.")
                 if onerule.get('action') == "Drop" or onerule.get('action') == "drop":
                     return False
                 if onerule.get('action') == "Allow" or onerule.get('action') == "allow":
                     return True
         #If no rules prohibit it, allow it.  Default policy
         return True
+    
+    def AdvFirewallAdd(self, InInterface: str, OutInterface: str, dropallow: str):
+        logging.debug("Adding firewall rule. in {InInterface} - out {OutInterface} - {dropallow}")
+        #if we have a rule with the same src/dest, we replace the target
+        #if not, we add a new rule with the specified info
+        for onerule in self.AllFirewallRules():
+            if onerule.get('source') == InInterface and onerule.get('destination') == OutInterface:
+                onerule['action'] = dropallow
+                return True
+        #If we get here, nothing yet matched.  Add a new record
+        newfw = {
+            "source" : InInterface,
+            "destination" : OutInterface,
+            "action" : dropallow
+        } 
+        self.json['firewallrule'].append(newfw)
+        return True
+
+    def AdvFirewallDel(self, InInterface: str, OutInterface: str, dropallow: str):
+        logging.debug("Deleting firewall rule. in {InInterface} - out {OutInterface} - {dropallow}")
+        #if we have a rule with the same src/dest/targer, we drop it
+        #if not, we return "false"
+        for onerule in self.AllFirewallRules():
+            if onerule.get('source') == InInterface and onerule.get('destination') == OutInterface and onerule.get('action') == dropallow:
+                self.json['firewallrule'].remove(onerule)
+                return True
+        #If we get here, nothing yet matched.  Add a new record
+        return False
+
 
     # Generic functions
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict | None:
