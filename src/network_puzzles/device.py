@@ -277,7 +277,7 @@ class Device:
         #if not, we add a new rule with the specified info
         for onerule in self.AllFirewallRules():
             if onerule.get('source') == InInterface and onerule.get('destination') == OutInterface:
-                onerule['action'] = dropallow
+                onerule['action'] = dropallow.lower()
                 return True
         #If we get here, nothing yet matched.  Add a new record
         newfw = {

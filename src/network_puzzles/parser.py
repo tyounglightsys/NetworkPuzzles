@@ -411,7 +411,7 @@ class Parser:
         if not d_target_device.CanDoFirewall:
             session.print(f"invalid device: {args[0]} not allowed to have a firewall")
             return False
-        if args[1] not in [ "add", "del", "remove" ]:
+        if args[1].lower() not in [ "add", "del", "remove" ]:
             session.print(f"invalid firewall command: {args[1]}  Only add/delete/remove allowed")
             return False
         ininterface = d_target_device.interface_from_name(args[2])
@@ -422,11 +422,11 @@ class Parser:
         if outinterface is None:
             session.print(f"invalid interface: {args[3]}")
             return False
-        if args[4] not in [ "drop", "allow" ]:
+        if args[4].lower() not in [ "drop", "allow" ]:
             session.print(f"invalid firewall command: {args[4]}  Only allow/drop")
             return False
         #if we get here, we have a valid command.  Determine if we are removing an existing rule, or making a new one
-        if args[1] == "add":
+        if args[1].lower() == "add":
             d_target_device.AdvFirewallAdd(args[2],args[3],args[4])
         else:
             d_target_device.AdvFirewallDel(args[2],args[3],args[4])
