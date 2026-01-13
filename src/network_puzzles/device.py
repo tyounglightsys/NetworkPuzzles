@@ -1415,7 +1415,7 @@ def packetFromTo(src, dest):
         return nPacket
 
 
-def Ping(src, dest):
+def ping(src, dest):
     """Generate a ping packet, starting at the srcdevice and destined for the destination device
     Args:
         src:srcDevice (also works with a hostname)
