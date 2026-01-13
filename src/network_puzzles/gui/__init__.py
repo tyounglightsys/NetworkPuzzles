@@ -113,11 +113,11 @@ class NetworkPuzzlesApp(App):
 
     @property
     def links(self):
-        return self._get_widgets_by_class_name("Link")
+        return self._get_widgets_by_class_name("GuiLink")
 
     @property
     def packets(self):
-        return self._get_widgets_by_class_name("Packet")
+        return self._get_widgets_by_class_name("GuiPacket")
 
     def check_puzzle(self, *args):
         """Checked at regular interval during kivy app loop."""
@@ -143,9 +143,6 @@ class NetworkPuzzlesApp(App):
             devicew.hide()
 
         # Add device to layout.
-        for attr in sorted(devicew.__dir__()):
-            if not attr.startswith("__"):
-                print(f"{attr} = {getattr(devicew, attr)}")
         self.root.ids.layout.add_widget(devicew)
 
     def add_link(self, linkw=None):
@@ -221,9 +218,13 @@ class NetworkPuzzlesApp(App):
         Clock.schedule_once(self.draw_links)
 
     def get_first_link_index(self):
-        first_index = 999
+        first_index = None
         for w in self.links:
-            first_index = min([self.root.ids.layout.children.index(w), first_index])
+            idx = self.root.ids.layout.children.index(w)
+            if first_index is None:
+                first_index = idx
+            else:
+                first_index = min((idx, first_index))
         return first_index
 
     def get_widget_by_hostname(self, hostname):
