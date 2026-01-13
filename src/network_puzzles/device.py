@@ -133,6 +133,10 @@ class Device:
             self.powered_on = True  # when it blows up, the power gets turned off
 
     @property
+    def size(self):
+        return int(self.json.get("size"))
+
+    @property
     def uniqueidentifier(self) -> str:
         return self.json.get("uniqueidentifier", "")
 
