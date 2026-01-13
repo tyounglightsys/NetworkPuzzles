@@ -9,10 +9,15 @@ class Nic:
             raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
         self.json = nicrec
         # add the interfaces
-        if not isinstance(self.json.get("interface"), list):
-            self.json["interface"] = [
-                self.json["interface"]
-            ]  # make it a list so we can iterate it
+        if self.json.get("interface") and not isinstance(
+            self.json.get("interface"), list
+        ):
+            # make it a list so we can iterate it
+            self.json["interface"] = [self.json["interface"]]
+
+    @property
+    def hostid(self):
+        return self.myid.get("hostid", "")
 
     @property
     def interfaces(self):
@@ -52,13 +57,12 @@ class Nic:
     @property
     def uses_dhcp(self):
         return self.json.get("usesdhcp").lower() in ["true", "yes"]
-    
+
     @uses_dhcp.setter
     def uses_dhcp(self, value):
         if isinstance(value, bool):
             value = str(value)
         self.json["usesdhcp"] = value
-
 
     def ensure_mac(self, data=None):
         if data is not None:

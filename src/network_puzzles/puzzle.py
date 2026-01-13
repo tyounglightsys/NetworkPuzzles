@@ -581,8 +581,9 @@ class Puzzle:
             self.createNIC(newdevice, "wan")
         if device_type in {"server"}:
             self.createNIC(newdevice, "eth")
-            newdevice['isdhcp'] = "True" #servers can serve DHCP.  They may or may not have DHCP configured
-            device.Device(newdevice).disable_nic_dhcp()   
+            # Servers can serve DHCP.  They may or may not have DHCP configured
+            newdevice["isdhcp"] = "True"
+            device.Device(newdevice).disable_nic_dhcp()
         if device_type in {"cellphone", "tablet"}:
             self.createNIC(newdevice, "wlan")
         if device_type == "ip_phone":
