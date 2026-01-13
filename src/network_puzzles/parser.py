@@ -366,7 +366,7 @@ class Parser:
             return False
         # if we get here, we are ready to try to ping.
         session.print(f"TRACEROUTE: {args[0]} -> {args[1]}")
-        device.Traceroute(shost, dhost)
+        device.traceroute(shost, dhost)
         # FIXME: This only shows that the ping command was successfully
         # initiated, not that it was itself successful.
         return True

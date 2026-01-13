@@ -1099,8 +1099,8 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                 print(
                     f"Making new traceroute from {sdev['hostname']} to {ddev['hostname']} with TTL {packRec['payload']['origTTL'] + 1}"
                 )
-                if packRec["payload"]["origTTL"] + 1 < 10:
-                    Traceroute(sdev, ddev, packRec["payload"]["origTTL"] + 1)
+                if packRec.payload.get("origTTL") + 1 < 10:
+                    traceroute(sdev, ddev, packRec.payload.get("origTTL") + 1)
             else:
                 pingsrcip = packet.justIP(packRec.get("destIP"))
                 srcip = pingdestip = packet.justIP(packRec.get("sourceIP"))
@@ -1430,7 +1430,7 @@ def Ping(src, dest):
         packet.addPacketToPacketlist(nPacket)
 
 
-def Traceroute(src, dest, newTTL=1):
+def traceroute(src, dest, newTTL=1):
     """Generate a traceroute packet, starting at the srcdevice and destined for the destination device
     Args:
         src:srcDevice (also works with a hostname)
