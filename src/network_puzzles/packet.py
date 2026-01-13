@@ -4,47 +4,211 @@ import re
 import time
 
 from . import device, session
+from .link import Link
+from .nic import Nic
 
-# TODO: Create Packet class & subclass it in GUI.
 
+class Packet:
+    def __init__(self, json_data={}):
+        if json_data is None:
+            json_data = {}
+        self.json = json_data
+        self.damage_count = 0
+        self.health_init = self.health
 
-def getPacketLocation(packetrec):
-    """
-    Return the x/y location of a paket.
-    Args: packetrec - a valid packet structure.
-    returns: an {x,y} structure showing the center-point of the packet or None
-    """
-    if packetrec is None or "packetlocation" not in packetrec:
-        return None
-    # packets are only displayed when they are on links.
-    thelink = session.puzzle.link_from_name(packetrec["packetlocation"])
-    if thelink is None:
-        return None  # We could not find the link
-    # if we get here, we have the link that the packet is on
-    sdevice = session.puzzle.device_from_uid(thelink["SrcNic"]["hostid"])
-    ddevice = session.puzzle.device_from_uid(thelink["DstNic"]["hostid"])
-    if sdevice is None or ddevice is None:
-        return None  # This should never happen.  But exit gracefully.
-    if packetrec["packetDirection"] != 1:
-        # swap the source and destination
-        tdevice = sdevice  # stash it temporarily
-        sdevice = ddevice
-        ddevice = tdevice
-    # Now the source and destination are appropriately set
-    sx, sy = splitXYfromString(sdevice["location"])
-    dx, dy = splitXYfromString(ddevice["location"])
-    # We now have a line that the packet is somewhere on.
-    deltax = (dx - sx) / 100
-    deltay = (dy - sy) / 100
+    @property
+    def destination_ip(self):
+        return self.json.get("destIP")
 
-    amountx = deltax * packetrec["packetDistance"]
-    amounty = deltay * packetrec["packetDistance"]
+    @property
+    def destination_mac(self):
+        return self.json.get("destMAC")
 
-    tx = sx + amountx
-    ty = sy + amounty
+    @property
+    def direction(self) -> int | None:
+        return self.json.get("packetDirection")
 
-    # return a [x,y] structure
-    return [tx, ty]
+    @property
+    def distance(self):
+        return self.json.get("packetDistance")
+
+    @distance.setter
+    def distance(self, value):
+        self.json["packetDistance"] = value
+
+    @property
+    def hash_id(self):
+        """Get unique identifier by hashing specific properties of packet data."""
+        return hash(
+            (
+                self.source_ip,
+                self.source_mac,
+                self.destination_ip,
+                self.destination_mac,
+                self.packet_location,
+            )
+        )
+
+    @property
+    def health(self):
+        return self.json.get("health")
+
+    @health.setter
+    def health(self, value):
+        self.json["health"] = value
+
+    @property
+    def packet_location(self):
+        return self.json.get("packetlocation", "")
+
+    @property
+    def packettype(self):
+        return self.json.get("packettype")
+
+    @property
+    def source_ip(self):
+        return self.json.get("sourceIP")
+
+    @property
+    def source_mac(self):
+        return self.json.get("sourceMAC")
+
+    @property
+    def starttime(self):
+        return self.json.get("starttime")
+
+    @property
+    def status(self):
+        return self.json.get("status", "")
+
+    @status.setter
+    def status(self, value):
+        self.json["status"] = value
+
+    @property
+    def statusmessage(self):
+        return self.json.get("statusmessage", "")
+
+    @statusmessage.setter
+    def statusmessage(self, value):
+        self.json["statusmessage"] = str(value)
+
+    @staticmethod
+    def new_json():
+        return {
+            "packettype": "",
+            "VLANID": 0,  # start on the default vlan
+            "health": 100,  # health.  This will drop as the packet goes too close to things causing interferance
+            "sourceIP": "",
+            "TTL": 32,  # The initial time-to-live.  This is really only needed for traceroute packets
+            "sourceMAC": "",
+            "destIP": "",
+            "destMAC": "",
+            "tdestIP": "",  # If we are going through a router.  Mainly so we know which interface we are supposed to be using
+            "status": "good",
+            "statusmessage": "",
+            "payload": "",
+            "starttime": int(
+                time.time() * 1000
+            ),  # secondssince epoc.  Failsafe that will kill the packet if too much time has passed
+            "packetlocation": "",  # where the packet is.  Should almost always be a link name
+            "packetDirection": 0,  # Which direction are we going on a network link.  1=src to dest, 2=dest to src
+            "packetDistance": 0,  # The % distance the packet has traversed.  This is incremented until it reaches 100%
+        }
+
+    def apply_possible_damage(self, tick_pct):
+        """Damage the packet if near enough to microwave (wireless connection) or light (wired connection)."""
+        # Find link that packet is traveling on.
+        lnk = self.get_current_link()
+        if lnk is None:
+            logging.warning(
+                f"Unable to apply damage because no `Link` found for `Packet`: {self.json}"
+            )
+            return
+
+        # List damage-causing devices in puzzle.
+        risky_devices = []
+        for dev_json in session.puzzle.devices:
+            dev = device.Device(dev_json)
+            if dev.mytype == "microwave" and lnk.linktype == "wireless":
+                risky_devices.append(dev)
+            if dev.mytype == "fluorescent" and lnk.linktype != "wireless":
+                risky_devices.append(dev)
+
+        # Check if each device is close enough to damage packet.
+        for dev in risky_devices:
+            # We need to check for damage.
+            dx, dy = dev.location
+            # calculate the centerpoint
+            halfsize = int(
+                dev.size / 2
+            )  # all devices in EduNetworkBuilder were 100 size
+            dx += halfsize
+            dy += halfsize
+
+            # Now compare locations to each point along the distance.
+            for px, py in self.get_distance_points(tick_pct):
+                # NOTE: It seems unnecessary (or possibly erroneous) to
+                # convert the distance() value below into an int, because
+                # this would theoretically apply damage even when the
+                # distance between the objects is just beyond the threshold
+                # but happens to round down (when using int()) to the
+                # threshold. However, changing this conversion might have
+                # unintended consequences on already-designed puzzles. so it
+                # has been left as an int accordingly.
+                # Compare distance between device and packet with threshold.
+                if int(distance(px, py, dx, dy)) <= 43:
+                    self.health -= 1
+                    self.damage_count += 1
+                    if self.health <= 0:
+                        self.status = "done"  # the packet dies silently
+            if self.health_init > self.health:
+                logging.debug(f"Packet damaged: {self.packettype} {self.health}")
+
+    def get_distance_points(self, tick_pct):
+        devices = self.get_current_link_endpoint_devices()
+        if devices is None or not isinstance(devices, tuple):
+            return None
+        src_device, dest_device = devices
+        sx, sy = src_device.location
+        dx, dy = dest_device.location
+        # We now have a line that the packet is somewhere on; calculate progress.
+        deltax = (dx - sx) / 100
+        deltay = (dy - sy) / 100
+
+        points = list()
+        for a in range(int(self.distance), int(self.distance + tick_pct), 2):
+            tx = sx + (deltax * a)
+            ty = sy + (deltay * a)
+            points.append([tx, ty])
+        return points
+
+    def get_current_link(self) -> Link | None:
+        link_data = session.puzzle.link_from_name(self.packet_location)
+        if link_data is None:
+            return None  # We could not find the link
+        return Link(link_data)
+
+    def get_current_link_endpoint_devices(self):
+        """Return tuple of (src_device, dest_device)."""
+        src_nic, dest_nic = self.get_current_link_endpoint_nics()
+        src_json = session.puzzle.device_from_uid(src_nic.hostid)
+        dest_json = session.puzzle.device_from_uid(dest_nic.hostid)
+        if None in (src_json, dest_json):
+            return None
+        return (device.Device(value=src_json), device.Device(value=dest_json))
+
+    def get_current_link_endpoint_nics(self):
+        """Return tuple of (SrcNic, DstNic)."""
+        current_link = self.get_current_link()
+        src_nic_myid = current_link.src_nic
+        dest_nic_myid = current_link.dest_nic
+        if self.direction == 1:
+            dest_nic_myid = current_link.src_nic
+            src_nic_myid = current_link.dest_nic
+        src_nic_data = device.getDeviceNicFromLinkNicRec(src_nic_myid)
+        dest_nic_data = device.getDeviceNicFromLinkNicRec(dest_nic_myid)
+        return (Nic(src_nic_data), Nic(dest_nic_data))
 
 
 def newPacket():
@@ -72,70 +236,15 @@ def newPacket():
     return nPacket
 
 
-def splitXYfromString(xystring: str):
-    """Take a string like "50,50" and change it to be { 50,50 }
-    Args: xystring:str - a string with an x and y value, separated by a comma
-    Returns: an {x,y} struct, which can be assigned by x,y = splitXYfromString("50,50")
-    Note: if it is broken, it will return None, which the break the above line.
-    """
-    try:
-        sx, sy = xystring.split(",")
-        ix = int(sx)
-        iy = int(sy)
-        return [ix, iy]
-    except ValueError:
-        return None
-
-
 def distance(sx, sy, dx, dy):
     # we have a 5/5 grid that we are working with.
     # The ** is the exponent.  **2 is squared, **.5 is the square-root
     return ((((sx - dx) ** 2) + ((sy - dy) ** 2)) ** 0.5) / 5
 
 
-def damagePacketIfNeeded(packetrec, packetnumber, pointlist):
-    """
-    Search damage the packet if wireless+microwave or wired+light
-    """
-    # packets are only displayed when they are on links.
-    thelink = session.puzzle.link_from_name(packetrec["packetlocation"])
-    if thelink is None:
-        return None  # We could not find the link
-    # if we get here, we have the link that the packet is on
-    for one in session.puzzle.devices:
-        doit = False
-        if one.get("mytype") == "microwave" and thelink.get("linktype") == "wireless":
-            doit = True
-        if one.get("mytype") == "fluorescent" and thelink.get("linktype") != "wireless":
-            doit = True
-        if doit:
-            # We need to check for damage.
-            dx, dy = splitXYfromString(one.get("location"))
-            # calculate the centerpoint
-            halfsize = 50  # all devices in EduNetworkBuilder were 100 size
-            dx = dx + halfsize
-            dy = dy + halfsize
-
-            # now compare locations to each point along the distance.
-            totdamage = 0
-            for onepoint in pointlist:
-                px, py = onepoint
-                # calculate distance
-                dist = int(distance(px, py, dx, dy))
-                if dist <= 43:
-                    packetrec["health"] = packetrec["health"] - 1
-                    totdamage = totdamage + 1
-                    if packetrec["health"] <= 0:
-                        packetrec["status"] = "done"  # the packet dies silently
-            if totdamage > 0:
-                logging.debug(
-                    f"Packet damaged  {packetrec['packettype']} {packetrec['health']}"
-                )
-
-
 def addPacketToPacketlist(thepacket):
     if thepacket is not None:
-        session.packetlist.append(thepacket)
+        session.packetlist.append(Packet(thepacket))
 
 
 def packetsNeedProcessing():
@@ -146,46 +255,9 @@ def packetsNeedProcessing():
     if len(session.packetlist) > 30:
         if not session.packetstorm:
             logging.info(f"We started a storm: {len(session.packetlist)}")
-        session.packetstorm = (
-            True  # There were too many packets.  Must have created a storm/net loop
-        )
+        # There were too many packets.  Must have created a storm/net loop
+        session.packetstorm = True
     return len(session.packetlist) > 0
-
-
-def packetDistancePoints(packetrec, tick_pct):
-    if packetrec is None or "packetlocation" not in packetrec:
-        return None
-    # packets are only displayed when they are on links.
-    thelink = session.puzzle.link_from_name(packetrec["packetlocation"])
-    if thelink is None:
-        return None  # We could not find the link
-    # if we get here, we have the link that the packet is on
-    sdevice = session.puzzle.device_from_uid(thelink["SrcNic"]["hostid"])
-    ddevice = session.puzzle.device_from_uid(thelink["DstNic"]["hostid"])
-    if sdevice is None or ddevice is None:
-        return None  # This should never happen.  But exit gracefully.
-    if packetrec["packetDirection"] != 1:
-        # swap the source and destination
-        tdevice = sdevice  # stash it temporarily
-        sdevice = ddevice
-        ddevice = tdevice
-    # Now the source and destination are appropriately set
-    sx, sy = splitXYfromString(sdevice["location"])
-    dx, dy = splitXYfromString(ddevice["location"])
-    # We now have a line that the packet is somewhere on.
-    deltax = (dx - sx) / 100
-    deltay = (dy - sy) / 100
-
-    myarray = list()
-
-    for a in range(
-        int(packetrec["packetDistance"]), int(packetrec["packetDistance"] + tick_pct), 2
-    ):
-        tx = sx + (deltax * a)
-        ty = sy + (deltay * a)
-        myarray.append([tx, ty])
-
-    return myarray
 
 
 def processPackets(killSeconds: int = 20, tick_pct: float = 10):
@@ -197,40 +269,35 @@ def processPackets(killSeconds: int = 20, tick_pct: float = 10):
     # here we loop through all packets and process them
     curtime = int(time.time() * 1000)
     counter = 0
-    for one in session.packetlist:
+    for pkt in session.packetlist:
         counter = counter + 1
         # figure out where the packet is
-        theLink = session.puzzle.link_from_name(one["packetlocation"])
-        if theLink is not None:
+        current_link = pkt.get_current_link()
+        if current_link is not None:
             # the packet is traversing a link
-            pointlist = packetDistancePoints(one, tick_pct)
-            one["packetDistance"] += tick_pct
-            damagePacketIfNeeded(one, counter, pointlist)
-            if one["packetDistance"] > 50 and theLink.get("linktype") == "broken":
+            # damagePacketIfNeeded(pkt, tick_pct)
+            pkt.apply_possible_damage(tick_pct)
+            pkt.distance += tick_pct
+            if pkt.distance > 50 and current_link.linktype == "broken":
                 # The link is broken.  The packet gets killed
-                one["status"] = "done"  # the packet dies silently
-            if one["packetDistance"] > 100 and one["status"] != "done":
+                pkt.status = "done"  # the packet dies silently
+            if pkt.distance > 100 and pkt.status != "done":
                 # We have arrived.  We need to process the arrival!
                 # get interface from link
-                nicrec = theLink["SrcNic"]
-                if one["packetDirection"] == 1:
-                    nicrec = theLink["DstNic"]
-                tNic = device.getDeviceNicFromLinkNicRec(nicrec)
-                if tNic is None:
+                src_nic = pkt.get_current_link_endpoint_nics()[0]
+                if src_nic is None:
                     # We could not find the record.  This should never happen.  For now, blow up
-                    print("Bad Link:")
-                    print(theLink)
-                    print("Direction = " + str(one["packetDirection"]))
-                    raise Exception("Could not find the endpoint of the link. ")
+                    logging.error(f"Bad Link: {current_link}")
+                    logging.error(f"Direction = {pkt.direction}")
+                    raise Exception("Could not find the endpoint of the link.")
                 # We are here.  Call a function on the nic to start the packet entering the device
-                # print ("packet finished " + one['packetlocation'] + " and is moving onto " + tNic['myid']['hostname'])
-                device.doInputFromLink(one, tNic)
+                device.doInputFromLink(pkt.json, src_nic.json)
 
         # If the packet has been going too long.  Kill it.
-        if curtime - one["starttime"] > killMilliseconds:
+        if curtime - pkt.starttime > killMilliseconds:
             # over 20 seconds have passed.  Kill the packet
-            one["status"] = "failed"
-            one["statusmessage"] = "Packet timed out"
+            pkt.status = "failed"
+            pkt.statusmessage = "Packet timed out"
             logging.warning("packet killed")
     # When we are done with all the processing, kill any packets that need killing.
     cleanupPackets()
@@ -239,22 +306,19 @@ def processPackets(killSeconds: int = 20, tick_pct: float = 10):
 def cleanupPackets():
     """After processing packets, remove any "done" ones from the list."""
     for index in range(len(session.packetlist) - 1, -1, -1):
-        one = session.packetlist[index]
-        match one["status"]:
+        pkt = session.packetlist[index]
+        match pkt.status:
             case "good":
                 continue
             case "failed":
                 # We may need to log/track this.  But we simply remove it for now
                 del session.packetlist[index]
-                continue
             case "done":
                 # We may need to log/track this.  But we simply remove it for now
                 del session.packetlist[index]
-                continue
             case "dropped":
                 # packets are dropped when they are politely ignored by a device.  No need to log
                 del session.packetlist[index]
-                continue
 
 
 def is_ipv6(string):
