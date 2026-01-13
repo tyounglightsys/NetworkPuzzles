@@ -1,15 +1,11 @@
 # This file will be the main parser.  We will pass commands to the puzzle through this.
 # Most interaction with the puzzle, making changes or doing actions, will go through this
-import logging
-import sys
 import copy
 import ipaddress
+import logging
+import sys
 
-from . import device
-from . import puzzle
-from . import session
-from . import packet
-from . import nic
+from . import device, nic, packet, puzzle, session
 
 
 class Parser:
@@ -206,18 +202,24 @@ class Parser:
 
                 # go through and clear out all the IP addresses
                 for onenic in device.Device(item).all_nics():
-                    for oneint in onenic['interface']:
-                        if oneint['nicname'] != "lo0":
-                            oneint['myip']['ip'] = "0.0.0.0" #reset them all to nothing - the default
-                            oneint['myip']['mask'] = "0.0.0.0" #reset them all to nothing - the default
+                    for oneint in onenic["interface"]:
+                        if oneint["nicname"] != "lo0":
+                            oneint["myip"]["ip"] = (
+                                "0.0.0.0"  # reset them all to nothing - the default
+                            )
+                            oneint["myip"]["mask"] = (
+                                "0.0.0.0"  # reset them all to nothing - the default
+                            )
 
                 # clear out the gateway
-                item['gateway']['ip'] = "0.0.0.0"
-                item['gateway']['mask'] = "0.0.0.0" #this should never be set, but do it just in case
+                item["gateway"]["ip"] = "0.0.0.0"
+                item["gateway"]["mask"] = (
+                    "0.0.0.0"  # this should never be set, but do it just in case
+                )
 
                 # remove blownup entry if one exists
-                if 'blownup' in item:
-                    del item['blownup']
+                if "blownup" in item:
+                    del item["blownup"]
 
                 # mark blowsupwithpower as complete
                 session.puzzle.mark_test_as_completed(
@@ -236,21 +238,25 @@ class Parser:
 
                 session.print(f"Successfully replaced {item['hostname']}")
                 session.print(f"{item['hostname']} left in an off state")
-                #raise NotImplementedError
+                # raise NotImplementedError
             else:  # it is something that does not exist
                 raise ValueError(f"Not a valid item: {args[0]}")
         if len(args) == 2:
-            #We are hopefully finding something like replace pc0 eth0
+            # We are hopefully finding something like replace pc0 eth0
             item = session.puzzle.device_from_name(args[0])
             if item is not None:
                 for onenic in device.Device(item).all_nics():
-                    if onenic.get('nicname') == args[1] and onenic['nicname'] != "lo0":
-                        #We found the nic to replace.
-                        onenic.pop('Mac',None)
+                    if onenic.get("nicname") == args[1] and onenic["nicname"] != "lo0":
+                        # We found the nic to replace.
+                        onenic.pop("Mac", None)
                         nic.Nic(onenic).ensure_mac()
-                        for oneint in onenic['interface']:
-                                oneint['myip']['ip'] = "0.0.0.0" #reset them all to nothing - the default
-                                oneint['myip']['mask'] = "0.0.0.0" #reset them all to nothing - the default
+                        for oneint in onenic["interface"]:
+                            oneint["myip"]["ip"] = (
+                                "0.0.0.0"  # reset them all to nothing - the default
+                            )
+                            oneint["myip"]["mask"] = (
+                                "0.0.0.0"  # reset them all to nothing - the default
+                            )
 
             else:  # it is something that does not exist
                 raise ValueError(f"Not a valid item: {args[0]}")
@@ -286,12 +292,10 @@ class Parser:
 
     def add_ups(self, args):
         if len(args) != 1:
-            session.print(
-                "Usage: ups [host]"
-            )
+            session.print("Usage: ups [host]")
             session.print(" example: ups pc0")
             return False
-        #figure out the host
+        # figure out the host
         shost = session.puzzle.device_from_name(args[0])
         if shost is None:
             shost = session.puzzle.device_from_ip(args[0])
@@ -299,8 +303,13 @@ class Parser:
             session.print(f"No such host: {args[0]}")
             return False
         session.print(f"Add UPS: {args[0]}")
-        #DeviceNeedsUPS
-        session.puzzle.mark_test_as_completed(shost['hostname'],shost['hostname'],"DeviceNeedsUPS",f"Added a ups to {shost['hostname']}")
+        # DeviceNeedsUPS
+        session.puzzle.mark_test_as_completed(
+            shost["hostname"],
+            shost["hostname"],
+            "DeviceNeedsUPS",
+            f"Added a ups to {shost['hostname']}",
+        )
 
     def run_ping(self, args):
         if len(args) != 2:
@@ -319,7 +328,7 @@ class Parser:
         if dhost is None:
             dhost = session.puzzle.device_from_ip(args[1])
         if dhost is None and packet.is_ipv4(args[1]):
-            dhost = args[1] #it is a valid IP address.  Try it.
+            dhost = args[1]  # it is a valid IP address.  Try it.
         if shost is None:
             session.print(f"No such host: {args[0]}")
             return False
@@ -361,7 +370,6 @@ class Parser:
         # FIXME: This only shows that the ping command was successfully
         # initiated, not that it was itself successful.
         return True
-
 
     def do_dhcp(self, args):
         if len(args) == 0:
@@ -419,9 +427,11 @@ class Parser:
                     session.print(f"poweroff: {thedevice['poweroff']}")
                 if "isdhcp" in thedevice and thedevice["isdhcp"].lower() == "true":
                     session.print(f"DHCP server: {thedevice['isdhcp']}")
-                    if thedevice.get('dhcprange') is not None:
-                        for item in thedevice.get('dhcprange'):
-                            session.print(f"  Range: {item['ip']} {item['mask']}-{item['gateway']}")
+                    if thedevice.get("dhcprange") is not None:
+                        for item in thedevice.get("dhcprange"):
+                            session.print(
+                                f"  Range: {item['ip']} {item['mask']}-{item['gateway']}"
+                            )
                 session.print(f"gateway: {thedevice['gateway']['ip']}")
                 for onestring in device.allIPStrings(thedevice, True, True):
                     session.print(onestring)
@@ -442,8 +452,10 @@ class Parser:
             if args[0].lower() == "tests":
                 session.print("--Tests--")
                 for onetest in session.puzzle.all_tests():
-                    if onetest.get('thetest',"").startswith("Lock"):
-                        session.print(f"source: {onetest.get('shost')} test: {onetest.get('thetest')}")
+                    if onetest.get("thetest", "").startswith("Lock"):
+                        session.print(
+                            f"source: {onetest.get('shost')} test: {onetest.get('thetest')}"
+                        )
                     else:
                         session.print(
                             f"source: {onetest.get('shost')} test: {onetest.get('thetest')}  dest: {onetest.get('dhost')} status: {onetest.get('completed', 'False')}"
@@ -471,18 +483,19 @@ class Parser:
                 return
             session.print(f"No such host {args[0]}")
         if len(args) == 2:
-            #hopefully show pc0 eth0 or something like that
+            # hopefully show pc0 eth0 or something like that
             thedevice = session.puzzle.device_from_name(args[0])
             if thedevice is not None:
-                #right now, we are hoping it is a hostname and a nic name. Later we may have vlans, etc.
+                # right now, we are hoping it is a hostname and a nic name. Later we may have vlans, etc.
                 for onenic in thedevice["nic"]:
-                    #print the nic info
-                    if(onenic.get('nicname') == args[1]):
-                        for oneinterface in onenic.get('interface'):
-                            session.print(f"{oneinterface.get('nicname')} - {oneinterface.get('myip').get('ip')}/{oneinterface.get('myip').get('mask')} - {onenic.get('Mac')}")
+                    # print the nic info
+                    if onenic.get("nicname") == args[1]:
+                        for oneinterface in onenic.get("interface"):
+                            session.print(
+                                f"{oneinterface.get('nicname')} - {oneinterface.get('myip').get('ip')}/{oneinterface.get('myip').get('mask')} - {onenic.get('Mac')}"
+                            )
             else:
                 session.print(f"No such host {args[0]}")
-
 
     def set_dhcp_value(self, dev_obj, value):
         if not device.servesDHCP(dev_obj.json):
@@ -509,78 +522,81 @@ class Parser:
 
     def set_dhcp_range(self, dev_obj, value):
         if not device.servesDHCP(dev_obj.json):
-            #The device is incapable of being a DHCP server 
+            # The device is incapable of being a DHCP server
             session.print(f"{dev_obj.hostname} is not a dhcp server")
             return False
         if not dev_obj.is_dhcp:
-            #The device is capable of being a DHCP server, but that ability is not turned on 
+            # The device is capable of being a DHCP server, but that ability is not turned on
             session.print(f"{dev_obj.hostname} is not a dhcp server")
             return False
-        #Now, we need to ensure we have the right settings.
+        # Now, we need to ensure we have the right settings.
         #   Value should be a range LowIp-HighIp
         #   or Value should be a range ethIP LowIp-HighIp
         #   or Value should be a range ethIP LowIp HighIp
         if len(value) == 0:
             session.print("You must supply a value-range for the DHCP range")
             return False
-        startip=""
-        endip=""
-        ethip=""
+        startip = ""
+        endip = ""
+        ethip = ""
         session.print(f"Setting DHCP: {len(value)} items:{value}")
         if len(value) == 1:
-            values = value[0].split('-')            
+            values = value[0].split("-")
             if len(values) != 2:
-                session.print("You must specify a beginning and ending range:  eg. 192.168.1.10-192.168.1.20")
+                session.print(
+                    "You must specify a beginning and ending range:  eg. 192.168.1.10-192.168.1.20"
+                )
                 return False
-            startip=values[0]
-            endip=values[1]
+            startip = values[0]
+            endip = values[1]
         if len(value) == 2:
-            if ('-' in value[1]):
-                #we have an ip,rangestart-rangeend
-                values = value[1].split('-')            
+            if "-" in value[1]:
+                # we have an ip,rangestart-rangeend
+                values = value[1].split("-")
                 if len(values) != 2:
-                    session.print("You must specify a beginning and ending range:  eg. 192.168.1.10-192.168.1.20")
+                    session.print(
+                        "You must specify a beginning and ending range:  eg. 192.168.1.10-192.168.1.20"
+                    )
                     return False
-                startip=values[0]
-                endip=values[1]
-                ethip=value[0]
+                startip = values[0]
+                endip = values[1]
+                ethip = value[0]
             else:
-                #we have a rangestart, rangeend
-                startip=value[0]
-                endip=value[1]
+                # we have a rangestart, rangeend
+                startip = value[0]
+                endip = value[1]
         if len(value) == 3:
-            ethip=value[0]
-            startip=value[1]
-            endip=value[2]
+            ethip = value[0]
+            startip = value[1]
+            endip = value[2]
         ip_list = packet.get_ip_range(startip, endip)
-            #If we got here, it worked as a valid IP range.  Accept it.
+        # If we got here, it worked as a valid IP range.  Accept it.
         if len(ip_list) < 1:
             session.print(f"Invalid DHCP range: {startip} {endip}")
             return False
-        #If we get here, it was a valid range.
-        #Now we create a new DHCP entry.  It looks like: {ip:[ip of nic], mask:[rangestart],gateway:[range-end],type:"dhcp}
+        # If we get here, it was a valid range.
+        # Now we create a new DHCP entry.  It looks like: {ip:[ip of nic], mask:[rangestart],gateway:[range-end],type:"dhcp}
         if ethip == "":
-            #We need to figure out the IP address of the ethernet belonging to the range
+            # We need to figure out the IP address of the ethernet belonging to the range
             localIP = device.sourceIP(dev_obj.json, ipaddress.IPv4Address(startip))
             if localIP is not None and localIP != "":
-                ethip =  packet.justIP(localIP)
+                ethip = packet.justIP(localIP)
         if ethip == "":
             session.print("Could not find local IP connected to the ip range specified")
             return False
-        #remove the previous record, if one existed
-        if dev_obj.json.get('dhcprange') is None:
-            dev_obj.json['dhcprange'] = {}
-        itemlist = [ record for record in dev_obj.json.get('dhcprange') if record['ip'] != ethip]
-        #Now, we create a record and store it.
-        newitem = { 
-            'ip':ethip,
-            'mask':startip,
-            'gateway':endip,
-            'type':"dhcp"
-        }
+        # remove the previous record, if one existed
+        if dev_obj.json.get("dhcprange") is None:
+            dev_obj.json["dhcprange"] = {}
+        itemlist = [
+            record for record in dev_obj.json.get("dhcprange") if record["ip"] != ethip
+        ]
+        # Now, we create a record and store it.
+        newitem = {"ip": ethip, "mask": startip, "gateway": endip, "type": "dhcp"}
         itemlist.append(newitem)
-        dev_obj.json['dhcprange'] = itemlist
-        session.print(f"Setting DHCP range on {dev_obj.hostname} to: {ethip} {startip}-{endip}")
+        dev_obj.json["dhcprange"] = itemlist
+        session.print(
+            f"Setting DHCP range on {dev_obj.hostname} to: {ethip} {startip}-{endip}"
+        )
 
     def set_gateway_value(self, dev_obj, value):
         # we really need to do some type checking.  It should be a valid ipv4 or ipv6 address
@@ -591,14 +607,16 @@ class Parser:
             )
             dev_obj.json["gateway"]["ip"] = value
             tmp_obj = session.puzzle.device_from_ip(value)
-            if tmp_obj is not None and 'hostname' in tmp_obj:
-                logging.debug(f"setting {dev_obj.hostname} NeedsDefaultGW to {tmp_obj['hostname']} as solved")
+            if tmp_obj is not None and "hostname" in tmp_obj:
+                logging.debug(
+                    f"setting {dev_obj.hostname} NeedsDefaultGW to {tmp_obj['hostname']} as solved"
+                )
                 session.puzzle.mark_test_as_completed(
-                        dev_obj.hostname,
-                        tmp_obj['hostname'],
-                        "NeedsDefaultGW",
-                        f"{dev_obj.hostname} has default gateway set",
-                    )
+                    dev_obj.hostname,
+                    tmp_obj["hostname"],
+                    "NeedsDefaultGW",
+                    f"{dev_obj.hostname} has default gateway set",
+                )
             session.print(
                 f"Setting {dev_obj.hostname} gateway: {dev_obj.json['gateway']['ip']}"
             )
@@ -693,20 +711,21 @@ class Parser:
                 None, dev_obj.hostname, "DeviceIsFrozen", ""
             )
         else:
-            #we are trying to turn on the device.
-            if session.puzzle.item_blows_up(dev_obj.hostname) or session.puzzle.item_needs_ups(dev_obj.hostname):
-                dev_obj.powered_on = True #make sure it is powered off
+            # we are trying to turn on the device.
+            if session.puzzle.item_blows_up(
+                dev_obj.hostname
+            ) or session.puzzle.item_needs_ups(dev_obj.hostname):
+                dev_obj.powered_on = True  # make sure it is powered off
                 dev_obj.blown_up = True
                 session.print(f"{dev_obj.hostname} exploded")
                 logging.info(f"{dev_obj.hostname} exploded")
                 return
             else:
                 session.add_undo_entry(
-                    f"set {dev_obj.hostname} power on", 
-                    f"set {dev_obj.hostname} power {pastvalue}"
+                    f"set {dev_obj.hostname} power on",
+                    f"set {dev_obj.hostname} power {pastvalue}",
                 )
                 dev_obj.powered_on = False
-
 
         session.print(
             f"Defining {dev_obj.hostname} 'poweroff' to {dev_obj.json.get('poweroff')}"
