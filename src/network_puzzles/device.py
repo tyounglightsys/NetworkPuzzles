@@ -807,19 +807,19 @@ def doInputFromLink(packRec, nicRec):
 
     # Do the simple stuff
     if powerOff(thisDevice):
-        packRec["status"] = "done"
+        packRec.status = "done"
         # nothing more to be done
         return False
 
     if device_is_frozen(thisDevice):
-        packRec["status"] = "done"
+        packRec.status = "done"
         # nothing more to be done
         return False
     # If the packet is a DHCP answer, process that here.  To be done later
     # If the packet is a DHCP request, and this is a DHCP server, process that.  To be done later.
 
     # Find the network interface.  It might be none if the IP does not match, or if it is a switch/hub device.
-    tInterface = findLocalNICInterface(packRec["tdestIP"], nicRec)
+    tInterface = findLocalNICInterface(packRec.json.get("tdestIP"), nicRec)
     # if this is None, try the primary interface.
     if tInterface is None:
         tInterface = findPrimaryNICInterface(nicRec)
@@ -861,7 +861,7 @@ def beginIngressOnNIC(packRec, nicRec):
     theDevice = session.puzzle.device_from_name(nicRec.get("myid").get("hostname"))
     if theDevice is None:
         # This is a problem.  We need to exit gracefully
-        packRec["status"] = "done"
+        packRec.status = "done"
         return False
     # if it is a port (swicth/hub) or wport (wireless devices)
     if nictype == "port" or nictype == "wport":
@@ -874,18 +874,16 @@ def beginIngressOnNIC(packRec, nicRec):
         # We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
         if "port_arps" not in theDevice:
             theDevice["port_arps"] = {}
-        if packRec.get("sourceMAC") not in theDevice.get("port_arps"):
-            theDevice["port_arps"][packRec.get("sourceMAC")] = nicRec.get("nicname")
+        if packRec.source_mac not in theDevice.get("port_arps"):
+            theDevice["port_arps"][packRec.source_mac] = nicRec.get("nicname")
 
     # Look better tracking for network loops
     # If the same packet hits the same switch, we determine it is a loop
     hostname = theDevice.get("hostname")
-    if "path" not in packRec:
-        packRec["path"] = []
     # Check if the hostname is already in the path of the packet.  If so, it is a loop
-    if hostname in packRec.get("path"):
+    if hostname in packRec.path:
         session.packetstorm = True
-    packRec["path"].append(hostname)
+    packRec.path.append(hostname)
 
     # If we are entering a WAN port, see if we should be blocked or if it is a return packet
     if nictype == "wan":
@@ -894,8 +892,8 @@ def beginIngressOnNIC(packRec, nicRec):
         # if the packet is a return ping packet, allow it. Otherwise, reject
 
     if (
-        packRec["destMAC"] == nicRec["Mac"]
-        or packet.isBroadcastMAC(packRec["destMAC"])
+        packRec.destination_mac == nicRec["Mac"]
+        or packet.is_broadcast_mac(packRec.destination_mac)
         or nictype == "port"
         or nictype == "wport"
     ):
@@ -906,7 +904,7 @@ def beginIngressOnNIC(packRec, nicRec):
         # print("packet did not match.  Dropping")
         # print (packRec)
         # print("  packet dst MAC" + packRec['destMAC'] + " vs this NIC" + nicRec['Mac'])
-        packRec["status"] = "dropped"
+        packRec.status = "dropped"
         return False
 
 
@@ -922,15 +920,19 @@ def beginIngressOnInterface(packRec, interfaceRec):
 
 def packetEntersDevice(packRec, thisDevice, nicRec):
     """When a packet enters a device, coming from an interface and network card.  Here we respond to stuff, route, or switch..."""
+    # Ensure Packet object.
+    if not isinstance(packRec, packet.Packet):
+        raise ValueError(f"packet arg should be `packet.Packet' not '{type(packRec)}'")
+
     if powerOff(thisDevice):
-        packRec["status"] = "done"
+        packRec.status = "done"
         # nothing more to be done
         return False
     # We would check if it was frozen.  That is a test, not a status.  We do not have that check yet.
 
     # Deal with DHCP.
     # If it is a request and this is a DHCP server, serve an IP back.
-    if packRec["packettype"] == "DHCP-Request":
+    if packRec.packettype == "DHCP-Request":
         if servesDHCP(thisDevice):
             if (
                 "isdhcp" in thisDevice
@@ -939,127 +941,124 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             ):
                 session.print(f"Arrived at DHCP server: {thisDevice['hostname']}")
                 makeDHCPResponse(packRec, thisDevice, nicRec)
-                packRec["status"] = "done"
+                packRec.status = "done"
                 return True
     # If it is a DHCP answer, update the device IP address.
-    if packRec["packettype"] == "DHCP-Response":
-        if packRec["destMAC"] == nicRec["Mac"] and nicRec.get("usesdhcp") == "True":
+    elif packRec.packettype == "DHCP-Response":
+        if (
+            packRec.destination_mac == nicRec["Mac"]
+            and nicRec.get("usesdhcp") == "True"
+        ):
             logging.info(
-                f"Recieved DHCP response.  Dealing with it. payload: {packRec['payload']}"
+                f"Recieved DHCP response.  Dealing with it. payload: {packRec.payload}"
             )
             logging.info("packet matches this nic.")
             session.ui.parser.parse(
-                f"set {thisDevice['hostname']} {nicRec['nicname']} {packRec['payload']['ip']}/{packRec['payload']['subnet']}",
+                f"set {thisDevice['hostname']} {nicRec['nicname']} {packRec.payload.get('ip')}/{packRec.payload.get('subnet')}",
                 False,
             )
             if packet.isEmpty(thisDevice["gateway"]["ip"]):
                 session.ui.parser.parse(
-                    f"set {thisDevice['hostname']} gateway {packRec['payload']['gateway']}"
+                    f"set {thisDevice['hostname']} gateway {packRec.payload.get('gateway')}"
                 )
-            packRec["status"] = "done"
+            packRec.status = "done"
             return True
 
     # If the packet is destined for here, process that
     # print("Checking destination.  Looking for " + packet.justIP(packRec['destIP']))
     # print("   Checking against" + str(allIPStrings(thisDevice)))
-    if routesPackets(thisDevice) or deviceHasIP(thisDevice, packRec["destIP"]):
-        packRec["TTL"] = (
-            packRec.get("TTL", 0) - 1
+    if routesPackets(thisDevice) or deviceHasIP(thisDevice, packRec.destination_ip):
+        packRec.json["TTL"] = (
+            packRec.json.get("TTL", 0) - 1
         )  # decrement the ttl with every router
-        if packRec["TTL"] <= 0:
-            if packRec["packettype"] == "traceroute-request":
+        if packRec.json.get("TTL", 0) <= 0:
+            if packRec.packettype == "traceroute-request":
                 # We need to bounce a response back
-                dest = deviceFromIP(packet.justIP(str(packRec["sourceIP"])))
+                dest = deviceFromIP(packet.justIP(str(packRec.source_ip)))
                 logging.info(
                     f"A traceroute timed out at {thisDevice['hostname']}.  Making a return packet"
                 )
                 # we need to generate a traceroute response
                 nPacket = packetFromTo(thisDevice, dest)
-                nPacket["packettype"] = "traceroute-response"
-                nPacket["payload"] = packRec["payload"]
+                nPacket.packettype = "traceroute-response"
+                nPacket.payload = packRec.payload
                 sendPacketOutDevice(nPacket, thisDevice)
-                nPacket["payload"]["tempDest"] = nPacket["sourceIP"]
-                # print (nPacket)
-                packet.addPacketToPacketlist(nPacket)
-                packRec["status"] = "done"
+                nPacket.payload["tempDest"] = nPacket.source_ip
+                nPacket.add_to_packet_list()
+                packRec.status = "done"
                 return True
 
-    if not packet.isEmpty(packRec["destIP"]) and deviceHasIP(
-        thisDevice, packRec["destIP"]
+    if not packet.isEmpty(packRec.destination_ip) and deviceHasIP(
+        thisDevice, packRec.destination_ip
     ):
-        packRec["status"] = "done"
-        logging.info("Packet arrived at destination")
-        #        print ("packet type: -" + packRec['packettype'] + "-")
+        packRec.status = "done"
+        logging.info(f"Packet '{packRec.packettype}' arrived at destination")
 
         # ping, send ping packet back
-        if packRec["packettype"] == "ping":
+        if packRec.packettype == "ping":
             # logging.debug(f"Returning packet: {packRec}")
             # logging.debug(f"Returning packet: {packRec['sourceIP']} - {packet.justIP(str(packRec["sourceIP"]))}")
-            dest = deviceFromIP(packet.justIP(str(packRec["sourceIP"])))
+            dest = deviceFromIP(packet.justIP(str(packRec.source_ip)))
             # logging.info(f"A ping came.  Making a return packet going to {dest}")
-            # print (packet.justIP(str(packRec['sourceIP'])))
-            # print(dest)
+
             # we need to generate a ping response
             nPacket = packetFromTo(thisDevice, dest)
             # logging.debug(f"Created new packet : {dest}")
-            if nPacket is None:
-                return False
-            # logging.debug("new packet was not None")
-            nPacket["origPingDest"] = packRec.get("origPingDest")
-            nPacket["packettype"] = "ping-response"
+            nPacket.json["origPingDest"] = packRec.json.get("origPingDest")
+            nPacket.packettype = "ping-response"
             sendPacketOutDevice(nPacket, thisDevice)
             # logging.debug("new packet sent out of device")
-            # print (nPacket)
-            packet.addPacketToPacketlist(nPacket)
+            nPacket.add_to_packet_list()
             # if we are a hub/switch, do not end broadcast pings here; pass them on
-            if not forwardsPackets(thisDevice) and not packet.isBroadcastMAC(
-                packRec.get("destMAC")
+            if not forwardsPackets(thisDevice) and not packet.is_broadcast_mac(
+                packRec.destination_mac
             ):
                 logging.debug("decided packet is finished.  Marking it done")
-                packRec["status"] = "done"
+                packRec.status = "done"
                 return True
             else:
                 # we continue.  This packet is not stopping here.
-                packRec["status"] = "good"
+                packRec.status = "good"
 
         # ping response, mark it as done
-        if packRec["packettype"] == "ping-response":
+        elif packRec.packettype == "ping-response":
             logging.info("Woot! We returned with a ping")
-            packRec["status"] = "done"
-            pingsrcip = packet.justIP(packRec.get("destIP"))
-            srcip = pingdestip = packet.justIP(packRec.get("sourceIP"))
+            packRec.status = "done"
+            pingsrcip = packet.justIP(packRec.destination_ip)
+            srcip = pingdestip = packet.justIP(packRec.source_ip)
             pingdest = deviceFromIP(pingdestip)
             logging.info(f"sourceip is {srcip}")
             logging.info(f"dest host is {pingdest.get('hostname')}")
             # logging.debug(f"Showing orig dest as: {packRec["origPingDest"]}")
-            if packRec["health"] < 100:
+            if packRec.health < 100:
                 logging.info(
-                    f"Packet was damaged during transit.  Not complete success: Health={packRec['health']}"
+                    f"Packet was damaged during transit.  Not complete success: Health={packRec.health}"
                 )
                 session.print(
-                    f"PING: {pingsrcip} -> {pingdestip}: Partial Success! - Packet damaged in transit.  Health={packRec['health']}"
+                    f"PING: {pingsrcip} -> {pingdestip}: Partial Success! - Packet damaged in transit.  Health={packRec.health}"
                 )
             else:
                 session.print(f"PING: {pingsrcip} -> {pingdestip}: Success!")
-            if pingdest is not None and packRec["health"] == 100:
+            if pingdest is not None and packRec.health == 100:
                 # deal with broadcast pings.
+                orig_dest = packRec.json.get("origPingDest")
                 if (
-                    packRec.get("origPingDest") is not None
-                    and packRec.get("origPingDest") != ""
-                    and packRec.get("origPingDest") != packRec.get("destIP")
+                    orig_dest is not None
+                    and orig_dest != ""
+                    and orig_dest != packRec.destination_ip
                 ):
                     mark_test_as_completed(
                         thisDevice.get("hostname"),
-                        packRec.get("origPingDest"),
+                        orig_dest,
                         "SuccessfullyPings",
-                        f"Successfully pinged from {thisDevice.get('hostname')} to {packRec.get('origPingDest')}",
+                        f"Successfully pinged from {thisDevice.get('hostname')} to {orig_dest}",
                     )
                     # We mark this as complete too, but the test for 'WithoutLoop' happens later
                     mark_test_as_completed(
                         thisDevice.get("hostname"),
-                        packRec.get("origPingDest"),
+                        orig_dest,
                         "SuccessfullyPingsWithoutLoop",
-                        f"Successfully pinged from {thisDevice.get('hostname')} to {packRec.get('origPingDest')} without a network loop.",
+                        f"Successfully pinged from {thisDevice.get('hostname')} to {orig_dest} without a network loop.",
                     )
 
                 mark_test_as_completed(
@@ -1079,42 +1078,43 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                 # print(f" we are done, and packetlist is: {len(session.packetlist)} and storm: {session.packetstorm}")
             return True
 
-        if packRec["packettype"] == "traceroute-response":
+        elif packRec.packettype == "traceroute-response":
             # We need to determine what machine responded.  If it was the true dest, we are done.
             # If not, we need to send out a packet with a longer TTL
-            packRec["status"] = "done"
-            if packRec["payload"]["tempDest"] is None:
+            packRec.status = "done"
+            temp_dest = packRec.payload.get("tempDest")
+            if temp_dest is None:
                 return False
             print(
-                f" We are looking at a packet from {packRec['payload']['tempDest']} and the final destination should be {packRec['payload']['origDestIP']}"
+                f" We are looking at a packet from {temp_dest} and the final destination should be {packRec.payload.get('origDestIP')}"
             )
-            if packRec["payload"]["tempDest"] != packRec["payload"]["origDestIP"]:
+            if temp_dest != packRec.payload.get("origDestIP"):
                 # It is not the right dest.  Try again
                 sdev = session.puzzle.device_from_name(
-                    packRec["payload"]["origSHostname"]
+                    packRec.payload.get("origSHostname")
                 )
                 ddev = session.puzzle.device_from_name(
-                    packRec["payload"]["origDHostname"]
+                    packRec.payload.get("origDHostname")
                 )
                 print(
-                    f"Making new traceroute from {sdev['hostname']} to {ddev['hostname']} with TTL {packRec['payload']['origTTL'] + 1}"
+                    f"Making new traceroute from {sdev['hostname']} to {ddev['hostname']} with TTL {packRec.payload.get('origTTL') + 1}"
                 )
                 if packRec.payload.get("origTTL") + 1 < 10:
                     traceroute(sdev, ddev, packRec.payload.get("origTTL") + 1)
             else:
-                pingsrcip = packet.justIP(packRec.get("destIP"))
-                srcip = pingdestip = packet.justIP(packRec.get("sourceIP"))
+                pingsrcip = packet.justIP(packRec.destination_ip)
+                srcip = pingdestip = packet.justIP(packRec.source_ip)
                 pingdest = deviceFromIP(pingdestip)
-                if packRec["health"] < 100:
+                if packRec.health < 100:
                     logging.info(
-                        f"Packet was damaged during transit.  Not complete success: Health={packRec['health']}"
+                        f"Packet was damaged during transit.  Not complete success: Health={packRec.health}"
                     )
                     session.print(
-                        f"PING: {pingsrcip} -> {pingdestip}: Partial Success! - Packet damaged in transit.  Health={packRec['health']}"
+                        f"PING: {pingsrcip} -> {pingdestip}: Partial Success! - Packet damaged in transit.  Health={packRec.health}"
                     )
                 else:
                     session.print(f"Traceroute: {pingsrcip} -> {pingdestip}: Success!")
-                if pingdest is not None and packRec["health"] == 100:
+                if pingdest is not None and packRec.health == 100:
                     mark_test_as_completed(
                         thisDevice.get("hostname"),
                         pingdest.get("hostname"),
@@ -1124,39 +1124,43 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
             return True
 
     logging.debug(
-        f"We made it through.  Now seeing if we need to keep going. {packRec['status']}"
+        f"We made it through.  Now seeing if we need to keep going. {packRec.status}"
     )
-
     # If the packet is not done and we forward, forward. Basically, a switch/hub
     if (
-        packRec["status"] != "done" or packet.isBroadcastMAC(packRec.get("destMAC"))
+        packRec.status != "done" or packet.is_broadcast_mac(packRec.destination_mac)
     ) and forwardsPackets(thisDevice):
-        logging.debug("About to forward packet out switch")
-        packRec["status"] = "good"
+        packRec.status = "good"
         send_out_hubswitch(thisDevice, packRec, nicRec)
-        packRec["status"] = "done"
+        packRec.status = "done"
         return
+
     # if the packet is not done and we route, route
-    if packRec["status"] != "done" and routesPackets(thisDevice):
+    if packRec.status != "done" and routesPackets(thisDevice):
         # print("routing")
-        if not packet.isBroadcastMAC(packRec.get("destMAC")):
+        if not packet.is_broadcast_mac(packRec.destination_mac):
             # we do not route broadcast packets
             sendPacketOutDevice(packRec, thisDevice)
         else:
             # if it is a broadcast, the packet stops here.
-            packRec["status"] = "done"
+            packRec.status = "done"
         return
     # If we get here, we might have forwarded.  If so, we mark the old packet as done.
-    packRec["status"] = "done"
+    packRec.status = "done"
 
 
 def send_out_hubswitch(thisDevice, packRec, nicRec=None):
+    # Ensure Packet object.
+    if not isinstance(packRec, packet.Packet):
+        raise ValueError(f"packet arg should be `packet.Packet' not '{type(packRec)}'")
+
     # We loop through all nics. (minus the one we came in from)
     onlyport = ""
     if thisDevice.get("mytype") == "net_switch":
-        if packRec.get("destMAC") in thisDevice.get("port_arps", {}):
+        if packRec.destination_mac in thisDevice.get("port_arps", {}):
             # we just send this out the one port.
-            onlyport = thisDevice.get("port_arps").get(packRec.get("destMAC"))
+            onlyport = thisDevice.get("port_arps").get(packRec.destination_mac)
+
     # print("We are forwarding.")
     for onenic in thisDevice["nic"]:
         # we duplicate the packet and send it out each port-type
@@ -1169,25 +1173,27 @@ def send_out_hubswitch(thisDevice, packRec, nicRec=None):
             # We have a network wire connected to the NIC.  Send the packet out
             # if it is a switch-port, then we check first if we know where the packet goes - undone
             if onlyport == "" or onlyport == onenic.get("nicname"):
-                tpacket = copy.deepcopy(packRec)
-                tpacket["packetlocation"] = tlink["hostname"]
-                tpacket["packetDistance"] = (
-                    0  # reset it to the beginning of the next link
-                )
-                if tlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
-                    tpacket["packetDirection"] = 1  # Src to Dest
+                tpacket = packet.Packet(packRec.json)
+                # Update location to outgoing link.
+                tpacket.packet_location = tlink.get("hostname")
+                # Reset distance to the beginning of outgoing link.
+                tpacket.distance = 0
+                # Set direction.
+                if tlink["SrcNic"]["hostname"] == thisDevice.get("hostname"):
+                    tpacket.direction = 1  # Src to Dest
                 else:
-                    tpacket["packetDirection"] = 2  # Dest to Source
-                tpacket["packetDistance"] = 0  # start at the beginning.
-                packet.addPacketToPacketlist(tpacket)
-                # print (" Sending packet out a port: " + tpacket['packetlocation'])
-    # we set this packet as done.
-    packRec["status"] = (
-        "done"  # The packet that came in gets killed since it was replicated everywhere else
-    )
+                    tpacket.direction = 2  # Dest to Source
+                tpacket.add_to_packet_list()
+
+    # The packet that came in gets killed since it was replicated everywhere else.
+    packRec.status = "done"
 
 
 def makeDHCPResponse(packRec, thisDevice, nicRec):
+    # Ensure Packet object.
+    if not isinstance(packRec, packet.Packet):
+        raise ValueError(f"packet arg should be `packet.Packet' not '{type(packRec)}'")
+
     if "dhcplist" not in thisDevice:
         thisDevice["dhcplist"] = {}
     inboundip = nicRec["interface"][0]["myip"]["ip"]
@@ -1218,74 +1224,70 @@ def makeDHCPResponse(packRec, thisDevice, nicRec):
                 available_ip = newip
                 break
     # Now, check to see if we have an entry already.
-    if packRec["sourceMAC"] in thisDevice["dhcplist"]:
+    if packRec.source_mac in thisDevice["dhcplist"]:
         # we already have an entry. Use it
-        available_ip = thisDevice["dhcplist"][packRec["sourceMAC"]]
+        available_ip = thisDevice["dhcplist"][packRec.source_mac]
     else:
         logging.debug(
-            f"DHCP: Making an IP reservation {available_ip} {packRec['sourceMAC']}"
+            f"DHCP: Making an IP reservation {available_ip} {packRec.source_mac}"
         )
 
     if available_ip != "":
         # stash it.  if it already exists, we use the same value.
-        thisDevice["dhcplist"][packRec["sourceMAC"]] = available_ip
+        thisDevice["dhcplist"][packRec.source_mac] = available_ip
         # Now, make a new DHCP response packet
-        nPacket = packet.newPacket()
-        nPacket["sourceIP"] = nicRec["interface"][0]["myip"]["ip"]
-        nPacket["sourceMAC"] = nicRec.get("Mac")
-        nPacket["destIP"] = "0.0.0.0"
-        nPacket["destMAC"] = packRec["sourceMAC"]
-        nPacket["packettype"] = "DHCP-Response"
-        nPacket["payload"] = {
+        nPacket = packet.Packet()
+        nPacket.source_ip = nicRec["interface"][0]["myip"]["ip"]
+        nPacket.source_mac = nicRec.get("Mac")
+        nPacket.destination_ip = "0.0.0.0"
+        nPacket.destination_mac = packRec.source_mac
+        nPacket.packettype = "DHCP-Response"
+        nPacket.payload = {
             "ip": available_ip,
             "subnet": nicRec["interface"][0]["myip"]["mask"],
             "gateway": thisDevice["gateway"]["ip"],
         }
         destlink = linkConnectedToNic(nicRec)
-        nPacket["packetlocation"] = destlink["hostname"]
+        nPacket.packet_location = destlink["hostname"]
         if destlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
-            nPacket["packetDirection"] = 1  # Src to Dest
+            nPacket.direction = 1  # Src to Dest
         else:
-            nPacket["packetDirection"] = 2  # Dest to Source
-        packet.addPacketToPacketlist(nPacket)
+            nPacket.direction = 2  # Dest to Source
+        nPacket.add_to_packet_list()
         logging.info(
-            f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {packRec['sourceMAC']}"
+            f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {packRec.source_mac}"
         )
-
-
-# def AssignMacIfNeeded(nicRec):
-#     if 'Mac' not in nicRec:
-#         #Most of the network cards do not have this done yet.  We generate a new random one
-#         localmac=""
-#         for i in range(1,13):
-#             localmac=localmac+random.choice("ABCDEF1234567890")
-#         nicRec['Mac']=localmac
 
 
 def sendPacketOutDevice(packRec, theDevice):
     """Send the packet out of the device."""
+    # Ensure Packet object.
+    if not isinstance(packRec, packet.Packet):
+        raise ValueError(f"packet arg should be `packet.Packet' not '{type(packRec)}'")
+
     # print("Sending packet out a device: " + theDevice['hostname'])
     # determine which interface/nic we are exiting out of - routing
-    packRec["packetDistance"] = 0  # always reset this
-    routeRec = routeRecFromDestIP(theDevice, packRec["destIP"])
+    packRec.distance = 0  # always reset this
+    routeRec = routeRecFromDestIP(theDevice, packRec.destination_ip)
     destlink = None
+
     # set the source MAC address on the packet as from the nic
     if routeRec is not None:
         logging.debug("Found a route rec.")
         routeRec["nic"] = Nic(routeRec["nic"]).ensure_mac()
-        packRec["sourceMAC"] = routeRec["nic"]["Mac"]
+        packRec.source_mac = routeRec["nic"]["Mac"]
         # set the destination MAC to be the GW MAC if the destination is not local
         # this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
         if (
-            packRec["destMAC"] != packet.BroadcastMAC()
-            and packRec["packettype"] != "DHCP-Response"
+            packRec.destination_mac != packet.BROADCAST_MAC
+            and packRec.packettype != "DHCP-Response"
         ):
             if routeRec.get("gateway") is not None:
                 # We are going out the gateway.  Find the ARP for that
-                packRec["destMAC"] = globalArpLookup(routeRec.get("gateway"))
+                packRec.destination_mac = globalArpLookup(routeRec.get("gateway"))
             else:
                 # We are on a local link.  Set the destmac to be the mac of our destination computer
-                packRec["destMAC"] = globalArpLookup(packRec.get("destIP"))
+                packRec.destination_mac = globalArpLookup(packRec.destination_ip)
 
         if routeRec["nic"]["nicname"] == "management_interface0":
             # If we are exiting a switch / hub; we go out the ports
@@ -1297,17 +1299,17 @@ def sendPacketOutDevice(packRec, theDevice):
             destlink = linkConnectedToNic(routeRec["nic"])
 
     if destlink is not None:
-        packRec["packetlocation"] = destlink["hostname"]
+        packRec.packet_location = destlink["hostname"]
         if destlink["SrcNic"]["hostname"] == theDevice["hostname"]:
-            packRec["packetDirection"] = 1  # Src to Dest
+            packRec.direction = 1  # Src to Dest
         else:
-            packRec["packetDirection"] = 2  # Dest to Source
+            packRec.direction = 2  # Dest to Source
         return True
     # If we get here, it did not work.  No route to host.
     # right now, we blow up.  We need to deal with this with a bit more grace.  Passing the error back to the user
-    packRec["status"] = "failed"
+    packRec.status = "failed"
     logging.info(
-        f"sendpacketoutdevice Giving 'No Route to host' from {theDevice['hostname']} when looking for {packRec['destIP']}"
+        f"sendpacketoutdevice Giving 'No Route to host' from {theDevice['hostname']} when looking for {packRec.destination_ip}"
     )
     session.print("No route to host")
 
@@ -1397,21 +1399,20 @@ def packetFromTo(src, dest):
         dest = ipaddress.IPv4Address(dest)
     # logging.debug(f"We are about to make a packet: {dest} {type(dest)}")
     if isinstance(dest, ipaddress.IPv4Address):
-        # This is what we are hoping for.
-        nPacket = packet.newPacket()  # make an empty packet
-        nPacket["sourceIP"] = sourceIP(src, dest)
-        # packet['sourceMAC'] = #the MAC address of the above IP
-        nPacket["sourceMAC"] = arpLookup(src, nPacket["sourceIP"])
-        # packet['destIP'] = #figure this out
-        nPacket["destIP"] = dest  # this should now be the IP
-        # packet['destMAC'] = #If the IP is local, we use the MAC of the host.  Otherwise it is the MAC of the gateway
-        nPacket["destMAC"] = globalArpLookup(dest)
+        # This is what we are hoping for; make an empty packet.
+        nPacket = packet.Packet()
+        nPacket.source_ip = sourceIP(src, dest)
+        # The MAC address of the above IP
+        nPacket.source_mac = arpLookup(src, nPacket.source_ip)
+        # Figure this out
+        nPacket.destination_ip = dest  # this should now be the IP
+        # If the IP is local, we use the MAC of the host. Otherwise it is the MAC of the gateway,
+        nPacket.destination_mac = globalArpLookup(dest)
         if ip_is_broadcast_for_device(src, dest):
+            # It is a broadcast, use the broadcast MAC
             logging.debug("It is a broadcast, using broadcast MAC")
-            nPacket["destMAC"] = (
-                packet.BroadcastMAC()
-            )  # it is a broadcast, use the broadcast MAC
-        nPacket["packettype"] = ""
+            nPacket.destination_mac = packet.BROADCAST_MAC
+        nPacket.packettype = ""
         return nPacket
 
 
@@ -1422,12 +1423,12 @@ def ping(src, dest):
         dest:dstDevice (also works with a hostname)
     """
     nPacket = packetFromTo(src, dest)
-    if nPacket is not None:
-        nPacket["packettype"] = "ping"
-        nPacket["origPingDest"] = dest
-        sendPacketOutDevice(nPacket, src)
-        # print (nPacket)
-        packet.addPacketToPacketlist(nPacket)
+    if nPacket is None:
+        raise Exception("Failed to create Ping packet.")
+    nPacket.packettype = "ping"
+    nPacket.json["origPingDest"] = dest
+    sendPacketOutDevice(nPacket, src)
+    nPacket.add_to_packet_list()
 
 
 def traceroute(src, dest, newTTL=1):
@@ -1439,21 +1440,20 @@ def traceroute(src, dest, newTTL=1):
     srchost = ensureHostRec(src)
     desthost = ensureHostRec(dest)
     nPacket = packetFromTo(src, dest)
-    nPacket["packettype"] = "traceroute-request"
-    nPacket["TTL"] = newTTL  # This is the secret to the traceroute.
-    nPacket["payload"] = {
+    nPacket.packettype = "traceroute-request"
+    nPacket.json["TTL"] = newTTL  # This is the secret to the traceroute.
+    nPacket.payload = {
         "origTTL": newTTL,  # We will increase this as we go out.
         "origSHostname": srchost.hostname,
-        "origSourceIP": nPacket["sourceIP"],
+        "origSourceIP": nPacket.source_ip,
         "origDHostname": desthost.hostname,
-        "origDestIP": nPacket["destIP"],
+        "origDestIP": nPacket.destination_ip,
     }
     logging.info(
         f"Starting traceroute packet from {srchost.hostname} to {desthost.hostname}"
     )
     sendPacketOutDevice(nPacket, src)
-    # print (nPacket)
-    packet.addPacketToPacketlist(nPacket)
+    nPacket.add_to_packet_list()
 
 
 def doDHCP(srcHostname):
@@ -1470,19 +1470,16 @@ def doDHCP(srcHostname):
         return
     for nic in Device(srcDevice).all_nics():
         if nic.get("usesdhcp") == "True":
-            # This NIC can do DHCP.  Send out a request
-            nPacket = packet.newPacket()
+            # This NIC can do DHCP.  Send out a request.
+            nPacket = packet.Packet()
             # We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
-            nPacket["sourceIP"] = "255.255.255.255"
-            # packet['sourceMAC'] = #the MAC address of the above IP
-            nPacket["sourceMAC"] = nic.get("Mac")
-            nPacket["destIP"] = "255.255.255.255"
-            # packet['destMAC'] = #If the IP is local, we use the MAC of the host.  Otherwise it is the MAC of the gateway
-            nPacket["destMAC"] = packet.BroadcastMAC()
-            nPacket["packettype"] = "DHCP-Request"
+            nPacket.source_ip = "255.255.255.255"
+            nPacket.source_mac = nic.get("Mac")
+            nPacket.destination_ip = "255.255.255.255"
+            nPacket.destination_mac = packet.BROADCAST_MAC
+            nPacket.packettype = "DHCP-Request"
             sendPacketOutDevice(nPacket, srcDevice)
-            # print (nPacket)
-            packet.addPacketToPacketlist(nPacket)
+            nPacket.add_to_packet_list()
 
 
 ##############

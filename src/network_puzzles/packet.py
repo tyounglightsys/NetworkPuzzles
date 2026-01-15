@@ -7,12 +7,38 @@ from . import device, session
 from .link import Link
 from .nic import Nic
 
+BROADCAST_MAC = "FFFFFFFFFFFF"
+
 
 class Packet:
-    def __init__(self, json_data={}):
+    empty_packet_json = {
+        "packettype": "",
+        "VLANID": 0,  # start on the default vlan
+        "health": 100,  # health.  This will drop as the packet goes too close to things causing interferance
+        "sourceIP": "",
+        "TTL": 32,  # The initial time-to-live.  This is really only needed for traceroute packets
+        "sourceMAC": "",
+        "destIP": "",
+        "destMAC": "",
+        "tdestIP": "",  # If we are going through a router.  Mainly so we know which interface we are supposed to be using
+        "status": "good",
+        "statusmessage": "",
+        "payload": "",
+        "packetlocation": "",  # where the packet is.  Should almost always be a link name
+        "packetDirection": 0,  # Which direction are we going on a network link.  1=src to dest, 2=dest to src
+        "packetDistance": 0,  # The % distance the packet has traversed.  This is incremented until it reaches 100%
+    }
+
+    def __init__(self, json_data=None):
         if json_data is None:
-            json_data = {}
-        self.json = json_data
+            json_data = self.empty_packet_json
+            # Seconds since epoc. Failsafe that will kill the packet if too much time has passed
+            json_data["starttime"] = int(time.time() * 1000)
+        self.session = session
+        self.json = json_data.copy()
+        # TODO: Consider adding packet data to puzzle JSON for comprehensive tracking.
+        # if self.session.puzzle:
+        #     self.session.puzzle.add_packet(self.json)
         self.damage_count = 0
         self.health_init = self.health
 
@@ -20,13 +46,26 @@ class Packet:
     def destination_ip(self):
         return self.json.get("destIP")
 
+    @destination_ip.setter
+    def destination_ip(self, value):
+        self.json["destIP"] = value
+
     @property
     def destination_mac(self):
         return self.json.get("destMAC")
 
+    @destination_mac.setter
+    def destination_mac(self, value):
+        self.json["destMAC"] = value
+
     @property
     def direction(self) -> int | None:
         return self.json.get("packetDirection")
+
+    @direction.setter
+    def direction(self, value):
+        value = int(value)  # ensure int
+        self.json["packetDirection"] = value
 
     @property
     def distance(self):
@@ -61,17 +100,51 @@ class Packet:
     def packet_location(self):
         return self.json.get("packetlocation", "")
 
+    @packet_location.setter
+    def packet_location(self, value):
+        self.json["packetlocation"] = value
+
     @property
     def packettype(self):
         return self.json.get("packettype")
+
+    @packettype.setter
+    def packettype(self, value):
+        if not isinstance(value, str):
+            raise ValueError(f"Invalid type for `packettype`: {type(value)}")
+        self.json["packettype"] = value
+
+    @property
+    def path(self):
+        if self.json.get("path") is None:
+            self.json["path"] = []
+        return self.json.get("path")
+
+    @property
+    def payload(self):
+        return self.json.get("payload")
+
+    @payload.setter
+    def payload(self, value):
+        if not isinstance(value, dict):
+            raise ValueError(f"Invalid type for payload: {type(value)}")
+        self.json["payload"] = value
 
     @property
     def source_ip(self):
         return self.json.get("sourceIP")
 
+    @source_ip.setter
+    def source_ip(self, value):
+        self.json["sourceIP"] = value
+
     @property
     def source_mac(self):
         return self.json.get("sourceMAC")
+
+    @source_mac.setter
+    def source_mac(self, value):
+        self.json["sourceMAC"] = value
 
     @property
     def starttime(self):
@@ -83,6 +156,8 @@ class Packet:
 
     @status.setter
     def status(self, value):
+        if not isinstance(value, str):
+            raise ValueError(f"Invalid type for status: {type(value)}")
         self.json["status"] = value
 
     @property
@@ -93,28 +168,8 @@ class Packet:
     def statusmessage(self, value):
         self.json["statusmessage"] = str(value)
 
-    @staticmethod
-    def new_json():
-        return {
-            "packettype": "",
-            "VLANID": 0,  # start on the default vlan
-            "health": 100,  # health.  This will drop as the packet goes too close to things causing interferance
-            "sourceIP": "",
-            "TTL": 32,  # The initial time-to-live.  This is really only needed for traceroute packets
-            "sourceMAC": "",
-            "destIP": "",
-            "destMAC": "",
-            "tdestIP": "",  # If we are going through a router.  Mainly so we know which interface we are supposed to be using
-            "status": "good",
-            "statusmessage": "",
-            "payload": "",
-            "starttime": int(
-                time.time() * 1000
-            ),  # secondssince epoc.  Failsafe that will kill the packet if too much time has passed
-            "packetlocation": "",  # where the packet is.  Should almost always be a link name
-            "packetDirection": 0,  # Which direction are we going on a network link.  1=src to dest, 2=dest to src
-            "packetDistance": 0,  # The % distance the packet has traversed.  This is incremented until it reaches 100%
-        }
+    def add_to_packet_list(self):
+        session.packetlist.append(self)
 
     def apply_possible_damage(self, tick_pct):
         """Damage the packet if near enough to microwave (wireless connection) or light (wired connection)."""
@@ -211,40 +266,10 @@ class Packet:
         return (Nic(src_nic_data), Nic(dest_nic_data))
 
 
-def newPacket():
-    """Returns an empty packet with all the fields."""
-    nPacket = {
-        "packettype": "",
-        "VLANID": 0,  # start on the default vlan
-        "health": 100,  # health.  This will drop as the packet goes too close to things causing interferance
-        "sourceIP": "",
-        "TTL": 32,  # The initial time-to-live.  This is really only needed for traceroute packets
-        "sourceMAC": "",
-        "destIP": "",
-        "destMAC": "",
-        "tdestIP": "",  # If we are going through a router.  Mainly so we know which interface we are supposed to be using
-        "status": "good",
-        "statusmessage": "",
-        "payload": "",
-        "starttime": int(
-            time.time() * 1000
-        ),  # secondssince epoc.  Failsafe that will kill the packet if too much time has passed
-        "packetlocation": "",  # where the packet is.  Should almost always be a link name
-        "packetDirection": 0,  # Which direction are we going on a network link.  1=src to dest, 2=dest to src
-        "packetDistance": 0,  # The % distance the packet has traversed.  This is incremented until it reaches 100%
-    }
-    return nPacket
-
-
 def distance(sx, sy, dx, dy):
     # we have a 5/5 grid that we are working with.
     # The ** is the exponent.  **2 is squared, **.5 is the square-root
     return ((((sx - dx) ** 2) + ((sy - dy) ** 2)) ** 0.5) / 5
-
-
-def addPacketToPacketlist(thepacket):
-    if thepacket is not None:
-        session.packetlist.append(Packet(thepacket))
 
 
 def packetsNeedProcessing():
@@ -291,7 +316,7 @@ def processPackets(killSeconds: int = 20, tick_pct: float = 10):
                     logging.error(f"Direction = {pkt.direction}")
                     raise Exception("Could not find the endpoint of the link.")
                 # We are here.  Call a function on the nic to start the packet entering the device
-                device.doInputFromLink(pkt.json, src_nic.json)
+                device.doInputFromLink(pkt, src_nic.json)
 
         # If the packet has been going too long.  Kill it.
         if curtime - pkt.starttime > killMilliseconds:
@@ -305,20 +330,9 @@ def processPackets(killSeconds: int = 20, tick_pct: float = 10):
 
 def cleanupPackets():
     """After processing packets, remove any "done" ones from the list."""
-    for index in range(len(session.packetlist) - 1, -1, -1):
-        pkt = session.packetlist[index]
-        match pkt.status:
-            case "good":
-                continue
-            case "failed":
-                # We may need to log/track this.  But we simply remove it for now
-                del session.packetlist[index]
-            case "done":
-                # We may need to log/track this.  But we simply remove it for now
-                del session.packetlist[index]
-            case "dropped":
-                # packets are dropped when they are politely ignored by a device.  No need to log
-                del session.packetlist[index]
+    for pkt in session.packetlist:
+        if pkt.status in ("done", "dropped", "failed"):
+            session.packetlist.remove(pkt)
 
 
 def is_ipv6(string):
@@ -409,20 +423,9 @@ def isBroadcast(packetIP: str, interfaceIP: str):
         return False
 
 
-def BroadcastMAC():
-    """ "return the broadcast MAC address: FFFFFFFFFFFF"""
-    return "FFFFFFFFFFFF"
-
-
-def isBroadcastMAC(macToCheck: str):
-    """Check to see if the mac address is the broadcast one.  Should be FFFFFFFFFFFF"""
-    if macToCheck == "FFFFFFFFFFFF":
-        return True
-    if macToCheck == "FF:FF:FF:FF:FF:FF":
-        return True
-    if macToCheck == "FF-FF-FF-FF-FF-FF":
-        return True
-    return False
+def is_broadcast_mac(mac: str):
+    """Check to see if the mac address is the broadcast one. Should be FFFFFFFFFFFF"""
+    return mac.replace(":", "").replace("-", "").upper() == BROADCAST_MAC
 
 
 def isEmpty(iptocheck: str):
