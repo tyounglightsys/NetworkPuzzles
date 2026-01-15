@@ -77,15 +77,11 @@ class Puzzle:
         return f"{self.json.get('level')}.{self.json.get('sortorder')}"
 
     def all_devices(self):
-        """
-        Return a list that contains all devices in the puzzle.
-        """
+        """Return a list that contains all devices in the puzzle."""
         return self._get_items("device")
 
     def all_links(self):
-        """
-        Return a list that contains all links in the puzzle.
-        """
+        """Return a list that contains all links in the puzzle."""
         return self._get_items("link")
 
     def all_tests(self, hostname=None):
