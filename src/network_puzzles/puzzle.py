@@ -20,7 +20,7 @@ class Puzzle:
     def __init__(self, data):
         if not isinstance(data, dict):
             raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
-        self.json = data
+        self.json = data.copy()
         self.completion_notified = False
 
     @property
@@ -61,6 +61,16 @@ class Puzzle:
                 logging.warning(f"Ignoring invalid link data, {lnk}")
 
     @property
+    def packets(self):
+        """Generator to yield all packets currently present in the puzzle."""
+        raise NotImplementedError
+        for data in self.json.get("packet", []):
+            if isinstance(data, dict):
+                yield data
+            else:
+                logging.warning(f"Ignoring invalid packet data: {data}")
+
+    @property
     def tests(self):
         """Generator to yield all tests in puzzle as PuzzleTest objects."""
         for data in self.json.get("nettest", []):
@@ -76,6 +86,16 @@ class Puzzle:
     def uid(self):
         return f"{self.json.get('level')}.{self.json.get('sortorder')}"
 
+    def add_packet(self, pkt):
+        if isinstance(pkt, packet.Packet):
+            data = pkt.json
+        elif isinstance(pkt, dict):
+            data = pkt
+        # Ensure packet entry exists.
+        if not self.json.get("packet"):
+            self.json["packet"] = []
+        self.json["packet"].append(data)
+
     def all_devices(self):
         """Return a list that contains all devices in the puzzle."""
         return self._get_items("device")
@@ -83,6 +103,11 @@ class Puzzle:
     def all_links(self):
         """Return a list that contains all links in the puzzle."""
         return self._get_items("link")
+
+    def all_packets(self):
+        """Return a list that contains all packets in the puzzle."""
+        raise NotImplementedError
+        return self._get_items("packet")
 
     def all_tests(self, hostname=None):
         tests = []
@@ -163,6 +188,16 @@ class Puzzle:
 
     def arp_lookup(self, ipaddr):
         return device.globalArpLookup(ipaddr)
+
+    def delete_packet(self, pkt):
+        pkts = self.json.get("packet")
+        if isinstance(pkts, list):
+            for i, p in enumerate(pkts):
+                if p == pkt.json:
+                    del self.json["packet"][i]
+        # Delete empty packet list.
+        if len(self.json.get("packet", [])) == 0:
+            del self.json["packet"]
 
     def device_from_ip(self, ipaddr):
         for d in self.devices:
@@ -705,7 +740,8 @@ class Puzzle:
 
     def _get_items(self, item_type: str):
         """
-        Return a list of the given item_type ('link', 'device', 'nettest').
+        Return a list of the given item_type.
+        Valid types include: "link", "device", "nettest", "packet"
         """
         items = []
         only_one_item = False
@@ -718,7 +754,7 @@ class Puzzle:
                 case "link" | "device":
                     if "hostname" in item:
                         items.append(item)
-                case "nettest":
+                case "nettest" | "packet":
                     items.append(item)
             if only_one_item:
                 break  # stop iterating through dict keys
