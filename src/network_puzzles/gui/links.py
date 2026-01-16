@@ -2,18 +2,18 @@ from kivy.graphics import Color, Line
 from kivy.properties import ListProperty
 from kivy.uix.widget import Widget
 
-from .. import link, session
+from .. import session
+from ..link import Link
 from .base import hide_widget
 from .popups import ThemedPopup
 
 
-class Link(Widget):
+class GuiLink(Widget, Link):
     end = ListProperty(None)
     start = ListProperty(None)
 
-    def __init__(self, init_data=None, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.base = link.Link(init_data)
 
         self._set_points()
         self._set_size_and_pos()
@@ -24,20 +24,6 @@ class Link(Widget):
     @property
     def app(self):
         return session.app
-
-    @property
-    def hostname(self):
-        if hasattr(self, "base"):
-            return self.base.hostname
-        else:
-            return None
-
-    @property
-    def uniqueidentifier(self):
-        if hasattr(self, "base"):
-            return self.base.uniqueidentifier
-        else:
-            return None
 
     def _draw_line(self):
         self.canvas.clear()
@@ -94,14 +80,14 @@ class Link(Widget):
     def _set_endpoint(self, end_dev=None):
         if end_dev is None:
             end_dev = self.app.get_widget_by_hostname(
-                self.base.json.get("DstNic").get("hostname")
+                self.json.get("DstNic").get("hostname")
             )
         self.end = end_dev.button.center
 
     def _set_startpoint(self, start_dev=None):
         if start_dev is None:
             start_dev = self.app.get_widget_by_hostname(
-                self.base.json.get("SrcNic").get("hostname")
+                self.json.get("SrcNic").get("hostname")
             )
         self.start = start_dev.button.center
 

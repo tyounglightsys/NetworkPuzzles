@@ -21,7 +21,6 @@ from kivy.app import App
 from kivy.base import ExceptionHandler, ExceptionManager
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.textinput import TextInput
 
 from .. import messages, nettests
@@ -39,8 +38,8 @@ from .base import (
     show_grid,  # noqa: F401
 )
 from .buttons import MenuButton
-from .devices import ChooseNicPopup, Device
-from .links import Link
+from .devices import ChooseNicPopup, GuiDevice
+from .links import GuiLink
 from .packets import PacketManager
 from .popups import (
     CommandPopup,
@@ -110,15 +109,15 @@ class NetworkPuzzlesApp(App):
 
     @property
     def devices(self):
-        return self._get_widgets_by_class_name("Device")
+        return self._get_widgets_by_class_name("GuiDevice")
 
     @property
     def links(self):
-        return self._get_widgets_by_class_name("Link")
+        return self._get_widgets_by_class_name("GuiLink")
 
     @property
     def packets(self):
-        return self._get_widgets_by_class_name("Packet")
+        return self._get_widgets_by_class_name("GuiPacket")
 
     def check_puzzle(self, *args):
         """Checked at regular interval during kivy app loop."""
@@ -130,9 +129,9 @@ class NetworkPuzzlesApp(App):
         self.root.ids.layout.close_trays()
         # TODO: If device_inst not given, require user to choose device type
         # on the screen to instantiate a new device.
-        if not isinstance(devicew, Device):
+        if not isinstance(devicew, GuiDevice):
             if isinstance(devicew, dict):
-                devicew = Device(devicew)
+                devicew = GuiDevice(value=devicew)
             elif isinstance(devicew, MenuButton):
                 # Initiate new device creation sequence.
                 self._new_device_type = dtype
@@ -140,7 +139,7 @@ class NetworkPuzzlesApp(App):
                 return
 
         # Hide invisible devices.
-        if devicew.base.is_invisible:
+        if devicew.is_invisible:
             devicew.hide()
 
         # Add device to layout.
@@ -150,18 +149,18 @@ class NetworkPuzzlesApp(App):
         # Ensure new item menus are closed.
         self.root.ids.layout.close_trays()
 
-        if not isinstance(linkw, Link):
+        if not isinstance(linkw, GuiLink):
             if isinstance(linkw, dict):
-                linkw = Link(linkw)
+                linkw = GuiLink(linkrec=linkw)
             elif isinstance(linkw, MenuButton):
                 # Initiate new link creation sequence.
                 Clock.schedule_once(self._new_link)
                 return
 
         # Hide liks connected to invisible devices.
-        for host in (linkw.base.src, linkw.base.dest):
+        for host in (linkw.src, linkw.dest):
             w = self.get_widget_by_hostname(host)
-            if w.base.is_invisible:
+            if w.is_invisible:
                 linkw.hide()
 
         # Add link to z-index = 99 to ensure it's drawn under devices.
@@ -174,13 +173,13 @@ class NetworkPuzzlesApp(App):
 
     def draw_devices(self, *args):
         for dev in self.ui.puzzle.devices:
-            self.add_device(Device(dev))
+            self.add_device(GuiDevice(value=dev))
 
     def draw_links(self, *args):
         for link in self.ui.puzzle.links:
             if link is None:
                 continue
-            self.add_link(Link(link))
+            self.add_link(GuiLink(linkrec=link))
         self._print_stats()
 
     def draw_puzzle(self, *args):
@@ -219,9 +218,13 @@ class NetworkPuzzlesApp(App):
         Clock.schedule_once(self.draw_links)
 
     def get_first_link_index(self):
-        first_index = 999
+        first_index = None
         for w in self.links:
-            first_index = min([self.root.ids.layout.children.index(w), first_index])
+            idx = self.root.ids.layout.children.index(w)
+            if first_index is None:
+                first_index = idx
+            else:
+                first_index = min((idx, first_index))
         return first_index
 
     def get_widget_by_hostname(self, hostname):
@@ -286,7 +289,7 @@ class NetworkPuzzlesApp(App):
         """Remove widget from layout by widget or item JSON data."""
         # TODO: Add parser command to also remove widget from puzzle JSON.
         widget = None
-        if isinstance(item, Link) or isinstance(item, Device):
+        if isinstance(item, GuiLink) or isinstance(item, GuiDevice):
             widget = item
         elif isinstance(item, dict):
             widget = self.get_widget_by_hostname(item.get("hostname"))
@@ -409,7 +412,7 @@ class NetworkPuzzlesApp(App):
         # NOTE: Invariant emblems don't get removed.
         for c in self.root.ids.layout.children:
             if isinstance(c, HelpHighlight):
-                # print(f"Removing highlight for {c.base.hostname}")
+                # print(f"Removing highlight for {c.hostname}")
                 self.root.ids.layout.remove_widget(c)
         # Add any required highlights.
         if help_level > 0:
@@ -427,7 +430,7 @@ class NetworkPuzzlesApp(App):
                     logging.info(f'App: Ignoring highlight of non-device "{n}"')
                     continue
                 w = self.get_widget_by_hostname(n)
-                if isinstance(w, Device) and not w.base.is_invisible:
+                if isinstance(w, GuiDevice) and not w.is_invisible:
                     match t:
                         case "LockAll":
                             # Ignore. Used for fluorescent light in packet

@@ -20,7 +20,7 @@ class Puzzle:
     def __init__(self, data):
         if not isinstance(data, dict):
             raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
-        self.json = data
+        self.json = data.copy()
         self.completion_notified = False
 
     @property
@@ -61,6 +61,16 @@ class Puzzle:
                 logging.warning(f"Ignoring invalid link data, {lnk}")
 
     @property
+    def packets(self):
+        """Generator to yield all packets currently present in the puzzle."""
+        raise NotImplementedError
+        for data in self.json.get("packet", []):
+            if isinstance(data, dict):
+                yield data
+            else:
+                logging.warning(f"Ignoring invalid packet data: {data}")
+
+    @property
     def tests(self):
         """Generator to yield all tests in puzzle as PuzzleTest objects."""
         for data in self.json.get("nettest", []):
@@ -76,17 +86,28 @@ class Puzzle:
     def uid(self):
         return f"{self.json.get('level')}.{self.json.get('sortorder')}"
 
+    def add_packet(self, pkt):
+        if isinstance(pkt, packet.Packet):
+            data = pkt.json
+        elif isinstance(pkt, dict):
+            data = pkt
+        # Ensure packet entry exists.
+        if not self.json.get("packet"):
+            self.json["packet"] = []
+        self.json["packet"].append(data)
+
     def all_devices(self):
-        """
-        Return a list that contains all devices in the puzzle.
-        """
+        """Return a list that contains all devices in the puzzle."""
         return self._get_items("device")
 
     def all_links(self):
-        """
-        Return a list that contains all links in the puzzle.
-        """
+        """Return a list that contains all links in the puzzle."""
         return self._get_items("link")
+
+    def all_packets(self):
+        """Return a list that contains all packets in the puzzle."""
+        raise NotImplementedError
+        return self._get_items("packet")
 
     def all_tests(self, hostname=None):
         tests = []
@@ -167,6 +188,16 @@ class Puzzle:
 
     def arp_lookup(self, ipaddr):
         return device.globalArpLookup(ipaddr)
+
+    def delete_packet(self, pkt):
+        pkts = self.json.get("packet")
+        if isinstance(pkts, list):
+            for i, p in enumerate(pkts):
+                if p == pkt.json:
+                    del self.json["packet"][i]
+        # Delete empty packet list.
+        if len(self.json.get("packet", [])) == 0:
+            del self.json["packet"]
 
     def device_from_ip(self, ipaddr):
         for d in self.devices:
@@ -544,51 +575,53 @@ class Puzzle:
             },
             "nic": list(),
         }
-        if device_type not in {"tree", "fluorescent"}:
+        if device_type not in ("tree", "fluorescent"):
             self.createNIC(newdevice, "lo")
-        if device_type in {"net_switch", "net_hub"}:
-            self.createNIC(newdevice, "management_interface")
-            for a in range(8):
-                self.createNIC(newdevice, "port")
-        if device_type == "pc":
-            for a in range(2):
+        match device_type:
+            case "cellphone" | "tablet":
+                self.createNIC(newdevice, "wlan")
+            case "firewall":
                 self.createNIC(newdevice, "eth")
-        if device_type == "laptop":
-            self.createNIC(newdevice, "eth")
-            self.createNIC(newdevice, "wlan")
-        if device_type == "wbridge":
-            self.createNIC(newdevice, "wlan")
-            for a in range(4):
-                self.createNIC(newdevice, "wport")
-        if device_type == "wap":
-            self.createNIC(newdevice, "management_interface")
-            self.createNIC(newdevice, "port")
-            for a in range(6):
-                self.createNIC(newdevice, "wport")
-        if device_type == "wrepeater":
-            self.createNIC(newdevice, "wport")
-            self.createNIC(newdevice, "wlan")
-        if device_type == "wrouter":
-            self.createNIC(newdevice, "management_interface")
-            for a in range(4):
+                self.createNIC(newdevice, "wan")
+            case "ip_phone":
+                # an IP phone has one nic that is DHCP enabled
+                newnic = self.createNIC(newdevice, "eth")
+                newnic["usesdhcp"] = "True"
+            case "laptop":
+                self.createNIC(newdevice, "eth")
+                self.createNIC(newdevice, "wlan")
+            case "net_hub" | "net_switch":
+                self.createNIC(newdevice, "management_interface")
+                for _ in range(8):
+                    self.createNIC(newdevice, "port")
+            case "pc":
+                for _ in range(2):
+                    self.createNIC(newdevice, "eth")
+            case "server":
+                self.createNIC(newdevice, "eth")
+                # Servers can serve DHCP.  They may or may not have DHCP configured
+                newdevice["isdhcp"] = "True"
+                device.Device(newdevice).disable_nic_dhcp()
+            case "wap":
+                self.createNIC(newdevice, "management_interface")
                 self.createNIC(newdevice, "port")
-            for a in range(8):
+                for _ in range(6):
+                    self.createNIC(newdevice, "wport")
+            case "wbridge":
+                self.createNIC(newdevice, "wlan")
+                for _ in range(4):
+                    self.createNIC(newdevice, "wport")
+            case "wrepeater":
                 self.createNIC(newdevice, "wport")
-            self.createNIC(newdevice, "vpn")
-            self.createNIC(newdevice, "wan")
-        if device_type == "firewall":
-            self.createNIC(newdevice, "eth")
-            self.createNIC(newdevice, "wan")
-        if device_type in {"server"}:
-            self.createNIC(newdevice, "eth")
-            newdevice['isdhcp'] = "True" #servers can serve DHCP.  They may or may not have DHCP configured
-            device.Device(newdevice).disable_nic_dhcp()   
-        if device_type in {"cellphone", "tablet"}:
-            self.createNIC(newdevice, "wlan")
-        if device_type == "ip_phone":
-            # an IP phone has one nic that is DHCP enabled
-            newnic = self.createNIC(newdevice, "eth")
-            newnic["usesdhcp"] = "True"
+                self.createNIC(newdevice, "wlan")
+            case "wrouter":
+                self.createNIC(newdevice, "management_interface")
+                for _ in range(4):
+                    self.createNIC(newdevice, "port")
+                for _ in range(8):
+                    self.createNIC(newdevice, "wport")
+                self.createNIC(newdevice, "vpn")
+                self.createNIC(newdevice, "wan")
 
         self.json["device"].append(newdevice)
         session.print(f"Creating new device: {newdevicename}")
@@ -618,9 +651,8 @@ class Puzzle:
                     return False
 
         else:
-            args.pop(
-                0
-            )  # get rid of it. if it is none, we use the arg as the dest hostname
+            # get rid of it. if it is none, we use the arg as the dest hostname
+            args.pop(0)
         ddevicename = args.pop(0)
         ddevice = session.puzzle.device_from_name(ddevicename)
         if ddevice is None:
@@ -708,7 +740,8 @@ class Puzzle:
 
     def _get_items(self, item_type: str):
         """
-        Return a list of the given item_type ('link', 'device', 'nettest').
+        Return a list of the given item_type.
+        Valid types include: "link", "device", "nettest", "packet"
         """
         items = []
         only_one_item = False
@@ -721,7 +754,7 @@ class Puzzle:
                 case "link" | "device":
                     if "hostname" in item:
                         items.append(item)
-                case "nettest":
+                case "nettest" | "packet":
                     items.append(item)
             if only_one_item:
                 break  # stop iterating through dict keys

@@ -166,7 +166,7 @@ class AppButton(ThemedButton):
 
 class DeviceButton(ThemedButton):
     def on_pos(self, *args):
-        # Update drag_rectangle for Device (parent) widget.
+        # Update drag_rectangle for GuiDevice (parent) widget.
         if hasattr(self, "parent"):
             self.parent.drag_rectangle = [
                 *self.parent.drag_rectangle[:3],

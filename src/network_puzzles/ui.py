@@ -170,9 +170,9 @@ class CLI(UI):
                 if count > 5:
                     self.acknowledge_any_tests()
                     count = 0
-                packet.processPackets(
-                    2
-                )  # the cli does not need much time to know packets are going to loop forever.
+                # The cli does not need much time to know packets are going to
+                # loop forever.
+                packet.processPackets(2)
             self.update_puzzle_completion_status()
         except EOFError:
             sys.exit()

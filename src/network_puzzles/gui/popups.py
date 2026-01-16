@@ -2,7 +2,7 @@ import logging
 
 from kivy.uix.popup import Popup
 
-from .. import device, session
+from .. import device, nic, session
 from .inputs import ValueInput
 from .labels import CheckBoxLabel
 from .layouts import SingleRowLayout
@@ -60,27 +60,57 @@ class DeviceCommandsPopup(ThemedPopup):
 
 
 class EditDhcpPopup(ActionPopup):
+    LOCALHOST_IP = "127.0.0.1"
+    NO_IP = "0.0.0.0"
+    UNSET = {"ip": NO_IP, "mask": "0.0.0.0", "gateway": "0.0.0.0", "type": "route"}
+
     def __init__(self, devicew, **kwargs):
         self.device = devicew
         super().__init__(**kwargs)
-        self.dhcp_configs = [
-            ip_data
-            for ip_data in self.device.base.json.get("dhcprange", list())
-            if ip_data.get("ip") != "127.0.0.1"
-        ]
         self._add_dhcp_configs()
 
+    @property
+    def dhcp_configs(self):
+        return [
+            ip_data
+            for ip_data in self.device.json.get("dhcprange", [])
+            if ip_data.get("ip") != self.LOCALHOST_IP
+        ]
+
+    @property
+    def unset_configs(self):
+        unset_configs = []
+        for data in self.device.all_nics():
+            n = nic.Nic(data)
+            ips = [
+                ip.get("ip")
+                for ip in n.ip_addresses
+                if ip.get("ip") != self.LOCALHOST_IP
+            ]
+            for ip in ips:
+                _data = self.UNSET.copy()
+                _data["ip"] = ip
+                unset_configs.append(_data)
+        if len(unset_configs) == 0:
+            data = self.UNSET.copy()
+            data["ip"] = self.NO_IP
+            unset_configs.append(data)
+        return unset_configs
+
     def on_okay(self):
-        for c in self.dhcp_configs:
-            ip = c.get("ip")
-            row = self._get_dhcp_row(ip)
-            if row:
-                start = row.children[-2].text
-                end = row.children[-3].text
-                if start != c.get("mask") or end != c.get("gateway"):
-                    cmd = f"set {self.device.hostname} dhcp {ip} {start}-{end}"
-                    logging.info(f"Popups: > {cmd}")
-                    self.app.ui.parse(cmd)
+        old_configs = [c.values() for c in self.dhcp_configs]
+        for row in self.ids.dhcp_configs_layout.children:
+            # Child widgets' order is the opposite of how they were added.
+            end, start, ip = [c.text for c in row.children]
+            if ip == "0.0.0.0":
+                # Fallback config.
+                continue
+            elif [ip, start, end] in old_configs:
+                # Unchanged config.
+                continue
+            cmd = f"set {self.device.hostname} dhcp {ip} {start}-{end}"
+            logging.info(f"Popups: > {cmd}")
+            self.app.ui.parse(cmd)
 
         # Update GUI helps b/c it will trigger tooltip updates, which are needed
         # b/c IP data has likely changed.
@@ -88,19 +118,17 @@ class EditDhcpPopup(ActionPopup):
         super().on_okay()
 
     def _add_dhcp_configs(self):
-        for config in self.dhcp_configs:
+        configs = self.dhcp_configs
+        if len(configs) == 0:
+            configs = self.unset_configs
+        for data in configs:
             bl = SingleRowLayout()
-            ip = CheckBoxLabel(text=config.get("ip"))
-            start = ValueInput(text=config.get("mask"))
-            end = ValueInput(text=config.get("gateway"))
+            ip = CheckBoxLabel(text=data.get("ip"))
+            start = ValueInput(text=data.get("mask"))
+            end = ValueInput(text=data.get("gateway"))
             for w in [ip, start, end]:
                 bl.add_widget(w)
-        self.ids.dhcp_configs_layout.add_widget(bl)
-
-    def _get_dhcp_row(self, ip):
-        for row in self.ids.dhcp_configs_layout.children:
-            if row.children[-1].text == ip:
-                return row
+            self.ids.dhcp_configs_layout.add_widget(bl)
 
 
 class EditIpPopup(ActionPopup):
