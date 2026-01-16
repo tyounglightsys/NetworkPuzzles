@@ -230,7 +230,79 @@ class Device:
                 if oneinterface.get("nicname") == interfacename:
                     return oneinterface
         return None
+    
+    #firewall pieces
+    @property
+    def CanDoFirewall(self):
+        #If it does not exist at all
+        if self.type == "firewall":
+            return True
+        if self.type == "wrouter":
+            return True
+        return False
 
+    @property
+    def HasAdvancedFirewall(self):
+        #If it does not exist at all
+        if 'firewallrule' not in self.json:
+            return False
+        if (len(self.json.get('firewallrule')) == 0):
+            return False
+        return True
+    
+    def AllFirewallRules(self):
+        if (not self.HasAdvancedFirewall):
+            #it is an empty list
+            return []
+        if not isinstance(self.json.get('firewallrule'), list):
+            #make sure it is a list.
+            self.json['firewallrule'] = [self.json.get('firewallrule')]
+        return self.json['firewallrule']
+    
+    def AdvFirewallAllows(self,InInterface: str, OutInterface: str):
+        if (not self.HasAdvancedFirewall):
+            return True #We can go out the firewall if no rules
+        #logging.debug("Testing firewall rule. in {InInterface} - out {OutInterface}")
+        for onerule in self.AllFirewallRules():
+            if onerule.get('source') == InInterface and onerule.get('destination') == OutInterface:
+                #logging.debug("Found match.")
+                if onerule.get('action') == "Drop" or onerule.get('action') == "drop":
+                    return False
+                if onerule.get('action') == "Allow" or onerule.get('action') == "allow":
+                    return True
+        #If no rules prohibit it, allow it.  Default policy
+        return True
+    
+    def AdvFirewallAdd(self, InInterface: str, OutInterface: str, dropallow: str):
+        logging.debug("Adding firewall rule. in {InInterface} - out {OutInterface} - {dropallow}")
+        #if we have a rule with the same src/dest, we replace the target
+        #if not, we add a new rule with the specified info
+        for onerule in self.AllFirewallRules():
+            if onerule.get('source') == InInterface and onerule.get('destination') == OutInterface:
+                onerule['action'] = dropallow.lower()
+                return True
+        #If we get here, nothing yet matched.  Add a new record
+        newfw = {
+            "source" : InInterface,
+            "destination" : OutInterface,
+            "action" : dropallow
+        } 
+        self.json['firewallrule'].append(newfw)
+        return True
+
+    def AdvFirewallDel(self, InInterface: str, OutInterface: str, dropallow: str):
+        logging.debug("Deleting firewall rule. in {InInterface} - out {OutInterface} - {dropallow}")
+        #if we have a rule with the same src/dest/targer, we drop it
+        #if not, we return "false"
+        for onerule in self.AllFirewallRules():
+            if onerule.get('source') == InInterface and onerule.get('destination') == OutInterface and onerule.get('action').lower() == dropallow.lower():
+                self.json['firewallrule'].remove(onerule)
+                return True
+        #If we get here, nothing yet matched.  Add a new record
+        return False
+
+
+    # Generic functions
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict | None:
         # Returns first match; i.e. assumes only one item in list matches given
         # attribute. It also assumes that 'items' is a list of dicts or json data.
@@ -789,7 +861,9 @@ def findLocalNICInterface(targetIPstring: str, networkCardRec):
             networkCardRec["interface"]
         ]  # turn it into a list if needed.
     for oneIF in networkCardRec["interface"]:
+        #logging.debug(f"Looking for local interface.  Comparing: {targetIPstring} {interfaceIP(oneIF)}")
         if packet.isLocal(targetIPstring, interfaceIP(oneIF)):
+            #logging.debug(f"   Found it: {oneIF}")
             return oneIF
     return None
 
@@ -802,8 +876,13 @@ def findPrimaryNICInterface(networkCardRec):
 
 
 def doInputFromLink(packRec, nicRec):
+    #zero these out.  We will set them below
+    packRec['inhost'] = ""
+    packRec['ininterface'] = ""
     # figure out what device belongs to the nic
     thisDevice = session.puzzle.device_from_uid(nicRec["myid"]["hostid"])
+    if thisDevice is not None:
+        packRec['inhost'] = Device(thisDevice).hostname
 
     # Do the simple stuff
     if powerOff(thisDevice):
@@ -826,10 +905,18 @@ def doInputFromLink(packRec, nicRec):
     # the interface still might be none if we are a switch/hub port
     # Verify the interface.  This is mainly to work with SSIDs, VLANs, VPNs, etc.
     if tInterface is not None:
+        #we track where it came in on.  We do it it here to track vlan info too.
+        if isinstance(tInterface, str):
+            packRec['ininterface'] = tInterface
+        else:
+            packRec['ininterface'] = tInterface.get('nicname')
+
         beginIngressOnInterface(packRec, tInterface)
 
     # the packet status should show dropped or something if we have a problem.
     # but for now, pass it onto the NIC
+    #logging.debug(f"We are routing.  Here is the packet: {packRec}")
+    #logging.debug(f"We are routing.  Here is the nic: {nicRec}")
     return beginIngressOnNIC(packRec, nicRec)
     # The NIC passes it onto the device if needed.  We are done with this.
 
@@ -1276,6 +1363,7 @@ def sendPacketOutDevice(packRec, theDevice):
         logging.debug("Found a route rec.")
         routeRec["nic"] = Nic(routeRec["nic"]).ensure_mac()
         packRec.source_mac = routeRec["nic"]["Mac"]
+        packRec.json['tdestIP'] = routeRec.get('gateway') #track when we use a gateway
         # set the destination MAC to be the GW MAC if the destination is not local
         # this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
         if (
@@ -1304,7 +1392,20 @@ def sendPacketOutDevice(packRec, theDevice):
             packRec.direction = 1  # Src to Dest
         else:
             packRec.direction = 2  # Dest to Source
-        return True
+        #If we get here, we know which interface the packet is going out of.
+        #If we are an originating packet, check firewall.  A reply gets allowed.
+        if packRec.packettype == "traceroute-response" or packRec.packettype == "ping-response":
+            return True
+        
+        #This works for originating packets
+        if Device(theDevice).AdvFirewallAllows(packRec.json.get('ininterface'),routeRec.get('interface').get('nicname')):
+            return True
+        else:
+            logging.debug(f"Packet dropped by firewall: {packRec.json.get('inhost')} {packRec.json.get('ininterface')}-{routeRec.get('interface').get('nicname')}")
+            session.print("Packet dropped by firewall")
+            packRec.status = "done"
+            return False
+
     # If we get here, it did not work.  No route to host.
     # right now, we blow up.  We need to deal with this with a bit more grace.  Passing the error back to the user
     packRec.status = "failed"

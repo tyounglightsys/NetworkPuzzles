@@ -165,7 +165,7 @@
               }
             }
           ],
-          "firwallrule": [
+          "firewallrule": [
             {
               "source": "eth0",
               "destination": "eth0:1",

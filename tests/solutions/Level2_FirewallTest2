@@ -1,0 +1,4 @@
+load Level2_FirewallTest2
+firewall firewall0 del eth0 eth1 drop
+ping pc1 pc3
+ping pc3 pc1
