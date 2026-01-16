@@ -286,6 +286,7 @@ class EditDevicePopup(ActionPopup):
         self.selected_ip = None
         self._selected_nic = None
         self.puzzle_commands = list()
+        self.dhcp_checkbox = None
         self._add_conditional_widgets()
 
     @property
@@ -301,7 +302,10 @@ class EditDevicePopup(ActionPopup):
         EditDhcpPopup(self.device).open()
 
     def on_dhcp_chkbox(self):
-        raise NotImplementedError
+        if self.dhcp_checkbox.state == "normal":  # unchecked
+            self.device.is_dhcp = False
+        elif self.dhcp_checkbox.state == "down":  # checked
+            self.device.is_dhcp = True
 
     def on_gateway(self):
         if not self.ids.gateway.focus:
@@ -406,10 +410,10 @@ class EditDevicePopup(ActionPopup):
                 state = "down"
             else:
                 state = "normal"
-            c = ThemedCheckBox(size_hint_x=0.1, state=state)
+            self.dhcp_checkbox = DHCPCheckBox(size_hint_x=0.1, state=state)
             t = CheckBoxLabel(text=f"{_('DHCP Server')}", size_hint_x=0.4)
             b = ThemedButton(text=f"{_('Edit DHCP')}", on_release=self.on_dhcp_button)
-            for w in [c, t, b]:
+            for w in [self.dhcp_checkbox, t, b]:
                 l_cb.add_widget(w)
             self.root.ids.left_panel.add_widget(l_cb)
         if self.device.mytype in ["router", "switch"]:
@@ -447,3 +451,17 @@ class EditDevicePopup(ActionPopup):
         n = self.device.get_nic(self.selected_nic)
         logging.debug(f"Devices: {n.name} ifaces: {n.interfaces}")
         self.ids.ips_list.update_data(n.ip_addresses)
+
+
+class DHCPCheckBox(ThemedCheckBox):
+    @property
+    def popup(self):
+        w = self
+        while w:
+            if hasattr(w.parent, "on_dhcp_chkbox"):
+                return w.parent
+            w = w.parent
+
+    def on_activate(self):
+        if self.popup:
+            self.popup.on_dhcp_chkbox()
