@@ -924,6 +924,11 @@ def choosePuzzle(what, filter=None):
     readPuzzle()
     if filter is not None:
         # We have a filter.  We need to try to look up the item from the filtered list
+        # Strip matched start and end quotes. If unmatched, the quotes are
+        # assumed to be part of the intended pattern. If matched, the quotes are
+        # assumed to be terminal "escaping" for "dangerous" characters.
+        if filter[0] == filter[-1] and filter[0] in ('"', "'"):
+            filter = filter.strip(filter[0])
         filteredList = listPuzzles(filter)
         if len(filteredList) > 0:
             # this means it is a valid filter. Try to use it.
