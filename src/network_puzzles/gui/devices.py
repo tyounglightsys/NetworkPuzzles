@@ -278,6 +278,12 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
 
 
 class EditDevicePopup(ActionPopup):
+    # TODO: Decide which changes should be made immediately and which ones
+    # should only be made when clicking "Okay". Consider: add/remove NICs,
+    # add/remove IPs, enable/disable DHCP/firewall, configure DHCP/firewall. One
+    # idea is on "Cancel" an equal number of "redo" functions is run that
+    # correspond to the number of commands run since the Popup was opened.
+
     def __init__(self, dev, **kwargs):
         # Use copy of data for displaying in UI b/c real changes will be
         # applied via parser commands when "Okay" is clicked.
