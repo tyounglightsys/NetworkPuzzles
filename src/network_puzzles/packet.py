@@ -102,6 +102,28 @@ class Packet(ItemBase):
         self.json["health"] = value
 
     @property
+    def in_host(self):
+        if "inhost" not in self.json:
+            self.json["inhost"] = ""
+        return self.json.get("inhost")
+
+    @in_host.setter
+    def in_host(self, value):
+        value = str(value)
+        self.json["inhost"] = value
+
+    @property
+    def in_interface(self):
+        if "ininterface" not in self.json:
+            self.json["ininterface"] = ""
+        return self.json.get("ininterface")
+
+    @in_interface.setter
+    def in_interface(self, value):
+        value = str(value)
+        self.json["ininterface"] = value
+
+    @property
     def packet_location(self):
         return self.json.get("packetlocation", "")
 
@@ -172,6 +194,15 @@ class Packet(ItemBase):
     @statusmessage.setter
     def statusmessage(self, value):
         self.json["statusmessage"] = str(value)
+
+    @property
+    def ttl(self):
+        return self.json.get("TTL")
+
+    @ttl.setter
+    def ttl(self, value):
+        value = int(value)
+        self.json["TTL"] = value
 
     def add_to_packet_list(self):
         """Convenience function for managing packets."""
@@ -363,7 +394,7 @@ def isBroadcast(packetIP: str, interfaceIP: str):
         network = ipaddress.ip_network(
             interfaceIP, strict=False
         )  # The interface will have host bits set, so we choose false
-        #logging.debug(f" Checking packet: {str(ip)} {str(network.broadcast_address)}")
+        # logging.debug(f" Checking packet: {str(ip)} {str(network.broadcast_address)}")
         return str(ip) == str(network.broadcast_address)
     except ValueError:
         # Handle invalid IP address or subnet format

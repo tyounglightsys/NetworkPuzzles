@@ -87,6 +87,8 @@ class Puzzle(ItemBase):
             data = pkt.json
         elif isinstance(pkt, dict):
             data = pkt
+        else:
+            raise ValueError(f"Invalid packet data type: {type(pkt)}")
         # Ensure packet entry exists.
         if not self.json.get("packet"):
             self.json["packet"] = []
@@ -794,7 +796,7 @@ class Puzzle(ItemBase):
         else:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
             return False
-    
+
     def ClearAllConnectionEntries(self):
         for onedevice in self.devices:
             device(onedevice).ClearIPConnections()
