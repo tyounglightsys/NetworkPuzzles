@@ -173,6 +173,15 @@ class Packet(ItemBase):
     def statusmessage(self, value):
         self.json["statusmessage"] = str(value)
 
+    @property
+    def ttl(self):
+        return self.json.get("TTL")
+
+    @ttl.setter
+    def ttl(self, value):
+        value = int(value)
+        self.json["TTL"] = value
+
     def add_to_packet_list(self):
         """Convenience function for managing packets."""
         self.session.puzzle.packets.append(self)
