@@ -13,10 +13,6 @@ class UI:
         session.ui = self
 
     @property
-    def packetlist(self):
-        return session.packetlist
-
-    @property
     def puzzle(self):
         """Convenience attribute."""
         return session.puzzle
@@ -158,21 +154,26 @@ class CLI(UI):
         """How the GUI handles messages"""
         print(message)
 
+    def process_packets(self):
+        # if we created packets, process them until done.
+        count = 0
+        while session.puzzle.packets_need_processing():
+            count = count + 1
+            if count > 5:
+                self.acknowledge_any_tests()
+                count = 0
+            # The cli does not need much time to know packets are going to
+            # loop forever.
+            session.puzzle.process_packets(2)
+
     def prompt(self):
         """A CLI only function.  Prompt for imput and process it"""
         try:
             answer = input(f"{self.PS1} ")
             self.parser.parse(answer, True)
-            # if we created packets, process them until done.
-            count = 0
-            while packet.packetsNeedProcessing():
-                count = count + 1
-                if count > 5:
-                    self.acknowledge_any_tests()
-                    count = 0
-                # The cli does not need much time to know packets are going to
-                # loop forever.
-                packet.processPackets(2)
+            # If we created packets, process them until done.
+            self.process_packets()
+            # Check if puzzle is complete.
             self.update_puzzle_completion_status()
         except EOFError:
             sys.exit()
@@ -201,8 +202,8 @@ class GUI(UI):
 
     def process_packets(self, tick_pct):
         # If we created packets, process them until done.
-        if packet.packetsNeedProcessing():
-            packet.processPackets(tick_pct=tick_pct)
+        if self.puzzle.packets_need_processing():
+            session.puzzle.process_packets(tick_pct=tick_pct)
 
     def quit(self):
         self.app.stop()

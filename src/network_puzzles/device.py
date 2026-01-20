@@ -1,30 +1,35 @@
 import ipaddress
 import logging
+from copy import deepcopy
 
 from . import packet, session
+from .core import ItemBase
 from .nic import Nic
 
 
-class Device:
-    def __init__(self, value=None):
-        try:
-            value = int(value)
-        except (TypeError, ValueError):
-            pass
-        if isinstance(value, int):
-            self.json = session.puzzle.device_from_uid(value)
-        # define the varables as specific types so intellisense works nicely with it
-        elif isinstance(value, str):
-            # Find device by hostname.
-            self.json = session.puzzle.device_from_name(value)
-        elif isinstance(value, dict):
-            self.json = value
-        else:
-            raise ValueError(
-                f"Not a valid uniqueidentifier, hostname, or JSON data: {value}"
-            )
-        if self.json is None:
-            self.json = {}
+class Device(ItemBase):
+    def __init__(self, value=None, json_data=None):
+        super().__init__(json_data)
+        # Allow override of json data with passed "value" identifier.
+        if value is not None:
+            try:
+                value = int(value)
+            except (TypeError, ValueError):
+                pass
+            if isinstance(value, int):
+                # Find device by uid; might return None
+                json_data = session.puzzle.device_from_uid(value)
+            # define the varables as specific types so intellisense works nicely with it
+            elif isinstance(value, str):
+                # Find device by hostname; might return None.
+                json_data = session.puzzle.device_from_name(value)
+            elif isinstance(value, dict):
+                json_data = value
+            else:
+                raise ValueError(
+                    f"Not a valid uniqueidentifier, hostname, or JSON data: {value}"
+                )
+            self.json = json_data if json_data else {}
 
     @property
     def gateway(self) -> str:
@@ -884,17 +889,12 @@ def findLocalNICInterface(targetIPstring: str, networkCardRec):
     returns: the interface record that is local to the target IP, or None"""
     if networkCardRec is None:
         return None
-    if networkCardRec["nictype"][0] == "port":
+    nic = Nic(networkCardRec)
+    if nic.type[0] == "port":
         return None  # Ports have no IP address
     # loop through all the interfaces and return any that might be local.
-    if not isinstance(networkCardRec["interface"], list):
-        networkCardRec["interface"] = [
-            networkCardRec["interface"]
-        ]  # turn it into a list if needed.
-    for oneIF in networkCardRec["interface"]:
-        # logging.debug(f"Looking for local interface.  Comparing: {targetIPstring} {interfaceIP(oneIF)}")
+    for oneIF in nic.interfaces:
         if packet.isLocal(targetIPstring, interfaceIP(oneIF)):
-            # logging.debug(f"   Found it: {oneIF}")
             return oneIF
     return None
 
@@ -1193,7 +1193,7 @@ def packetEntersDevice(packRec, thisDevice, nicRec):
                     f"Successfully pinged from {thisDevice.get('hostname')} to {pingdest.get('hostname')} without a network loop.",
                 )
 
-                # print(f" we are done, and packetlist is: {len(session.packetlist)} and storm: {session.packetstorm}")
+                # print(f" we are done, and packetlist is: {len(session.puzzle.packets)} and storm: {session.packetstorm}")
             return True
 
         elif packRec.packettype == "traceroute-response":
@@ -1291,7 +1291,7 @@ def send_out_hubswitch(thisDevice, packRec, nicRec=None):
             # We have a network wire connected to the NIC.  Send the packet out
             # if it is a switch-port, then we check first if we know where the packet goes - undone
             if onlyport == "" or onlyport == onenic.get("nicname"):
-                tpacket = packet.Packet(packRec.json)
+                tpacket = packet.Packet(deepcopy(packRec.json))
                 # Update location to outgoing link.
                 tpacket.packet_location = tlink.get("hostname")
                 # Reset distance to the beginning of outgoing link.

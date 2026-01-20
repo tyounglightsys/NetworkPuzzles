@@ -131,7 +131,7 @@ class NetworkPuzzlesApp(App):
         # on the screen to instantiate a new device.
         if not isinstance(devicew, GuiDevice):
             if isinstance(devicew, dict):
-                devicew = GuiDevice(value=devicew)
+                devicew = GuiDevice(json_data=devicew)
             elif isinstance(devicew, MenuButton):
                 # Initiate new device creation sequence.
                 self._new_device_type = dtype
@@ -151,7 +151,7 @@ class NetworkPuzzlesApp(App):
 
         if not isinstance(linkw, GuiLink):
             if isinstance(linkw, dict):
-                linkw = GuiLink(linkrec=linkw)
+                linkw = GuiLink(json_data=linkw)
             elif isinstance(linkw, MenuButton):
                 # Initiate new link creation sequence.
                 Clock.schedule_once(self._new_link)
@@ -173,13 +173,13 @@ class NetworkPuzzlesApp(App):
 
     def draw_devices(self, *args):
         for dev in self.ui.puzzle.devices:
-            self.add_device(GuiDevice(value=dev))
+            self.add_device(GuiDevice(json_data=dev))
 
     def draw_links(self, *args):
         for link in self.ui.puzzle.links:
             if link is None:
                 continue
-            self.add_link(GuiLink(linkrec=link))
+            self.add_link(GuiLink(json_data=link))
         self._print_stats()
 
     def draw_puzzle(self, *args):

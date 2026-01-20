@@ -201,8 +201,9 @@ class Parser:
                 tcopy = copy.deepcopy(item)
 
                 # go through and clear out all the IP addresses
-                for onenic in device.Device(item).all_nics():
-                    for oneint in onenic["interface"]:
+                for nic_json in device.Device(item).all_nics():
+                    onenic = nic.Nic(nic_json)
+                    for oneint in onenic.interfaces:
                         if oneint["nicname"] != "lo0":
                             oneint["myip"]["ip"] = (
                                 "0.0.0.0"  # reset them all to nothing - the default
@@ -245,12 +246,16 @@ class Parser:
             # We are hopefully finding something like replace pc0 eth0
             item = session.puzzle.device_from_name(args[0])
             if item is not None:
-                for onenic in device.Device(item).all_nics():
-                    if onenic.get("nicname") == args[1] and onenic["nicname"] != "lo0":
+                for nic_json in device.Device(item).all_nics():
+                    onenic = nic.Nic(nic_json)
+                    if (
+                        onenic.my_id.nicname == args[1]
+                        and onenic.my_id.nicname != "lo0"
+                    ):
                         # We found the nic to replace.
-                        onenic.pop("Mac", None)
-                        nic.Nic(onenic).ensure_mac()
-                        for oneint in onenic["interface"]:
+                        nic_json.pop("Mac", None)
+                        onenic.ensure_mac()
+                        for oneint in onenic.interfaces:
                             oneint["myip"]["ip"] = (
                                 "0.0.0.0"  # reset them all to nothing - the default
                             )

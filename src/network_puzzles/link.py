@@ -1,6 +1,9 @@
-class Link:
-    def __init__(self, linkrec={}):
-        self.json = linkrec
+from .core import ItemBase
+
+
+class Link(ItemBase):
+    def __init__(self, json_data=None):
+        super().__init__(json_data)
 
     def __str__(self):
         return self.hostname

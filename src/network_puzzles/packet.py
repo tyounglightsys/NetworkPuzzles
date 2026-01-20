@@ -2,16 +2,18 @@ import ipaddress
 import logging
 import re
 import time
+from copy import deepcopy
 
 from . import device, session
+from .core import ItemBase
 from .link import Link
 from .nic import Nic
 
 BROADCAST_MAC = "FFFFFFFFFFFF"
 
 
-class Packet:
-    empty_packet_json = {
+class Packet(ItemBase):
+    EMPTY_PACKET_JSON = {
         "packettype": "",
         "VLANID": 0,  # start on the default vlan
         "health": 100,  # health.  This will drop as the packet goes too close to things causing interferance
@@ -31,12 +33,15 @@ class Packet:
 
     def __init__(self, json_data=None):
         if json_data is None:
-            json_data = self.empty_packet_json
+            # deepcopy keeps class attribute from being changed.
+            json_data = deepcopy(self.EMPTY_PACKET_JSON)
             # Seconds since epoc. Failsafe that will kill the packet if too much time has passed
             json_data["starttime"] = int(time.time() * 1000)
+        super().__init__(json_data)
         self.session = session
-        self.json = json_data.copy()
         # TODO: Consider adding packet data to puzzle JSON for comprehensive tracking.
+        # If this is done, then json_data should be copied before instantiating
+        # this class rather than being copied here.
         # if self.session.puzzle:
         #     self.session.puzzle.add_packet(self.json)
         self.damage_count = 0
@@ -169,7 +174,12 @@ class Packet:
         self.json["statusmessage"] = str(value)
 
     def add_to_packet_list(self):
-        session.packetlist.append(self)
+        """Convenience function for managing packets."""
+        self.session.puzzle.packets.append(self)
+
+    def remove_from_packet_list(self):
+        """Convenience function for managing packets."""
+        self.session.puzzle.packets.remove(self)
 
     def apply_possible_damage(self, tick_pct):
         """Damage the packet if near enough to microwave (wireless connection) or light (wired connection)."""
@@ -183,7 +193,7 @@ class Packet:
 
         # List damage-causing devices in puzzle.
         risky_devices = []
-        for dev_json in session.puzzle.devices:
+        for dev_json in self.session.puzzle.devices:
             dev = device.Device(dev_json)
             if dev.mytype == "microwave" and lnk.linktype == "wireless":
                 risky_devices.append(dev)
@@ -239,7 +249,7 @@ class Packet:
         return points
 
     def get_current_link(self) -> Link | None:
-        link_data = session.puzzle.link_from_name(self.packet_location)
+        link_data = self.session.puzzle.link_from_name(self.packet_location)
         if link_data is None:
             return None  # We could not find the link
         return Link(link_data)
@@ -247,8 +257,8 @@ class Packet:
     def get_current_link_endpoint_devices(self):
         """Return tuple of (src_device, dest_device)."""
         src_nic, dest_nic = self.get_current_link_endpoint_nics()
-        src_json = session.puzzle.device_from_uid(src_nic.hostid)
-        dest_json = session.puzzle.device_from_uid(dest_nic.hostid)
+        src_json = self.session.puzzle.device_from_uid(src_nic.my_id.host_id)
+        dest_json = self.session.puzzle.device_from_uid(dest_nic.my_id.host_id)
         if None in (src_json, dest_json):
             return None
         return (device.Device(value=src_json), device.Device(value=dest_json))
@@ -270,69 +280,6 @@ def distance(sx, sy, dx, dy):
     # we have a 5/5 grid that we are working with.
     # The ** is the exponent.  **2 is squared, **.5 is the square-root
     return ((((sx - dx) ** 2) + ((sy - dy) ** 2)) ** 0.5) / 5
-
-
-def packetsNeedProcessing():
-    """determine if we should continue to loop through packets
-    returns true or false"""
-    if len(session.packetlist) > session.maxpackets:
-        session.maxpackets = len(session.packetlist)
-    if len(session.packetlist) > 30:
-        if not session.packetstorm:
-            logging.info(f"We started a storm: {len(session.packetlist)}")
-        # There were too many packets.  Must have created a storm/net loop
-        session.packetstorm = True
-    return len(session.packetlist) > 0
-
-
-def processPackets(killSeconds: int = 20, tick_pct: float = 10):
-    """
-    Loop through all packets, moving them along through the system
-    Args: killseconds - the number of seconds to go before killing the packets.
-    """
-    killMilliseconds = killSeconds * 1000
-    # here we loop through all packets and process them
-    curtime = int(time.time() * 1000)
-    counter = 0
-    for pkt in session.packetlist:
-        counter = counter + 1
-        # figure out where the packet is
-        current_link = pkt.get_current_link()
-        if current_link is not None:
-            # the packet is traversing a link
-            # damagePacketIfNeeded(pkt, tick_pct)
-            pkt.apply_possible_damage(tick_pct)
-            pkt.distance += tick_pct
-            if pkt.distance > 50 and current_link.linktype == "broken":
-                # The link is broken.  The packet gets killed
-                pkt.status = "done"  # the packet dies silently
-            if pkt.distance > 100 and pkt.status != "done":
-                # We have arrived.  We need to process the arrival!
-                # get interface from link
-                src_nic = pkt.get_current_link_endpoint_nics()[0]
-                if src_nic is None:
-                    # We could not find the record.  This should never happen.  For now, blow up
-                    logging.error(f"Bad Link: {current_link}")
-                    logging.error(f"Direction = {pkt.direction}")
-                    raise Exception("Could not find the endpoint of the link.")
-                # We are here.  Call a function on the nic to start the packet entering the device
-                device.doInputFromLink(pkt, src_nic.json)
-
-        # If the packet has been going too long.  Kill it.
-        if curtime - pkt.starttime > killMilliseconds:
-            # over 20 seconds have passed.  Kill the packet
-            pkt.status = "failed"
-            pkt.statusmessage = "Packet timed out"
-            logging.warning("packet killed")
-    # When we are done with all the processing, kill any packets that need killing.
-    cleanupPackets()
-
-
-def cleanupPackets():
-    """After processing packets, remove any "done" ones from the list."""
-    for pkt in session.packetlist:
-        if pkt.status in ("done", "dropped", "failed"):
-            session.packetlist.remove(pkt)
 
 
 def is_ipv6(string):

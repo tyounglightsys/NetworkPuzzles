@@ -17,7 +17,6 @@ class Session:
         self.maclist: list = list()
         self.puzzlelist: list = list()
         self.puzzle = None
-        self.packetlist: list = list()
         self.packetstorm = False
         self.maxpackets = 0
         self.history = list()
