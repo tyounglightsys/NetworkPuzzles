@@ -481,8 +481,9 @@ def linkConnectedToNic(nicRec):
     """Find a link connected to the specified network card"""
     if nicRec is None:
         return None
-    logging.debug("looking for link connecting to nicid: " + nicRec["myid"]["nicid"])
-    logging.debug("  Looking at nic: " + nicRec["nicname"])
+    logging.debug(
+        f"looking for link connected to nic; #{nicRec['myid']['nicid']}; {nicRec['nicname']}"
+    )
     for one in session.puzzle.links:
         if one:
             # print ("   link - " + one['hostname'])
