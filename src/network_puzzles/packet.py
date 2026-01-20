@@ -102,6 +102,28 @@ class Packet(ItemBase):
         self.json["health"] = value
 
     @property
+    def in_host(self):
+        if "inhost" not in self.json:
+            self.json["inhost"] = ""
+        return self.json.get("inhost")
+
+    @in_host.setter
+    def in_host(self, value):
+        value = str(value)
+        self.json["inhost"] = value
+
+    @property
+    def in_interface(self):
+        if "ininterface" not in self.json:
+            self.json["ininterface"] = ""
+        return self.json.get("ininterface")
+
+    @in_interface.setter
+    def in_interface(self, value):
+        value = str(value)
+        self.json["ininterface"] = value
+
+    @property
     def packet_location(self):
         return self.json.get("packetlocation", "")
 

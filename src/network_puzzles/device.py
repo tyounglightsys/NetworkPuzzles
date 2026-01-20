@@ -906,30 +906,30 @@ def findPrimaryNICInterface(networkCardRec):
     return None
 
 
-def doInputFromLink(packRec, nicRec):
+def doInputFromLink(pkt, nicRec):
     # zero these out.  We will set them below
-    packRec.json["inhost"] = ""
-    packRec.json["ininterface"] = ""
+    pkt.in_host = ""
+    pkt.in_interface = ""
     # figure out what device belongs to the nic
     thisDevice = session.puzzle.device_from_uid(nicRec["myid"]["hostid"])
     if thisDevice is not None:
-        packRec.json["inhost"] = Device(thisDevice).hostname
+        pkt.in_host = Device(thisDevice).hostname
 
     # Do the simple stuff
     if powerOff(thisDevice):
-        packRec.status = "done"
+        pkt.status = "done"
         # nothing more to be done
         return False
 
     if device_is_frozen(thisDevice):
-        packRec.status = "done"
+        pkt.status = "done"
         # nothing more to be done
         return False
     # If the packet is a DHCP answer, process that here.  To be done later
     # If the packet is a DHCP request, and this is a DHCP server, process that.  To be done later.
 
     # Find the network interface.  It might be none if the IP does not match, or if it is a switch/hub device.
-    tInterface = findLocalNICInterface(packRec.json.get("tdestIP"), nicRec)
+    tInterface = findLocalNICInterface(pkt.json.get("tdestIP"), nicRec)
     # if this is None, try the primary interface.
     if tInterface is None:
         tInterface = findPrimaryNICInterface(nicRec)
@@ -938,17 +938,17 @@ def doInputFromLink(packRec, nicRec):
     if tInterface is not None:
         # we track where it came in on.  We do it it here to track vlan info too.
         if isinstance(tInterface, str):
-            packRec.json["ininterface"] = tInterface
+            pkt.in_interface = tInterface
         else:
-            packRec.json["ininterface"] = tInterface.get("nicname")
+            pkt.in_interface = tInterface.get("nicname")
 
-        beginIngressOnInterface(packRec, tInterface)
+        beginIngressOnInterface(pkt, tInterface)
 
     # the packet status should show dropped or something if we have a problem.
     # but for now, pass it onto the NIC
     # logging.debug(f"We are routing.  Here is the packet: {packRec}")
     # logging.debug(f"We are routing.  Here is the nic: {nicRec}")
-    return beginIngressOnNIC(packRec, nicRec)
+    return beginIngressOnNIC(pkt, nicRec)
     # The NIC passes it onto the device if needed.  We are done with this.
 
 
@@ -1533,7 +1533,6 @@ def packetFromTo(src, dest):
     if isinstance(dest, ipaddress.IPv4Address):
         # This is what we are hoping for; make an empty packet.
         nPacket = packet.Packet()
-        logging.debug(f"Test: 1 {nPacket.ttl=}")
         nPacket.source_ip = sourceIP(src, dest)
         # The MAC address of the above IP
         nPacket.source_mac = arpLookup(src, nPacket.source_ip)
