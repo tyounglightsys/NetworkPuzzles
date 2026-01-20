@@ -363,7 +363,7 @@ def isBroadcast(packetIP: str, interfaceIP: str):
         network = ipaddress.ip_network(
             interfaceIP, strict=False
         )  # The interface will have host bits set, so we choose false
-        #logging.debug(f" Checking packet: {str(ip)} {str(network.broadcast_address)}")
+        # logging.debug(f" Checking packet: {str(ip)} {str(network.broadcast_address)}")
         return str(ip) == str(network.broadcast_address)
     except ValueError:
         # Handle invalid IP address or subnet format
