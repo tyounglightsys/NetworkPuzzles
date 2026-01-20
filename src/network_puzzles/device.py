@@ -32,6 +32,10 @@ class Device(ItemBase):
             self.json = json_data if json_data else {}
 
     @property
+    def frozen(self):
+        return session.puzzle.device_is_frozen(self.json)
+
+    @property
     def gateway(self) -> str:
         return self.json.get("gateway").get("ip", "")
 
@@ -135,6 +139,16 @@ class Device(ItemBase):
                 value = str(value)
             self.json["blownup"] = value
             self.powered_on = True  # when it blows up, the power gets turned off
+
+    @property
+    def is_wireless_forwarder(self):
+        """return true if the device is a wireless device that does forwarding, false if it does not"""
+        if self.json is None:
+            return False
+        match self.mytype:
+            case "wrepeater" | "wap" | "wbridge" | "wrouter":
+                return True
+        return False
 
     @property
     def size(self):
@@ -336,6 +350,75 @@ class Device(ItemBase):
             "packettype": packettype.lower(),
             "response": response.lower(),
         }
+
+    def begin_ingress_on_nic(self, nic, pkt):
+        """Begin the packet entering a device.  It enters via a nic, and then is processed.
+        Args:
+            nic: a `nic.Nic` object - the NIC the packet enters into
+            pkt: a `packet.Packet` object - the packet entering the device
+        returns: nothing
+        """
+        # logging.debug(f"Test: Device.begin_ingress_on_nic: {self.hostname}:{nic.name}")
+        # Notes from EduNetworkBuilder
+        # Check to see if we have tests that break stuff.
+        # - DeviceNicSprays (nic needs to be replaced)
+        # - Device is frozen (packet is dropped)
+        # - Device is burned (packet is dropped)
+        # - Device is powered off (packet is dropped)
+        #
+        # - Check to see if we are firewalled.  Drop packet if needed
+        # If none of the above...
+        # if the packet is destined for this NIC/interface, then we accept and pass it to the device to see if we should respond
+        # If the packet is a broadcast, check to see if we should respond
+        # - We might both route it and respond to a broadcast (broadcast ping and switch responds)
+        # If we route packets, accept it for routing.
+        #
+
+        # in certain cases we track inbound traffic; remembering where it came from.
+        trackPackets = False
+
+        # if it is a port (swicth/hub) or wport (wireless devices)
+        if nic.type[0] == "port" or nic.type[0] == "wport":
+            trackPackets = True
+        if self.is_wireless_forwarder and nic.type[0] == "wlan":
+            trackPackets = True
+        if nic.type[0] == "port" and self.mytype == "wap":
+            trackPackets = True
+        if trackPackets:
+            # We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
+            if "port_arps" not in self.json:
+                self.json["port_arps"] = {}
+            if pkt.source_mac not in self.json.get("port_arps"):
+                self.json["port_arps"][pkt.source_mac] = nic.name
+
+        # Look better tracking for network loops
+        # If the same packet hits the same switch, we determine it is a loop
+        # Check if the hostname is already in the path of the packet.  If so, it is a loop
+        if self.hostname in pkt.path:
+            session.packetstorm = True
+        pkt.path.append(self.hostname)
+
+        # If we are entering a WAN port, see if we should be blocked or if it is a return packet
+        if nic.type[0] == "wan":
+            pass
+            # We do not have the firewall programed in yet.
+            # if the packet is a return ping packet, allow it. Otherwise, reject
+
+        if (
+            pkt.destination_mac == nic.mac
+            or packet.is_broadcast_mac(pkt.destination_mac)
+            or nic.type[0] == "port"
+            or nic.type[0] == "wport"
+        ):
+            # The packet is good, and has reached the computer.  Pass it on to the device
+            # print ("Packet entering device: {self.hostname}")
+            return packetEntersDevice(pkt, self.json, nic.json)
+        else:
+            # print("packet did not match.  Dropping")
+            # print (pkt.json)
+            # print("  packet dst MAC" + pkt.destination_mac + " vs this NIC" + nicRec['Mac'])
+            pkt.status = "dropped"
+            return False
 
     # Generic functions
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict | None:
@@ -907,32 +990,33 @@ def findPrimaryNICInterface(networkCardRec):
 
 
 def doInputFromLink(pkt, nicRec):
+    nic = Nic(nicRec)
     # zero these out.  We will set them below
     pkt.in_host = ""
     pkt.in_interface = ""
     # figure out what device belongs to the nic
-    thisDevice = session.puzzle.device_from_uid(nicRec["myid"]["hostid"])
-    if thisDevice is not None:
-        pkt.in_host = Device(thisDevice).hostname
+    host_id = nic.my_id.host_id
+    thisDevice = session.puzzle.device_from_uid(host_id)
+    if thisDevice is None:
+        raise ValueError(f"Device not found: {host_id}")
+
+    dev = Device(thisDevice)
+    pkt.in_host = dev.hostname
 
     # Do the simple stuff
-    if powerOff(thisDevice):
+    if not dev.powered_on or dev.frozen:
         pkt.status = "done"
         # nothing more to be done
         return False
 
-    if device_is_frozen(thisDevice):
-        pkt.status = "done"
-        # nothing more to be done
-        return False
     # If the packet is a DHCP answer, process that here.  To be done later
     # If the packet is a DHCP request, and this is a DHCP server, process that.  To be done later.
 
     # Find the network interface.  It might be none if the IP does not match, or if it is a switch/hub device.
-    tInterface = findLocalNICInterface(pkt.json.get("tdestIP"), nicRec)
+    tInterface = findLocalNICInterface(pkt.json.get("tdestIP"), nic.json)
     # if this is None, try the primary interface.
     if tInterface is None:
-        tInterface = findPrimaryNICInterface(nicRec)
+        tInterface = findPrimaryNICInterface(nic.json)
     # the interface still might be none if we are a switch/hub port
     # Verify the interface.  This is mainly to work with SSIDs, VLANs, VPNs, etc.
     if tInterface is not None:
@@ -947,83 +1031,9 @@ def doInputFromLink(pkt, nicRec):
     # the packet status should show dropped or something if we have a problem.
     # but for now, pass it onto the NIC
     # logging.debug(f"We are routing.  Here is the packet: {pkt.json}")
-    # logging.debug(f"We are routing.  Here is the nic: {nicRec}")
-    return beginIngressOnNIC(pkt, nicRec)
+    # logging.debug(f"We are routing.  Here is the nic: {nic.json}")
+    return dev.begin_ingress_on_nic(nic, pkt)
     # The NIC passes it onto the device if needed.  We are done with this.
-
-
-def beginIngressOnNIC(pkt, nicRec):
-    """Begin the packet entering a device.  It enters via a nic, and then is processed.
-    Args:
-        pkt: a `packet.Packet` object - the packet entering the device
-        nicRec: a network card record - the nic on the device that we are entering.
-    returns: nothing
-    """
-    # Notes from EduNetworkBuilder
-    # Check to see if we have tests that break stuff.
-    # - DeviceNicSprays (nic needs to be replaced)
-    # - Device is frozen (packet is dropped)
-    # - Device is burned (packet is dropped)
-    # - Device is powered off (packet is dropped)
-    #
-    # - Check to see if we are firewalled.  Drop packet if needed
-    # If none of the above...
-    # if the packet is destined for this NIC/interface, then we accept and pass it to the device to see if we should respond
-    # If the packet is a broadcast, check to see if we should respond
-    # - We might both route it and respond to a broadcast (broadcast ping and switch responds)
-    # If we route packets, accept it for routing.
-    #
-    nictype = nicRec["nictype"][0]
-    # in certain cases we track inbound traffic; remembering where it came from.
-    trackPackets = False
-    theDevice = session.puzzle.device_from_name(nicRec.get("myid").get("hostname"))
-    if theDevice is None:
-        # This is a problem.  We need to exit gracefully
-        pkt.status = "done"
-        return False
-    # if it is a port (swicth/hub) or wport (wireless devices)
-    if nictype == "port" or nictype == "wport":
-        trackPackets = True
-    if isWirelessForwarder(theDevice) and nictype == "wlan":
-        trackPackets = True
-    if nictype == "port" and theDevice["mytype"] == "wap":
-        trackPackets = True
-    if trackPackets:
-        # We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
-        if "port_arps" not in theDevice:
-            theDevice["port_arps"] = {}
-        if pkt.source_mac not in theDevice.get("port_arps"):
-            theDevice["port_arps"][pkt.source_mac] = nicRec.get("nicname")
-
-    # Look better tracking for network loops
-    # If the same packet hits the same switch, we determine it is a loop
-    hostname = theDevice.get("hostname")
-    # Check if the hostname is already in the path of the packet.  If so, it is a loop
-    if hostname in pkt.path:
-        session.packetstorm = True
-    pkt.path.append(hostname)
-
-    # If we are entering a WAN port, see if we should be blocked or if it is a return packet
-    if nictype == "wan":
-        pass
-        # We do not have the firewall programed in yet.
-        # if the packet is a return ping packet, allow it. Otherwise, reject
-
-    if (
-        pkt.destination_mac == nicRec["Mac"]
-        or packet.is_broadcast_mac(pkt.destination_mac)
-        or nictype == "port"
-        or nictype == "wport"
-    ):
-        # The packet is good, and has reached the computer.  Pass it on to the device
-        # print ("Packet entering device: " + theDevice['hostname'])
-        return packetEntersDevice(pkt, theDevice, nicRec)
-    else:
-        # print("packet did not match.  Dropping")
-        # print (pkt.json)
-        # print("  packet dst MAC" + pkt.destination_mac + " vs this NIC" + nicRec['Mac'])
-        pkt.status = "dropped"
-        return False
 
 
 def beginIngressOnInterface(pkt, interfaceRec):
@@ -1084,7 +1094,6 @@ def packetEntersDevice(pkt, thisDevice, nicRec):
     # print("   Checking against" + str(allIPStrings(thisDevice)))
     if routesPackets(thisDevice) or deviceHasIP(thisDevice, pkt.destination_ip):
         # decrement the ttl with every router
-        logging.debug(f"Test: {pkt.ttl=}")
         pkt.ttl -= 1
         if pkt.ttl <= 0:
             if pkt.packettype == "traceroute-request":
@@ -1111,7 +1120,7 @@ def packetEntersDevice(pkt, thisDevice, nicRec):
 
         # ping, send ping packet back
         if pkt.packettype == "ping":
-            # logging.debug(f"Returning packet: {pkt.json}")
+            # logging.debug(f"Test: Returning packet: {pkt.json}")
             # logging.debug(f"Returning packet: {pkt.source_ip} - {packet.justIP(str(pkt.source_ip))}")
             dest = deviceFromIP(packet.justIP(str(pkt.source_ip)))
             # logging.info(f"A ping came.  Making a return packet going to {dest}")
@@ -1540,7 +1549,6 @@ def packetFromTo(src, dest):
             logging.debug("It is a broadcast, using broadcast MAC")
             nPacket.destination_mac = packet.BROADCAST_MAC
         nPacket.packettype = ""
-        logging.debug(f"Test: 2 {nPacket.ttl=}")
         return nPacket
 
 
