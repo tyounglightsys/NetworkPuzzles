@@ -946,7 +946,7 @@ def doInputFromLink(pkt, nicRec):
 
     # the packet status should show dropped or something if we have a problem.
     # but for now, pass it onto the NIC
-    # logging.debug(f"We are routing.  Here is the packet: {packRec}")
+    # logging.debug(f"We are routing.  Here is the packet: {pkt.json}")
     # logging.debug(f"We are routing.  Here is the nic: {nicRec}")
     return beginIngressOnNIC(pkt, nicRec)
     # The NIC passes it onto the device if needed.  We are done with this.
@@ -955,7 +955,7 @@ def doInputFromLink(pkt, nicRec):
 def beginIngressOnNIC(pkt, nicRec):
     """Begin the packet entering a device.  It enters via a nic, and then is processed.
     Args:
-        packetRec: a packet record - the packet entering the device
+        pkt: a `packet.Packet` object - the packet entering the device
         nicRec: a network card record - the nic on the device that we are entering.
     returns: nothing
     """
@@ -1020,8 +1020,8 @@ def beginIngressOnNIC(pkt, nicRec):
         return packetEntersDevice(pkt, theDevice, nicRec)
     else:
         # print("packet did not match.  Dropping")
-        # print (packRec)
-        # print("  packet dst MAC" + packRec['destMAC'] + " vs this NIC" + nicRec['Mac'])
+        # print (pkt.json)
+        # print("  packet dst MAC" + pkt.destination_mac + " vs this NIC" + nicRec['Mac'])
         pkt.status = "dropped"
         return False
 
@@ -1080,7 +1080,7 @@ def packetEntersDevice(pkt, thisDevice, nicRec):
             return True
 
     # If the packet is destined for here, process that
-    # print("Checking destination.  Looking for " + packet.justIP(packRec['destIP']))
+    # print("Checking destination.  Looking for " + packet.justIP(pkt.destination_ip))
     # print("   Checking against" + str(allIPStrings(thisDevice)))
     if routesPackets(thisDevice) or deviceHasIP(thisDevice, pkt.destination_ip):
         # decrement the ttl with every router
@@ -1111,8 +1111,8 @@ def packetEntersDevice(pkt, thisDevice, nicRec):
 
         # ping, send ping packet back
         if pkt.packettype == "ping":
-            # logging.debug(f"Returning packet: {packRec}")
-            # logging.debug(f"Returning packet: {packRec['sourceIP']} - {packet.justIP(str(packRec["sourceIP"]))}")
+            # logging.debug(f"Returning packet: {pkt.json}")
+            # logging.debug(f"Returning packet: {pkt.source_ip} - {packet.justIP(str(pkt.source_ip))}")
             dest = deviceFromIP(packet.justIP(str(pkt.source_ip)))
             # logging.info(f"A ping came.  Making a return packet going to {dest}")
 
@@ -1144,7 +1144,7 @@ def packetEntersDevice(pkt, thisDevice, nicRec):
             pingdest = deviceFromIP(pingdestip)
             logging.info(f"sourceip is {srcip}")
             logging.info(f"dest host is {pingdest.get('hostname')}")
-            # logging.debug(f"Showing orig dest as: {packRec["origPingDest"]}")
+            # logging.debug(f"Showing orig dest as: {pkt.json.get("origPingDest")}")
             if pkt.health < 100:
                 logging.info(
                     f"Packet was damaged during transit.  Not complete success: Health={pkt.health}"
@@ -1260,17 +1260,17 @@ def packetEntersDevice(pkt, thisDevice, nicRec):
     pkt.status = "done"
 
 
-def send_out_hubswitch(thisDevice, packRec, nicRec=None):
+def send_out_hubswitch(thisDevice, pkt, nicRec=None):
     # Ensure Packet object.
-    if not isinstance(packRec, packet.Packet):
-        raise ValueError(f"packet arg should be `packet.Packet' not '{type(packRec)}'")
+    if not isinstance(pkt, packet.Packet):
+        raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
     # We loop through all nics. (minus the one we came in from)
     onlyport = ""
     if thisDevice.get("mytype") == "net_switch":
-        if packRec.destination_mac in thisDevice.get("port_arps", {}):
+        if pkt.destination_mac in thisDevice.get("port_arps", {}):
             # we just send this out the one port.
-            onlyport = thisDevice.get("port_arps").get(packRec.destination_mac)
+            onlyport = thisDevice.get("port_arps").get(pkt.destination_mac)
 
     # print("We are forwarding.")
     for onenic in thisDevice["nic"]:
@@ -1284,7 +1284,7 @@ def send_out_hubswitch(thisDevice, packRec, nicRec=None):
             # We have a network wire connected to the NIC.  Send the packet out
             # if it is a switch-port, then we check first if we know where the packet goes - undone
             if onlyport == "" or onlyport == onenic.get("nicname"):
-                tpacket = packet.Packet(deepcopy(packRec.json))
+                tpacket = packet.Packet(deepcopy(pkt.json))
                 # Update location to outgoing link.
                 tpacket.packet_location = tlink.get("hostname")
                 # Reset distance to the beginning of outgoing link.
@@ -1297,13 +1297,13 @@ def send_out_hubswitch(thisDevice, packRec, nicRec=None):
                 tpacket.add_to_packet_list()
 
     # The packet that came in gets killed since it was replicated everywhere else.
-    packRec.status = "done"
+    pkt.status = "done"
 
 
-def makeDHCPResponse(packRec, thisDevice, nicRec):
+def makeDHCPResponse(pkt, thisDevice, nicRec):
     # Ensure Packet object.
-    if not isinstance(packRec, packet.Packet):
-        raise ValueError(f"packet arg should be `packet.Packet' not '{type(packRec)}'")
+    if not isinstance(pkt, packet.Packet):
+        raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
     if "dhcplist" not in thisDevice:
         thisDevice["dhcplist"] = {}
@@ -1335,23 +1335,21 @@ def makeDHCPResponse(packRec, thisDevice, nicRec):
                 available_ip = newip
                 break
     # Now, check to see if we have an entry already.
-    if packRec.source_mac in thisDevice["dhcplist"]:
+    if pkt.source_mac in thisDevice["dhcplist"]:
         # we already have an entry. Use it
-        available_ip = thisDevice["dhcplist"][packRec.source_mac]
+        available_ip = thisDevice["dhcplist"][pkt.source_mac]
     else:
-        logging.debug(
-            f"DHCP: Making an IP reservation {available_ip} {packRec.source_mac}"
-        )
+        logging.debug(f"DHCP: Making an IP reservation {available_ip} {pkt.source_mac}")
 
     if available_ip != "":
         # stash it.  if it already exists, we use the same value.
-        thisDevice["dhcplist"][packRec.source_mac] = available_ip
+        thisDevice["dhcplist"][pkt.source_mac] = available_ip
         # Now, make a new DHCP response packet
         nPacket = packet.Packet()
         nPacket.source_ip = nicRec["interface"][0]["myip"]["ip"]
         nPacket.source_mac = nicRec.get("Mac")
         nPacket.destination_ip = "0.0.0.0"
-        nPacket.destination_mac = packRec.source_mac
+        nPacket.destination_mac = pkt.source_mac
         nPacket.packettype = "DHCP-Response"
         nPacket.payload = {
             "ip": available_ip,
@@ -1366,44 +1364,44 @@ def makeDHCPResponse(packRec, thisDevice, nicRec):
             nPacket.direction = 2  # Dest to Source
         nPacket.add_to_packet_list()
         logging.info(
-            f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {packRec.source_mac}"
+            f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {pkt.source_mac}"
         )
 
 
-def sendPacketOutDevice(packRec, theDevice):
+def sendPacketOutDevice(pkt, theDevice):
     """Send the packet out of the device."""
     # Ensure Packet object.
-    if not isinstance(packRec, packet.Packet):
-        raise ValueError(f"packet arg should be `packet.Packet' not '{type(packRec)}'")
+    if not isinstance(pkt, packet.Packet):
+        raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
     # print("Sending packet out a device: " + theDevice['hostname'])
     # determine which interface/nic we are exiting out of - routing
-    packRec.distance = 0  # always reset this
-    routeRec = routeRecFromDestIP(theDevice, packRec.destination_ip)
+    pkt.distance = 0  # always reset this
+    routeRec = routeRecFromDestIP(theDevice, pkt.destination_ip)
     destlink = None
 
     # set the source MAC address on the packet as from the nic
     if routeRec is not None:
         logging.debug("Found a route rec.")
         routeRec["nic"] = Nic(routeRec["nic"]).ensure_mac()
-        packRec.source_mac = routeRec["nic"]["Mac"]
-        packRec.json["tdestIP"] = routeRec.get("gateway")  # track when we use a gateway
+        pkt.source_mac = routeRec["nic"]["Mac"]
+        pkt.json["tdestIP"] = routeRec.get("gateway")  # track when we use a gateway
         # set the destination MAC to be the GW MAC if the destination is not local
         # this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
         if (
-            packRec.destination_mac != packet.BROADCAST_MAC
-            and packRec.packettype != "DHCP-Response"
+            pkt.destination_mac != packet.BROADCAST_MAC
+            and pkt.packettype != "DHCP-Response"
         ):
             if routeRec.get("gateway") is not None:
                 # We are going out the gateway.  Find the ARP for that
-                packRec.destination_mac = globalArpLookup(routeRec.get("gateway"))
+                pkt.destination_mac = globalArpLookup(routeRec.get("gateway"))
             else:
                 # We are on a local link.  Set the destmac to be the mac of our destination computer
-                packRec.destination_mac = globalArpLookup(packRec.destination_ip)
+                pkt.destination_mac = globalArpLookup(pkt.destination_ip)
 
         if routeRec["nic"]["nicname"] == "management_interface0":
             # If we are exiting a switch / hub; we go out the ports
-            send_out_hubswitch(theDevice, packRec)
+            send_out_hubswitch(theDevice, pkt)
             return
         else:
             # set the packet location being the link associated with the nic
@@ -1411,37 +1409,34 @@ def sendPacketOutDevice(packRec, theDevice):
             destlink = linkConnectedToNic(routeRec["nic"])
 
     if destlink is not None:
-        packRec.packet_location = destlink["hostname"]
+        pkt.packet_location = destlink["hostname"]
         if destlink["SrcNic"]["hostname"] == theDevice["hostname"]:
-            packRec.direction = 1  # Src to Dest
+            pkt.direction = 1  # Src to Dest
         else:
-            packRec.direction = 2  # Dest to Source
+            pkt.direction = 2  # Dest to Source
         # If we get here, we know which interface the packet is going out of.
         # If we are an originating packet, check firewall.  A reply gets allowed.
-        if (
-            packRec.packettype == "traceroute-response"
-            or packRec.packettype == "ping-response"
-        ):
+        if pkt.packettype == "traceroute-response" or pkt.packettype == "ping-response":
             return True
 
         # This works for originating packets
         if Device(theDevice).AdvFirewallAllows(
-            packRec.json.get("ininterface"), routeRec.get("interface").get("nicname")
+            pkt.in_interface, routeRec.get("interface").get("nicname")
         ):
             return True
         else:
             logging.debug(
-                f"Packet dropped by firewall: {packRec.json.get('inhost')} {packRec.json.get('ininterface')}-{routeRec.get('interface').get('nicname')}"
+                f"Packet dropped by firewall: {pkt.in_host} {pkt.in_interface}-{routeRec.get('interface').get('nicname')}"
             )
             session.print("Packet dropped by firewall")
-            packRec.status = "done"
+            pkt.status = "done"
             return False
 
     # If we get here, it did not work.  No route to host.
     # right now, we blow up.  We need to deal with this with a bit more grace.  Passing the error back to the user
-    packRec.status = "failed"
+    pkt.status = "failed"
     logging.info(
-        f"sendpacketoutdevice Giving 'No Route to host' from {theDevice['hostname']} when looking for {packRec.destination_ip}"
+        f"sendpacketoutdevice Giving 'No Route to host' from {theDevice['hostname']} when looking for {pkt.destination_ip}"
     )
     session.print("No route to host")
 
