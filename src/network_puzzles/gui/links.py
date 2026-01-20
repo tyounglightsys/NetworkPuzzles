@@ -12,8 +12,8 @@ class GuiLink(Widget, Link):
     end = ListProperty(None)
     start = ListProperty(None)
 
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, json_data, **kwargs):
+        super().__init__(json_data=json_data, **kwargs)
 
         self._set_points()
         self._set_size_and_pos()

@@ -35,8 +35,8 @@ from .popups import (
 
 
 class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, json_data, **kwargs):
+        super().__init__(json_data=json_data, **kwargs)
         self.help_text = None
         self.highlighting = None
         self.lock_icon = None
@@ -287,7 +287,7 @@ class EditDevicePopup(ActionPopup):
     def __init__(self, dev, **kwargs):
         # Use copy of data for displaying in UI b/c real changes will be
         # applied via parser commands when "Okay" is clicked.
-        self.device = GuiDevice(value=deepcopy(dev.json))
+        self.device = GuiDevice(json_data=deepcopy(dev.json))
         super().__init__(**kwargs)
         self.selected_ip = None
         self._selected_nic = None
@@ -391,7 +391,7 @@ class EditDevicePopup(ActionPopup):
         self.app.ui.parse(f"replace {self.device.hostname} {self.selected_nic}")
         # Update device with new data.
         self.device = GuiDevice(
-            value=deepcopy(self.app.ui.get_device(self.device.hostname))
+            json_data=deepcopy(self.app.ui.get_device(self.device.hostname))
         )
         # Update NIC list.
         self.ids.nics_list.update_data(self.device.nics, management=True)

@@ -29,7 +29,7 @@ class PacketManager:
     @property
     def packet_ids(self):
         """Yield a hash of the JSON of each currently active packet."""
-        for p in self.app.ui.packetlist:
+        for p in self.app.ui.puzzle.packets:
             yield p.hash_id
 
     def get_gui_packet(self, pkt):
@@ -65,7 +65,7 @@ class PacketManager:
                 self.app.root.ids.layout.remove_widget(p)
 
         # Add or update packets in layout.
-        for p in self.app.ui.packetlist:
+        for p in self.app.ui.puzzle.packets:
             link = self.get_link_widget(p.packet_location)
             # NOTE: Sometimes the layout doesn't contain the link widgets, maybe
             # due to a race condition with a redraw? So skipping packet update

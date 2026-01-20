@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 
 from kivy.uix.popup import Popup
 
@@ -88,11 +89,11 @@ class EditDhcpPopup(ActionPopup):
                 if ip.get("ip") != self.LOCALHOST_IP
             ]
             for ip in ips:
-                _data = self.UNSET.copy()
+                _data = deepcopy(self.UNSET)
                 _data["ip"] = ip
                 unset_configs.append(_data)
         if len(unset_configs) == 0:
-            data = self.UNSET.copy()
+            data = deepcopy(self.UNSET)
             data["ip"] = self.NO_IP
             unset_configs.append(data)
         return unset_configs

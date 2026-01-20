@@ -5,22 +5,22 @@ import copy
 import json
 import logging
 import re
+import time
 
 from packaging.version import Version
 
 # define the global network list
 from . import device, packet, session
+from .core import ItemBase
 from .link import Link
 from .nic import Nic
 
 
-class Puzzle:
+class Puzzle(ItemBase):
     """Encapsulates the loaded puzzle's data and functionality."""
 
-    def __init__(self, data):
-        if not isinstance(data, dict):
-            raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
-        self.json = data.copy()
+    def __init__(self, json_data):
+        super().__init__(json_data)
         self.completion_notified = False
 
     @property
@@ -62,13 +62,9 @@ class Puzzle:
 
     @property
     def packets(self):
-        """Generator to yield all packets currently present in the puzzle."""
-        raise NotImplementedError
-        for data in self.json.get("packet", []):
-            if isinstance(data, dict):
-                yield data
-            else:
-                logging.warning(f"Ignoring invalid packet data: {data}")
+        if "packet" not in self.json:
+            self.json["packet"] = []
+        return self.json.get("packet")
 
     @property
     def tests(self):
@@ -422,14 +418,14 @@ class Puzzle:
         for link_data in self.links:
             link = Link(link_data)
             # Check if NIC is used by host device as src or dest.
-            if nic.myid.get("hostname") == link.src and nic.name == link.json.get(
+            if nic.my_id.hostname == link.src and nic.name == link.json.get(
                 "SrcNic"
             ).get("nicname"):  # NIC used as link src
                 if link.linktype == "broken":
                     return False
                 else:
                     return True
-            if nic.myid.get("hostname") == link.dest and nic.name == link.json.get(
+            if nic.my_id.hostname == link.dest and nic.name == link.json.get(
                 "DstNic"
             ).get("nicname"):  # NIC used as link dest
                 if link.linktype == "broken":
@@ -437,6 +433,67 @@ class Puzzle:
                 else:
                     return True
         return False
+
+    def packets_need_processing(self):
+        """Determine if we should continue to loop through packets
+        returns True or False"""
+        if len(self.packets) > session.maxpackets:
+            session.maxpackets = len(self.packets)
+        if len(self.packets) > 30:
+            if not session.packetstorm:
+                logging.info(f"We started a storm: {len(self.packets)}")
+            # There were too many packets.  Must have created a storm/net loop
+            session.packetstorm = True
+        return len(self.packets) > 0
+
+    def process_packets(self, killSeconds: int = 20, tick_pct: float = 10):
+        """
+        Loop through all packets, moving them along through the system
+        Args: killseconds - the number of seconds to go before killing the packets.
+        """
+        killMilliseconds = killSeconds * 1000
+        # here we loop through all packets and process them
+        curtime = int(time.time() * 1000)
+        counter = 0
+        # logging.debug("Packet: Starting packetlist loop.")
+        for pkt in self.packets:
+            # logging.debug(f"Packet: Current: {pkt}")
+            counter = counter + 1
+            # figure out where the packet is
+            current_link = pkt.get_current_link()
+            # logging.debug(f"Packet: On link: {current_link}, {pkt.status=}")
+            if current_link is not None:
+                # the packet is traversing a link
+                # damagePacketIfNeeded(pkt, tick_pct)
+                pkt.apply_possible_damage(tick_pct)
+                pkt.distance += tick_pct
+                # logging.debug(f"Packet: Moved to {pkt.distance}; {pkt.health=}")
+                if pkt.distance > 50 and current_link.linktype == "broken":
+                    # The link is broken.  The packet gets killed
+                    pkt.status = "done"  # the packet dies silently
+                if pkt.distance > 100 and pkt.status != "done":
+                    # We have arrived.  We need to process the arrival!
+                    # get interface from link
+                    src_nic = pkt.get_current_link_endpoint_nics()[0]
+                    logging.debug(f"Packet: Arrived at NIC: {src_nic}")
+                    if src_nic is None:
+                        # We could not find the record.  This should never happen.  For now, blow up
+                        logging.error(f"Bad Link: {current_link}")
+                        logging.error(f"Direction = {pkt.direction}")
+                        raise Exception("Could not find the endpoint of the link.")
+                    # We are here.  Call a function on the nic to start the packet entering the device
+                    device.doInputFromLink(pkt, src_nic.json)
+
+            # If the packet has been going too long.  Kill it.
+            if curtime - pkt.starttime > killMilliseconds:
+                # over 20 seconds have passed.  Kill the packet
+                pkt.status = "failed"
+                pkt.statusmessage = "Packet timed out"
+                logging.warning("packet killed")
+
+            # When we are done with all the processing, kill any packets that need killing.
+            if pkt.status in ("done", "dropped", "failed"):
+                pkt.remove_from_packet_list()
 
     def firstFreeNic(self, deviceRec):
         """find the first unused network card

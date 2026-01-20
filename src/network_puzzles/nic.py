@@ -1,30 +1,22 @@
+# import logging
 import random
 
 from . import interface
+from .core import ItemBase
 
 
-class Nic:
-    def __init__(self, nicrec):
-        if not isinstance(nicrec, dict):
-            raise ValueError(f"Invalid JSON data passed to {self.__class__}.")
-        self.json = nicrec
-        # add the interfaces
-        if self.json.get("interface") and not isinstance(
-            self.json.get("interface"), list
-        ):
-            # make it a list so we can iterate it
-            self.json["interface"] = [self.json["interface"]]
+class Nic(ItemBase):
+    def __init__(self, json_data=None):
+        super().__init__(json_data)
 
-    @property
-    def hostid(self):
-        return self.myid.get("hostid", "")
+    def __str__(self):
+        return self.name
 
     @property
     def interfaces(self):
-        data = self.json.get("interface")
-        if not isinstance(data, list):
-            data = [data]
-        return [iface for iface in data]
+        if not isinstance(self.json.get("interface"), list):
+            self.json["interface"] = [self.json.get("interface")]
+        return self.json.get("interface")
 
     @property
     def ip_addresses(self):
@@ -43,8 +35,9 @@ class Nic:
         return self.json.get("Mac")
 
     @property
-    def myid(self):
-        return self.json.get("myid")
+    def my_id(self):
+        """Object with "myid" data."""
+        return MyId(self.json.get("myid"))
 
     @property
     def name(self):
@@ -79,3 +72,26 @@ class Nic:
 
         self.json = new_data
         return new_data
+
+
+class MyId(ItemBase):
+    """Helper class for accessing NIC "myid" data."""
+
+    def __init__(self, json_data=None):
+        super().__init__(json_data)
+
+    @property
+    def host_id(self):
+        return self.json.get("hostid")
+
+    @property
+    def hostname(self):
+        return self.json.get("hostname")
+
+    @property
+    def nic_id(self):
+        return self.json.get("nicid")
+
+    @property
+    def nicname(self):
+        return self.json.get("nicname")

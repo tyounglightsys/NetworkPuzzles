@@ -1,17 +1,9 @@
-class Interface:
-    def __init__(self, interfacerec=None):
-        if interfacerec is None:
-            interfacerec = {}
-        self.json = interfacerec
-        self.ip: str = self.json.get("myip")
-        self.vlan: list = []
-        if "VLAN" in self.json:
-            if not isinstance(self.json.get("VLAN"), list):
-                self.json["VLAN"] = [self.json.get("VLAN")]
-            for onevlan in self.json.get("VLAN"):
-                self.vlan.append(
-                    onevlan
-                )  # we do not need to do a deep copy or anything
+from .core import ItemBase
+
+
+class Interface(ItemBase):
+    def __init__(self, json_data=None):
+        super().__init__(json_data)
 
     @property
     def ip_data(self) -> dict:
@@ -29,12 +21,18 @@ class Interface:
     def nicname(self, value):
         self.json["nicname"] = value
 
+    @property
+    def vlans(self):
+        if "VLAN" not in self.json:
+            self.json["VLAN"] = []
+        elif not isinstance(self.json.get("VLAN"), list):
+            self.json["VLAN"] = [self.json.get("VLAN")]
+        return self.json.get("VLANS")
 
-class IpAddress:
-    def __init__(self, data=None):
-        if data is None:
-            data = {}
-        self.json = data
+
+class IpAddress(ItemBase):
+    def __init__(self, json_data=None):
+        super().__init__(json_data)
 
     @property
     def address(self) -> str:
