@@ -737,6 +737,10 @@ class Puzzle:
         else:
             session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
             return False
+    
+    def ClearAllConnectionEntries(self):
+        for onedevice in self.devices:
+            device(onedevice).ClearIPConnections()
 
     def _get_items(self, item_type: str):
         """

@@ -313,6 +313,24 @@ class Device:
                 return True
         # If we get here, nothing yet matched.  Add a new record
         return False
+    
+    # NAT-table functions
+    # for tracking outbound packets on WAN network cards.
+    def AddIPConnectionEntry(self, dest_ip, src_ip, packettype, response):
+        '''Add a record of the packet and what we should do when we encounter its response
+        dest_ip: the IP address of the destination
+        src_ip: the IP address of the source
+        packettype: 'ping, ping-response, etc.
+        response: One of  none|accept|masq|drop|reject'''
+        if 'IPConnections' not in self.json:
+            self.json['IPConnections'] = [] #make an empty array
+        
+        newrec = { 
+            'dest' : dest_ip,
+            'src' : src_ip,
+            'packettype' : packettype.lower(),
+            'response' : response.lower()
+        }
 
     # Generic functions
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict | None:
