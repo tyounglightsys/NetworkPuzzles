@@ -1,8 +1,9 @@
-# import logging
+import logging
 import random
 
-from . import interface
+from . import interface, session
 from .core import ItemBase
+from .link import Link
 
 
 class Nic(ItemBase):
@@ -48,6 +49,10 @@ class Nic(ItemBase):
         return self.json.get("nictype")
 
     @property
+    def uniqueidentifier(self):
+        return self.json.get("uniqueidentifier")
+
+    @property
     def uses_dhcp(self):
         return self.json.get("usesdhcp").lower() in ["true", "yes"]
 
@@ -72,6 +77,44 @@ class Nic(ItemBase):
 
         self.json = new_data
         return new_data
+
+    def get_connected_link(self):
+        """Find a link connected to the specified network card"""
+        logging.debug(
+            f"looking for link connected to nic; #{self.my_id.nic_id}; {self.name}"
+        )
+        for one in session.puzzle.links:
+            if one:
+                # print ("   link - " + one['hostname'])
+                if one["SrcNic"]["nicid"] == self.my_id.nic_id:
+                    return one
+                if one["DstNic"]["nicid"] == self.my_id.nic_id:
+                    return one
+        # we did not find anything that matched.  Return None
+        return None
+
+    def is_connected(self):
+        """Connected status of given interface.
+        returns: boolean
+        """
+        for link_data in session.puzzle.links:
+            link = Link(link_data)
+            # Check if NIC is used by host device as src or dest.
+            if self.my_id.hostname == link.src and self.name == link.src_nic.get(
+                "nicname"
+            ):  # NIC used as link src
+                if link.linktype == "broken":
+                    return False
+                else:
+                    return True
+            if self.my_id.hostname == link.dest and self.name == link.dest_nic.get(
+                "nicname"
+            ):  # NIC used as link dest
+                if link.linktype == "broken":
+                    return False
+                else:
+                    return True
+        return False
 
 
 class MyId(ItemBase):
