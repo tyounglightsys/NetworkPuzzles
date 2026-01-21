@@ -743,7 +743,8 @@ class Parser:
             logging.debug(f"{dev_obj.is_invisible=}")
             # if any of the links connected to the switch were hidden/invisible, draw them
             for onenic in dev_obj.all_nics():
-                onelink = device.linkConnectedToNic(onenic)
+                n = nic.Nic(onenic)
+                onelink = n.get_connected_link()
                 if (
                     onelink is not None
                     and onelink.get("isinvisible", "").lower() == "true"
@@ -809,7 +810,8 @@ class Parser:
         if dev_obj.is_invisible:
             can_continue = False
             for onenic in dev_obj.all_nics():
-                onelink = device.linkConnectedToNic(onenic)
+                n = nic.Nic(onenic)
+                onelink = n.get_connected_link()
                 if onelink is not None and (
                     onelink.get("isinvisible") == "false"
                     or onelink.get("isinvisible") == "False"

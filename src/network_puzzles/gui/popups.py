@@ -35,9 +35,7 @@ class ChooseNicPopup(ActionPopup):
         self.device = devicew
         super().__init__(**kwargs)
         self.selected_nic = None
-        free_nics = [
-            n for n in self.device.nics if device.linkConnectedToNic(n.json) is None
-        ]
+        free_nics = [n for n in self.device.nics if n.get_connected_link() is None]
         self.ids.nics_list.update_data(free_nics, management=False)
 
     def on_nic_selection(self, selected_nic_text):

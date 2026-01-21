@@ -126,6 +126,7 @@ class Puzzle(ItemBase):
 
     def commands_from_tests(self, hostname=None):
         commands = list()
+        tdevice = self.device_from_name(hostname)
         for test in self.all_tests(hostname):
             # print(f"checking test: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')} - {onetest.get('completed',False)}")
             if test.get("completed", False):
@@ -168,7 +169,7 @@ class Puzzle(ItemBase):
                 case "DeviceNeedsUPS":
                     commands.append(f"addups {test.get('shost')}")
                 case "DeviceIsFrozen" | "DeviceBlowsUpWithPower" | "DeviceNeedsUPS":
-                    if device.powerOff(hostname):
+                    if not device.Device(tdevice).powered_on:
                         commands.append(f"set {test.get('shost')} power on")
                     else:
                         commands.append(f"set {test.get('shost')} power off")
@@ -177,7 +178,6 @@ class Puzzle(ItemBase):
                     ):
                         # FIXME: Need correct command for adding UPS.
                         commands.append(f"replaceups {test.get('shost')}")
-        tdevice = self.device_from_name(hostname)
         if tdevice is not None and device.canUseDHCP(hostname):
             commands.append(f"dhcp {hostname}")
         if device.Device(tdevice).blown_up:
@@ -248,7 +248,7 @@ class Puzzle(ItemBase):
 
     def check_local_IP_test(self, shost):
         """Check to see if there is a test we need to check for completion"""
-        logging.debug(f"{shost.get('hostname')=}")
+        # logging.debug(f"{shost.get('hostname')=}")
         for test in self.all_tests():
             if test.get("completed"):
                 # only check tests which are not completed
@@ -411,31 +411,6 @@ class Puzzle(ItemBase):
                     return item
         return None
 
-    def nic_is_connected(self, nicRec):
-        """Connected status of given interface.
-        Args: nicRec: the NIC record
-        returns: boolean
-        """
-        nic = Nic(nicRec)
-        for link_data in self.links:
-            link = Link(link_data)
-            # Check if NIC is used by host device as src or dest.
-            if nic.my_id.hostname == link.src and nic.name == link.json.get(
-                "SrcNic"
-            ).get("nicname"):  # NIC used as link src
-                if link.linktype == "broken":
-                    return False
-                else:
-                    return True
-            if nic.my_id.hostname == link.dest and nic.name == link.json.get(
-                "DstNic"
-            ).get("nicname"):  # NIC used as link dest
-                if link.linktype == "broken":
-                    return False
-                else:
-                    return True
-        return False
-
     def packets_need_processing(self):
         """Determine if we should continue to loop through packets
         returns True or False"""
@@ -476,15 +451,16 @@ class Puzzle(ItemBase):
                 if pkt.distance > 100 and pkt.status != "done":
                     # We have arrived.  We need to process the arrival!
                     # get interface from link
-                    src_nic = pkt.get_current_link_endpoint_nics()[0]
-                    logging.debug(f"Packet: Arrived at NIC: {src_nic}")
-                    if src_nic is None:
+                    end_nics = pkt.get_current_link_endpoint_nics()
+                    if end_nics is None:
                         # We could not find the record.  This should never happen.  For now, blow up
                         logging.error(f"Bad Link: {current_link}")
                         logging.error(f"Direction = {pkt.direction}")
                         raise Exception("Could not find the endpoint of the link.")
+                    src_nic = end_nics[0]
+                    logging.debug(f"Packet: Arrived at NIC: {src_nic}")
                     # We are here.  Call a function on the nic to start the packet entering the device
-                    device.doInputFromLink(pkt, src_nic.json)
+                    device.doInputFromLink(pkt, src_nic)
 
             # If the packet has been going too long.  Kill it.
             if curtime - pkt.starttime > killMilliseconds:
@@ -503,13 +479,14 @@ class Puzzle(ItemBase):
         returns: the first port, eth or whatnot that is not attached to something.  None if no port can be found
         """
         for onenic in deviceRec.get("nic"):
-            if onenic.get("nictype")[0] == "lo":
+            nic = Nic(onenic)
+            if nic.type[0] == "lo":
                 continue  # skip loopback devices
-            if onenic.get("nictype")[0] == "management_interface":
+            if nic.type[0] == "management_interface":
                 continue  # skip management_interface devices
-            match onenic.get("nictype")[0]:
+            match nic.type[0]:
                 case "port" | "wport" | "eth" | "wan" | "wlan":
-                    tlink = device.linkConnectedToNic(onenic)
+                    tlink = nic.get_connected_link()
                     if tlink is None:
                         return onenic
             # if the nic type is not one of those, then do not give it as an option.
@@ -533,7 +510,8 @@ class Puzzle(ItemBase):
                 return False
             # We need to find any links connected to this device and delete them
             for onenic in device.Device(existing_device).all_nics():
-                onelink = device.linkConnectedToNic(onenic)
+                nic = Nic(onenic)
+                onelink = nic.get_connected_link()
                 if onelink is not None:
                     self.deleteItem(onelink.get("hostname"))
             session.print(f"Deleting: {itemToDelete}")
@@ -699,8 +677,8 @@ class Puzzle(ItemBase):
             return False
         # The second item might be a nic name, or the second device.
         snicname = args[0]
-        snic = device.Device(sdevice).nic_from_name(snicname)
-        if snic is None:
+        snic_json = device.Device(sdevice).nic_from_name(snicname)
+        if snic_json is None:
             snicname = ""
             if session.puzzle.device_from_name(args[0]) is None:
                 # the nic failed to match, and it was not a valid host.
@@ -712,43 +690,48 @@ class Puzzle(ItemBase):
         else:
             # get rid of it. if it is none, we use the arg as the dest hostname
             args.pop(0)
+
         ddevicename = args.pop(0)
         ddevice = session.puzzle.device_from_name(ddevicename)
         if ddevice is None:
             session.print(f"Error no such device {ddevicename}")
             return False
         dnicname = ""
-        dnic = None
+        dnic_json = None
         if len(args) > 0:
-            dnic = device.Device(ddevice).nic_from_name(args[0])
-            if dnic is not None:
+            dnic_json = device.Device(ddevice).nic_from_name(args[0])
+            if dnic_json is not None:
                 dnicname = args[0]
             else:
                 session.print(f"Could not find nic: {args[0]}")
                 return False
         # If the snic and dnics are not set, find an available one.
-        if snic is None:
-            snic = self.firstFreeNic(sdevice)
-            if snic is not None:
-                snicname = snic.get("nicname")
-        if dnic is None:
-            dnic = self.firstFreeNic(ddevice)
-            if dnic is not None:
-                dnicname = dnic.get("nicname")  # this was mainly for debugging
+        if snic_json is None:
+            snic_json = self.firstFreeNic(sdevice)
+            # if snic_json is not None:
+            #     snicname = snic.get("nicname")
+        snic = Nic(snic_json)
+
+        if dnic_json is None:
+            dnic_json = self.firstFreeNic(ddevice)
+            # if dnic is not None:
+            #     dnicname = dnic.get("nicname")  # this was mainly for debugging
+        dnic = Nic(dnic_json)
+
         # print(f"trying to make a link from {sdevicename} {snicname} to {ddevicename} {dnicname}")
         existinglink = self.link_from_devices(sdevice, ddevice)
         if existinglink is not None:
             session.print(f"Link already exists: {existinglink['hostname']}")
             return False
 
-        existinglink = device.linkConnectedToNic(snic)
+        existinglink = snic.get_connected_link()
         if existinglink is not None:
             session.print(
-                f"Source nic already in use: {snic['myid']['hostname']} {snic['myid']['nicname']}"
+                f"Source nic already in use: {snic.my_id.hostname} {snic.my_id.nicname}"
             )
             return False
 
-        existinglink = device.linkConnectedToNic(dnic)
+        existinglink = dnic.get_connected_link()
         if existinglink is not None:
             session.print(
                 f"Destination nic already in use: {dnic['myid']['hostname']} {dnic['myid']['nicname']}"
@@ -756,15 +739,12 @@ class Puzzle(ItemBase):
             return False
         # verify the port types match
         ismatch = False
-        snictype = snic.get("nictype")[0]
-        dnictype = dnic.get("nictype")[0]
-        if (snictype == "wlan" or snictype == "wport") and (
-            dnictype == "wlan" or dnictype == "wport"
+        if (snic.type[0] == "wlan" or snic.type[0] == "wport") and (
+            dnic.type[0] == "wlan" or dnic.type[0] == "wport"
         ):
             ismatch = True
-        if (snictype == "port" or snictype == "eth" or snictype == "wan") and (
-            dnictype == "port" or dnictype == "eth" or dnictype == "wan"
-        ):
+        ok_types = ("port", "eth", "wan")
+        if snic.type[0] in ok_types and dnic.type[0] in ok_types:
             ismatch = True
         # if we get here, we should have all the pieces.
         if ismatch:
@@ -774,8 +754,8 @@ class Puzzle(ItemBase):
                 linktype  # should be "normal", "broken", or "wireless"
             )
             newlink["uniqueidentifier"] = session.puzzle.issueUniqueIdentifier()
-            newlink["SrcNic"] = copy.copy(snic.get("myid"))
-            newlink["DstNic"] = copy.copy(dnic.get("myid"))
+            newlink["SrcNic"] = copy.copy(snic.my_id.json)
+            newlink["DstNic"] = copy.copy(dnic.my_id.json)
             if not isinstance(self.json.get("link"), list):
                 self.json["link"] = [self.json.get("link")]
             self.json["link"].append(newlink)
@@ -794,7 +774,7 @@ class Puzzle(ItemBase):
             )
             return True
         else:
-            session.print(f"Cannot connect ports of type: {snictype} and {dnictype}")
+            session.print(f"Cannot connect ports of type: {snic.type} and {dnic.type}")
             return False
 
     def ClearAllConnectionEntries(self):

@@ -269,7 +269,7 @@ class TestProperties(unittest.TestCase):
                 for nic_data in dev.all_nics():
                     n = nic.Nic(nic_data)
                     if n.name == "eth0":
-                        self.assertTrue(self.app.puzzle.nic_is_connected(nic_data))
+                        self.assertTrue(n.is_connected())
                     elif n.name == "eth1":
-                        self.assertFalse(self.app.puzzle.nic_is_connected(nic_data))
+                        self.assertFalse(n.is_connected())
                 break

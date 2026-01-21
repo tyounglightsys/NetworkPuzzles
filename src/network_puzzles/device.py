@@ -420,15 +420,15 @@ class Device(ItemBase):
         ):
             # The packet is good, and has reached the computer.  Pass it on to the device
             # print ("Packet entering device: {self.hostname}")
-            return self.receive_packet(pkt, nic.json)
+            return self.receive_packet(pkt, nic)
         else:
             # print("packet did not match.  Dropping")
             # print (pkt.json)
-            # print("  packet dst MAC" + pkt.destination_mac + " vs this NIC" + nicRec['Mac'])
+            # print("  packet dst MAC" + pkt.destination_mac + " vs this NIC" + nic.mac)
             pkt.status = "dropped"
             return False
 
-    def receive_packet(self, pkt, nicRec):
+    def receive_packet(self, pkt, nic):
         """When a packet enters a device, coming from an interface and network card.  Here we respond to stuff, route, or switch..."""
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
@@ -446,21 +446,18 @@ class Device(ItemBase):
             if self.serves_dhcp:
                 if self.is_dhcp and "dhcprange" in self.json:
                     session.print(f"Arrived at DHCP server: {self.hostname}")
-                    makeDHCPResponse(pkt, self.json, nicRec)
+                    makeDHCPResponse(pkt, self.json, nic)
                     pkt.status = "done"
                     return True
         # If it is a DHCP answer, update the device IP address.
         elif pkt.packettype == "DHCP-Response":
-            if (
-                pkt.destination_mac == nicRec["Mac"]
-                and nicRec.get("usesdhcp") == "True"
-            ):
+            if pkt.destination_mac == nic.mac and nic.uses_dhcp is True:
                 logging.info(
                     f"Recieved DHCP response.  Dealing with it. payload: {pkt.payload}"
                 )
                 logging.info("packet matches this nic.")
                 session.ui.parser.parse(
-                    f"set {self.hostname} {nicRec['nicname']} {pkt.payload.get('ip')}/{pkt.payload.get('subnet')}",
+                    f"set {self.hostname} {nic.name} {pkt.payload.get('ip')}/{pkt.payload.get('subnet')}",
                     False,
                 )
                 if packet.isEmpty(self.json["gateway"]["ip"]):
@@ -638,7 +635,7 @@ class Device(ItemBase):
             pkt.status != "done" or packet.is_broadcast_mac(pkt.destination_mac)
         ) and forwardsPackets(self.json):
             pkt.status = "good"
-            send_out_hubswitch(self.json, pkt, nicRec)
+            send_out_hubswitch(self.json, pkt, nic)
             pkt.status = "done"
             return
 
@@ -785,48 +782,15 @@ def servesDHCP(deviceRec):
     return False
 
 
-def powerOff(deviceRec):
-    """return true if the device is powered off"""
-    return not Device(deviceRec).powered_on
-
-
-def isWirelessForwarder(deviceRec):
-    """return true if the device is a wireless device that does forwarding, false if it does not"""
-    if deviceRec is None:
-        return False
-    match deviceRec.get("mytype"):
-        case "wrepeater" | "wap" | "wbridge" | "wrouter":
-            return True
-    return False
-
-
-def linkConnectedToNic(nicRec):
-    """Find a link connected to the specified network card"""
-    if nicRec is None:
-        return None
-    logging.debug(
-        f"looking for link connected to nic; #{nicRec['myid']['nicid']}; {nicRec['nicname']}"
-    )
-    for one in session.puzzle.links:
-        if one:
-            # print ("   link - " + one['hostname'])
-            if one["SrcNic"]["nicid"] == nicRec["myid"]["nicid"]:
-                return one
-            if one["DstNic"]["nicid"] == nicRec["myid"]["nicid"]:
-                return one
-    # we did not find anything that matched.  Return None
-    return None
-
-
-def getDeviceNicFromLinkNicRec(tLinkNicRec):
+def getDeviceNicFromLinkNicRec(linkNicRec):
     """
     return the interface that the link connects to
     Args:
-    tLinkNicRec:link-Nic-rec.  This should be link['SrcNic'] or link['DstNic']
+    linkNicRec:link-Nic-rec.  This should be link['SrcNic'] or link['DstNic']
     returns: the interface record or None
     """
-    # a nic rec looks like: { "hostid": "100", "nicid": "102", "hostname": "pc0", "nicname": "eth0" }
-    tNic = session.puzzle.nic_from_uid(tLinkNicRec["nicid"])
+    # a link nic rec looks like: { "hostid": "100", "nicid": "102", "hostname": "pc0", "nicname": "eth0" }
+    tNic = session.puzzle.nic_from_uid(linkNicRec.get("nicid"))
     if tNic is None:
         return None
     # If we get here, we have the nic record.
@@ -857,10 +821,11 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     if "gateway" not in routeRec:
         # We did not find it in the static routes.  Loop through all nics and see if one is local
         for oneNic in theDeviceRec["nic"]:
-            localInterface = findLocalNICInterface(destinationIPString, oneNic)
+            nic = Nic(oneNic)
+            localInterface = findLocalNICInterface(destinationIPString, nic)
             if localInterface is not None:
                 # We found it.  Use it.
-                routeRec["nic"] = oneNic
+                routeRec["nic"] = nic.json
                 routeRec["interface"] = localInterface
                 break
 
@@ -872,10 +837,11 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     # if we have a gateway but do not know the nic and interface, find the right one
     if "gateway" in routeRec and "nic" not in routeRec:
         for oneNic in theDeviceRec["nic"]:
-            localInterface = findLocalNICInterface(routeRec["gateway"], oneNic)
+            nic = Nic(oneNic)
+            localInterface = findLocalNICInterface(routeRec["gateway"], nic)
             if localInterface is not None:
                 # We found it.  Use it.
-                routeRec["nic"] = oneNic
+                routeRec["nic"] = nic.json
                 routeRec["interface"] = localInterface
                 break
 
@@ -1176,38 +1142,36 @@ def ip_is_broadcast_for_device(deviceRec, ipstr: str):
         deviceRec["nic"] = [deviceRec["nic"]]
     for onenic in deviceRec["nic"]:
         # logging.debug(f"    Checking {onenic} {ipstr}")
-        if ip_is_broadcast_for_nic(onenic, ipstr):
+        nic = Nic(onenic)
+        if ip_is_broadcast_for_nic(nic, ipstr):
             # logging.debug("    SUCCESS! It is a broadcast!")
             return True
     return False
 
 
-def ip_is_broadcast_for_nic(nicRec, ipstr: str):
+def ip_is_broadcast_for_nic(nic, ipstr: str):
     """Return True if the specified ipstring is a broadcast IP for the specified NIC"""
     # logging.debug("Checking to see if our nic has broadcast IP")
-    if nicRec is None:
+    if nic is None:
         return False
-    if nicRec["nictype"][0] == "port":
+    if nic.type[0] == "port":
         return False  # Ports have no IP address
     # loop through all the interfaces and return any that might be local.
-    if not isinstance(nicRec["interface"], list):
-        nicRec["interface"] = [nicRec["interface"]]  # turn it into a list if needed.
-    for oneIF in nicRec["interface"]:
+    for oneIF in nic.interfaces:
         # logging.debug(f"    Checking {ipstr} with {str(interfaceIP(oneIF))}")
         if packet.isBroadcast(ipstr, str(interfaceIP(oneIF))):
             return True
     return False
 
 
-def findLocalNICInterface(targetIPstring: str, networkCardRec):
+def findLocalNICInterface(targetIPstring: str, nic):
     """Return the network interface record that has an IP address that is local to the IP specified as the target
     Args:
         targetIPstring:str - a string IP address, which we are trying to find a local interface for
-        networCardRec:nicRecord - a netetwork card record, which may contain multiple interfaces
+        nic:nic.Nic - a network card object, which may contain multiple interfaces
     returns: the interface record that is local to the target IP, or None"""
-    if networkCardRec is None:
+    if nic is None:
         return None
-    nic = Nic(networkCardRec)
     if nic.type[0] == "port":
         return None  # Ports have no IP address
     # loop through all the interfaces and return any that might be local.
@@ -1217,15 +1181,14 @@ def findLocalNICInterface(targetIPstring: str, networkCardRec):
     return None
 
 
-def findPrimaryNICInterface(networkCardRec):
+def findPrimaryNICInterface(nic):
     """return the primary nic interface.  Turns out this is always interface 0"""
-    if len(networkCardRec["nictype"]) > 0:
-        return networkCardRec["nictype"][0]
+    if len(nic.type) > 0:
+        return nic.type[0]
     return None
 
 
-def doInputFromLink(pkt, nicRec):
-    nic = Nic(nicRec)
+def doInputFromLink(pkt, nic):
     # zero these out.  We will set them below
     pkt.in_host = ""
     pkt.in_interface = ""
@@ -1248,10 +1211,10 @@ def doInputFromLink(pkt, nicRec):
     # If the packet is a DHCP request, and this is a DHCP server, process that.  To be done later.
 
     # Find the network interface.  It might be none if the IP does not match, or if it is a switch/hub device.
-    tInterface = findLocalNICInterface(pkt.json.get("tdestIP"), nic.json)
+    tInterface = findLocalNICInterface(pkt.json.get("tdestIP"), nic)
     # if this is None, try the primary interface.
     if tInterface is None:
-        tInterface = findPrimaryNICInterface(nic.json)
+        tInterface = findPrimaryNICInterface(nic)
     # the interface still might be none if we are a switch/hub port
     # Verify the interface.  This is mainly to work with SSIDs, VLANs, VPNs, etc.
     if tInterface is not None:
@@ -1281,7 +1244,7 @@ def beginIngressOnInterface(pkt, interfaceRec):
     return True
 
 
-def send_out_hubswitch(thisDevice, pkt, nicRec=None):
+def send_out_hubswitch(thisDevice, pkt, nic=None):
     # Ensure Packet object.
     if not isinstance(pkt, packet.Packet):
         raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
@@ -1295,16 +1258,17 @@ def send_out_hubswitch(thisDevice, pkt, nicRec=None):
 
     # print("We are forwarding.")
     for onenic in thisDevice["nic"]:
+        n = Nic(onenic)
         # we duplicate the packet and send it out each port-type
         # find the link connected to the port
-        # print ("Should we send out port: " + onenic['nicname'])
-        tlink = linkConnectedToNic(onenic)
+        # print (f"Should we send out port: {n.name}")
+        tlink = n.get_connected_link()
         if tlink is not None and (
-            nicRec is None or nicRec["uniqueidentifier"] != onenic["uniqueidentifier"]
+            nic is None or nic.uniqueidentifier != n.uniqueidentifier
         ):
             # We have a network wire connected to the NIC.  Send the packet out
             # if it is a switch-port, then we check first if we know where the packet goes - undone
-            if onlyport == "" or onlyport == onenic.get("nicname"):
+            if onlyport == "" or onlyport == n.name:
                 tpacket = packet.Packet(deepcopy(pkt.json))
                 # Update location to outgoing link.
                 tpacket.packet_location = tlink.get("hostname")
@@ -1321,14 +1285,14 @@ def send_out_hubswitch(thisDevice, pkt, nicRec=None):
     pkt.status = "done"
 
 
-def makeDHCPResponse(pkt, thisDevice, nicRec):
+def makeDHCPResponse(pkt, thisDevice, nic):
     # Ensure Packet object.
     if not isinstance(pkt, packet.Packet):
         raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
     if "dhcplist" not in thisDevice:
         thisDevice["dhcplist"] = {}
-    inboundip = nicRec["interface"][0]["myip"]["ip"]
+    inboundip = nic.interfaces[0]["myip"]["ip"]
     iprange = None
     available_ip = ""  # start with it empty.  Fill it if we can
     for onerange in thisDevice["dhcprange"]:
@@ -1367,17 +1331,17 @@ def makeDHCPResponse(pkt, thisDevice, nicRec):
         thisDevice["dhcplist"][pkt.source_mac] = available_ip
         # Now, make a new DHCP response packet
         nPacket = packet.Packet()
-        nPacket.source_ip = nicRec["interface"][0]["myip"]["ip"]
-        nPacket.source_mac = nicRec.get("Mac")
+        nPacket.source_ip = nic.interfaces[0]["myip"]["ip"]
+        nPacket.source_mac = nic.mac
         nPacket.destination_ip = "0.0.0.0"
         nPacket.destination_mac = pkt.source_mac
         nPacket.packettype = "DHCP-Response"
         nPacket.payload = {
             "ip": available_ip,
-            "subnet": nicRec["interface"][0]["myip"]["mask"],
+            "subnet": nic.interfaces[0]["myip"]["mask"],
             "gateway": thisDevice["gateway"]["ip"],
         }
-        destlink = linkConnectedToNic(nicRec)
+        destlink = nic.get_connected_link()
         nPacket.packet_location = destlink["hostname"]
         if destlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
             nPacket.direction = 1  # Src to Dest
@@ -1427,7 +1391,7 @@ def sendPacketOutDevice(pkt, theDevice):
         else:
             # set the packet location being the link associated with the nic
             #   Fail if there is no link on the port
-            destlink = linkConnectedToNic(routeRec["nic"])
+            destlink = Nic(routeRec.get("nic")).get_connected_link()
 
     if destlink is not None:
         pkt.packet_location = destlink["hostname"]

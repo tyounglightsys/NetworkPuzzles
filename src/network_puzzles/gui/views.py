@@ -33,7 +33,7 @@ class NICsRecView(AppRecView):
                 continue
             text = n.name
             # Add "*" to text if iface is connected.
-            if self.app.ui.puzzle.nic_is_connected(n.json):
+            if n.is_connected():
                 text += "*"
             # Add MAC address to NIC description.
             text += f"; {n.mac}"
