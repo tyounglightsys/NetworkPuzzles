@@ -779,7 +779,7 @@ class Puzzle(ItemBase):
 
     def ClearAllConnectionEntries(self):
         for onedevice in self.devices:
-            device(onedevice).ClearIPConnections()
+            device.Device(onedevice).ClearIPConnections()
 
     def _get_items(self, item_type: str):
         """
