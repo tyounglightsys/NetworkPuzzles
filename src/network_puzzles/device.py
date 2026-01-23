@@ -358,6 +358,10 @@ class Device(ItemBase):
             "packettype": packettype.lower(),
             "response": response.lower(),
         }
+        self.json["IPConnections"].append(newrec)
+
+    def ClearIPConnections(self):
+        self.json["IPConnections"] = [] #empty them
 
     def begin_ingress_on_nic(self, nic, pkt):
         """Begin the packet entering a device.  It enters via a nic, and then is processed.
