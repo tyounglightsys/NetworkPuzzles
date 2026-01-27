@@ -5,6 +5,7 @@ from copy import deepcopy
 from . import packet, session
 from .core import ItemBase
 from .nic import Nic
+from .interface import Interface
 
 
 class Device(ItemBase):
@@ -357,8 +358,10 @@ class Device(ItemBase):
             "src": src_ip,
             "packettype": packettype.lower(),
             "response": response.lower(),
+            "masqsrc": src_ip,
         }
         self.json["IPConnections"].append(newrec)
+        return newrec
 
     def ClearIPConnections(self):
         self.json["IPConnections"] = [] #empty them
@@ -1411,8 +1414,11 @@ def sendPacketOutDevice(pkt, theDevice):
         #In all other cases, accept
         #valid responses are: masq, accept, drop, reject, none
         if Nic(routeRec["nic"]).type == "wan" and not pkt.justcreated:
-            ddevice.AddIPConnectionEntry(pkt.destination_ip, pkt.source_ip, pkt.packettype, 'masq' )
-            #here we would masquerade the packet
+            connectionrec = ddevice.AddIPConnectionEntry(pkt.destination_ip, pkt.source_ip, pkt.packettype, 'masq' )
+            #here we masquerade the packet
+            connectionrec['src'] = Interface(routeRec['interface']).ip_data['ip']
+            pkt.source_ip = Interface(routeRec['interface']).ip_data['ip']
+
         else:
             ddevice.AddIPConnectionEntry(pkt.destination_ip, pkt.source_ip, pkt.packettype, 'accept' )
 
