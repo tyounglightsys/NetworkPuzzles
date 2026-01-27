@@ -26,6 +26,7 @@ class Packet(ItemBase):
         "status": "good",
         "statusmessage": "",
         "payload": "",
+        "justcreated": False,
         "packetlocation": "",  # where the packet is.  Should almost always be a link name
         "packetDirection": 0,  # Which direction are we going on a network link.  1=src to dest, 2=dest to src
         "packetDistance": 0,  # The % distance the packet has traversed.  This is incremented until it reaches 100%
@@ -140,6 +141,16 @@ class Packet(ItemBase):
         if not isinstance(value, str):
             raise ValueError(f"Invalid type for `packettype`: {type(value)}")
         self.json["packettype"] = value
+
+    @property
+    def justcreated(self):
+        return self.json.get("justcreated")
+
+    @justcreated.setter
+    def justcreated(self, value):
+        if not isinstance(value, bool):
+            raise ValueError(f"Invalid type for `justcreated`: {type(value)}")
+        self.json["justcreated"] = value
 
     @property
     def path(self):

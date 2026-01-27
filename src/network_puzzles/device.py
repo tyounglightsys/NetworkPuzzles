@@ -1234,6 +1234,7 @@ def doInputFromLink(pkt, nic):
     # but for now, pass it onto the NIC
     # logging.debug(f"We are routing.  Here is the packet: {pkt.json}")
     # logging.debug(f"We are routing.  Here is the nic: {nic.json}")
+    pkt.justcreated = False
     return dev.begin_ingress_on_nic(nic, pkt)
     # The NIC passes it onto the device if needed.  We are done with this.
 
@@ -1404,6 +1405,17 @@ def sendPacketOutDevice(pkt, theDevice):
         else:
             pkt.direction = 2  # Dest to Source
         # If we get here, we know which interface the packet is going out of.
+        #track outbound packets.
+        ddevice = Device(theDevice)
+        #if we are going out the WAN and did not originate here, masq the packet
+        #In all other cases, accept
+        #valid responses are: masq, accept, drop, reject, none
+        if Nic(routeRec["nic"]).type == "wan" and not pkt.justcreated:
+            ddevice.AddIPConnectionEntry(pkt.destination_ip, pkt.source_ip, pkt.packettype, 'masq' )
+            #here we would masquerade the packet
+        else:
+            ddevice.AddIPConnectionEntry(pkt.destination_ip, pkt.source_ip, pkt.packettype, 'accept' )
+
         # If we are an originating packet, check firewall.  A reply gets allowed.
         if pkt.packettype == "traceroute-response" or pkt.packettype == "ping-response":
             return True
@@ -1545,6 +1557,7 @@ def ping(src, dest):
         # logging.error("Failed to create Ping packet.")
         return
     nPacket.packettype = "ping"
+    nPacket.justcreated = True
     nPacket.json["origPingDest"] = dest
     sendPacketOutDevice(nPacket, src)
     nPacket.add_to_packet_list()
@@ -1560,6 +1573,7 @@ def traceroute(src, dest, newTTL=1):
     desthost = ensureHostRec(dest)
     nPacket = packetFromTo(src, dest)
     nPacket.packettype = "traceroute-request"
+    nPacket.justcreated = True
     nPacket.ttl = newTTL  # This is the secret to the traceroute.
     nPacket.payload = {
         "origTTL": newTTL,  # We will increase this as we go out.
