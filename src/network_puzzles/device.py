@@ -807,7 +807,7 @@ def forwardsPackets(deviceRec):
 def routesPackets(deviceRec):
     """return true if the device routes packets, false if it does not"""
     match deviceRec["mytype"]:
-        case "router" | "firewall":
+        case "router" | "wrouter" | "firewall":
             return True
     return False
 
@@ -1340,6 +1340,7 @@ def makeDHCPResponse(pkt, thisDevice, nic):
     if "dhcplist" not in thisDevice:
         thisDevice["dhcplist"] = {}
     inboundip = nic.interfaces[0]["myip"]["ip"]
+    logging.debug(f"making a dhcp response on nic {nic.name}  {nic.interfaces[0]["myip"]["ip"]}")
     iprange = None
     available_ip = ""  # start with it empty.  Fill it if we can
     for onerange in thisDevice["dhcprange"]:
@@ -1388,6 +1389,9 @@ def makeDHCPResponse(pkt, thisDevice, nic):
             "subnet": nic.interfaces[0]["myip"]["mask"],
             "gateway": thisDevice["gateway"]["ip"],
         }
+        #if the dhcp server is a router/firewall, use the nic IP as the gateway
+        if routesPackets(thisDevice):
+            nPacket.payload['gateway'] = inboundip
         destlink = nic.get_connected_link()
         nPacket.packet_location = destlink["hostname"]
         if destlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
