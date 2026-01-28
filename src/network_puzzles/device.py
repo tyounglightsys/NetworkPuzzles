@@ -354,14 +354,42 @@ class Device(ItemBase):
             self.json["IPConnections"] = []  # make an empty array
 
         newrec = {
-            "dest": dest_ip,
-            "src": src_ip,
+            "dest": packet.justIP(dest_ip),
+            "src": packet.justIP(src_ip),
             "packettype": packettype.lower(),
             "response": response.lower(),
-            "masqsrc": src_ip,
+            "masqsrc": packet.justIP(src_ip),
         }
         self.json["IPConnections"].append(newrec)
         return newrec
+
+    def ReturnIPConnectionEntry(self, dest_ip, src_ip, packettype):
+        """Look up and return the IP packet matching info, if it exists
+        dest_ip: the IP address of the destination
+        src_ip: the IP address of the source
+        packettype: 'ping, ping-response, etc.
+        response: One of  none|accept|masq|drop|reject"""
+
+        check_type = packettype
+        if packettype == "ping-response":
+            check_type = 'ping'
+        if packettype == "traceroute-request":
+            check_type = 'traceroute-response'
+
+        if "IPConnections" not in self.json:
+            self.json["IPConnections"] = []  # make an empty array
+            return None
+        for onerec in self.json["IPConnections"]:
+            logging.debug(f"checking for response {packet.justIP(dest_ip)}, {packet.justIP(src_ip)} {packettype} check_type: {check_type}")
+            logging.debug(f"checking for response {onerec['dest']}, {onerec['src']} {onerec['packettype']}")
+            if onerec['dest'] == packet.justIP(dest_ip) and onerec['src'] == packet.justIP(src_ip) and onerec['packettype'] == packettype:
+                #outbound packet
+                pass
+        if onerec['src'] == packet.justIP(dest_ip) and onerec['dest'] == packet.justIP(src_ip) and onerec['packettype'] == check_type:
+            logging.debug("found one!")
+            return onerec
+                
+        return None
 
     def ClearIPConnections(self):
         self.json["IPConnections"] = [] #empty them
@@ -415,9 +443,17 @@ class Device(ItemBase):
 
         # If we are entering a WAN port, see if we should be blocked or if it is a return packet
         if nic.type[0] == "wan":
-            pass
-            # We do not have the firewall programed in yet.
-            # if the packet is a return ping packet, allow it. Otherwise, reject
+            connection_info = self.ReturnIPConnectionEntry(pkt.destination_ip, pkt.source_ip, pkt.packettype)
+            if connection_info is not None:
+                logging.debug(f"Found a return packet {connection_info}")
+                if connection_info['response'] == 'masq':
+                    logging.debug(f"Packet was masqueraded.  Switching it back {connection_info['src']} -> {connection_info['masqsrc']}")
+                    pkt.destination_ip = connection_info['masqsrc']
+            else:
+                #we do not have a record of this.  Packets coming into the WAN, unless it is destined for here, are dropped.
+                logging.debug("no record of this.  Drop it for now")
+                pkt.status = "done"
+                return False
 
         if (
             pkt.destination_mac == nic.mac
@@ -1413,13 +1449,15 @@ def sendPacketOutDevice(pkt, theDevice):
         #if we are going out the WAN and did not originate here, masq the packet
         #In all other cases, accept
         #valid responses are: masq, accept, drop, reject, none
-        if Nic(routeRec["nic"]).type == "wan" and not pkt.justcreated:
+        if Nic(routeRec["nic"]).type[0] == "wan" and not pkt.justcreated:
             connectionrec = ddevice.AddIPConnectionEntry(pkt.destination_ip, pkt.source_ip, pkt.packettype, 'masq' )
             #here we masquerade the packet
+            logging.debug("We are masquerading the packet")
             connectionrec['src'] = Interface(routeRec['interface']).ip_data['ip']
             pkt.source_ip = Interface(routeRec['interface']).ip_data['ip']
 
         else:
+            logging.debug(f"We are tracking outbound packet on {Nic(routeRec["nic"]).type[0]}")
             ddevice.AddIPConnectionEntry(pkt.destination_ip, pkt.source_ip, pkt.packettype, 'accept' )
 
         # If we are an originating packet, check firewall.  A reply gets allowed.
