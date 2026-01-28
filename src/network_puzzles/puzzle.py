@@ -245,6 +245,38 @@ class Puzzle(ItemBase):
                 # the test matches, return true only if 'completed' is set to true
                 return test.get("completed", False)
         return False
+    
+    def ClearPingTests(self):
+        self.json['pingtests'] = []
+
+    def allPingTests(self):
+        if 'pingtests' not in self.json:
+            self.ClearPingTests()
+        return self.json['pingtests']
+
+    def RegisterPingTest(self, source, dest):
+        pt = {
+            'source': source,
+            'dest' : dest,
+            'result' : "failed", #we mark it as successful later.
+        }
+        self.json['pingtests'].append(pt)
+
+    def RegisterPingTestSuccess(self, source, dest):
+        for onerecord in self.allPingTests():
+            if onerecord['source'] == source and onerecord['dest'] == dest:
+                onerecord['result'] = "passed"
+
+    def AfterPacketsNoticeFailedPings(self):
+        '''This runs after all packets are complete. Any registered pings which failed get noted.
+        There are 'FailedPing' tests, which are used to show us firewalls are successfully done, etc.'''
+        for onerecord in self.allPingTests():
+            logging.debug(f"Looking at registered pings: {onerecord}")
+            if onerecord['result'] == 'failed':
+                logging.debug(f"Failed Ping: {onerecord['source']} {onerecord['dest']}")
+                session.puzzle.mark_test_as_completed(onerecord['source'], onerecord['dest'], 'FailedPing', f"The ping failed from {onerecord['source']} to {onerecord['dest']}")
+        self.ClearPingTests()
+
 
     def check_local_IP_test(self, shost):
         """Check to see if there is a test we need to check for completion"""

@@ -167,6 +167,7 @@ class CLI(UI):
             # The cli does not need much time to know packets are going to
             # loop forever.
             session.puzzle.process_packets(2)
+        session.puzzle.AfterPacketsNoticeFailedPings()
 
     def prompt(self):
         """A CLI only function.  Prompt for imput and process it"""
@@ -208,6 +209,8 @@ class GUI(UI):
         # If we created packets, process them until done.
         if self.puzzle.packets_need_processing():
             session.puzzle.process_packets(tick_pct=tick_pct)
+        session.puzzle.AfterPacketsNoticeFailedPings()
+
  
 
     def quit(self):

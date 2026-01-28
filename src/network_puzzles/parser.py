@@ -345,6 +345,14 @@ class Parser:
             return False
         # if we get here, we are ready to try to ping.
         session.print(f"PING: {args[0]} -> {args[1]}")
+        session.puzzle.ClearPingTests()
+        shost_register = shost
+        if 'hostname' in shost_register:
+            shost_register = shost.get('hostname')
+        dhost_register = dhost
+        if 'hostname' in dhost_register:
+            dhost_register = dhost.get('hostname')
+        session.puzzle.RegisterPingTest(shost_register,dhost_register)
         device.ping(shost, dhost)
         # FIXME: This only shows that the ping command was successfully
         # initiated, not that it was itself successful.

@@ -385,9 +385,9 @@ class Device(ItemBase):
             if onerec['dest'] == packet.justIP(dest_ip) and onerec['src'] == packet.justIP(src_ip) and onerec['packettype'] == packettype:
                 #outbound packet
                 pass
-        if onerec['src'] == packet.justIP(dest_ip) and onerec['dest'] == packet.justIP(src_ip) and onerec['packettype'] == check_type:
-            logging.debug("found one!")
-            return onerec
+            if onerec['src'] == packet.justIP(dest_ip) and onerec['dest'] == packet.justIP(src_ip) and onerec['packettype'] == check_type:
+                logging.debug("found one!")
+                return onerec
                 
         return None
 
@@ -598,6 +598,7 @@ class Device(ItemBase):
                             "SuccessfullyPings",
                             f"Successfully pinged from {self.hostname} to {orig_dest}",
                         )
+                        session.puzzle.RegisterPingTestSuccess(self.hostname, orig_dest)
                         # We mark this as complete too, but the test for 'WithoutLoop' happens later
                         mark_test_as_completed(
                             self.hostname,
@@ -612,6 +613,8 @@ class Device(ItemBase):
                         "SuccessfullyPings",
                         f"Successfully pinged from {self.hostname} to {pingdest.get('hostname')}",
                     )
+                    session.puzzle.RegisterPingTestSuccess(self.hostname, pingdest.get('hostname'))
+
                     # We mark this as complete too, but the test for 'WithoutLoop' happens later
                     mark_test_as_completed(
                         self.hostname,

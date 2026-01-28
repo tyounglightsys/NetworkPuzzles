@@ -1,0 +1,13 @@
+load Level2_FirewallDemo
+#source: pc0 test: FailedPing  dest: pc1 status: False
+#source: pc0 test: FailedPing  dest: pc3 status: False
+#source: pc2 test: SuccessfullyPings  dest: pc0 status: False
+#source: pc4 test: SuccessfullyPings  dest: pc0 status: False
+#source: pc4 test: SuccessfullyPings  dest: pc2 status: False
+dhcp pc2
+dhcp pc4
+ping pc2 pc0
+ping pc4 pc0
+ping pc4 pc2
+ping pc0 pc1
+ping pc0 pc3
