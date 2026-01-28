@@ -205,11 +205,11 @@ class GUI(UI):
 
     def process_packets(self, tick_pct):
         #clear all connection entries in preparation to process all packets
-        session.puzzle.ClearAllConnectionEntries()
+        #session.puzzle.ClearAllConnectionEntries()
         # If we created packets, process them until done.
         if self.puzzle.packets_need_processing():
             session.puzzle.process_packets(tick_pct=tick_pct)
-        session.puzzle.AfterPacketsNoticeFailedPings()
+        #session.puzzle.AfterPacketsNoticeFailedPings()
 
  
 
