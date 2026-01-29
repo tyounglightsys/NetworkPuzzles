@@ -468,6 +468,9 @@ class Puzzle(ItemBase):
         for pkt in self.packets:
             # logging.debug(f"Packet: Current: {pkt}")
             counter = counter + 1
+            if pkt.status == "tunneled":
+                #These packets are being tunneled and are a payload in a VPN.  For now, we skip processing them
+                continue
             # figure out where the packet is
             current_link = pkt.get_current_link()
             # logging.debug(f"Packet: On link: {current_link}, {pkt.status=}")

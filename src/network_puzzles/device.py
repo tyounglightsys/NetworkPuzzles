@@ -1453,6 +1453,13 @@ def sendPacketOutDevice(pkt, theDevice):
         # If we get here, we know which interface the packet is going out of.
         #track outbound packets.
         ddevice = Device(theDevice)
+        
+        #Handle VPNs.
+        if Nic(routeRec["nic"]).type[0] == "VPN":
+            #We are going out a VPN. Generate a new packet, with the current packet being the payload. 
+            VPN(theDevice.get('hostname'),routeRec["nic"]["tunnelendpoint"]["ip"],routeRec["nic"]["encryptionkey"],pkt)
+            return False #At this point in time, the packet is "tunneled" and we have a new packet to worry about.  All done for now.
+
         #if we are going out the WAN and did not originate here, masq the packet
         #In all other cases, accept
         #valid responses are: masq, accept, drop, reject, none
@@ -1639,6 +1646,30 @@ def traceroute(src, dest, newTTL=1):
     sendPacketOutDevice(nPacket, src)
     nPacket.add_to_packet_list()
 
+def VPN(src, dest, key, opacket):
+    """Generate a VPN packet, starting at the srcdevice and destined for the destination device
+    Args:
+        src:srcDevice (also works with a hostname)
+        dest:dstDevice (also works with a hostname)
+        key:the encryption key; must be the same at both ends of the VPN
+        packet:the packet being tunneled
+    """
+    nPacket = packetFromTo(src, dest)
+    if nPacket is None:
+        # The problem should have been logged and the user informed in the
+        # packetFromTo function; fail silently.
+        # logging.error("Failed to create Ping packet.")
+        return
+    nPacket.packettype = "tunnel"
+    nPacket.justcreated = True
+    nPacket.payload = opacket
+    nPacket.key = key
+    nPacket.json["origPingDest"] = dest
+
+    opacket.status="tunneled" #we will change this back to good when we un-tunnel the packet later on
+
+    sendPacketOutDevice(nPacket, src)
+    nPacket.add_to_packet_list()
 
 def doDHCP(srcHostname):
     """Generate a DHCP request packet from the specified hostname, if that host has any

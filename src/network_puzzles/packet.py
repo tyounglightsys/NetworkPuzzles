@@ -27,6 +27,7 @@ class Packet(ItemBase):
         "statusmessage": "",
         "payload": "",
         "justcreated": False,
+        "key": "", #encryption key; used for VPNs
         "packetlocation": "",  # where the packet is.  Should almost always be a link name
         "packetDirection": 0,  # Which direction are we going on a network link.  1=src to dest, 2=dest to src
         "packetDistance": 0,  # The % distance the packet has traversed.  This is incremented until it reaches 100%
@@ -143,6 +144,16 @@ class Packet(ItemBase):
         self.json["packettype"] = value
 
     @property
+    def key(self):
+        return self.json.get("key")
+
+    @key.setter
+    def key(self, value):
+        if not isinstance(value, str):
+            raise ValueError(f"Invalid type for `key`: {type(value)}")
+        self.json["key"] = value
+
+    @property
     def justcreated(self):
         return self.json.get("justcreated")
 
@@ -221,6 +232,9 @@ class Packet(ItemBase):
 
     def remove_from_packet_list(self):
         """Convenience function for managing packets."""
+        if 'payload' in self.json and "packettype" in self.json["payload"]:
+            #the payload is a packet.  Kill that packet the same way this was (whether failed or done)
+            self.json["payload"]["status"] = self.status
         self.session.puzzle.packets.remove(self)
 
     def apply_possible_damage(self, tick_pct):
