@@ -471,6 +471,30 @@ class Device(ItemBase):
             pkt.status = "dropped"
             return False
 
+    def process_tunneled_packet(self, pkt):
+        packetpayload = pkt.payload
+        pkt.status = "done" #Regardless, the packet ends here.
+        if isinstance(packetpayload, packet):
+            #This is what we are expecting. 
+            packetpayload.status = "goood" #start it processing once again.
+            vpninterface = None
+            vpnnic = None
+            for onenic in self.all_nics:
+                vpnnic = onenic
+                vpninterface = findLocalNICInterface(packetpayload['tdestIP'],onenic)
+                if vpninterface is not None:
+                    break
+            if vpninterface is not None:
+                #we have a VPN interface that is local to the tunneled packet.  
+                #  Send the packet down that way
+                if pkt.key == vpnnic.get('encryptionkey'):
+                    beginIngressOnInterface(packetpayload,vpninterface)
+                    self.begin_ingress_on_nic(vpnnic,pkt)
+                    return True
+                else:
+                    session.print("Key mismatch.  Cannot decrypt")
+        return False
+
     def receive_packet(self, pkt, nic):
         """When a packet enters a device, coming from an interface and network card.  Here we respond to stuff, route, or switch..."""
         # Ensure Packet object.
@@ -509,6 +533,11 @@ class Device(ItemBase):
                     )
                 pkt.status = "done"
                 return True
+        elif pkt.packettype == "tunnel":
+            #here we untunnel the packet
+            self.process_tunneled_packet(pkt)
+            return True
+
 
         # If the packet is destined for here, process that
         # print("Checking destination.  Looking for " + packet.justIP(pkt.destination_ip))
@@ -960,7 +989,9 @@ def destIP(srcDevice, dstDevice):
             # compare each of them to find one that is local
             if oneSip in oneDip.network:
                 # We found a match.  We are looking for the destination.  So we return that
-                return oneDip
+                logging.debug(f"Checking ip addresses.  Comparing {oneSip} to {packet.justIP(str(oneDip))}")
+                if packet.justIP(str(oneDip)) != "0.0.0.0": 
+                    return oneDip
     # if we get here, we did not find a match
     for oneDip in dstIPs:
         # compare each of them to find one that is local
@@ -1403,6 +1434,13 @@ def makeDHCPResponse(pkt, thisDevice, nic):
             f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {pkt.source_mac}"
         )
 
+def untunnel_packet(pkt, thedevice):
+    #The packet is a tunneled packet.
+    #We need to unpack the payload and find the VPN nic it should enter
+    #We need to then make sure the key can decrypt the packet
+    #And then, we ingress the packet on the appropriate VPN nic.
+    if pkt.packettype != "tunnel":
+        return False
 
 def sendPacketOutDevice(pkt, theDevice):
     """Send the packet out of the device."""
