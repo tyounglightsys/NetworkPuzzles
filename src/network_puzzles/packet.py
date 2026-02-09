@@ -175,7 +175,8 @@ class Packet(ItemBase):
 
     @payload.setter
     def payload(self, value):
-        if not isinstance(value, dict):
+        #the payload will often be a packet, or a dict
+        if not isinstance(value, dict) and not isinstance(value, Packet):
             raise ValueError(f"Invalid type for payload: {type(value)}")
         self.json["payload"] = value
 
