@@ -233,9 +233,10 @@ class Packet(ItemBase):
 
     def remove_from_packet_list(self):
         """Convenience function for managing packets."""
-        if 'payload' in self.json and "packettype" in self.json["payload"]:
+        if 'payload' in self.json and isinstance(self.json["payload"], Packet):
             #the payload is a packet.  Kill that packet the same way this was (whether failed or done)
-            self.json["payload"]["status"] = self.status
+            self.json["payload"].status = self.status
+            self.json["payload"].remove_from_packet_list()
         self.session.puzzle.packets.remove(self)
 
     def apply_possible_damage(self, tick_pct):

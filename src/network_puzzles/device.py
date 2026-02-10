@@ -240,6 +240,26 @@ class Device(ItemBase):
             return None
         return self._item_by_attrib(self.json.get("nic"), "nicname", nicname)
 
+    def nic_from_ip(self, ip):
+        """return the network card from the name
+        Args:
+            name: str - the hostname of the device that contains the nic we are looking for
+            theDevice:device - the device containing the nic we are looking for
+            what:str - the IP we are looking for
+        Returns:
+            the network card record from the device or None
+        """
+        if "nic" not in self.json:
+            return None
+        ip = packet.justIP(ip)
+        logging.debug(f"Looking up interface from IP: {ip}")
+        tInterface = self.interface_from_ip(ip)
+        if tInterface is not None:
+            logging.debug(f"We found: {tInterface} ")
+            tNicname = tInterface.get("nicname")
+            tNic = self.nic_from_name(tNicname)
+            return tNic
+
     def interface_from_name(self, interfacename):
         """return the network interface from the name
         Args:
@@ -257,6 +277,26 @@ class Device(ItemBase):
                 if oneinterface.get("nicname") == interfacename:
                     return oneinterface
         return None
+    
+    def interface_from_ip(self, ip):
+        """return the network interface from the IP
+        Args:
+        Returns:
+            the network interface record from the device or None
+        """
+        if "nic" not in self.json:
+            return None
+        if not isinstance(self.json["nic"], list):
+            self.json["nic"] = [self.json["nic"]]
+        for onenic in self.json["nic"]:
+            if not isinstance(onenic["interface"], list):
+                onenic["interface"] = [onenic["interface"]]
+            for oneinterface in onenic["interface"]:
+                logging.debug(f"checking interface: {oneinterface.get('nicname')} {oneinterface.get("myip").get("ip")} ")
+                if oneinterface.get("myip").get("ip") == ip:
+                    return oneinterface
+        return None
+
 
     # firewall pieces
     @property
@@ -474,14 +514,14 @@ class Device(ItemBase):
     def process_tunneled_packet(self, pkt):
         packetpayload = pkt.payload
         pkt.status = "done" #Regardless, the packet ends here.
-        if isinstance(packetpayload, packet):
+        if isinstance(packetpayload, packet.Packet):
             #This is what we are expecting. 
             packetpayload.status = "goood" #start it processing once again.
             vpninterface = None
             vpnnic = None
-            for onenic in self.all_nics:
+            for onenic in self.all_nics():
                 vpnnic = onenic
-                vpninterface = findLocalNICInterface(packetpayload['tdestIP'],onenic)
+                vpninterface = findLocalNICInterface(packetpayload.json['tdestIP'],onenic)
                 if vpninterface is not None:
                     break
             if vpninterface is not None:
@@ -883,6 +923,7 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
         theDeviceRec["route"] = []
     if not isinstance(theDeviceRec["route"], list):
         theDeviceRec["route"] = [theDeviceRec["route"]]  # turn it into a list
+    #logging.debug(f"Checking for static route: {theDeviceRec["route"]}")
     for oneroute in theDeviceRec["route"]:
         staticroute = ipaddress.ip_network(
             oneroute["ip"] + "/" + oneroute["mask"], strict=False
@@ -890,30 +931,38 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
         if destinationIPString in staticroute:
             # We found a gateway that we should use.
             routeRec["gateway"] = oneroute["gateway"]  # just the gateway
+            logging.debug(f"Found a static route.  Adding gateway: {routeRec["gateway"]}")
             break
 
     # if not a device route, look through nics
     if "gateway" not in routeRec:
         # We did not find it in the static routes.  Loop through all nics and see if one is local
+        logging.debug("No gateway set in routerec.  Looking through nics")
         for oneNic in theDeviceRec["nic"]:
             nic = Nic(oneNic)
-            localInterface = findLocalNICInterface(destinationIPString, nic)
+            skipzeroes = True
+            if destinationIPString == "255.255.255.255":
+                skipzeroes = False
+            localInterface = findLocalNICInterface(destinationIPString, nic, skipzeroes)
             if localInterface is not None:
                 # We found it.  Use it.
                 routeRec["nic"] = nic.json
                 routeRec["interface"] = localInterface
+                logging.debug(" Adding nic and interface to routeRec")
                 break
 
     # if not a nic, use the default gateway
     if "gateway" not in routeRec and "nic" not in routeRec:
         # use the device default gateway
         routeRec["gateway"] = theDeviceRec["gateway"]["ip"]
+        logging.debug(f"Still no idea.  Using default gateway: {routeRec["gateway"]}")
 
     # if we have a gateway but do not know the nic and interface, find the right one
     if "gateway" in routeRec and "nic" not in routeRec:
+        logging.debug(f"Finding nic to use for routerec: {routeRec}")
         for oneNic in theDeviceRec["nic"]:
             nic = Nic(oneNic)
-            localInterface = findLocalNICInterface(routeRec["gateway"], nic)
+            localInterface = findLocalNICInterface(routeRec["gateway"], nic, True)
             if localInterface is not None:
                 # We found it.  Use it.
                 routeRec["nic"] = nic.json
@@ -925,6 +974,7 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     if "interface" not in routeRec:
         # We could not figure out the route.  return None.
         return None
+    #logging.debug(f" Using routerec: {routeRec}")
     return routeRec
 
 
@@ -988,16 +1038,23 @@ def destIP(srcDevice, dstDevice):
         for oneDip in dstIPs:
             # compare each of them to find one that is local
             if oneSip in oneDip.network:
-                # We found a match.  We are looking for the destination.  So we return that
-                logging.debug(f"Checking ip addresses.  Comparing {oneSip} to {packet.justIP(str(oneDip))}")
                 if packet.justIP(str(oneDip)) != "0.0.0.0": 
+                    # We found a match.  We are looking for the destination.  So we return that
+                    logging.debug(f"Checking ip addresses.  Comparing {oneSip} to {packet.justIP(str(oneDip))}")
+                    tNic = Device(srcDevice).nic_from_ip(str(oneSip)) 
+                    if tNic is not None:
+                        logging.debug(f" nictype  {tNic.get("nictype")[0]}")
+                    if tNic is not None and tNic.get("nictype")[0] == "vpn":
+                        continue #We do not find a machine across the VPN
                     return oneDip
     # if we get here, we did not find a match
+    logging.debug("No match so far.  Looking to find the local address")
     for oneDip in dstIPs:
         # compare each of them to find one that is local
         if ipaddress.IPv4Interface(dstDevice.get("gateway")["ip"]) in oneDip.network:
             return oneDip
     # we need to find the IP address that is local to the gateway and use that.
+    logging.debug("Using the gateway")
     oneDip = ipaddress.IPv4Interface(srcDevice.get("gateway")["ip"])
     return oneDip
 
@@ -1241,7 +1298,7 @@ def ip_is_broadcast_for_nic(nic, ipstr: str):
     return False
 
 
-def findLocalNICInterface(targetIPstring: str, nic):
+def findLocalNICInterface(targetIPstring: str, nic, skip_zeros=False):
     """Return the network interface record that has an IP address that is local to the IP specified as the target
     Args:
         targetIPstring:str - a string IP address, which we are trying to find a local interface for
@@ -1249,10 +1306,15 @@ def findLocalNICInterface(targetIPstring: str, nic):
     returns: the interface record that is local to the target IP, or None"""
     if nic is None:
         return None
-    if nic.type[0] == "port":
+    if isinstance(nic, dict):
+        nic = Nic(nic) #change it to a class for the rest of the function
+    if isinstance(nic, dict) and nic['type'][0] == "port":
         return None  # Ports have no IP address
     # loop through all the interfaces and return any that might be local.
     for oneIF in nic.interfaces:
+        if skip_zeros and interfaceIP(oneIF) == "0.0.0.0/0.0.0.0":
+            logging.debug("Found 0.0.0.0.  skipping")
+            continue
         if packet.isLocal(targetIPstring, interfaceIP(oneIF)):
             return oneIF
     return None
@@ -1277,6 +1339,7 @@ def doInputFromLink(pkt, nic):
 
     dev = Device(thisDevice)
     pkt.in_host = dev.hostname
+    logging.debug(f"Packet arrived at device: {dev.hostname}")
 
     # Do the simple stuff
     if not dev.powered_on or dev.frozen:
@@ -1456,7 +1519,7 @@ def sendPacketOutDevice(pkt, theDevice):
 
     # set the source MAC address on the packet as from the nic
     if routeRec is not None:
-        logging.debug("Found a route rec.")
+        logging.debug(f"Found a route rec. {routeRec}")
         routeRec["nic"] = Nic(routeRec["nic"]).ensure_mac()
         pkt.source_mac = routeRec["nic"]["Mac"]
         pkt.json["tdestIP"] = routeRec.get("gateway")  # track when we use a gateway
@@ -1482,6 +1545,16 @@ def sendPacketOutDevice(pkt, theDevice):
             #   Fail if there is no link on the port
             destlink = Nic(routeRec.get("nic")).get_connected_link()
 
+        #Handle VPNs.
+        logging.debug(f"Checking if we need VPN: {routeRec}")
+        if Nic(routeRec["nic"]).type[0] == "vpn":
+            logging.debug("  Using VPN")
+            #We are going out a VPN. Generate a new packet, with the current packet being the payload. 
+            #VPN(theDevice.get('hostname'),routeRec["nic"]["tunnelendpoint"]["ip"],routeRec["nic"]["encryptionkey"],pkt)
+            VPN(theDevice,routeRec["nic"]["tunnelendpoint"]["ip"],routeRec["nic"]["encryptionkey"],pkt)
+            return False #At this point in time, the packet is "tunneled" and we have a new packet to worry about.  All done for now.
+
+
     if destlink is not None:
         pkt.packet_location = destlink["hostname"]
         if destlink["SrcNic"]["hostname"] == theDevice["hostname"]:
@@ -1492,12 +1565,6 @@ def sendPacketOutDevice(pkt, theDevice):
         #track outbound packets.
         ddevice = Device(theDevice)
         
-        #Handle VPNs.
-        if Nic(routeRec["nic"]).type[0] == "VPN":
-            #We are going out a VPN. Generate a new packet, with the current packet being the payload. 
-            VPN(theDevice.get('hostname'),routeRec["nic"]["tunnelendpoint"]["ip"],routeRec["nic"]["encryptionkey"],pkt)
-            return False #At this point in time, the packet is "tunneled" and we have a new packet to worry about.  All done for now.
-
         #if we are going out the WAN and did not originate here, masq the packet
         #In all other cases, accept
         #valid responses are: masq, accept, drop, reject, none
@@ -1621,7 +1688,7 @@ def packetFromTo(src, dest):
         return None
     if isinstance(dest, str):  # It is a string of an IP.  We should try it.
         dest = ipaddress.IPv4Address(dest)
-    # logging.debug(f"We are about to make a packet: {dest} {type(dest)}")
+    logging.debug(f"We are about to make a packet: {dest} {type(dest)}")
     if isinstance(dest, ipaddress.IPv4Address):
         # This is what we are hoping for; make an empty packet.
         nPacket = packet.Packet()
