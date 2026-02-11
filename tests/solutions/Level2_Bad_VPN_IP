@@ -1,0 +1,3 @@
+load Level2_Bad_VPN_IP
+set firewall0 vpn0 192.168.50.1
+ping pc0 pc1

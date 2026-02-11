@@ -857,6 +857,7 @@ class Parser:
                 if (
                     prop.startswith("eth")
                     or prop.startswith("wan")
+                    or prop.startswith("vpn")
                     or prop.startswith("wlan")
                     or prop.startswith("management")
                 ):
