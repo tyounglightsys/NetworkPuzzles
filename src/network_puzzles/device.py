@@ -461,6 +461,8 @@ class Device(ItemBase):
         trackPackets = False
 
         # if it is a port (swicth/hub) or wport (wireless devices)
+        if isinstance(nic, dict):
+            nic = Nic(nic) #if it was json that was passed in
         if nic.type[0] == "port" or nic.type[0] == "wport":
             trackPackets = True
         if self.is_wireless_forwarder and nic.type[0] == "wlan":
@@ -491,13 +493,17 @@ class Device(ItemBase):
                     pkt.destination_ip = connection_info['masqsrc']
             else:
                 #we do not have a record of this.  Packets coming into the WAN, unless it is destined for here, are dropped.
-                logging.debug("no record of this.  Drop it for now")
-                pkt.status = "done"
-                return False
+                #see if the packet is destined for us.
+                t_nic = self.nic_from_ip(pkt.destination_ip)
+                if t_nic is None:
+                    logging.debug("No record of this and not destined for this machine.  Drop it for now")
+                    pkt.status = "done"
+                    return False
 
         if (
             pkt.destination_mac == nic.mac
             or packet.is_broadcast_mac(pkt.destination_mac)
+            or routesPackets(self.json)
             or nic.type[0] == "port"
             or nic.type[0] == "wport"
         ):
@@ -514,14 +520,16 @@ class Device(ItemBase):
     def process_tunneled_packet(self, pkt):
         packetpayload = pkt.payload
         pkt.status = "done" #Regardless, the packet ends here.
+        logging.debug(f"Unpacking a tunneled packet - {packetpayload.packettype} {packetpayload.source_ip} {packetpayload.destination_ip}")
         if isinstance(packetpayload, packet.Packet):
             #This is what we are expecting. 
             packetpayload.status = "goood" #start it processing once again.
             vpninterface = None
             vpnnic = None
+
             for onenic in self.all_nics():
                 vpnnic = onenic
-                vpninterface = findLocalNICInterface(packetpayload.json['tdestIP'],onenic)
+                vpninterface = findLocalNICInterface(packetpayload.json['tdestIP'],onenic, True)
                 if vpninterface is not None:
                     break
             if vpninterface is not None:
@@ -529,10 +537,11 @@ class Device(ItemBase):
                 #  Send the packet down that way
                 if pkt.key == vpnnic.get('encryptionkey'):
                     beginIngressOnInterface(packetpayload,vpninterface)
-                    self.begin_ingress_on_nic(vpnnic,pkt)
+                    self.begin_ingress_on_nic(vpnnic,packetpayload)
                     return True
                 else:
                     session.print("Key mismatch.  Cannot decrypt")
+                    logging.debug(f"Key mismatch.  Cannot decrypt: key1 {pkt.key} - key2 {vpnnic.get('encryptionkey')}")
         return False
 
     def receive_packet(self, pkt, nic):
@@ -546,7 +555,7 @@ class Device(ItemBase):
             # nothing more to be done
             return False
         # We would check if it was frozen.  That is a test, not a status.  We do not have that check yet.
-
+        logging.debug(f"Receiving packet in {self.hostname} - {pkt.packettype}")
         # Deal with DHCP.
         # If it is a request and this is a DHCP server, serve an IP back.
         if pkt.packettype == "DHCP-Request":
@@ -574,9 +583,11 @@ class Device(ItemBase):
                 pkt.status = "done"
                 return True
         elif pkt.packettype == "tunnel":
-            #here we untunnel the packet
-            self.process_tunneled_packet(pkt)
-            return True
+            #here we untunnel the packet if it belongs to us
+            t_nic =  self.nic_from_ip(pkt.destination_ip)
+            if t_nic is not None:
+                self.process_tunneled_packet(pkt)
+                return True
 
 
         # If the packet is destined for here, process that
@@ -1339,6 +1350,7 @@ def doInputFromLink(pkt, nic):
 
     dev = Device(thisDevice)
     pkt.in_host = dev.hostname
+    logging.debug("-----------------------------------------")
     logging.debug(f"Packet arrived at device: {dev.hostname}")
 
     # Do the simple stuff
@@ -1363,7 +1375,7 @@ def doInputFromLink(pkt, nic):
             pkt.in_interface = tInterface
         else:
             pkt.in_interface = tInterface.get("nicname")
-
+        logging.debug(f"Beginning on interface: {tInterface}")
         beginIngressOnInterface(pkt, tInterface)
 
     # the packet status should show dropped or something if we have a problem.
@@ -1371,6 +1383,7 @@ def doInputFromLink(pkt, nic):
     # logging.debug(f"We are routing.  Here is the packet: {pkt.json}")
     # logging.debug(f"We are routing.  Here is the nic: {nic.json}")
     pkt.justcreated = False
+    logging.debug(f"Beginning on nic: {nic.name}")
     return dev.begin_ingress_on_nic(nic, pkt)
     # The NIC passes it onto the device if needed.  We are done with this.
 
