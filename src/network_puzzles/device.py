@@ -519,6 +519,7 @@ class Device(ItemBase):
 
     def process_tunneled_packet(self, pkt):
         packetpayload = pkt.payload
+        pkt.payload = None #remove the packet so it is not killed when the tunnel is killed
         pkt.status = "done" #Regardless, the packet ends here.
         logging.debug(f"Unpacking a tunneled packet - {packetpayload.packettype} {packetpayload.source_ip} {packetpayload.destination_ip}")
         if isinstance(packetpayload, packet.Packet):
@@ -935,11 +936,13 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     if not isinstance(theDeviceRec["route"], list):
         theDeviceRec["route"] = [theDeviceRec["route"]]  # turn it into a list
     #logging.debug(f"Checking for static route: {theDeviceRec["route"]}")
+    destinationIP = ipaddress.ip_address(packet.justIP(destinationIPString))
     for oneroute in theDeviceRec["route"]:
         staticroute = ipaddress.ip_network(
             oneroute["ip"] + "/" + oneroute["mask"], strict=False
         )
-        if destinationIPString in staticroute:
+        logging.debug(f"Checking if destinationIp {destinationIPString} is in staticroute {staticroute} from {oneroute["ip"]}/{oneroute["mask"]}")
+        if destinationIP in staticroute:
             # We found a gateway that we should use.
             routeRec["gateway"] = oneroute["gateway"]  # just the gateway
             logging.debug(f"Found a static route.  Adding gateway: {routeRec["gateway"]}")
