@@ -1253,6 +1253,8 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
                         + oneinterface["myip"]["mask"]
                         + " key:"
                         + onenic["encryptionkey"]
+                        + " endpoint:"
+                        + onenic["tunnelendpoint"]["ip"]
                     )
                 else:
                     interfacelist.append(
