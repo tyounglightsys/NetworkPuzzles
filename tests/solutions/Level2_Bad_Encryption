@@ -1,0 +1,3 @@
+load Level2_Bad_Encryption
+set firewall1 key vpn0 Key
+ping pc0 pc1
