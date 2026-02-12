@@ -1,0 +1,2 @@
+load Level2_VPNTraceroute
+traceroute pc1 pc2
