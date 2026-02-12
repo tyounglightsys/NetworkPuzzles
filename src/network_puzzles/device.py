@@ -1244,13 +1244,24 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
                 continue
             # print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
             if appendInterfacNames:
-                interfacelist.append(
-                    oneinterface["nicname"]
-                    + " "
-                    + oneinterface["myip"]["ip"]
-                    + "/"
-                    + oneinterface["myip"]["mask"]
-                )
+                if onenic["nictype"][0] == "vpn":
+                    interfacelist.append(
+                        oneinterface["nicname"]
+                        + " "
+                        + oneinterface["myip"]["ip"]
+                        + "/"
+                        + oneinterface["myip"]["mask"]
+                        + " key:"
+                        + onenic["encryptionkey"]
+                    )
+                else:
+                    interfacelist.append(
+                        oneinterface["nicname"]
+                        + " "
+                        + oneinterface["myip"]["ip"]
+                        + "/"
+                        + oneinterface["myip"]["mask"]
+                    )
             else:
                 interfacelist.append(
                     oneinterface["myip"]["ip"] + "/" + oneinterface["myip"]["mask"]
