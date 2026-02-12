@@ -53,6 +53,14 @@ class Nic(ItemBase):
         return self.json.get("uniqueidentifier")
 
     @property
+    def encryption(self):
+        return self.json.get("encryptionkey")
+
+    @encryption.setter
+    def encryption(self, value:str):
+        self.json["encryptionkey"] = value
+
+    @property
     def uses_dhcp(self):
         return self.json.get("usesdhcp").lower() in ["true", "yes"]
 

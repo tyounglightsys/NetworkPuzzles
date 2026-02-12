@@ -688,6 +688,21 @@ class Parser:
             session.print(f"invalid address: {value}")
             return False
 
+    def set_encryption(self, dev_obj:device.Device, nicname, newkey):
+        # set encryption, used on VPNs and wireless links
+        if dev_obj is None:
+            return False
+        tnic = dev_obj.nic_from_name(nicname)
+        if tnic is None:
+            session.print(f"Invalid nicname {nicname}:")
+            return False
+        if session.puzzle.item_is_locked(dev_obj.hostname, "LockNic"):
+            session.print("Cannot change the encryption on this nic.  Puzzle has it locked.")
+            return False
+        nic.Nic(tnic).encryption = newkey
+
+
+
     def set_ip_value(self, dev_obj, nicname, value, fromuser=True):
         # we should be setting the IP address.
         theparts = value.split("/")
@@ -850,6 +865,9 @@ class Parser:
                 self.set_dhcp_range(dev_obj, values)
             case "gateway" | "gw":
                 self.set_gateway_value(dev_obj, values[0])
+            case "key" | "encryption":
+                #set key firewall0 vpn0 newkey
+                self.set_encryption(dev_obj, values[0], values[1])
             case "location" | "position" | "pos":
                 self.set_position_value(dev_obj, values[0], values[1])
             case _:
