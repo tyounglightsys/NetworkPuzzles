@@ -733,7 +733,18 @@ class Parser:
             return False
         nic.Nic(tnic).encryption = newkey
 
-
+    def set_endpoint(self, dev_obj:device.Device, nicname, endpoint):
+        # set encryption, used on VPNs and wireless links
+        if dev_obj is None:
+            return False
+        tnic = dev_obj.nic_from_name(nicname)
+        if tnic is None:
+            session.print(f"Invalid nicname {nicname}:")
+            return False
+        if session.puzzle.item_is_locked(dev_obj.hostname, "LockNic"):
+            session.print("Cannot change the endpoint on this nic.  Puzzle has it locked.")
+            return False
+        nic.Nic(tnic).endpoint = endpoint
 
     def set_ip_value(self, dev_obj, nicname, value, fromuser=True):
         # we should be setting the IP address.
@@ -900,6 +911,9 @@ class Parser:
             case "key" | "encryption":
                 #set key firewall0 vpn0 newkey
                 self.set_encryption(dev_obj, values[0], values[1])
+            case "endpoint" | "tunnelendpoint":
+                #set endpoint firewall0 vpn0 gateway
+                self.set_endpoint(dev_obj, values[0], values[1])
             case "location" | "position" | "pos":
                 self.set_position_value(dev_obj, values[0], values[1])
             case _:

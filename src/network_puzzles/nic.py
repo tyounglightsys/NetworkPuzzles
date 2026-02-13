@@ -61,6 +61,18 @@ class Nic(ItemBase):
         self.json["encryptionkey"] = value
 
     @property
+    def endpoint(self):
+        if self.json.get("tunnelendpoint") is None:
+            self.json.get["tunnelendpoint"] = {}
+        return self.json.get("tunnelendpoint").get("ip")
+
+    @endpoint.setter
+    def endpoint(self, value:str):
+        if self.json.get("tunnelendpoint") is None:
+            self.json.get["tunnelendpoint"] = {}
+        self.json["tunnelendpoint"]["ip"] = value
+
+    @property
     def uses_dhcp(self):
         return self.json.get("usesdhcp").lower() in ["true", "yes"]
 

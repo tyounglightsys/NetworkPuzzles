@@ -1,0 +1,11 @@
+load Level2_Build_A_VPN
+set firewall0 vpn0 192.168.50.1/24
+set firewall0 key vpn0 testkey
+set firewall0 endpoint vpn0 192.168.6.2
+set firewall1 vpn0 192.168.50.2/24
+set firewall1 key vpn0 testkey
+set firewall1 endpoint vpn0 192.168.5.2
+route firewall0 add 192.168.2.0/24 192.168.50.2
+route firewall1 add 192.168.1.0/24 192.168.50.1
+ping pc0 pc1
+
