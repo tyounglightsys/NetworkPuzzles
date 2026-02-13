@@ -1,0 +1,8 @@
+load Level2_Connect_The_Dots
+create link firewall0 wan0 router0 eth1
+create link firewall1 wan0 router0 eth0
+set firewall0 wan0 192.168.5.2/24
+set firewall0 gateway 192.168.5.1
+set firewall1 wan0 192.168.6.2/24
+set firewall1 gateway 192.168.6.1
+ping pc0 pc1
