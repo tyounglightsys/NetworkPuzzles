@@ -1,0 +1,3 @@
+load Level2_Bad_Route
+route firewall0 add 192.168.2.0/24 192.168.50.2
+ping pc0 pc1

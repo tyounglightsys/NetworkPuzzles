@@ -91,8 +91,10 @@ class Parser:
                     return self.run_ping(args)
                 case "replace":
                     return self.replace_something(args)
+                case "route":
+                    return self.change_route(args)
                 case "show" | "list":
-                    self.show_info(args)
+                    return self.show_info(args)
                 case "set":
                     return self.setvalue(args, fromuser)
                 case "traceroute" | "tracert":
@@ -415,6 +417,32 @@ class Parser:
         # We will need to check for that later after the tests are done.
         return session.puzzle.deleteItem(args[0])
 
+    def change_route(self, args):
+        if len(args) != 4:
+            session.print("invalid route command: usage: route item [add|del] ip/mask gateway")
+            session.print(" example: route firewall0 add 192.168.2.0/24 192.168.50.1")
+            session.print(" example: route firewall0 del 192.168.2.0/24 192.168.50.1")
+            return False
+        logging.debug(f"parser.Parser.change_route({args[0]})")
+        hostname = args[0].lower()
+        command = args[1].lower()
+        target = args[2]
+        gateway= args[3]
+        target_device = session.puzzle.device_from_name(hostname)
+        if target_device is None:
+            session.print(f"Invalid host: {hostname}")
+            return False
+        if command not in {"add", "del"}:
+            session.print(f"Invalid command: {command}")
+            session.print("  Allowed Commands: add, del")
+            return False
+        target_device = device.Device(target_device)
+        if command == "add":
+            return target_device.route_add(target,gateway)
+        return target_device.route_del(target,gateway)
+
+
+
     def process_firewall(self, args):
         if len(args) != 5:
             session.print(
@@ -492,6 +520,10 @@ class Parser:
                 session.print(f"gateway: {thedevice['gateway']['ip']}")
                 for onestring in device.allIPStrings(thedevice, True, True):
                     session.print(onestring)
+                #logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
+                if thedevice.get("route") is not None and len(thedevice.get("route"))>0:
+                    for oneroute in thedevice.get("route"):
+                        session.print(f"route: {oneroute['ip']}/{oneroute['mask']} GW:{oneroute['gateway']}") 
                 d_thedevice = device.Device(thedevice)
                 if len(d_thedevice.AllFirewallRules()) > 0:
                     session.print("Firewall Rules:")

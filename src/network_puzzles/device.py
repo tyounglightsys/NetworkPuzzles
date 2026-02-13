@@ -297,6 +297,74 @@ class Device(ItemBase):
                     return oneinterface
         return None
 
+    #route add/del pieces
+    def route_add(self, target, gateway):
+        logging.debug(
+            f"Adding route. {target} {gateway}"
+        )
+        # if we have a route with the same src/dest/targer, we drop it
+        # if not, we return "false"
+        try:
+            target_IP = ipaddress.ip_interface(target) 
+        except ValueError:
+            session.print(f"Invalid target: {target} Must be a valid IP")
+            return False
+        if self.json.get("route") is None:
+            self.json["route"] = []
+        if not isinstance(self.json.get("route"),list):
+            self.json["route"] = [ self.json.get("route") ] #turn it into a list so we can iterate through it
+        for oneroute in self.json.get("route"):
+            if ( oneroute is not None
+                and oneroute.get("ip") == str(target_IP.ip)
+                and oneroute.get("mask") == str(target_IP.netmask)
+                and oneroute.get("gateway") == gateway
+            ):
+                logging.debug("  We already have this route.  Nothing to do.")
+                return False
+        # If we get here, nothing yet matched.  Add a new record
+        newroute = { 
+            "ip" : str(target_IP.ip),
+            "mask" : str(target_IP.netmask),
+            "gateway" : gateway,
+            "type" : "route"
+        }
+        mark_test_as_completed(
+            self.hostname,
+            str(target_IP.ip),
+            "NeedsRouteToNet", 
+            f"{self.hostname} successfully created route to {target_IP.ip}"
+            )
+        self.json["route"].append(newroute)
+        return True
+
+    def route_del(self, target, gateway):
+        logging.debug(
+            f"Deleting route {target} {gateway}"
+        )
+        # if we have a route with the same src/dest/targer, we drop it
+        # if not, we return "false"
+        try:
+            target_IP = ipaddress.ip_interface(target) 
+        except ValueError:
+            session.print(f"Invalid target: {target} Must be a valid IP")
+            return False
+        if self.json.get("route") is None:
+            self.json["route"] = []
+        if not isinstance(self.json.get("route"),list):
+            self.json["route"] = [self.json.get("route")] #turn it into a list so we can iterate through it
+        for oneroute in self.json.get("route"):
+            if (
+                oneroute.get("ip") == str(target_IP.ip)
+                and oneroute.get("mask") == str(target_IP.netmask)
+                and oneroute.get("gateway") == gateway
+            ):
+                logging.debug("  Deleting the route.")
+                self.json["route"].remove(oneroute)
+                return
+        # If we get here, nothing yet matched.  Could not find it.  Nothing to drop
+        session.print("No such route")
+        return False
+
 
     # firewall pieces
     @property
@@ -345,7 +413,7 @@ class Device(ItemBase):
 
     def AdvFirewallAdd(self, InInterface: str, OutInterface: str, dropallow: str):
         logging.debug(
-            "Adding firewall rule. in {InInterface} - out {OutInterface} - {dropallow}"
+            f"Adding firewall rule. in {InInterface} - out {OutInterface} - {dropallow}"
         )
         # if we have a rule with the same src/dest, we replace the target
         # if not, we add a new rule with the specified info
@@ -367,7 +435,7 @@ class Device(ItemBase):
 
     def AdvFirewallDel(self, InInterface: str, OutInterface: str, dropallow: str):
         logging.debug(
-            "Deleting firewall rule. in {InInterface} - out {OutInterface} - {dropallow}"
+            f"Deleting firewall rule. in {InInterface} - out {OutInterface} - {dropallow}"
         )
         # if we have a rule with the same src/dest/targer, we drop it
         # if not, we return "false"
