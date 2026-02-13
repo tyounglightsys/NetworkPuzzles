@@ -522,7 +522,10 @@ class Parser:
                     session.print(onestring)
                 #logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
                 if thedevice.get("route") is not None and len(thedevice.get("route"))>0:
+                    if not isinstance(thedevice.get("route"), list):
+                        thedevice["route"] = [ thedevice["route"] ]
                     for oneroute in thedevice.get("route"):
+                        logging.debug(f"Printing route: {oneroute}")
                         session.print(f"route: {oneroute['ip']}/{oneroute['mask']} GW:{oneroute['gateway']}") 
                 d_thedevice = device.Device(thedevice)
                 if len(d_thedevice.AllFirewallRules()) > 0:
