@@ -164,6 +164,8 @@ class Parser:
             return session.puzzle.createLink(args)
         elif item == "device":
             return session.puzzle.createDevice(args)
+        elif item == "nic":
+            session.puzzle.createOneNic(args)
 
     def replace_something(self, args):
         if len(args) == 0:

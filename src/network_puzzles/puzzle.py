@@ -582,12 +582,29 @@ class Puzzle(ItemBase):
         self.json["uniqueidentifier"] = nextval
         return availableval
 
+    def createOneNic(self, args):
+        if len(args) != 2:
+            logging.error("createDevice: invalid number of arguments.")
+            return
+        sdevicename = args.pop(0)
+        sdevice = session.puzzle.device_from_name(sdevicename)
+        if sdevice is None:
+            session.print(f"Error: no such device: {sdevicename}")
+            return False
+        # The second item might be a nic name, or bic type. (vpn0 or vpn)
+        nictype = args[0][:3] #choose the first three characters, vpn, eth, etc
+        self.createNIC(sdevice,nictype)
+
+
     def createNIC(self, thedevicejson, nictype):
         thedevice = device.Device(thedevicejson)
         count = 0
         while (thedevice.nic_from_name(f"{nictype}{count}")) is not None:
             count = count + 1
         newnicname = f"{nictype}{count}"
+        if nictype not in {"eth","vpn","wan","wlan"}:
+            logging.debug(f"Oops.  Cannot create a nic of type: {nictype}")
+            return None
         newid = self.issueUniqueIdentifier()
         newip = "0.0.0.0"
         newmask = "0.0.0.0"
@@ -605,8 +622,8 @@ class Puzzle(ItemBase):
             },
             "uniqueidentifier": newid,
             "usesdhcp": "False",
-            "encryptionkey": None,
-            "ssid": None,
+            "encryptionkey": "",
+            "ssid": "",
             "interface": [
                 {
                     "nicname": newnicname,
@@ -618,6 +635,11 @@ class Puzzle(ItemBase):
                 }
             ],
         }
+        if nictype == "vpn":
+            newnic['tunnelendpoint'] = {
+                'ip' : "0.0.0.0",
+                'mask' : "0.0.0.0"
+            }
         Nic(newnic).ensure_mac()
         thedevicejson["nic"].append(newnic)
         return newnic
