@@ -1441,7 +1441,7 @@ def doInputFromLink(pkt, nic):
     dev = Device(thisDevice)
     pkt.in_host = dev.hostname
     logging.debug("-----------------------------------------")
-    logging.debug(f"Packet arrived at device: {dev.hostname}  {pkt.json}")
+    logging.debug(f"Packet arrived at device: {dev.hostname}")
     logging.debug("-----------------------------------------")
 
     # Do the simple stuff

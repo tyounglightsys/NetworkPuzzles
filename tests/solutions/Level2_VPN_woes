@@ -1,0 +1,9 @@
+load Level2_VPN_woes
+set firewall1 eth0 192.168.2.1/24
+set net_switch1 eth0 192.168.2.4/24
+set pc1 eth0 192.168.2.2/24
+set laptop1 eth0 192.168.2.3/24
+set net_switch1 gateway 192.168.2.1
+set pc1 gateway 192.168.2.1
+set laptop1 gateway 192.168.2.1
+ping pc0 pc1

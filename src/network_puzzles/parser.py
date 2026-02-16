@@ -525,7 +525,7 @@ class Parser:
                     if not isinstance(thedevice.get("route"), list):
                         thedevice["route"] = [ thedevice["route"] ]
                     for oneroute in thedevice.get("route"):
-                        logging.debug(f"Printing route: {oneroute}")
+                        #logging.debug(f"Printing route: {oneroute}")
                         session.print(f"route: {oneroute['ip']}/{oneroute['mask']} GW:{oneroute['gateway']}") 
                 d_thedevice = device.Device(thedevice)
                 if len(d_thedevice.AllFirewallRules()) > 0:
