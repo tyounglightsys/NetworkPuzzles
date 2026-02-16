@@ -1,0 +1,12 @@
+load Level3_PhoneyNetwork
+set server0 eth0 192.168.1.2/24
+set server0 gateway 192.168.1.1
+set server0 isdhcp true
+set server0 dhcp 192.168.1.2 192.168.1.10-192.168.1.20
+set server1 eth0 192.168.2.2/24
+set server1 gateway 192.168.2.1
+set server1 isdhcp true
+set server1 dhcp 192.168.2.2 192.168.2.10-192.168.2.20
+dhcp
+ping ip_phone0 ip_phone2
+ping ip_phone2 ip_phone0
