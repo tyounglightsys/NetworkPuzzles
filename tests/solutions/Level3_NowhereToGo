@@ -1,0 +1,5 @@
+load Level3_NowhereToGo
+route router2 add 192.168.1.0/24 192.168.3.1
+route router2 add 192.168.2.0/24 192.168.4.1
+ping pc2 pc1
+ping pc1 pc2
