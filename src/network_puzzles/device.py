@@ -552,6 +552,8 @@ class Device(ItemBase):
         pkt.path.append(self.hostname)
 
         # If we are entering a WAN port, see if we should be blocked or if it is a return packet
+        if nic.type[0] == "vpn":
+            logging.debug(f"Coming in a VPN link: {pkt.json}")
         if nic.type[0] == "wan":
             connection_info = self.ReturnIPConnectionEntry(pkt.destination_ip, pkt.source_ip, pkt.packettype)
             if connection_info is not None:
@@ -673,8 +675,8 @@ class Device(ItemBase):
                         f"A traceroute timed out at {self.hostname}.  Making a return packet"
                     )
                     # we need to generate a traceroute response
-                    nPacket = packetFromTo(self.json, dest)
-                    nPacket.packettype = "traceroute-response"
+                    nPacket = packetFromTo(self.json, dest, "traceroute-response")
+                    #nPacket.packettype = "traceroute-response"
                     nPacket.payload = pkt.payload
                     sendPacketOutDevice(nPacket, self.json)
                     nPacket.payload["tempDest"] = nPacket.source_ip
@@ -696,10 +698,10 @@ class Device(ItemBase):
                 # logging.info(f"A ping came.  Making a return packet going to {dest}")
 
                 # we need to generate a ping response
-                nPacket = packetFromTo(self.json, dest)
+                nPacket = packetFromTo(self.json, dest, "ping-response")
                 # logging.debug(f"Created new packet : {dest}")
                 nPacket.json["origPingDest"] = deepcopy(pkt.json.get("origPingDest"))
-                nPacket.packettype = "ping-response"
+                #nPacket.packettype = "ping-response"
                 sendPacketOutDevice(nPacket, self.json)
                 # logging.debug("new packet sent out of device")
                 nPacket.add_to_packet_list()
@@ -1141,7 +1143,7 @@ def destIP(srcDevice, dstDevice):
     return oneDip
 
 
-def sourceIP(src, dstIP):
+def sourceIP(src, dstIP, isBroadcast:bool = False):
     """
     Find the IP address to use when pinging the destination.  If the address is local, use the local nic.
     If the address is at a distance, we use the IP address associated with whatever route gets us there.
@@ -1190,6 +1192,10 @@ def sourceIP(src, dstIP):
     # return the IP that is local to the dest IP
     for oneip in allIPs:
         # oneip=ipaddress.IPv4Interface
+        #logging.debug(f" Creating packet.  Networks {oneip.exploded}")
+        if not isBroadcast and oneip.exploded == "0.0.0.0/0":
+            #logging.debug("Skipped NIC with no IP")
+            continue
         if dstIP in oneip.network:
             logging.info("We found a local network ")
             logging.debug(oneip.ip)
@@ -1435,7 +1441,8 @@ def doInputFromLink(pkt, nic):
     dev = Device(thisDevice)
     pkt.in_host = dev.hostname
     logging.debug("-----------------------------------------")
-    logging.debug(f"Packet arrived at device: {dev.hostname}")
+    logging.debug(f"Packet arrived at device: {dev.hostname}  {pkt.json}")
+    logging.debug("-----------------------------------------")
 
     # Do the simple stuff
     if not dev.powered_on or dev.frozen:
@@ -1735,7 +1742,7 @@ def ensureHostname(item):
     return hostname
 
 
-def packetFromTo(src, dest):
+def packetFromTo(src, dest, packettype:str):
     """Generate a packet, starting at the srcdevice and destined for the destination device
     Args:
         src:srcDevice (also works with a hostname)
@@ -1789,7 +1796,7 @@ def packetFromTo(src, dest):
     if isinstance(dest, ipaddress.IPv4Address):
         # This is what we are hoping for; make an empty packet.
         nPacket = packet.Packet()
-        nPacket.source_ip = sourceIP(src, dest)
+        nPacket.source_ip = sourceIP(src, dest, False)
         # The MAC address of the above IP
         nPacket.source_mac = arpLookup(src, nPacket.source_ip)
         # Figure this out
@@ -1800,7 +1807,7 @@ def packetFromTo(src, dest):
             # It is a broadcast, use the broadcast MAC
             logging.debug("It is a broadcast, using broadcast MAC")
             nPacket.destination_mac = packet.BROADCAST_MAC
-        nPacket.packettype = ""
+        nPacket.packettype = packettype
         return nPacket
 
 
@@ -1810,13 +1817,13 @@ def ping(src, dest):
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
     """
-    nPacket = packetFromTo(src, dest)
+    nPacket = packetFromTo(src, dest, "ping")
     if nPacket is None:
         # The problem should have been logged and the user informed in the
         # packetFromTo function; fail silently.
         # logging.error("Failed to create Ping packet.")
         return
-    nPacket.packettype = "ping"
+    #nPacket.packettype = "ping"
     nPacket.justcreated = True
     nPacket.json["origPingDest"] = dest
     sendPacketOutDevice(nPacket, src)
@@ -1831,8 +1838,8 @@ def traceroute(src, dest, newTTL=1):
     """
     srchost = ensureHostRec(src)
     desthost = ensureHostRec(dest)
-    nPacket = packetFromTo(src, dest)
-    nPacket.packettype = "traceroute-request"
+    nPacket = packetFromTo(src, dest, "traceroute-request")
+    #nPacket.packettype = "traceroute-request"
     nPacket.justcreated = True
     nPacket.ttl = newTTL  # This is the secret to the traceroute.
     nPacket.payload = {
@@ -1856,13 +1863,13 @@ def VPN(src, dest, key, opacket):
         key:the encryption key; must be the same at both ends of the VPN
         packet:the packet being tunneled
     """
-    nPacket = packetFromTo(src, dest)
+    nPacket = packetFromTo(src, dest, "tunnel")
     if nPacket is None:
         # The problem should have been logged and the user informed in the
         # packetFromTo function; fail silently.
         # logging.error("Failed to create Ping packet.")
         return
-    nPacket.packettype = "tunnel"
+    #nPacket.packettype = "tunnel"
     nPacket.justcreated = True
     nPacket.payload = opacket
     nPacket.key = key

@@ -1,0 +1,4 @@
+load Level2_CannotConnect
+set firewall0 poweron
+dhcp laptop2
+ping laptop2 laptop1
