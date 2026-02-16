@@ -1,0 +1,14 @@
+load Level3_VPNify
+create nic firewall0 vpn0
+set firewall0 vpn0 192.168.50.1/24
+set firewall0 endpoint vpn0 172.16.5.2
+set firewall0 key vpn0 Test
+route firewall0 add 192.168.2.0/24 192.168.50.2
+create nic firewall1 vpn0
+set firewall1 vpn0 192.168.50.2/24
+set firewall1 endpoint vpn0 172.16.1.2
+set firewall1 key vpn0 Test
+route firewall1 add 192.168.1.0/24 192.168.50.1
+dhcp
+ping pc2 pc1
+ping pc3 pc0
