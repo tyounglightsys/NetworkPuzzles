@@ -918,6 +918,8 @@ class Parser:
                 self.set_encryption(dev_obj, values[0], values[1])
             case "endpoint" | "tunnelendpoint":
                 #set endpoint firewall0 vpn0 gateway
+                if len(values) != 2:
+                    session.print("invalid number of arguments.")
                 self.set_endpoint(dev_obj, values[0], values[1])
             case "location" | "position" | "pos":
                 self.set_position_value(dev_obj, values[0], values[1])
