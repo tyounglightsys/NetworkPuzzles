@@ -569,7 +569,11 @@ class Device(ItemBase):
                     logging.debug("No record of this and not destined for this machine.  Drop it for now")
                     pkt.status = "done"
                     return False
-
+        if pkt.destination_mac is None:
+            #The packet was improperly crafted or no such machine exists.  Drop
+            logging.debug("This packet was killed.  There was a problem.  No such destination.  No MAC Address that matched")
+            pkt.status = "Failed"
+            return False
         if (
             pkt.destination_mac == nic.mac
             or packet.is_broadcast_mac(pkt.destination_mac)
@@ -1808,6 +1812,8 @@ def packetFromTo(src, dest, packettype:str):
             logging.debug("It is a broadcast, using broadcast MAC")
             nPacket.destination_mac = packet.BROADCAST_MAC
         nPacket.packettype = packettype
+        if nPacket.destination_mac is None:
+            return None
         return nPacket
 
 
