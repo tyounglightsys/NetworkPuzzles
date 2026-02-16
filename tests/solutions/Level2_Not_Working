@@ -1,0 +1,4 @@
+load Level2_Not_Working
+set firewall0 key vpn0 Test
+route firewall1 add 192.168.1.0/24 192.168.50.1
+ping pc0 pc1
