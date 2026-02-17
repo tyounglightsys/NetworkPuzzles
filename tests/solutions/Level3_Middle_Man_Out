@@ -1,0 +1,5 @@
+load Level3_Middle_Man_Out
+set router2 gateway 192.168.10.2
+set router3 gateway 192.168.30.2
+ping pc5 pc0
+ping pc5 pc3
