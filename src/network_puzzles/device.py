@@ -1323,6 +1323,8 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
             # print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
             if appendInterfacNames:
                 if onenic["nictype"][0] == "vpn":
+                    if onenic["encryptionkey"] is None:
+                        onenic["encryptionkey"] = ""
                     interfacelist.append(
                         oneinterface["nicname"]
                         + " "
