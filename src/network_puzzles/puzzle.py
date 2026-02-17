@@ -592,7 +592,9 @@ class Puzzle(ItemBase):
             session.print(f"Error: no such device: {sdevicename}")
             return False
         # The second item might be a nic name, or bic type. (vpn0 or vpn)
-        nictype = args[0][:3] #choose the first three characters, vpn, eth, etc
+        nictype = args[0] 
+        if nictype[-1].isdigit():
+            nictype = nictype[:-1] #pull off the last digit if the name is eth0 or port6
         self.createNIC(sdevice,nictype)
 
 
@@ -602,7 +604,7 @@ class Puzzle(ItemBase):
         while (thedevice.nic_from_name(f"{nictype}{count}")) is not None:
             count = count + 1
         newnicname = f"{nictype}{count}"
-        if nictype not in {"eth","vpn","wan","wlan"}:
+        if nictype not in {"eth","vpn","wan","wlan", "port"}:
             logging.debug(f"Oops.  Cannot create a nic of type: {nictype}")
             return None
         newid = self.issueUniqueIdentifier()
