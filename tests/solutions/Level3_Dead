@@ -1,0 +1,17 @@
+load Level3_Dead
+#source: pc2 test: SuccessfullyPings  dest: net_switch1 status: False
+#source: pc2 test: SuccessfullyPings  dest: pc0 status: False
+#source: pc2 test: SuccessfullyPings  dest: router1 status: False
+#source: pc2 test: SuccessfullyPings  dest: pc3 status: False
+set server0 dhcp 192.168.1.2 192.168.1.10-192.168.1.20
+dhcp
+set pc2 gateway 192.168.1.1
+set net_switch1 management_interface0 192.168.2.4/24
+set net_switch1 gateway 192.168.2.1
+route router2 del 192.168.1.0/24 192.168.8.1
+route router2 add 192.168.1.0/24 192.168.3.1
+
+ping pc2 net_switch1
+ping pc2 pc0
+ping pc2 router1
+ping pc2 pc3
