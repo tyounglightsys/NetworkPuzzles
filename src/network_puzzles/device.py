@@ -1323,8 +1323,10 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
             # print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
             if appendInterfacNames:
                 if onenic["nictype"][0] == "vpn":
-                    if onenic["encryptionkey"] is None:
+                    if "encryptionkey" not in onenic or onenic["encryptionkey"] is None:
                         onenic["encryptionkey"] = ""
+                    if "tunnelendpoint" not in onenic or onenic["tunnelendpoint"] is None:
+                        onenic["tunnelendpoint"] = { "ip" :""}
                     interfacelist.append(
                         oneinterface["nicname"]
                         + " "
@@ -1543,8 +1545,15 @@ def makeDHCPResponse(pkt, thisDevice, nic):
 
     if "dhcplist" not in thisDevice:
         thisDevice["dhcplist"] = {}
-    inboundip = nic.interfaces[0]["myip"]["ip"]
-    logging.debug(f"making a dhcp response on nic {nic.name}  {nic.interfaces[0]["myip"]["ip"]}")
+ 
+    tnic = nic
+    if nic.type[0] == "port":
+        #We want to grab stuff from the management interface
+        tnic = Nic(Device(thisDevice).nic_from_name("management_interface0"))
+        logging.debug(f"The nic is now {nic.name}")
+ 
+    inboundip = tnic.interfaces[0]["myip"]["ip"]
+    logging.debug(f"making a dhcp response on nic {tnic.name}  {tnic.interfaces[0]["myip"]["ip"]}")
     iprange = None
     available_ip = ""  # start with it empty.  Fill it if we can
     for onerange in thisDevice["dhcprange"]:
@@ -1583,14 +1592,14 @@ def makeDHCPResponse(pkt, thisDevice, nic):
         thisDevice["dhcplist"][pkt.source_mac] = available_ip
         # Now, make a new DHCP response packet
         nPacket = packet.Packet()
-        nPacket.source_ip = nic.interfaces[0]["myip"]["ip"]
-        nPacket.source_mac = nic.mac
+        nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
+        nPacket.source_mac = tnic.mac
         nPacket.destination_ip = "0.0.0.0"
         nPacket.destination_mac = pkt.source_mac
         nPacket.packettype = "DHCP-Response"
         nPacket.payload = {
             "ip": available_ip,
-            "subnet": nic.interfaces[0]["myip"]["mask"],
+            "subnet": tnic.interfaces[0]["myip"]["mask"],
             "gateway": thisDevice["gateway"]["ip"],
         }
         #if the dhcp server is a router/firewall, use the nic IP as the gateway
