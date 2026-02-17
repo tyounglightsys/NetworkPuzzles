@@ -1,0 +1,49 @@
+load Level3_GrandCentralStation
+
+#create links
+create link firewall0 wan0 router0 eth0
+create link firewall1 wan0 router0 eth1
+create link firewall2 wan0 router0 eth2
+
+#router0
+set router0 eth0 192.168.5.1/24
+set router0 eth1 192.168.6.1/24
+set router0 eth2 192.168.7.1/24
+
+#firewall0
+set firewall0 gateway 192.168.5.1
+set firewall0 vpn0 192.168.50.1/24
+set firewall0 vpn1 192.168.51.1/24
+set firewall0 endpoint vpn0 192.168.6.2
+set firewall0 endpoint vpn1 192.168.7.2
+set firewall0 key vpn0 GoodPass
+set firewall0 key vpn1 GoodPass
+route firewall0 add 192.168.2.0/24 192.168.50.2
+route firewall0 add 192.168.3.0/24 192.168.51.2
+
+#firewall1
+set firewall1 gateway 192.168.6.1
+set firewall1 vpn0 192.168.50.2/24
+set firewall1 endpoint vpn0 192.168.5.2
+set firewall1 key vpn0 GoodPass
+route firewall1 add 192.168.1.0/24 192.168.50.1
+route firewall1 add 192.168.3.0/24 192.168.50.1
+
+#firewall2
+set firewall2 gateway 192.168.7.1
+create nic firewall2 vpn
+set firewall2 vpn0 192.168.51.2/24
+set firewall2 endpoint vpn0 192.168.5.2
+set firewall2 key vpn0 GoodPass
+route firewall2 add 192.168.1.0/24 192.168.51.1
+route firewall2 add 192.168.2.0/24 192.168.51.1
+
+#source: pc1 test: SuccessfullyPings  dest: pc0 status: False
+#source: pc1 test: SuccessfullyPings  dest: pc2 status: False
+#source: pc0 test: SuccessfullyPings  dest: pc2 status: False
+#source: pc0 test: SuccessfullyPings  dest: pc1 status: False
+
+ping pc1 pc0
+ping pc1 pc2
+ping pc0 pc2
+ping pc0 pc1
