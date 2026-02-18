@@ -39,7 +39,7 @@
               "myid": {
                 "hostid": "162",
                 "nicid": "163",
-                "hostname": "firewall0",
+                "hostname": "server0",
                 "nicname": "lo0"
               },
               "uniqueidentifier": "163",
@@ -69,7 +69,7 @@
               "myid": {
                 "hostid": "162",
                 "nicid": "166",
-                "hostname": "firewall0",
+                "hostname": "server0",
                 "nicname": "wan0"
               },
               "uniqueidentifier": "166",
@@ -99,7 +99,7 @@
               "myid": {
                 "hostid": "162",
                 "nicid": "164",
-                "hostname": "firewall0",
+                "hostname": "server0",
                 "nicname": "eth0"
               },
               "uniqueidentifier": "164",
@@ -129,7 +129,7 @@
               "myid": {
                 "hostid": "162",
                 "nicid": "165",
-                "hostname": "firewall0",
+                "hostname": "server0",
                 "nicname": "eth1"
               },
               "uniqueidentifier": "165",
@@ -1840,7 +1840,7 @@
           "SrcNic": {
             "hostid": "162",
             "nicid": "164",
-            "hostname": "firewall0",
+            "hostname": "server0",
             "nicname": "eth0"
           },
           "DstNic": {

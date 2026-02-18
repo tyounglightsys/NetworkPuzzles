@@ -1,0 +1,15 @@
+load Level3_invisible
+set net_switch1 location 410 280
+set wrouter0 location 260 280
+set wrouter0 isdhcp false
+dhcp
+
+#source: pc0 test: SuccessfullyPings  dest: pc1 status: False
+#source: pc0 test: SuccessfullyPings  dest: pc2 status: False
+#source: pc0 test: SuccessfullyPings  dest: laptop0 status: False
+#source: pc0 test: SuccessfullyPings  dest: laptop1 status: False
+
+ping pc0 pc1
+ping pc0 pc2
+ping pc0 laptop0
+ping pc0 laptop1

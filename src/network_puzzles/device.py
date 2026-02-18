@@ -1607,6 +1607,8 @@ def makeDHCPResponse(pkt, thisDevice, nic):
             nPacket.payload['gateway'] = inboundip
         destlink = nic.get_connected_link()
         nPacket.packet_location = destlink["hostname"]
+        logging.debug(f"  The DHCP packet is: {nPacket.json}")
+        logging.debug(f"  And it is being sent out the link: {destlink}")
         if destlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
             nPacket.direction = 1  # Src to Dest
         else:
