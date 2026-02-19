@@ -1,0 +1,17 @@
+load Level4_RouterReplacement
+
+#This is the router that was replaced and the setings we need to set
+#hostname: router3
+#location: 450,10
+#gateway: 0.0.0.0
+#eth0 172.16.1.10/255.255.255.252
+#eth1 172.16.1.13/255.255.255.252
+#route: 172.16.1.2/255.255.255.252 GW:172.16.1.9
+#route: 172.16.1.18/255.255.255.252 GW:172.16.1.14
+
+set router3 eth0 172.16.1.10/255.255.255.252
+set router3 eth1 172.16.1.13/255.255.255.252
+route router3 add  172.16.1.2/255.255.255.252 172.16.1.9
+route router3 add 172.16.1.18/255.255.255.252 172.16.1.14
+
+ping pc2 pc1
