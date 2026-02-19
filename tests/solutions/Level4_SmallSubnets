@@ -1,0 +1,4 @@
+load Level4_SmallSubnets
+#The subnet mask was wrong.  Was 31, should be 30
+set router2 eth1 172.16.1.9/30
+ping pc2 pc1
