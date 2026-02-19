@@ -1,0 +1,4 @@
+load Level4_SinglesLife
+route firewall2 add 192.168.0.0/23 192.168.51.1
+ping pc2 pc0
+ping pc2 pc1

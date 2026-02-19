@@ -328,12 +328,28 @@ class Device(ItemBase):
             "gateway" : gateway,
             "type" : "route"
         }
+        #do it just using the ip
         mark_test_as_completed(
             self.hostname,
             str(target_IP.ip),
             "NeedsRouteToNet", 
             f"{self.hostname} successfully created route to {target_IP.ip}"
             )
+        #do it in 192.168.1.0/255.255.255.0 format
+        mark_test_as_completed(
+            self.hostname,
+            str(target_IP.ip)+"/"+str(target_IP.netmask),
+            "NeedsRouteToNet", 
+            f"{self.hostname} successfully created route to {target_IP.ip}/{target_IP.netmask}"
+            )
+        #do it in 192.168.1.0/24 format
+        mark_test_as_completed(
+            self.hostname,
+            str(target_IP),
+            "NeedsRouteToNet", 
+            f"{self.hostname} successfully created route to {str(target_IP)}"
+            )
+
         self.json["route"].append(newroute)
         return True
 
