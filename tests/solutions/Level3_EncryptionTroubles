@@ -1,0 +1,15 @@
+load Level3_EncryptionTroubles
+
+#set the keys for the VPNs
+#The trick to this is that they are reversed on firewall0
+#Easiest to just set them all appropriately
+set firewall0 key vpn0 PrimaryKey
+set firewall0 key vpn1 SecondaryKey
+set firewall1 key vpn0 PrimaryKey
+set firewall2 key vpn0 SecondaryKey
+
+#There is a broken wire too.  We need to replace that
+replace router0_link_firewall1
+
+#Now we solve the test
+ping pc2 pc1
