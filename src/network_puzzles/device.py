@@ -614,7 +614,9 @@ class Device(ItemBase):
         logging.debug(f"Unpacking a tunneled packet - {packetpayload.packettype} {packetpayload.source_ip} {packetpayload.destination_ip}")
         if isinstance(packetpayload, packet.Packet):
             #This is what we are expecting. 
-            packetpayload.status = "goood" #start it processing once again.
+            packetpayload.status = "good" #start it processing once again.
+            #if packetpayload not in session.puzzle.packets:
+                #session.puzzle.packets.append(packetpayload)
             vpninterface = None
             vpnnic = None
 

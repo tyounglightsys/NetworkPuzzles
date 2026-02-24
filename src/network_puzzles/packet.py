@@ -237,7 +237,9 @@ class Packet(ItemBase):
             #the payload is a packet.  Kill that packet the same way this was (whether failed or done)
             self.json["payload"].status = self.status
             self.json["payload"].remove_from_packet_list()
+        #if self in self.session.puzzle.packets:
         self.session.puzzle.packets.remove(self)
+        logging.debug(f"removed packet.  Packets left: {len(self.session.puzzle.packets)}")
 
     def apply_possible_damage(self, tick_pct):
         """Damage the packet if near enough to microwave (wireless connection) or light (wired connection)."""
@@ -248,7 +250,7 @@ class Packet(ItemBase):
                 f"Unable to apply damage because no `Link` found for `Packet`: {self.json}"
             )
             return
-
+        
         # List damage-causing devices in puzzle.
         risky_devices = []
         for dev_json in self.session.puzzle.devices:
