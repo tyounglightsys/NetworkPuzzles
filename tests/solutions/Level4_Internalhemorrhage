@@ -1,0 +1,13 @@
+load Level4_Internalhemorrhage
+set copier2 eth0 192.168.1.3/25
+set copier2 gateway 192.168.1.1
+set firewall0 eth0 192.168.10.5/30
+set firewall0 eth1 192.168.10.1/30
+set net_switch0 management_interface0 192.168.2.10/25
+set net_switch0 gateway 192.168.2.1
+ping pc0 copier2
+ping pc0 net_switch0
+ping pc0 pc3
+ping net_switch0 pc4
+show
+show tests
