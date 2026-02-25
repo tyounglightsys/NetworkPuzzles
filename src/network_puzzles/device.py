@@ -1171,7 +1171,8 @@ def destIP(srcDevice, dstDevice):
     logging.debug(f"Could not find an IP local to the gateway.  GW: {srcDevice.get("gateway")["ip"]}")
 
     #If we cannot find it, start guessing.  First we try the WAN, then the primary (eth0 or management)
-    for onename in {"wan0","eth0","wlan0","management_interface0"}:
+    for onename in ["wan0","eth0","wlan0","management_interface0"]:
+        logging.debug(f"Checking out nic: {onename}")
         theonenic = tDevice.nic_from_name(onename)
         if theonenic is not None:
             addresslist = Nic(theonenic).interfaces
@@ -1180,6 +1181,8 @@ def destIP(srcDevice, dstDevice):
                 oneDip = ipaddress.IPv4Interface(f"{addresslist[0]["myip"]["ip"]}/{addresslist[0]["myip"]["mask"]}")
                 logging.debug(f"Had to guess at the IP.  Guessed {oneDip}")
                 return oneDip
+        else:
+            logging.debug(f"No such nic: {onename}")
     logging.debug("Could not find an IP address for the destination.  Oops")
     return None
 
