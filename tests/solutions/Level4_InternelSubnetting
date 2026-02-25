@@ -1,0 +1,5 @@
+load Level4_InternelSubnetting
+create link pc5 eth0 net_switch0 port6
+set pc5 eth0 192.168.2.6/25
+set pc5 gateway 192.168.2.1
+ping pc5 pc4

@@ -1,4 +1,5 @@
 from .core import ItemBase
+import ipaddress
 
 
 class Interface(ItemBase):
@@ -12,6 +13,14 @@ class Interface(ItemBase):
     @ip_data.setter
     def ip_data(self, data):
         self.json["myip"] = data
+
+    @property
+    def ipaddress(self) -> dict:
+        tAddr = IpAddress(self.ip_data)
+        try:
+            return ipaddress.ip_interface(tAddr.address + "/" + tAddr.netmask)
+        except ValueError:
+            return None
 
     @property
     def nicname(self) -> str:

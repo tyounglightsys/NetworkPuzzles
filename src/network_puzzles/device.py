@@ -1159,10 +1159,29 @@ def destIP(srcDevice, dstDevice):
         # compare each of them to find one that is local
         if ipaddress.IPv4Interface(dstDevice.get("gateway")["ip"]) in oneDip.network:
             return oneDip
-    # we need to find the IP address that is local to the gateway and use that.
-    logging.debug("Using the gateway")
-    oneDip = ipaddress.IPv4Interface(srcDevice.get("gateway")["ip"])
-    return oneDip
+    #If the device has a gateway, choose the IP address that is local to the gateway
+    tDevice = Device(dstDevice)
+    for onenic in tDevice.all_nics():
+        one_interface = findLocalNICInterface(srcDevice.get("gateway")["ip"], onenic, True)
+        if one_interface is not None:
+            oneDip = Interface(one_interface).ipaddress
+            logging.debug(f"Found an IP local to the gateway: {oneDip}  Gateway: {srcDevice.get("gateway")["ip"]}")
+            return oneDip
+
+    logging.debug(f"Could not find an IP local to the gateway.  GW: {srcDevice.get("gateway")["ip"]}")
+
+    #If we cannot find it, start guessing.  First we try the WAN, then the primary (eth0 or management)
+    for onename in {"wan0","eth0","wlan0","management_interface0"}:
+        theonenic = tDevice.nic_from_name(onename)
+        if theonenic is not None:
+            addresslist = Nic(theonenic).interfaces
+            if len(addresslist) > 0:
+                #grab the first interface IP for the interface
+                oneDip = ipaddress.IPv4Interface(f"{addresslist[0]["myip"]["ip"]}/{addresslist[0]["myip"]["mask"]}")
+                logging.debug(f"Had to guess at the IP.  Guessed {oneDip}")
+                return oneDip
+    logging.debug("Could not find an IP address for the destination.  Oops")
+    return None
 
 
 def sourceIP(src, dstIP, isBroadcast:bool = False):
@@ -1382,11 +1401,12 @@ def deviceHasIP(deviceRec, IPString: str):
     tocheck = packet.justIP(IPString)
     for oneIP in allIPStrings(deviceRec):
         if tocheck == packet.justIP(oneIP):
+            logging.debug(f"Device does have the IP: {IPString}")
             return True
         try:
             device_IP = ipaddress.IPv4Interface(oneIP)
             logging.debug(
-                f"checking if device has IP {device_IP.network.broadcast_address} {IPString}"
+                f"checking if device has broadcast IP {device_IP.network.broadcast_address} {IPString}"
             )
             if str(device_IP.network.broadcast_address) == str(IPString):
                 return True
@@ -1838,6 +1858,7 @@ def packetFromTo(src, dest, packettype:str):
         nPacket.destination_ip = dest  # this should now be the IP
         # If the IP is local, we use the MAC of the host. Otherwise it is the MAC of the gateway,
         nPacket.destination_mac = globalArpLookup(dest)
+        logging.debug(f"Packet created: {nPacket.source_ip} -> {nPacket.destination_ip}")
         if ip_is_broadcast_for_device(src, dest):
             # It is a broadcast, use the broadcast MAC
             logging.debug("It is a broadcast, using broadcast MAC")
