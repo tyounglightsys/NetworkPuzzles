@@ -590,6 +590,7 @@ class Device(ItemBase):
             logging.debug("This packet was killed.  There was a problem.  No such destination.  No MAC Address that matched")
             pkt.status = "Failed"
             return False
+        
         if (
             pkt.destination_mac == nic.mac
             or packet.is_broadcast_mac(pkt.destination_mac)
@@ -598,12 +599,13 @@ class Device(ItemBase):
             or nic.type[0] == "wport"
         ):
             # The packet is good, and has reached the computer.  Pass it on to the device
-            # print ("Packet entering device: {self.hostname}")
+            logging.debug("Packet entering device: {self.hostname}")
             return self.receive_packet(pkt, nic)
         else:
-            # print("packet did not match.  Dropping")
+            logging.debug("packet did not match.  Dropping")
             # print (pkt.json)
-            # print("  packet dst MAC" + pkt.destination_mac + " vs this NIC" + nic.mac)
+            thostname = devicename_from_mac(pkt.destination_mac)
+            logging.debug(f"  packet dst MAC {pkt.destination_mac} ({thostname}) vs this NIC  {nic.mac}")
             pkt.status = "dropped"
             return False
 
@@ -611,7 +613,12 @@ class Device(ItemBase):
         packetpayload = pkt.payload
         pkt.payload = None #remove the packet so it is not killed when the tunnel is killed
         pkt.status = "done" #Regardless, the packet ends here.
-        logging.debug(f"Unpacking a tunneled packet - {packetpayload.packettype} {packetpayload.source_ip} {packetpayload.destination_ip}")
+        logging.debug("----------")
+        logging.debug(f"Unpacking a tunneled packet at {self.hostname} - {packetpayload.packettype} {packetpayload.source_ip} {packetpayload.destination_ip}")
+        logging.debug("----------")
+        packetpayload.packet_location = self.hostname #mark it as being here for now
+        packetpayload.packet_location = "" #mark it as being here for now
+        logging.debug(f"packet  {packetpayload.json}")
         if isinstance(packetpayload, packet.Packet):
             #This is what we are expecting. 
             packetpayload.status = "good" #start it processing once again.
@@ -705,6 +712,13 @@ class Device(ItemBase):
                     nPacket.add_to_packet_list()
                     pkt.status = "done"
                     return True
+                else:
+                    #the ttl timed the packet out.  It should finish
+                    logging.debug(f"Packet TTL reached 0. killing packet at device: {self.hostname}")
+                    logging.debug(f"  Packet: {pkt.packettype} {pkt.source_ip} -> {pkt.destination_ip}")
+                    pkt.status = "done"
+                    return True
+
 
         if not packet.isEmpty(pkt.destination_ip) and deviceHasIP(
             self.json, pkt.destination_ip
@@ -853,16 +867,20 @@ class Device(ItemBase):
         if (
             pkt.status != "done" or packet.is_broadcast_mac(pkt.destination_mac)
         ) and forwardsPackets(self.json):
-            pkt.status = "good"
-            send_out_hubswitch(self.json, pkt, nic)
-            pkt.status = "done"
-            return
+            #with a wrouter, we handle this during "SendPacketOutDevice"
+            if self.mytype != "wrouter":
+                pkt.status = "good"
+                send_out_hubswitch(self.json, pkt, nic)
+                pkt.status = "done"
+                return
+            #If it is a wireless router, we might route the packet out the WAN too
 
         # if the packet is not done and we route, route
         if pkt.status != "done" and routesPackets(self.json):
             # print("routing")
             if not packet.is_broadcast_mac(pkt.destination_mac):
                 # we do not route broadcast packets
+                logging.debug(f"Sending packet out device. {self.hostname}")
                 sendPacketOutDevice(pkt, self.json)
             else:
                 # if it is a broadcast, the packet stops here.
@@ -922,6 +940,20 @@ def globalArpLookup(ip):
         if packet.justIP(oneMac["ip"]) == packet.justIP(ip):
             return oneMac["mac"]
     return None
+
+def devicename_from_mac(mac:str):
+    buildGlobalMACList()
+    for oneMac in session.maclist:
+        if packet.justIP(oneMac["mac"]) == packet.justIP(mac):
+            #we found the IP
+            tip = oneMac["ip"]
+            #logging.debug(f"found IP for mac: {tip} {mac}")
+            tdevice = session.puzzle.device_from_ip(packet.justIP(tip))
+            if tdevice is not None:
+                #logging.debug(f"found mac address: {mac} at device {tdevice.get('hostname')}")
+                return tdevice.get("hostname")
+    logging.debug(f"could not find host for mac: {mac}")
+    return ""
 
 
 def arpLookup(srcDevice, ip):
@@ -1490,7 +1522,7 @@ def doInputFromLink(pkt, nic):
     dev = Device(thisDevice)
     pkt.in_host = dev.hostname
     logging.debug("-----------------------------------------")
-    logging.debug(f"Packet arrived at device: {dev.hostname}")
+    logging.debug(f"Packet arrived at device: {dev.hostname} TTL:{pkt.ttl} {pkt.packettype} {pkt.source_ip} -> {pkt.destination_ip}")
     logging.debug("-----------------------------------------")
 
     # Do the simple stuff
@@ -1550,12 +1582,18 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
             # we just send this out the one port.
             onlyport = thisDevice.get("port_arps").get(pkt.destination_mac)
 
+    logging.debug(f"Sending packet out switch {thisDevice.get('hostname')}")
+
     # print("We are forwarding.")
     for onenic in thisDevice["nic"]:
         n = Nic(onenic)
         # we duplicate the packet and send it out each port-type
         # find the link connected to the port
-        # print (f"Should we send out port: {n.name}")
+        #logging.debug (f"Should we send out port: {n.name} {n.type[0]}")
+        if n.type[0] != "port" and n.type[0] != "wport":
+            #we do not send packets out eth, vpn, etc
+            #logging.debug ("  No.  Not sent out port")
+            continue
         tlink = n.get_connected_link()
         if tlink is not None and (
             nic is None or nic.uniqueidentifier != n.uniqueidentifier
@@ -1576,7 +1614,10 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
                 tpacket.add_to_packet_list()
 
     # The packet that came in gets killed since it was replicated everywhere else.
-    pkt.status = "done"
+    #but only if we are a not a router.
+    if not routesPackets(thisDevice):
+        pkt.status = "done"
+        return True
 
 
 def makeDHCPResponse(pkt, thisDevice, nic):
@@ -1697,6 +1738,7 @@ def sendPacketOutDevice(pkt, theDevice):
             else:
                 # We are on a local link.  Set the destmac to be the mac of our destination computer
                 pkt.destination_mac = globalArpLookup(pkt.destination_ip)
+            logging.debug(f"Using dest mac {pkt.destination_mac}")
 
         if routeRec["nic"]["nicname"] == "management_interface0":
             # If we are exiting a switch / hub; we go out the ports
@@ -1715,7 +1757,7 @@ def sendPacketOutDevice(pkt, theDevice):
             #VPN(theDevice.get('hostname'),routeRec["nic"]["tunnelendpoint"]["ip"],routeRec["nic"]["encryptionkey"],pkt)
             VPN(theDevice,routeRec["nic"]["tunnelendpoint"]["ip"],routeRec["nic"]["encryptionkey"],pkt)
             return False #At this point in time, the packet is "tunneled" and we have a new packet to worry about.  All done for now.
-
+        logging.debug("Not using VPN")
 
     if destlink is not None:
         pkt.packet_location = destlink["hostname"]

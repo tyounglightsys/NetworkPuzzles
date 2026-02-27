@@ -1,0 +1,4 @@
+load Level5_WirelessRouters
+ping pc0 pc1
+ping pc0 pc2
+ping pc2 pc0

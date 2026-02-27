@@ -497,12 +497,15 @@ class Puzzle(ItemBase):
                     # We are here.  Call a function on the nic to start the packet entering the device
                     device.doInputFromLink(pkt, src_nic)
 
+            if pkt.packet_location == "":
+                pkt.status="done"
+
             # If the packet has been going too long.  Kill it.
             if curtime - pkt.starttime > killMilliseconds:
                 # over 20 seconds have passed.  Kill the packet
                 pkt.status = "failed"
                 pkt.statusmessage = "Packet timed out"
-                logging.warning("packet killed")
+                logging.warning(f"packet killed {pkt.json}")
 
             # When we are done with all the processing, kill any packets that need killing.
             if pkt.status in ("done", "dropped", "failed"):
