@@ -1,0 +1,7 @@
+load Level4_WhoDidThat
+dhcp
+set net_switch0 location 109 397
+set laptop0 location 201 394
+set laptop0 eth0 192.168.1.10/24
+ping pc0 pc3
+ping pc2 pc3
