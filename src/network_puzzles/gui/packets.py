@@ -41,6 +41,9 @@ class PacketManager:
 
     def get_link_widget(self, link_name):
         link_data = self.app.ui.get_link(link_name)
+        if link_data is None:
+            #This would cause stuff the next line to explode
+            return None
         return self.app.get_widget_by_hostname(link_data.get("hostname"))
 
     def update_packets(self, *args):
