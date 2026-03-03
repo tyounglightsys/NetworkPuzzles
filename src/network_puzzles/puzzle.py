@@ -840,6 +840,7 @@ class Puzzle(ItemBase):
             return False
 
     def AutoJoinAllWireless(self):
+        #logging.debug("Doing AutoJoinWirelsss")
         for onedevice in self.devices:
             device.Device(onedevice).AutoJoinWireless()
 

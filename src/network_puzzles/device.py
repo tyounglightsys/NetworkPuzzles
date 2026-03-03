@@ -409,7 +409,7 @@ class Device(ItemBase):
             return False #Nothing to do if we are powered off
         for onenic in self.all_nics():
             tnic = Nic(onenic)
-            if tnic.type[0] != "wport":
+            if tnic.type[0] != "wlan":
                 continue #We only autoconnect wport ports
             olink = tnic.get_connected_link()
             tlink = Link(olink)
@@ -417,9 +417,11 @@ class Device(ItemBase):
             #make a note of whether we need to try to replace the link
             needs_replacing = False
 
+            logging.debug(f"AutoJoinWireless: {self.hostname} has wport {tnic.name}  {tnic.ssid} {tnic.encryption}")
+            #logging.debug(f"Looking at link: -{tlink}- {olink}")
+
             if olink is not None and tlink is not None:
                 #find the destination at the end of the link
-                logging.debug(f"Looking at link: -{tlink}- {olink}")
                 dst_hostname=None
                 if tlink.dest == self.hostname:
                     dst_hostname = tlink.src
@@ -446,6 +448,11 @@ class Device(ItemBase):
                     session.puzzle.deleteItem(tlink.hostname)
                     needs_replacing = True
                     tlink = None #mark it as gone, just in case
+            else:
+                #There is no link, make a new one
+                needs_replacing = True
+
+            logging.debug(f"Link needs creating {needs_replacing}")
 
             if needs_replacing:
                 #We want to search for things that might match
@@ -456,11 +463,12 @@ class Device(ItemBase):
                 for onedevice in session.puzzle.all_devices():
                     t_onedevice = Device(onedevice)
                     if t_onedevice.is_wireless_forwarder:
+                        logging.debug(f"Can we connect it to: {t_onedevice.hostname}")
                         #Check to see if ssid and key match.  And if so, does it have an empty port to connect to?
                         for dstnic in t_onedevice.all_nics():
                             t_dstnic = Nic(dstnic)
                             if t_dstnic.type[0] == "wport" and t_dstnic.encryption == tnic.encryption and  t_dstnic.ssid == tnic.ssid:
-                                if t_dstnic.get_connected_link() is None:                                
+                                if t_dstnic.get_connected_link() is None:                      
                                     #the key and ssid match, and the port is available.  Track the distance.
                                     sx, sy = self.location
                                     dx, dy = t_onedevice.location
@@ -469,11 +477,15 @@ class Device(ItemBase):
                                         closest_distance = t_dst_distance
                                         closest_dev = t_onedevice
                                         closest_nic = t_dstnic
+                                        break #we found one, break out of the for loop
+                                    else:
+                                        logging.debug(f"{t_onedevice.hostname} not close enough for {self.hostname}")
                 
                 #We now have closest_dev being the closest device that is a possibility.  If it is close enough, make a link.
+                logging.debug(f"closest_distance is: {closest_distance}")
                 if closest_distance <= session.WirelessReconnectDistance:
                     #we can make this link
-                    session.puzzle.createLink(self.hostname, tnic.name, closest_dev.hostname, closest_nic.name)
+                    session.puzzle.createLink([self.hostname, tnic.name, closest_dev.hostname, closest_nic.name])
                     return True
         #If we get here, we were unable to autojoin.
         return False
@@ -674,6 +686,7 @@ class Device(ItemBase):
             pkt.destination_mac == nic.mac
             or packet.is_broadcast_mac(pkt.destination_mac)
             or routesPackets(self.json)
+            or self.is_wireless_forwarder
             or nic.type[0] == "port"
             or nic.type[0] == "wport"
         ):
@@ -1662,15 +1675,16 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
             onlyport = thisDevice.get("port_arps").get(pkt.destination_mac)
 
     logging.debug(f"Sending packet out switch {thisDevice.get('hostname')}")
+    t_device = Device(thisDevice)
 
     # print("We are forwarding.")
     for onenic in thisDevice["nic"]:
         n = Nic(onenic)
         # we duplicate the packet and send it out each port-type
         # find the link connected to the port
-        #logging.debug (f"Should we send out port: {n.name} {n.type[0]}")
-        if n.type[0] != "port" and n.type[0] != "wport":
-            #we do not send packets out eth, vpn, etc
+        logging.debug (f"Should we send out port: {n.name} {n.type[0]}")
+        if n.type[0] != "port" and n.type[0] != "wport" and t_device.mytype != "wap":
+            #we do not send packets out eth, vpn, etc.  We do send it out wap eth ports
             #logging.debug ("  No.  Not sent out port")
             continue
         tlink = n.get_connected_link()

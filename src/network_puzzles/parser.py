@@ -48,6 +48,7 @@ class Parser:
         return {"command": cmd, "value": val}
 
     def parse(self, command: str, fromuser=True, fromundo=False):
+        retval = None
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         if command is not None and command.startswith("#"):
             # ignore comments.  Usually coming from the testing files
@@ -66,53 +67,54 @@ class Parser:
             args = items[1:]
             match cmd:
                 case "create":
-                    return self.create_something(args)
+                    retval = self.create_something(args)
                 case "help" | "?":
-                    self.printhelp()
+                    retval = self.printhelp()
                 case "history":
-                    self.show_info(["history"])
+                    retval = self.show_info(["history"])
                 case "puzzles" | "search":
-                    return self.get_puzzles(cmd, args)
+                    retval = self.get_puzzles(cmd, args)
                 case "load" | "open":
                     val = self.open_puzzle(cmd, args)
                     # If debugging, show what we just loaded.
                     if logging.getLogger().level < logging.WARNING:
                         self.show_info(["puzzle"])
-                    return val
+                    retval = val
                 case "delete":
-                    return self.delete_item(args)
+                    retval = self.delete_item(args)
                 case "dhcp":
-                    return self.do_dhcp(args)
+                    retval = self.do_dhcp(args)
                 case "exit" | "quit" | "stop":
                     self.exit_app()
                 case "firewall" | "fw":
-                    return self.process_firewall(args)
+                    retval = self.process_firewall(args)
                 case "ping":
-                    return self.run_ping(args)
+                    retval = self.run_ping(args)
                 case "replace":
-                    return self.replace_something(args)
+                    retval = self.replace_something(args)
                 case "route":
-                    return self.change_route(args)
+                    retval = self.change_route(args)
                 case "show" | "list":
-                    return self.show_info(args)
+                    retval = self.show_info(args)
                 case "set":
-                    return self.setvalue(args, fromuser)
+                    retval = self.setvalue(args, fromuser)
                 case "traceroute" | "tracert":
-                    return self.run_traceroute(args)
+                    retval = self.run_traceroute(args)
                 case "undo":
-                    return self.try_undo()
+                    retval = self.try_undo()
                 case "redo":
-                    return self.try_redo()
+                    retval = self.try_redo()
                 case "ups" | "addups":
-                    return self.add_ups(args)
+                    retval = self.add_ups(args)
                 case _:
                     session.print(f"unknown: {command}")
         else:
             # If command is empty, do nothing. The prompt will just be reshown.
             pass
-    #after we do anything, rebuild network wires if needed.
-    if session is not None and session.puzzle is not None:
-        session.puzzle.AutoJoinAllWireless()
+        #after we do anything, rebuild network wires if needed.
+        if session is not None and session.puzzle is not None:
+            session.puzzle.AutoJoinAllWireless()
+        return retval
 
     def try_undo(self):
         if len(session.undolist) > 0:
@@ -509,14 +511,15 @@ class Parser:
         if len(args) == 1:
             thedevice = session.puzzle.device_from_name(args[0])
             if thedevice is not None:
+                t_device = device.Device(thedevice)
                 # we have a valid device.  Show information about the device
                 session.print("----Device----")
-                session.print(f"hostname: {thedevice['hostname']}")
-                session.print(f"location: {thedevice['location']}")
-                if "poweroff" in thedevice and thedevice["poweroff"].lower() == "true":
+                session.print(f"hostname: {t_device.hostname}")
+                session.print(f"location: {t_device.location}")
+                if not t_device.powered_on:
                     session.print(f"poweroff: {thedevice['poweroff']}")
-                if "isdhcp" in thedevice and thedevice["isdhcp"].lower() == "true":
-                    session.print(f"DHCP server: {thedevice['isdhcp']}")
+                if t_device.is_dhcp:
+                    session.print(f"DHCP server: {t_device.is_dhcp}")
                     if thedevice.get("dhcprange") is not None:
                         for item in thedevice.get("dhcprange"):
                             session.print(
@@ -525,6 +528,11 @@ class Parser:
                 session.print(f"gateway: {thedevice['gateway']['ip']}")
                 for onestring in device.allIPStrings(thedevice, True, True):
                     session.print(onestring)
+                for onenic in t_device.all_nics():
+                    t_nic = nic.Nic(onenic)
+                    if t_nic.type[0] == "wport" or t_nic.type[0] == "wlan":
+                        session.print(f"{t_nic.name} ssid: {t_nic.ssid} key: {t_nic.encryption}")
+
                 #logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
                 if thedevice.get("route") is not None and len(thedevice.get("route"))>0:
                     if not isinstance(thedevice.get("route"), list):
@@ -732,14 +740,53 @@ class Parser:
         # set encryption, used on VPNs and wireless links
         if dev_obj is None:
             return False
-        tnic = dev_obj.nic_from_name(nicname)
-        if tnic is None:
-            session.print(f"Invalid nicname {nicname}:")
+        if nicname.lower().startswith("wport"):
+            #If we change one port, change them all.  wlans can have different ssids
+            nicname = ""
+        if nicname != "":
+            tnic = dev_obj.nic_from_name(nicname)
+            if tnic is None:
+                session.print(f"Invalid nicname {nicname}:")
+                return False
+            if session.puzzle.item_is_locked(dev_obj.hostname, "LockNic"):
+                session.print("Cannot change the encryption on this nic.  Puzzle has it locked.")
+                return False
+            nic.Nic(tnic).encryption = newkey
+        else:
+            #We are setting the encryption on a WAP, hopefully
+            didsomething = False
+            for onenic in dev_obj.all_nics():
+                tnic = nic.Nic(onenic)
+                if tnic.type[0] == "wport":
+                    tnic.encryption = newkey
+                    didsomething = True
+            if didsomething:
+                session.print(f"Key on {dev_obj.hostname} set to {newkey}")
+
+    def set_ssid(self, dev_obj:device.Device, nicname, newssid):
+        # set encryption, used on VPNs and wireless links
+        if dev_obj is None:
             return False
-        if session.puzzle.item_is_locked(dev_obj.hostname, "LockNic"):
-            session.print("Cannot change the encryption on this nic.  Puzzle has it locked.")
-            return False
-        nic.Nic(tnic).encryption = newkey
+        if nicname == "":
+            tnic = dev_obj.nic_from_name(nicname)
+            if tnic is None:
+                session.print(f"Invalid nicname {nicname}:")
+                return False
+            if session.puzzle.item_is_locked(dev_obj.hostname, "LockNic"):
+                session.print("Cannot change the ssid on this nic.  Puzzle has it locked.")
+                return False
+            nic.Nic(tnic).ssid = newssid
+        else:
+            #We are setting the encryption on a WAP, hopefully
+            didsomething = False
+            for onenic in dev_obj.all_nics():
+                tnic = nic.Nic(onenic)
+                if tnic.type[0] == "wport":
+                    tnic.ssid = newssid
+                    didsomething = True
+            if didsomething:
+                session.print(f"Key on {dev_obj.hostname} set to {newssid}")
+
 
     def set_endpoint(self, dev_obj:device.Device, nicname, endpoint):
         # set encryption, used on VPNs and wireless links
@@ -917,8 +964,19 @@ class Parser:
             case "gateway" | "gw":
                 self.set_gateway_value(dev_obj, values[0])
             case "key" | "encryption":
-                #set key firewall0 vpn0 newkey
-                self.set_encryption(dev_obj, values[0], values[1])
+                if len(values) == 2:
+                    #set key firewall0 vpn0 newkey
+                    self.set_encryption(dev_obj, values[0], values[1])
+                if len(values) == 1:
+                    #set key fwap0 newkey - when we do it for wireless devices, we do it across all wports
+                    self.set_encryption(dev_obj, "", values[0])
+            case "ssid":
+                if len(values) == 2:
+                    #set key firewall0 vpn0 newkey
+                    self.set_ssid(dev_obj, values[0], values[1])
+                if len(values) == 1:
+                    #set key fwap0 newkey - when we do it for wireless devices, we do it across all wports
+                    self.set_ssid(dev_obj, "", values[0])
             case "endpoint" | "tunnelendpoint":
                 #set endpoint firewall0 vpn0 gateway
                 if len(values) != 2:

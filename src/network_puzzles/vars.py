@@ -25,7 +25,7 @@ class Session:
         self.ui = None
         self.startinglevel = ""
         self.package_dir = Path(__file__).parent
-        self.WirelessReconnectDistance = 70 #The equivalent of a constant.  Stored here to be accessed multiple places. defined in EduNet. NB.cs line 373.
+        self.WirelessReconnectDistance = 80 #The equivalent of a constant.  Stored here to be accessed multiple places. defined in EduNet. NB.cs line 373.
 
     @property
     def device_type(self) -> str:
