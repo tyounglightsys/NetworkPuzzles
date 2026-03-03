@@ -839,6 +839,10 @@ class Puzzle(ItemBase):
             session.print(f"Cannot connect ports of type: {snic.type} and {dnic.type}")
             return False
 
+    def AutoJoinAllWireless(self):
+        for onedevice in self.devices:
+            device.Device(onedevice).AutoJoinWireless()
+
     def ClearAllConnectionEntries(self):
         for onedevice in self.devices:
             device.Device(onedevice).ClearIPConnections()
@@ -1057,6 +1061,7 @@ def choosePuzzle(what, filter=None):
         session.print("Loaded: " + puz["name"])
         session.puzzle = Puzzle(puz)
         session.puzzle.set_all_device_nic_macs()
+        session.puzzle.AutoJoinAllWireless()
     return puz
 
 

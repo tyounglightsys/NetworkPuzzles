@@ -110,6 +110,9 @@ class Parser:
         else:
             # If command is empty, do nothing. The prompt will just be reshown.
             pass
+    #after we do anything, rebuild network wires if needed.
+    if session is not None and session.puzzle is not None:
+        session.puzzle.AutoJoinAllWireless()
 
     def try_undo(self):
         if len(session.undolist) > 0:

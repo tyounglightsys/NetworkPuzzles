@@ -5,6 +5,7 @@ from copy import deepcopy
 from . import packet, session
 from .core import ItemBase
 from .nic import Nic
+from .link import Link 
 from .interface import Interface
 
 
@@ -400,6 +401,84 @@ class Device(ItemBase):
         if len(self.json.get("firewallrule")) == 0:
             return False
         return True
+
+    def AutoJoinWireless(self):
+        """If the device has a wlan port, create links between the device and 
+        the nearest AP (wrouter, wap, etc) that has a matching ssid/key"""
+        if not self.powered_on:
+            return False #Nothing to do if we are powered off
+        for onenic in self.all_nics():
+            tnic = Nic(onenic)
+            if tnic.type[0] != "wport":
+                continue #We only autoconnect wport ports
+            olink = tnic.get_connected_link()
+            tlink = Link(olink)
+
+            #make a note of whether we need to try to replace the link
+            needs_replacing = False
+
+            if olink is not None and tlink is not None:
+                #find the destination at the end of the link
+                logging.debug(f"Looking at link: -{tlink}- {olink}")
+                dst_hostname=None
+                if tlink.dest == self.hostname:
+                    dst_hostname = tlink.src
+                else:
+                    dst_hostname = tlink.dest
+                
+                dst = Device(session.puzzle.device_from_name(dst_hostname))
+
+                link_needs_destroying = False
+                #If the wport is connected to something that is powered off, disconnect it
+                if not dst.powered_on:
+                    link_needs_destroying = True
+
+                #If the wport is connected to something too far away, disconnect it 
+                else:
+                    sx, sy = self.location
+                    dx, dy = dst.location
+                    distance = packet.distance(sx, sy, dx, dy)
+                    if distance > session.WirelessReconnectDistance:
+                        link_needs_destroying = True
+
+                if link_needs_destroying:
+                    #destroy the link, and attempt to make another
+                    session.puzzle.deleteItem(tlink.hostname)
+                    needs_replacing = True
+                    tlink = None #mark it as gone, just in case
+
+            if needs_replacing:
+                #We want to search for things that might match
+                closest_dev = None
+                closest_nic = None
+                closest_distance = 9999 #anything will be closer.
+
+                for onedevice in session.puzzle.all_devices():
+                    t_onedevice = Device(onedevice)
+                    if t_onedevice.is_wireless_forwarder:
+                        #Check to see if ssid and key match.  And if so, does it have an empty port to connect to?
+                        for dstnic in t_onedevice.all_nics():
+                            t_dstnic = Nic(dstnic)
+                            if t_dstnic.type[0] == "wport" and t_dstnic.encryption == tnic.encryption and  t_dstnic.ssid == tnic.ssid:
+                                if t_dstnic.get_connected_link() is None:                                
+                                    #the key and ssid match, and the port is available.  Track the distance.
+                                    sx, sy = self.location
+                                    dx, dy = t_onedevice.location
+                                    t_dst_distance = packet.distance(sx, sy, dx, dy)
+                                    if t_dst_distance <= closest_distance:
+                                        closest_distance = t_dst_distance
+                                        closest_dev = t_onedevice
+                                        closest_nic = t_dstnic
+                
+                #We now have closest_dev being the closest device that is a possibility.  If it is close enough, make a link.
+                if closest_distance <= session.WirelessReconnectDistance:
+                    #we can make this link
+                    session.puzzle.createLink(self.hostname, tnic.name, closest_dev.hostname, closest_nic.name)
+                    return True
+        #If we get here, we were unable to autojoin.
+        return False
+
+
 
     def AllFirewallRules(self):
         if not self.HasAdvancedFirewall:

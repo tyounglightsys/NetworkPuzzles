@@ -61,6 +61,14 @@ class Nic(ItemBase):
         self.json["encryptionkey"] = value
 
     @property
+    def ssid(self):
+        return self.json.get("ssid")
+
+    @ssid.setter
+    def ssid(self, value:str):
+        self.json["ssid"] = value
+
+    @property
     def endpoint(self):
         if self.json.get("tunnelendpoint") is None:
             self.json.get["tunnelendpoint"] = {}
