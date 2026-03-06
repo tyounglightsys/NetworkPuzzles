@@ -1,4 +1,4 @@
-import logging
+# import logging
 import random
 
 from . import interface, session
@@ -57,7 +57,7 @@ class Nic(ItemBase):
         return self.json.get("encryptionkey")
 
     @encryption.setter
-    def encryption(self, value:str):
+    def encryption(self, value: str):
         self.json["encryptionkey"] = value
 
     @property
@@ -65,7 +65,7 @@ class Nic(ItemBase):
         return self.json.get("ssid")
 
     @ssid.setter
-    def ssid(self, value:str):
+    def ssid(self, value: str):
         self.json["ssid"] = value
 
     @property
@@ -75,7 +75,7 @@ class Nic(ItemBase):
         return self.json.get("tunnelendpoint").get("ip")
 
     @endpoint.setter
-    def endpoint(self, value:str):
+    def endpoint(self, value: str):
         if self.json.get("tunnelendpoint") is None:
             self.json.get["tunnelendpoint"] = {}
         self.json["tunnelendpoint"]["ip"] = value
@@ -108,9 +108,9 @@ class Nic(ItemBase):
 
     def get_connected_link(self):
         """Find a link connected to the specified network card"""
-        #logging.debug(
+        # logging.debug(
         #    f"looking for link connected to nic; #{self.my_id.nic_id}; {self.name}"
-        #)
+        # )
         for one in session.puzzle.links:
             if one:
                 # print ("   link - " + one['hostname'])
