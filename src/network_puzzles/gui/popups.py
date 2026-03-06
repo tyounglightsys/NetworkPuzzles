@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from kivy.uix.popup import Popup
 
-from .. import device, nic, session
+from .. import nic, session
 from .inputs import ValueInput
 from .labels import CheckBoxLabel
 from .layouts import SingleRowLayout
@@ -158,14 +158,18 @@ class EditIpPopup(ActionPopup):
             self.ip_address.gateway = input_inst.text
 
 
+class EditNicPopup(ActionPopup):
+    pass
+
+
 class ExceptionPopup(ThemedPopup):
     def __init__(self, message, **kwargs):
         super().__init__(**kwargs)
         self.ids.exception.text = message
 
-    def on_dismiss(self):
-        # Don't allow the app to continue running.
-        self.app.stop()
+    # def on_dismiss(self):
+    #     # Don't allow the app to continue running.
+    #     self.app.stop()
 
 
 class PingHostPopup(ActionPopup):
