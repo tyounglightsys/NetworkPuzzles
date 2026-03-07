@@ -82,11 +82,62 @@
             on_cancel: root.on_cancel()
             on_okay: root.on_okay()
 
+<EditNicPopup>:
+    size_hint_x: 0.5
+    title: f"{_('Edit')} {root.nic.name}"
+    ThemedBoxLayout:
+        orientation: "vertical"
+        SingleRowLayout:
+            RightAlignedLabel:
+                text: _("NIC type")
+            CheckBoxLabel:
+                text: root.nic.type
+        SingleRowLayout:
+            RightAlignedLabel:
+                text: _("MAC address")
+            CheckBoxLabel:
+                text: root.nic.mac
+        SingleRowLayout:
+            Widget:
+            SingleRowLayout:
+                ThemedCheckBox:
+                    size_hint_x: None
+                    width: dp(30)
+                    state: "down" if root.nic.can_use_dhcp else "normal"
+                    disabled: True
+                CheckBoxLabel:
+                    text: _("Can use DHCP")
+        SingleRowLayout:
+            Widget:
+            SingleRowLayout:
+                ThemedCheckBox:
+                    size_hint_x: None
+                    width: dp(30)
+                    state: "down" if root.nic.uses_dhcp else "normal"
+                    on_active: root.on_uses_dhcp(self)
+                CheckBoxLabel:
+                    text: _("Uses DHCP")
+        SingleRowLayout:
+            RightAlignedLabel:
+                text: _("VPN Endpoint")
+            CheckBoxLabel:
+                text: root.nic.endpoint
+        SingleRowLayout:
+            RightAlignedLabel:
+                text: _("Encryption key")
+            ValueInput:
+                text: root.nic.encryption
+                on_focus: root.set_encryption_key(self)
+        Widget:
+        ActionPopupButtons:
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()
+
 <ExceptionPopup>:
     title: _("Error")
     size_hint: (0.75, 0.75)
     ThemedBoxLayout:
-        orientation: 'vertical'
+        orientation: "vertical"
         ThemedScrollView:
             size_hint_y: 0.8
             TerminalLabel:
@@ -94,7 +145,7 @@
                 padding: dp(3)
                 size_hint: (None, None)
                 text_size: (self.parent.parent.width, None)
-                height: self.line_height * len(self.text.split('\n')) + dp(2)
+                height: self.line_height * len(self.text.split("\n")) + dp(2)
                 width: self.parent.parent.width - self.padding[1] - self.padding[3]
 
         HSeparator:
@@ -107,7 +158,7 @@
 <PingHostPopup>:
     size_hint: (0.5, 0.4)
     ThemedBoxLayout:
-        orientation: 'vertical'
+        orientation: "vertical"
         ValueInput:
             id: host
             hint_text: _("hostname or IP")
@@ -129,13 +180,13 @@
             Rectangle:
                 pos: self.pos
                 size: self.size
-        orientation: 'vertical'
+        orientation: "vertical"
         ThemedBoxLayout:  # top section
             padding: dp(0)
             spacing: dp(0)
             size_hint_y: 0.9
             ThemedBoxLayout:
-                orientation: 'vertical'
+                orientation: "vertical"
                 CheckBoxLabel:
                     text: _("Filter the puzzles by level:")
                 SingleRowLayout:

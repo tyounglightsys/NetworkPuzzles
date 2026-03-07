@@ -30,6 +30,7 @@ from .popups import (
     DeviceCommandsPopup,
     EditDhcpPopup,
     EditIpPopup,
+    EditNicPopup,
     PingHostPopup,
 )
 
@@ -379,7 +380,7 @@ class EditDevicePopup(ActionPopup):
         # )
 
     def on_nics_edit(self):
-        raise NotImplementedError
+        EditNicPopup(self, self.device.get_nic(self.selected_nic)).open()
 
     def on_nics_replace(self):
         # De-select label.
