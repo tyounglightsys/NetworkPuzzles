@@ -111,7 +111,7 @@ class Parser:
         else:
             # If command is empty, do nothing. The prompt will just be reshown.
             pass
-        #after we do anything, rebuild network wires if needed.
+        # after we do anything, rebuild network wires if needed.
         if session is not None and session.puzzle is not None:
             session.puzzle.AutoJoinAllWireless()
         return retval
@@ -356,12 +356,12 @@ class Parser:
         session.print(f"PING: {args[0]} -> {args[1]}")
         session.puzzle.ClearPingTests()
         shost_register = shost
-        if 'hostname' in shost_register:
-            shost_register = shost.get('hostname')
+        if "hostname" in shost_register:
+            shost_register = shost.get("hostname")
         dhost_register = dhost
-        if 'hostname' in dhost_register:
-            dhost_register = dhost.get('hostname')
-        session.puzzle.RegisterPingTest(shost_register,dhost_register)
+        if "hostname" in dhost_register:
+            dhost_register = dhost.get("hostname")
+        session.puzzle.RegisterPingTest(shost_register, dhost_register)
         device.ping(shost, dhost)
         # FIXME: This only shows that the ping command was successfully
         # initiated, not that it was itself successful.
@@ -426,7 +426,9 @@ class Parser:
 
     def change_route(self, args):
         if len(args) != 4:
-            session.print("invalid route command: usage: route item [add|del] ip/mask gateway")
+            session.print(
+                "invalid route command: usage: route item [add|del] ip/mask gateway"
+            )
             session.print(" example: route firewall0 add 192.168.2.0/24 192.168.50.1")
             session.print(" example: route firewall0 del 192.168.2.0/24 192.168.50.1")
             return False
@@ -434,7 +436,7 @@ class Parser:
         hostname = args[0].lower()
         command = args[1].lower()
         target = args[2]
-        gateway= args[3]
+        gateway = args[3]
         target_device = session.puzzle.device_from_name(hostname)
         if target_device is None:
             session.print(f"Invalid host: {hostname}")
@@ -445,10 +447,8 @@ class Parser:
             return False
         target_device = device.Device(target_device)
         if command == "add":
-            return target_device.route_add(target,gateway)
-        return target_device.route_del(target,gateway)
-
-
+            return target_device.route_add(target, gateway)
+        return target_device.route_del(target, gateway)
 
     def process_firewall(self, args):
         if len(args) != 5:
@@ -530,16 +530,23 @@ class Parser:
                     session.print(onestring)
                 for onenic in t_device.all_nics():
                     t_nic = nic.Nic(onenic)
-                    if t_nic.type[0] == "wport" or t_nic.type[0] == "wlan":
-                        session.print(f"{t_nic.name} ssid: {t_nic.ssid} key: {t_nic.encryption}")
+                    if t_nic.type in ("wport", "wlan"):
+                        session.print(
+                            f"{t_nic.name} ssid: {t_nic.ssid} key: {t_nic.encryption}"
+                        )
 
-                #logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
-                if thedevice.get("route") is not None and len(thedevice.get("route"))>0:
+                # logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
+                if (
+                    thedevice.get("route") is not None
+                    and len(thedevice.get("route")) > 0
+                ):
                     if not isinstance(thedevice.get("route"), list):
-                        thedevice["route"] = [ thedevice["route"] ]
+                        thedevice["route"] = [thedevice["route"]]
                     for oneroute in thedevice.get("route"):
-                        #logging.debug(f"Printing route: {oneroute}")
-                        session.print(f"route: {oneroute['ip']}/{oneroute['mask']} GW:{oneroute['gateway']}") 
+                        # logging.debug(f"Printing route: {oneroute}")
+                        session.print(
+                            f"route: {oneroute['ip']}/{oneroute['mask']} GW:{oneroute['gateway']}"
+                        )
                 d_thedevice = device.Device(thedevice)
                 if len(d_thedevice.AllFirewallRules()) > 0:
                     session.print("Firewall Rules:")
@@ -736,12 +743,12 @@ class Parser:
             session.print(f"invalid address: {value}")
             return False
 
-    def set_encryption(self, dev_obj:device.Device, nicname, newkey):
+    def set_encryption(self, dev_obj: device.Device, nicname, newkey):
         # set encryption, used on VPNs and wireless links
         if dev_obj is None:
             return False
         if nicname.lower().startswith("wport"):
-            #If we change one port, change them all.  wlans can have different ssids
+            # If we change one port, change them all.  wlans can have different ssids
             nicname = ""
         if nicname != "":
             tnic = dev_obj.nic_from_name(nicname)
@@ -749,21 +756,23 @@ class Parser:
                 session.print(f"Invalid nicname {nicname}:")
                 return False
             if session.puzzle.item_is_locked(dev_obj.hostname, "LockNic"):
-                session.print("Cannot change the encryption on this nic.  Puzzle has it locked.")
+                session.print(
+                    "Cannot change the encryption on this nic.  Puzzle has it locked."
+                )
                 return False
             nic.Nic(tnic).encryption = newkey
         else:
-            #We are setting the encryption on a WAP, hopefully
+            # We are setting the encryption on a WAP, hopefully
             didsomething = False
             for onenic in dev_obj.all_nics():
                 tnic = nic.Nic(onenic)
-                if tnic.type[0] == "wport":
+                if tnic.type == "wport":
                     tnic.encryption = newkey
                     didsomething = True
             if didsomething:
                 session.print(f"Key on {dev_obj.hostname} set to {newkey}")
 
-    def set_ssid(self, dev_obj:device.Device, nicname, newssid):
+    def set_ssid(self, dev_obj: device.Device, nicname, newssid):
         # set encryption, used on VPNs and wireless links
         if dev_obj is None:
             return False
@@ -773,22 +782,23 @@ class Parser:
                 session.print(f"Invalid nicname {nicname}:")
                 return False
             if session.puzzle.item_is_locked(dev_obj.hostname, "LockNic"):
-                session.print("Cannot change the ssid on this nic.  Puzzle has it locked.")
+                session.print(
+                    "Cannot change the ssid on this nic.  Puzzle has it locked."
+                )
                 return False
             nic.Nic(tnic).ssid = newssid
         else:
-            #We are setting the encryption on a WAP, hopefully
+            # We are setting the encryption on a WAP, hopefully
             didsomething = False
             for onenic in dev_obj.all_nics():
                 tnic = nic.Nic(onenic)
-                if tnic.type[0] == "wport":
+                if tnic.type == "wport":
                     tnic.ssid = newssid
                     didsomething = True
             if didsomething:
                 session.print(f"Key on {dev_obj.hostname} set to {newssid}")
 
-
-    def set_endpoint(self, dev_obj:device.Device, nicname, endpoint):
+    def set_endpoint(self, dev_obj: device.Device, nicname, endpoint):
         # set encryption, used on VPNs and wireless links
         if dev_obj is None:
             return False
@@ -797,7 +807,9 @@ class Parser:
             session.print(f"Invalid nicname {nicname}:")
             return False
         if session.puzzle.item_is_locked(dev_obj.hostname, "LockNic"):
-            session.print("Cannot change the endpoint on this nic.  Puzzle has it locked.")
+            session.print(
+                "Cannot change the endpoint on this nic.  Puzzle has it locked."
+            )
             return False
         nic.Nic(tnic).endpoint = endpoint
 
@@ -965,20 +977,20 @@ class Parser:
                 self.set_gateway_value(dev_obj, values[0])
             case "key" | "encryption":
                 if len(values) == 2:
-                    #set key firewall0 vpn0 newkey
+                    # set key firewall0 vpn0 newkey
                     self.set_encryption(dev_obj, values[0], values[1])
                 if len(values) == 1:
-                    #set key fwap0 newkey - when we do it for wireless devices, we do it across all wports
+                    # set key fwap0 newkey - when we do it for wireless devices, we do it across all wports
                     self.set_encryption(dev_obj, "", values[0])
             case "ssid":
                 if len(values) == 2:
-                    #set key firewall0 vpn0 newkey
+                    # set key firewall0 vpn0 newkey
                     self.set_ssid(dev_obj, values[0], values[1])
                 if len(values) == 1:
-                    #set key fwap0 newkey - when we do it for wireless devices, we do it across all wports
+                    # set key fwap0 newkey - when we do it for wireless devices, we do it across all wports
                     self.set_ssid(dev_obj, "", values[0])
             case "endpoint" | "tunnelendpoint":
-                #set endpoint firewall0 vpn0 gateway
+                # set endpoint firewall0 vpn0 gateway
                 if len(values) != 2:
                     session.print("invalid number of arguments.")
                 self.set_endpoint(dev_obj, values[0], values[1])

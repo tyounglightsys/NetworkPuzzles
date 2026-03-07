@@ -62,7 +62,9 @@ class Nic(ItemBase):
     def type(self):
         # NOTE: The JSON data defines nictype as a list of two identical
         # strings. We simply return the first one.
-        return self.json.get("nictype")[0]
+        nictype = self.json.get("nictype", list())
+        if nictype:
+            return self.json.get("nictype")[0]
 
     @property
     def uniqueidentifier(self):

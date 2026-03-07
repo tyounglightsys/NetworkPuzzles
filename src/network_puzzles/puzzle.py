@@ -523,11 +523,11 @@ class Puzzle(ItemBase):
         """
         for onenic in deviceRec.get("nic"):
             nic = Nic(onenic)
-            if nic.type[0] == "lo":
+            if nic.type == "lo":
                 continue  # skip loopback devices
-            if nic.type[0] == "management_interface":
+            if nic.type == "management_interface":
                 continue  # skip management_interface devices
-            match nic.type[0]:
+            match nic.type:
                 case "port" | "wport" | "eth" | "wan" | "wlan":
                     tlink = nic.get_connected_link()
                     if tlink is None:
@@ -804,12 +804,10 @@ class Puzzle(ItemBase):
             return False
         # verify the port types match
         ismatch = False
-        if (snic.type[0] == "wlan" or snic.type[0] == "wport") and (
-            dnic.type[0] == "wlan" or dnic.type[0] == "wport"
-        ):
+        if (snic.type in ("wlan", "wport")) and (dnic.type in ("wlan", "wport")):
             ismatch = True
         ok_types = ("port", "eth", "wan")
-        if snic.type[0] in ok_types and dnic.type[0] in ok_types:
+        if snic.type in ok_types and dnic.type in ok_types:
             ismatch = True
         # if we get here, we should have all the pieces.
         if ismatch:
