@@ -9,9 +9,23 @@ from .link import Link
 class Nic(ItemBase):
     def __init__(self, json_data=None):
         super().__init__(json_data)
+        self._can_use_dhcp = None
 
     def __str__(self):
         return self.name
+
+    @property
+    def can_use_dhcp(self):
+        if self._can_use_dhcp is None:
+            if self.type in ("eth", "management_interface", "wlan"):
+                self._can_use_dhcp = True
+            else:
+                self._can_use_dhcp = False
+        return self._can_use_dhcp
+
+    @can_use_dhcp.setter
+    def can_use_dhcp(self, value):
+        self._can_use_dhcp = value
 
     @property
     def interfaces(self):
@@ -46,7 +60,9 @@ class Nic(ItemBase):
 
     @property
     def type(self):
-        return self.json.get("nictype")
+        # NOTE: The JSON data defines nictype as a list of two identical
+        # strings. We simply return the first one.
+        return self.json.get("nictype")[0]
 
     @property
     def uniqueidentifier(self):
