@@ -6,9 +6,6 @@ from .. import session
 
 
 class ThemedLabel(Label):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
     @property
     def app(self):
         return session.app

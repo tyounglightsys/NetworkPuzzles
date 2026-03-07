@@ -12,7 +12,8 @@ from packaging.version import Version
 # define the global network list
 from . import device, packet, session
 from .core import ItemBase
-from .link import Link
+
+# from .link import Link
 from .nic import Nic
 
 
@@ -245,38 +246,42 @@ class Puzzle(ItemBase):
                 # the test matches, return true only if 'completed' is set to true
                 return test.get("completed", False)
         return False
-    
+
     def ClearPingTests(self):
-        self.json['pingtests'] = []
+        self.json["pingtests"] = []
 
     def allPingTests(self):
-        if 'pingtests' not in self.json:
+        if "pingtests" not in self.json:
             self.ClearPingTests()
-        return self.json['pingtests']
+        return self.json["pingtests"]
 
     def RegisterPingTest(self, source, dest):
         pt = {
-            'source': source,
-            'dest' : dest,
-            'result' : "failed", #we mark it as successful later.
+            "source": source,
+            "dest": dest,
+            "result": "failed",  # we mark it as successful later.
         }
-        self.json['pingtests'].append(pt)
+        self.json["pingtests"].append(pt)
 
     def RegisterPingTestSuccess(self, source, dest):
         for onerecord in self.allPingTests():
-            if onerecord['source'] == source and onerecord['dest'] == dest:
-                onerecord['result'] = "passed"
+            if onerecord["source"] == source and onerecord["dest"] == dest:
+                onerecord["result"] = "passed"
 
     def AfterPacketsNoticeFailedPings(self):
-        '''This runs after all packets are complete. Any registered pings which failed get noted.
-        There are 'FailedPing' tests, which are used to show us firewalls are successfully done, etc.'''
+        """This runs after all packets are complete. Any registered pings which failed get noted.
+        There are 'FailedPing' tests, which are used to show us firewalls are successfully done, etc."""
         for onerecord in self.allPingTests():
             logging.debug(f"Looking at registered pings: {onerecord}")
-            if onerecord['result'] == 'failed':
+            if onerecord["result"] == "failed":
                 logging.debug(f"Failed Ping: {onerecord['source']} {onerecord['dest']}")
-                session.puzzle.mark_test_as_completed(onerecord['source'], onerecord['dest'], 'FailedPing', f"The ping failed from {onerecord['source']} to {onerecord['dest']}")
+                session.puzzle.mark_test_as_completed(
+                    onerecord["source"],
+                    onerecord["dest"],
+                    "FailedPing",
+                    f"The ping failed from {onerecord['source']} to {onerecord['dest']}",
+                )
         self.ClearPingTests()
-
 
     def check_local_IP_test(self, shost):
         """Check to see if there is a test we need to check for completion"""
@@ -469,7 +474,7 @@ class Puzzle(ItemBase):
             # logging.debug(f"Packet: Current: {pkt}")
             counter = counter + 1
             if pkt.status == "tunneled":
-                #These packets are being tunneled and are a payload in a VPN.  For now, we skip processing them
+                # These packets are being tunneled and are a payload in a VPN.  For now, we skip processing them
                 continue
             # figure out where the packet is
             current_link = pkt.get_current_link()
@@ -498,7 +503,7 @@ class Puzzle(ItemBase):
                     device.doInputFromLink(pkt, src_nic)
 
             if pkt.packet_location == "":
-                pkt.status="done"
+                pkt.status = "done"
 
             # If the packet has been going too long.  Kill it.
             if curtime - pkt.starttime > killMilliseconds:
@@ -518,11 +523,11 @@ class Puzzle(ItemBase):
         """
         for onenic in deviceRec.get("nic"):
             nic = Nic(onenic)
-            if nic.type[0] == "lo":
+            if nic.type == "lo":
                 continue  # skip loopback devices
-            if nic.type[0] == "management_interface":
+            if nic.type == "management_interface":
                 continue  # skip management_interface devices
-            match nic.type[0]:
+            match nic.type:
                 case "port" | "wport" | "eth" | "wan" | "wlan":
                     tlink = nic.get_connected_link()
                     if tlink is None:
@@ -595,11 +600,12 @@ class Puzzle(ItemBase):
             session.print(f"Error: no such device: {sdevicename}")
             return False
         # The second item might be a nic name, or bic type. (vpn0 or vpn)
-        nictype = args[0] 
+        nictype = args[0]
         if nictype[-1].isdigit():
-            nictype = nictype[:-1] #pull off the last digit if the name is eth0 or port6
-        self.createNIC(sdevice,nictype)
-
+            nictype = nictype[
+                :-1
+            ]  # pull off the last digit if the name is eth0 or port6
+        self.createNIC(sdevice, nictype)
 
     def createNIC(self, thedevicejson, nictype):
         thedevice = device.Device(thedevicejson)
@@ -607,7 +613,7 @@ class Puzzle(ItemBase):
         while (thedevice.nic_from_name(f"{nictype}{count}")) is not None:
             count = count + 1
         newnicname = f"{nictype}{count}"
-        if nictype not in {"eth","vpn","wan","wlan", "port"}:
+        if nictype not in {"eth", "vpn", "wan", "wlan", "port"}:
             logging.debug(f"Oops.  Cannot create a nic of type: {nictype}")
             return None
         newid = self.issueUniqueIdentifier()
@@ -641,10 +647,7 @@ class Puzzle(ItemBase):
             ],
         }
         if nictype == "vpn":
-            newnic['tunnelendpoint'] = {
-                'ip' : "0.0.0.0",
-                'mask' : "0.0.0.0"
-            }
+            newnic["tunnelendpoint"] = {"ip": "0.0.0.0", "mask": "0.0.0.0"}
         Nic(newnic).ensure_mac()
         thedevicejson["nic"].append(newnic)
         return newnic
@@ -801,12 +804,10 @@ class Puzzle(ItemBase):
             return False
         # verify the port types match
         ismatch = False
-        if (snic.type[0] == "wlan" or snic.type[0] == "wport") and (
-            dnic.type[0] == "wlan" or dnic.type[0] == "wport"
-        ):
+        if (snic.type in ("wlan", "wport")) and (dnic.type in ("wlan", "wport")):
             ismatch = True
         ok_types = ("port", "eth", "wan")
-        if snic.type[0] in ok_types and dnic.type[0] in ok_types:
+        if snic.type in ok_types and dnic.type in ok_types:
             ismatch = True
         # if we get here, we should have all the pieces.
         if ismatch:
@@ -840,7 +841,7 @@ class Puzzle(ItemBase):
             return False
 
     def AutoJoinAllWireless(self):
-        #logging.debug("Doing AutoJoinWirelsss")
+        # logging.debug("Doing AutoJoinWirelsss")
         for onedevice in self.devices:
             device.Device(onedevice).AutoJoinWireless()
 

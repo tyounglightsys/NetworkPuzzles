@@ -1,4 +1,4 @@
-import logging
+# import logging
 import random
 
 from . import interface, session
@@ -9,9 +9,23 @@ from .link import Link
 class Nic(ItemBase):
     def __init__(self, json_data=None):
         super().__init__(json_data)
+        self._can_use_dhcp = None
 
     def __str__(self):
         return self.name
+
+    @property
+    def can_use_dhcp(self):
+        if self._can_use_dhcp is None:
+            if self.type in ("eth", "management_interface", "wlan"):
+                self._can_use_dhcp = True
+            else:
+                self._can_use_dhcp = False
+        return self._can_use_dhcp
+
+    @can_use_dhcp.setter
+    def can_use_dhcp(self, value):
+        self._can_use_dhcp = value
 
     @property
     def interfaces(self):
@@ -46,7 +60,11 @@ class Nic(ItemBase):
 
     @property
     def type(self):
-        return self.json.get("nictype")
+        # NOTE: The JSON data defines nictype as a list of two identical
+        # strings. We simply return the first one.
+        nictype = self.json.get("nictype", list())
+        if nictype:
+            return self.json.get("nictype")[0]
 
     @property
     def uniqueidentifier(self):
@@ -57,7 +75,7 @@ class Nic(ItemBase):
         return self.json.get("encryptionkey")
 
     @encryption.setter
-    def encryption(self, value:str):
+    def encryption(self, value: str):
         self.json["encryptionkey"] = value
 
     @property
@@ -65,7 +83,7 @@ class Nic(ItemBase):
         return self.json.get("ssid")
 
     @ssid.setter
-    def ssid(self, value:str):
+    def ssid(self, value: str):
         self.json["ssid"] = value
 
     @property
@@ -75,7 +93,7 @@ class Nic(ItemBase):
         return self.json.get("tunnelendpoint").get("ip")
 
     @endpoint.setter
-    def endpoint(self, value:str):
+    def endpoint(self, value: str):
         if self.json.get("tunnelendpoint") is None:
             self.json.get["tunnelendpoint"] = {}
         self.json["tunnelendpoint"]["ip"] = value
@@ -108,9 +126,9 @@ class Nic(ItemBase):
 
     def get_connected_link(self):
         """Find a link connected to the specified network card"""
-        #logging.debug(
+        # logging.debug(
         #    f"looking for link connected to nic; #{self.my_id.nic_id}; {self.name}"
-        #)
+        # )
         for one in session.puzzle.links:
             if one:
                 # print ("   link - " + one['hostname'])

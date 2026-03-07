@@ -3,7 +3,8 @@ from copy import deepcopy
 
 from kivy.uix.popup import Popup
 
-from .. import device, nic, session
+from .. import nic, session
+from .base import ThemedCheckBox
 from .inputs import ValueInput
 from .labels import CheckBoxLabel
 from .layouts import SingleRowLayout
@@ -51,7 +52,6 @@ class CommandPopup(ActionPopup):
     def on_okay(self):
         self.app.ui.parse(self.ids.text_input.text)
         super().on_okay()
-        # self.dismiss()
 
 
 class DeviceCommandsPopup(ThemedPopup):
@@ -158,14 +158,35 @@ class EditIpPopup(ActionPopup):
             self.ip_address.gateway = input_inst.text
 
 
+class EditNicPopup(ActionPopup):
+    def __init__(self, device_popup, nic, **kwargs):
+        self.device_popup = device_popup
+        self.nic = nic
+        super().__init__(**kwargs)
+
+    def on_okay(self):
+        # set firewall1 key vpn0 Key
+        self.device_popup.puzzle_commands.append(
+            f"set {self.device_popup.device.hostname} key {self.device_popup.selected_nic} {self.nic.encryption}"
+        )
+        super().on_okay()
+
+    def on_uses_dhcp(self, inst):
+        self.nic.uses_dhcp = inst.active
+
+    def set_encryption_key(self, input_inst):
+        if not input_inst.focus:
+            self.nic.encryption = input_inst.text
+
+
 class ExceptionPopup(ThemedPopup):
     def __init__(self, message, **kwargs):
         super().__init__(**kwargs)
         self.ids.exception.text = message
 
-    def on_dismiss(self):
-        # Don't allow the app to continue running.
-        self.app.stop()
+    # def on_dismiss(self):
+    #     # Don't allow the app to continue running.
+    #     self.app.stop()
 
 
 class PingHostPopup(ActionPopup):

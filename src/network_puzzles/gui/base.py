@@ -73,9 +73,6 @@ class ThemedCheckBox(CheckBox):
             if hasattr(win, "content"):
                 return win
 
-    def on_activate(self):
-        self.app.on_checkbox_activate(self)
-
 
 class HelpHighlight(Widget):
     def __init__(self, base=None, **kwargs):

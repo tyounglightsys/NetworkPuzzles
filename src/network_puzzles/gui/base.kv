@@ -10,10 +10,10 @@
             size: self.size
     color: app.theme.fg2
     font_size: sp(12)
-    on_active: self.on_activate()
 
 <FiltersCheckBox@ThemedCheckBox>:
     size_hint_x: 0.15
+    on_active: self.app.on_checkbox_activate(self)
 
 
 <Separator@Widget>:
