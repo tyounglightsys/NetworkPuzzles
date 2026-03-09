@@ -423,7 +423,7 @@ class Device(ItemBase):
             t_nic = Nic(onenic)
             if t_nic.type in ("wport", "wlan"):
                 session.print(
-                    f"{t_nic.name} ssid: {t_nic.ssid} key: {t_nic.encryption}"
+                    f"{t_nic.name} ssid: {t_nic.ssid} key: {t_nic.encryption_key}"
                 )
 
         # logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
@@ -476,7 +476,7 @@ class Device(ItemBase):
             needs_replacing = False
 
             logging.debug(
-                f"AutoJoinWireless: {self.hostname} has wport {tnic.name}  {tnic.ssid} {tnic.encryption}"
+                f"AutoJoinWireless: {self.hostname} has wport {tnic.name}  {tnic.ssid} {tnic.encryption_key}"
             )
             # logging.debug(f"Looking at link: -{tlink}- {olink}")
 
@@ -529,7 +529,7 @@ class Device(ItemBase):
                             t_dstnic = Nic(dstnic)
                             if (
                                 t_dstnic.type == "wport"
-                                and t_dstnic.encryption == tnic.encryption
+                                and t_dstnic.encryption_key == tnic.encryption_key
                                 and t_dstnic.ssid == tnic.ssid
                             ):
                                 if t_dstnic.get_connected_link() is None:

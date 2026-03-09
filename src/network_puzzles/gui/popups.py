@@ -172,7 +172,7 @@ class EditNicPopup(ActionPopup):
     def on_okay(self):
         # set firewall1 key vpn0 Key
         self.device_popup.puzzle_commands.append(
-            f"set {self.device_popup.device.hostname} key {self.device_popup.selected_nic} {self.nic.encryption}"
+            f"set {self.device_popup.device.hostname} key {self.device_popup.selected_nic} {self.nic.encryption_key}"
         )
         super().on_okay()
 
@@ -181,7 +181,7 @@ class EditNicPopup(ActionPopup):
 
     def set_encryption_key(self, input_inst):
         if not input_inst.focus:
-            self.nic.encryption = input_inst.text
+            self.nic.encryption_key = input_inst.text
 
 
 class EditRoutesPopup(ActionPopup):
