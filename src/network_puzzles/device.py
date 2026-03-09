@@ -390,6 +390,45 @@ class Device(ItemBase):
         session.print("No such route")
         return False
 
+    def show_info(self):
+        """Print information about the device to the in-app terminal."""
+        session.print("----Device----")
+        session.print(f"hostname: {self.hostname}")
+        session.print(f"location: {self.location}")
+        if not self.powered_on:
+            session.print(f"poweroff: {self['poweroff']}")
+        if self.is_dhcp:
+            session.print(f"DHCP server: {self.is_dhcp}")
+            if self.json.get("dhcprange") is not None:
+                for item in self.json.get("dhcprange"):
+                    session.print(
+                        f"  Range: {item['ip']} {item['mask']}-{item['gateway']}"
+                    )
+        session.print(f"gateway: {self.json['gateway']['ip']}")
+        for onestring in allIPStrings(self.json, True, True):
+            session.print(onestring)
+        for onenic in self.all_nics():
+            t_nic = Nic(onenic)
+            if t_nic.type in ("wport", "wlan"):
+                session.print(
+                    f"{t_nic.name} ssid: {t_nic.ssid} key: {t_nic.encryption}"
+                )
+
+        # logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
+        if len(self.routes) > 0:
+            for oneroute in self.routes:
+                # logging.debug(f"Printing route: {oneroute}")
+                session.print(
+                    f"route: {oneroute['ip']}/{oneroute['mask']} GW:{oneroute['gateway']}"
+                )
+
+        if len(self.AllFirewallRules()) > 0:
+            session.print("Firewall Rules:")
+            for onerule in self.AllFirewallRules():
+                session.print(
+                    f"  {onerule.get('source')} - {onerule.get('destination')} -> {onerule.get('action')}"
+                )
+
     # firewall pieces
     @property
     def CanDoFirewall(self):
