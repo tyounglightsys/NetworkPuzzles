@@ -198,8 +198,10 @@ class EditRoutesPopup(ActionPopup):
             self.ids.edit_button.disabled = False
 
     def on_edit(self):
+        # FIXME
         route = self.ids.static_routes_list.selected_item
         logging.debug(f'TEST: "Edit" clicked; "{route}" selected')
+        raise NotImplementedError
 
     def on_new(self):
         NewRoutePopup(self).open()
