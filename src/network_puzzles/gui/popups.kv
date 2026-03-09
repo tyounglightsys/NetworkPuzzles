@@ -124,6 +124,7 @@
                 text: _("VPN Endpoint")
             ValueInput:
                 text: root.nic.endpoint
+                on_focus: root.set_endpoint(self)
         SingleRowLayout:
             RightAlignedLabel:
                 text: _("Encryption key")
