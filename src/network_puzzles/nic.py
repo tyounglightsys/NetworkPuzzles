@@ -56,7 +56,7 @@ class Nic(ItemBase):
 
     @property
     def name(self):
-        return self.json.get("nicname")
+        return self.json.get("nicname", "")
 
     @property
     def type(self):
@@ -68,11 +68,11 @@ class Nic(ItemBase):
 
     @property
     def uniqueidentifier(self):
-        return self.json.get("uniqueidentifier")
+        return self.json.get("uniqueidentifier", "")
 
     @property
     def encryption_key(self):
-        return self.json.get("encryptionkey")
+        return self.json.get("encryptionkey", "")
 
     @encryption_key.setter
     def encryption_key(self, value: str):
@@ -80,7 +80,7 @@ class Nic(ItemBase):
 
     @property
     def ssid(self):
-        return self.json.get("ssid")
+        return self.json.get("ssid", "")
 
     @ssid.setter
     def ssid(self, value: str):
