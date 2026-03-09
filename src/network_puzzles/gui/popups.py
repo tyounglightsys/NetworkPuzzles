@@ -4,7 +4,6 @@ from copy import deepcopy
 from kivy.uix.popup import Popup
 
 from .. import nic, session
-from .base import ThemedCheckBox
 from .inputs import ValueInput
 from .labels import CheckBoxLabel
 from .layouts import SingleRowLayout
