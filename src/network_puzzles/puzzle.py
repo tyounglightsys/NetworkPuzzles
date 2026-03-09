@@ -761,13 +761,11 @@ class Puzzle(ItemBase):
         if ddevice is None:
             session.print(f"Error no such device {ddevicename}")
             return False
-        dnicname = ""
+        # Find dest NIC data.
         dnic_json = None
         if len(args) > 0:
             dnic_json = device.Device(ddevice).nic_from_name(args[0])
-            if dnic_json is not None:
-                dnicname = args[0]
-            else:
+            if dnic_json is None:
                 session.print(f"Could not find nic: {args[0]}")
                 return False
         # If the snic and dnics are not set, find an available one.

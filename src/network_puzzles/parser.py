@@ -5,7 +5,7 @@ import ipaddress
 import logging
 import sys
 
-from . import device, nic, packet, puzzle, session
+from . import device, link, nic, packet, puzzle, session
 
 
 class Parser:
@@ -511,62 +511,11 @@ class Parser:
         if len(args) == 1:
             thedevice = session.puzzle.device_from_name(args[0])
             if thedevice is not None:
-                t_device = device.Device(thedevice)
-                # we have a valid device.  Show information about the device
-                session.print("----Device----")
-                session.print(f"hostname: {t_device.hostname}")
-                session.print(f"location: {t_device.location}")
-                if not t_device.powered_on:
-                    session.print(f"poweroff: {thedevice['poweroff']}")
-                if t_device.is_dhcp:
-                    session.print(f"DHCP server: {t_device.is_dhcp}")
-                    if thedevice.get("dhcprange") is not None:
-                        for item in thedevice.get("dhcprange"):
-                            session.print(
-                                f"  Range: {item['ip']} {item['mask']}-{item['gateway']}"
-                            )
-                session.print(f"gateway: {thedevice['gateway']['ip']}")
-                for onestring in device.allIPStrings(thedevice, True, True):
-                    session.print(onestring)
-                for onenic in t_device.all_nics():
-                    t_nic = nic.Nic(onenic)
-                    if t_nic.type in ("wport", "wlan"):
-                        session.print(
-                            f"{t_nic.name} ssid: {t_nic.ssid} key: {t_nic.encryption}"
-                        )
-
-                # logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
-                if (
-                    thedevice.get("route") is not None
-                    and len(thedevice.get("route")) > 0
-                ):
-                    if not isinstance(thedevice.get("route"), list):
-                        thedevice["route"] = [thedevice["route"]]
-                    for oneroute in thedevice.get("route"):
-                        # logging.debug(f"Printing route: {oneroute}")
-                        session.print(
-                            f"route: {oneroute['ip']}/{oneroute['mask']} GW:{oneroute['gateway']}"
-                        )
-                d_thedevice = device.Device(thedevice)
-                if len(d_thedevice.AllFirewallRules()) > 0:
-                    session.print("Firewall Rules:")
-                    for onerule in d_thedevice.AllFirewallRules():
-                        session.print(
-                            f"  {onerule.get('source')} - {onerule.get('destination')} -> {onerule.get('action')}"
-                        )
+                device.Device(thedevice).show_info()
                 return
             thedevice = session.puzzle.link_from_name(args[0])
             if thedevice is not None:
-                # we have a valid link.  Show information about the link
-                session.print("----Link----")
-                session.print(f"name: {thedevice['hostname']}")
-                session.print(f"type: {thedevice['linktype']}")
-                session.print(
-                    f"source: {thedevice['SrcNic']['hostname']} - {thedevice['SrcNic']['nicname']}"
-                )
-                session.print(
-                    f"dest: {thedevice['DstNic']['hostname']} - {thedevice['DstNic']['nicname']}"
-                )
+                link.Link(thedevice).show_info()
                 return
             if args[0].lower() == "tests":
                 session.print("--Tests--")

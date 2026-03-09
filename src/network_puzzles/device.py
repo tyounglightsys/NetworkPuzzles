@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from . import packet, session
 from .core import ItemBase
-from .interface import Interface
+from .interface import UNSET_IP, Interface
 from .link import Link
 from .nic import Nic
 
@@ -32,6 +32,29 @@ class Device(ItemBase):
                     f"Not a valid uniqueidentifier, hostname, or JSON data: {value}"
                 )
             self.json = json_data if json_data else {}
+
+    @property
+    def blown_up(self) -> bool:
+        value = False
+        if "blownup" in self.json:
+            if self.json.get("blownup", "").lower() in ("true", "yes"):
+                value = True
+            else:
+                value = False
+            # logging.debug(f"{self.hostname}.powered_on: {value}")
+        return value
+
+    @blown_up.setter
+    def blown_up(self, value):
+        # we can only set it to true.  We cannot unset this value.
+        # to make it 'false', we need to replace the device
+        if (isinstance(value, bool) and value) or (
+            isinstance(value, str) and value.lower() == "true"
+        ):
+            if isinstance(value, bool):
+                value = str(value)
+            self.json["blownup"] = value
+            self.powered_on = True  # when it blows up, the power gets turned off
 
     @property
     def frozen(self):
@@ -92,6 +115,16 @@ class Device(ItemBase):
         self.json["isinvisible"] = value
 
     @property
+    def is_wireless_forwarder(self):
+        """return true if the device is a wireless device that does forwarding, false if it does not"""
+        if self.json is None:
+            return False
+        match self.mytype:
+            case "wrepeater" | "wap" | "wbridge" | "wrouter":
+                return True
+        return False
+
+    @property
     def location(self) -> tuple:
         loc = self.json.get("location")
         if loc:
@@ -120,37 +153,14 @@ class Device(ItemBase):
         self.json["poweroff"] = value
 
     @property
-    def blown_up(self) -> bool:
-        value = False
-        if "blownup" in self.json:
-            if self.json.get("blownup", "").lower() in ("true", "yes"):
-                value = True
-            else:
-                value = False
-            # logging.debug(f"{self.hostname}.powered_on: {value}")
-        return value
-
-    @blown_up.setter
-    def blown_up(self, value):
-        # we can only set it to true.  We cannot unset this value.
-        # to make it 'false', we need to replace the device
-        if (isinstance(value, bool) and value) or (
-            isinstance(value, str) and value.lower() == "true"
-        ):
-            if isinstance(value, bool):
-                value = str(value)
-            self.json["blownup"] = value
-            self.powered_on = True  # when it blows up, the power gets turned off
-
-    @property
-    def is_wireless_forwarder(self):
-        """return true if the device is a wireless device that does forwarding, false if it does not"""
-        if self.json is None:
-            return False
-        match self.mytype:
-            case "wrepeater" | "wap" | "wbridge" | "wrouter":
-                return True
-        return False
+    def routes(self):
+        if self.json.get("route") is None:
+            self.json["route"] = []
+        if not isinstance(self.json.get("route"), list):
+            self.json["route"] = [
+                self.json.get("route")
+            ]  # turn it into a list so we can iterate through it
+        return self.json.get("route")
 
     @property
     def serves_dhcp(self):
@@ -191,6 +201,18 @@ class Device(ItemBase):
         if not self.powered_on:
             commands.append(f"set {self.hostname} power on")
         return commands
+
+    def get_routes_from_nics(self):
+        nic_routes = []
+        for nic in self.all_nics():
+            n = Nic(nic)
+            for interface in n.interfaces:
+                iface = Interface(interface)
+                # Use current IP config for gateway.
+                if iface.ip_data.get("gateway") == UNSET_IP:
+                    iface.ip_data["gateway"] = self.gateway
+                nic_routes.append(iface.ip_data)
+        return nic_routes
 
     def mac_list(self):
         """
@@ -310,13 +332,8 @@ class Device(ItemBase):
         except ValueError:
             session.print(f"Invalid target: {target} Must be a valid IP")
             return False
-        if self.json.get("route") is None:
-            self.json["route"] = []
-        if not isinstance(self.json.get("route"), list):
-            self.json["route"] = [
-                self.json.get("route")
-            ]  # turn it into a list so we can iterate through it
-        for oneroute in self.json.get("route"):
+        # Check if route exists.
+        for oneroute in self.routes:
             if (
                 oneroute is not None
                 and oneroute.get("ip") == str(target_IP.ip)
@@ -354,7 +371,7 @@ class Device(ItemBase):
             f"{self.hostname} successfully created route to {str(target_IP)}",
         )
 
-        self.json["route"].append(newroute)
+        self.routes.append(newroute)
         return True
 
     def route_del(self, target, gateway):
@@ -384,6 +401,45 @@ class Device(ItemBase):
         # If we get here, nothing yet matched.  Could not find it.  Nothing to drop
         session.print("No such route")
         return False
+
+    def show_info(self):
+        """Print information about the device to the in-app terminal."""
+        session.print("----Device----")
+        session.print(f"hostname: {self.hostname}")
+        session.print(f"location: {self.location}")
+        if not self.powered_on:
+            session.print(f"poweroff: {self['poweroff']}")
+        if self.is_dhcp:
+            session.print(f"DHCP server: {self.is_dhcp}")
+            if self.json.get("dhcprange") is not None:
+                for item in self.json.get("dhcprange"):
+                    session.print(
+                        f"  Range: {item['ip']} {item['mask']}-{item['gateway']}"
+                    )
+        session.print(f"gateway: {self.json['gateway']['ip']}")
+        for onestring in allIPStrings(self.json, True, True):
+            session.print(onestring)
+        for onenic in self.all_nics():
+            t_nic = Nic(onenic)
+            if t_nic.type in ("wport", "wlan"):
+                session.print(
+                    f"{t_nic.name} ssid: {t_nic.ssid} key: {t_nic.encryption}"
+                )
+
+        # logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
+        if len(self.routes) > 0:
+            for oneroute in self.routes:
+                # logging.debug(f"Printing route: {oneroute}")
+                session.print(
+                    f"route: {oneroute['ip']}/{oneroute['mask']} GW:{oneroute['gateway']}"
+                )
+
+        if len(self.AllFirewallRules()) > 0:
+            session.print("Firewall Rules:")
+            for onerule in self.AllFirewallRules():
+                session.print(
+                    f"  {onerule.get('source')} - {onerule.get('destination')} -> {onerule.get('action')}"
+                )
 
     # firewall pieces
     @property

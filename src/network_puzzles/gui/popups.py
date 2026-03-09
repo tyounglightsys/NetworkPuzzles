@@ -3,8 +3,7 @@ from copy import deepcopy
 
 from kivy.uix.popup import Popup
 
-from .. import nic, session
-from .base import ThemedCheckBox
+from .. import interface, nic, session
 from .inputs import ValueInput
 from .labels import CheckBoxLabel
 from .layouts import SingleRowLayout
@@ -29,6 +28,28 @@ class ActionPopup(ThemedPopup):
 
     def on_okay(self):
         self.dismiss()
+
+
+class BaseIpPopup(ActionPopup):
+    """Base class for IP-address-related popups."""
+
+    def __init__(self, ip_address=None, **kwargs):
+        if ip_address is None:
+            ip_address = interface.IpAddress(deepcopy(interface.UNSET_IP_CONFIG))
+        self.ip_address = ip_address
+        super().__init__(**kwargs)
+
+    def set_address(self, input_inst):
+        if not input_inst.focus:
+            self.ip_address.address = input_inst.text
+
+    def set_netmask(self, input_inst):
+        if not input_inst.focus:
+            self.ip_address.netmask = input_inst.text
+
+    def set_gateway(self, input_inst):
+        if not input_inst.focus:
+            self.ip_address.gateway = input_inst.text
 
 
 class ChooseNicPopup(ActionPopup):
@@ -59,10 +80,6 @@ class DeviceCommandsPopup(ThemedPopup):
 
 
 class EditDhcpPopup(ActionPopup):
-    LOCALHOST_IP = "127.0.0.1"
-    NO_IP = "0.0.0.0"
-    UNSET = {"ip": NO_IP, "mask": "0.0.0.0", "gateway": "0.0.0.0", "type": "route"}
-
     def __init__(self, devicew, **kwargs):
         self.device = devicew
         super().__init__(**kwargs)
@@ -73,7 +90,7 @@ class EditDhcpPopup(ActionPopup):
         return [
             ip_data
             for ip_data in self.device.json.get("dhcprange", [])
-            if ip_data.get("ip") != self.LOCALHOST_IP
+            if ip_data.get("ip") != interface.LOCALHOST_IP
         ]
 
     @property
@@ -84,15 +101,15 @@ class EditDhcpPopup(ActionPopup):
             ips = [
                 ip.get("ip")
                 for ip in n.ip_addresses
-                if ip.get("ip") != self.LOCALHOST_IP
+                if ip.get("ip") != interface.LOCALHOST_IP
             ]
             for ip in ips:
-                _data = deepcopy(self.UNSET)
+                _data = deepcopy(interface.UNSET_IP_CONFIG)
                 _data["ip"] = ip
                 unset_configs.append(_data)
         if len(unset_configs) == 0:
-            data = deepcopy(self.UNSET)
-            data["ip"] = self.NO_IP
+            data = deepcopy(interface.UNSET_IP_CONFIG)
+            data["ip"] = interface.UNSET_IP
             unset_configs.append(data)
         return unset_configs
 
@@ -101,7 +118,7 @@ class EditDhcpPopup(ActionPopup):
         for row in self.ids.dhcp_configs_layout.children:
             # Child widgets' order is the opposite of how they were added.
             end, start, ip = [c.text for c in row.children]
-            if ip == "0.0.0.0":
+            if ip == interface.UNSET_IP:
                 # Fallback config.
                 continue
             elif [ip, start, end] in old_configs:
@@ -130,11 +147,11 @@ class EditDhcpPopup(ActionPopup):
             self.ids.dhcp_configs_layout.add_widget(bl)
 
 
-class EditIpPopup(ActionPopup):
+class EditIpPopup(BaseIpPopup):
     def __init__(self, device_popup, ip_address, **kwargs):
+        super().__init__(ip_address=ip_address, **kwargs)
+        self.ids.gateway_input.disabled = True
         self.device_popup = device_popup
-        self.ip_address = ip_address
-        super().__init__(**kwargs)
 
     def on_okay(self):
         # Add updating command.
@@ -144,18 +161,6 @@ class EditIpPopup(ActionPopup):
         # Update IPs in IPs list.
         self.device_popup._set_ips()
         super().on_okay()
-
-    def set_address(self, input_inst):
-        if not input_inst.focus:
-            self.ip_address.address = input_inst.text
-
-    def set_netmask(self, input_inst):
-        if not input_inst.focus:
-            self.ip_address.netmask = input_inst.text
-
-    def set_gateway(self, input_inst):
-        if not input_inst.focus:
-            self.ip_address.gateway = input_inst.text
 
 
 class EditNicPopup(ActionPopup):
@@ -179,14 +184,57 @@ class EditNicPopup(ActionPopup):
             self.nic.encryption = input_inst.text
 
 
+class EditRoutesPopup(ActionPopup):
+    def __init__(self, device_popup, **kwargs):
+        self.device_popup = device_popup
+        super().__init__(**kwargs)
+        self.ids.nic_routes_list.set_routes(
+            self.device_popup.device.get_routes_from_nics()
+        )
+        self.ids.static_routes_list.set_routes(self.device_popup.device.routes)
+
+    def check_for_selection(self, inst):
+        if inst.selected_item:
+            self.ids.edit_button.disabled = False
+
+    def on_edit(self):
+        # FIXME
+        route = self.ids.static_routes_list.selected_item
+        logging.debug(f'TEST: "Edit" clicked; "{route}" selected')
+        raise NotImplementedError
+
+    def on_new(self):
+        NewRoutePopup(self).open()
+
+
 class ExceptionPopup(ThemedPopup):
     def __init__(self, message, **kwargs):
         super().__init__(**kwargs)
         self.ids.exception.text = message
+        logging.error(message)
 
     # def on_dismiss(self):
     #     # Don't allow the app to continue running.
     #     self.app.stop()
+
+
+class NewRoutePopup(BaseIpPopup):
+    def __init__(self, routes_popup, **kwargs):
+        self.routes_popup = routes_popup
+        super().__init__(**kwargs)
+
+    def on_okay(self):
+        # logging.debug(f"{self.ip_address=}")
+        dev = self.routes_popup.device_popup.device.hostname
+        ip = self.ip_address.address
+        mask = self.ip_address.netmask
+        gw = self.ip_address.gateway
+        # Update intermediate popup data.
+        self.routes_popup.device_popup.device.route_add(f"{ip}/{mask}", gw)
+        self.routes_popup.ids.static_routes_list.update_data()
+        # Update puzzle data
+        self.app.ui.parse(f"route {dev} add {ip}/{mask} {gw}")
+        super().on_okay()
 
 
 class PingHostPopup(ActionPopup):

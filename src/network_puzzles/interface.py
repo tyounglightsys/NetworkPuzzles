@@ -1,5 +1,15 @@
-from .core import ItemBase
 import ipaddress
+
+from .core import ItemBase
+
+LOCALHOST_IP = "127.0.0.1"
+UNSET_IP = "0.0.0.0"
+UNSET_IP_CONFIG = {
+    "ip": UNSET_IP,
+    "mask": "255.255.255.0",
+    "gateway": "0.0.0.0",
+    "type": "route",
+}
 
 
 class Interface(ItemBase):

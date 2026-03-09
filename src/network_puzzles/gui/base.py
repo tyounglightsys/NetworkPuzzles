@@ -171,19 +171,19 @@ def location_to_pos(location: iter, size) -> tuple:
     """Converts EduNetworkBuilder's location coords to relative layout's position."""
     if len(location) != 2:
         raise ValueError(f"GUI: location length != 2: {location}")
-    logging.debug(f"Base: input location: {location}")
+    # logging.debug(f"Base: input location: {location}")
     # Get relative location (invert y-coord).
     effective_rel_pos = (
         location[0] / LOCATION_MAX_X,
         1 - (location[1] / LOCATION_MAX_Y),
     )
-    logging.debug(f"Base: effective area rel pos: {effective_rel_pos}")
+    # logging.debug(f"Base: effective area rel pos: {effective_rel_pos}")
     # Calculate proportial pos within non-padded puzzle area.
     effective_pos = rel_pos_to_pos(effective_rel_pos, get_effective_size(size))
-    logging.debug(f"Base: effective area pos: {effective_pos}")
+    # logging.debug(f"Base: effective area pos: {effective_pos}")
     # Calculate abs pos by taking padding into account.
     pos = (PADDING + effective_pos[0], PADDING + effective_pos[1])
-    logging.debug(f"Base: {location=} -> {pos=}")
+    # logging.debug(f"Base: {location=} -> {pos=}")
     return pos
 
 
@@ -243,6 +243,7 @@ def rel_pos_to_pos(rel_pos, size) -> tuple:
 
 
 def print_layout_info(app):
+    return
     # Layout debug logging.
     layout = app.root.ids.layout
     logging.debug(f"Base: {layout.__class__.__name__} corner: {layout.pos}")
