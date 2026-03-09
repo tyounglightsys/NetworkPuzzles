@@ -709,14 +709,14 @@ class Parser:
                     "Cannot change the encryption on this nic.  Puzzle has it locked."
                 )
                 return False
-            nic.Nic(tnic).encryption = newkey
+            nic.Nic(tnic).encryption_key = newkey
         else:
             # We are setting the encryption on a WAP, hopefully
             didsomething = False
             for onenic in dev_obj.all_nics():
                 tnic = nic.Nic(onenic)
                 if tnic.type == "wport":
-                    tnic.encryption = newkey
+                    tnic.encryption_key = newkey
                     didsomething = True
             if didsomething:
                 session.print(f"Key on {dev_obj.hostname} set to {newkey}")

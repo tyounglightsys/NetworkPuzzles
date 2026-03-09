@@ -122,13 +122,14 @@
         SingleRowLayout:
             RightAlignedLabel:
                 text: _("VPN Endpoint")
-            CheckBoxLabel:
+            ValueInput:
                 text: root.nic.endpoint
+                on_focus: root.set_endpoint(self)
         SingleRowLayout:
             RightAlignedLabel:
                 text: _("Encryption key")
             ValueInput:
-                text: root.nic.encryption
+                text: root.nic.encryption_key
                 on_focus: root.set_encryption_key(self)
         Widget:
         ActionPopupButtons:

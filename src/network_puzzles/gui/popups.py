@@ -168,20 +168,31 @@ class EditNicPopup(ActionPopup):
         self.device_popup = device_popup
         self.nic = nic
         super().__init__(**kwargs)
+        self.encryption_key_orig = self.nic.encryption_key
+        self.endpoint_orig = self.nic.endpoint
 
     def on_okay(self):
-        # set firewall1 key vpn0 Key
-        self.device_popup.puzzle_commands.append(
-            f"set {self.device_popup.device.hostname} key {self.device_popup.selected_nic} {self.nic.encryption}"
-        )
+        if self.nic.encryption_key != self.encryption_key_orig:
+            # set firewall1 key vpn0 Key
+            self.device_popup.puzzle_commands.append(
+                f"set {self.device_popup.device.hostname} key {self.device_popup.selected_nic} {self.nic.encryption_key}"
+            )
+        if self.nic.endpoint != self.endpoint_orig:
+            self.device_popup.puzzle_commands.append(
+                f"set {self.device_popup.device.hostname} endpoint {self.device_popup.selected_nic} {self.nic.endpoint}"
+            )
         super().on_okay()
 
     def on_uses_dhcp(self, inst):
         self.nic.uses_dhcp = inst.active
 
+    def set_endpoint(self, input_inst):
+        if not input_inst.focus:
+            self.nic.endpoint = input_inst.text
+
     def set_encryption_key(self, input_inst):
         if not input_inst.focus:
-            self.nic.encryption = input_inst.text
+            self.nic.encryption_key = input_inst.text
 
 
 class EditRoutesPopup(ActionPopup):

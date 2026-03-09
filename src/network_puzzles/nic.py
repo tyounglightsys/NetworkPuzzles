@@ -56,7 +56,7 @@ class Nic(ItemBase):
 
     @property
     def name(self):
-        return self.json.get("nicname")
+        return self.json.get("nicname", "")
 
     @property
     def type(self):
@@ -68,19 +68,19 @@ class Nic(ItemBase):
 
     @property
     def uniqueidentifier(self):
-        return self.json.get("uniqueidentifier")
+        return self.json.get("uniqueidentifier", "")
 
     @property
-    def encryption(self):
-        return self.json.get("encryptionkey")
+    def encryption_key(self):
+        return self.json.get("encryptionkey", "")
 
-    @encryption.setter
-    def encryption(self, value: str):
+    @encryption_key.setter
+    def encryption_key(self, value: str):
         self.json["encryptionkey"] = value
 
     @property
     def ssid(self):
-        return self.json.get("ssid")
+        return self.json.get("ssid", "")
 
     @ssid.setter
     def ssid(self, value: str):
@@ -88,15 +88,17 @@ class Nic(ItemBase):
 
     @property
     def endpoint(self):
-        if self.json.get("tunnelendpoint") is None:
-            self.json.get["tunnelendpoint"] = {}
-        return self.json.get("tunnelendpoint").get("ip")
+        return self.tunnel_endpoint.get("ip")
 
     @endpoint.setter
     def endpoint(self, value: str):
+        self.tunnel_endpoint["ip"] = value
+
+    @property
+    def tunnel_endpoint(self):
         if self.json.get("tunnelendpoint") is None:
             self.json.get["tunnelendpoint"] = {}
-        self.json["tunnelendpoint"]["ip"] = value
+        return self.json.get("tunnelendpoint")
 
     @property
     def uses_dhcp(self):
