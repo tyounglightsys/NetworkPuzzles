@@ -71,11 +71,11 @@ class Nic(ItemBase):
         return self.json.get("uniqueidentifier")
 
     @property
-    def encryption(self):
+    def encryption_key(self):
         return self.json.get("encryptionkey")
 
-    @encryption.setter
-    def encryption(self, value: str):
+    @encryption_key.setter
+    def encryption_key(self, value: str):
         self.json["encryptionkey"] = value
 
     @property
