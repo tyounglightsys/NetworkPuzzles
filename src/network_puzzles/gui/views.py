@@ -1,3 +1,5 @@
+import logging
+
 from kivy.uix.recycleview import RecycleView
 
 from .. import session
@@ -51,8 +53,29 @@ class PuzzlesRecView(AppRecView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.app.update_puzzle_list()
-        self.selected_item = None
         self.update_data()
 
     def update_data(self):
         self.data = [{"text": n} for n in self.app.filtered_puzzlelist]
+
+
+class RoutesRecView(AppRecView):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.routes = None
+        self.update_data()
+
+    def set_routes(self, routes):
+        self.routes = routes
+        self.update_data()
+
+    def update_data(self):
+        def get_text(data):
+            ip = data.get("ip")
+            mask = data.get("mask")
+            gw = data.get("gateway")
+            return f"IP:{ip:<20.20} Mask:{mask:<20.20} GW:{gw:<20.20}"
+
+        if self.routes is not None:
+            logging.debug(f"Views: {len(self.routes)=}")
+            self.data = [{"text": get_text(n)} for n in self.routes]

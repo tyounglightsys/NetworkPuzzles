@@ -31,6 +31,7 @@ from .popups import (
     EditDhcpPopup,
     EditIpPopup,
     EditNicPopup,
+    EditRoutesPopup,
     PingHostPopup,
 )
 
@@ -321,7 +322,7 @@ class EditDevicePopup(ActionPopup):
             )
 
     def on_routes(self):
-        raise NotImplementedError
+        EditRoutesPopup(self).open()
 
     def on_vlans(self):
         raise NotImplementedError

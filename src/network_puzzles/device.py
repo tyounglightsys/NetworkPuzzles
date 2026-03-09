@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from . import packet, session
 from .core import ItemBase
-from .interface import Interface
+from .interface import UNSET_IP, Interface
 from .link import Link
 from .nic import Nic
 
@@ -201,6 +201,18 @@ class Device(ItemBase):
         if not self.powered_on:
             commands.append(f"set {self.hostname} power on")
         return commands
+
+    def get_routes_from_nics(self):
+        nic_routes = []
+        for nic in self.all_nics():
+            n = Nic(nic)
+            for interface in n.interfaces:
+                iface = Interface(interface)
+                # Use current IP config for gateway.
+                if iface.ip_data.get("gateway") == UNSET_IP:
+                    iface.ip_data["gateway"] = self.gateway
+                nic_routes.append(iface.ip_data)
+        return nic_routes
 
     def mac_list(self):
         """
