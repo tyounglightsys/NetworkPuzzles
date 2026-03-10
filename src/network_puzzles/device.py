@@ -974,19 +974,22 @@ class Device(ItemBase):
                         and orig_dest != ""
                         and orig_dest != pkt.destination_ip
                     ):
+                        orig_dest_hostname = orig_dest.get("hostname")
                         mark_test_as_completed(
                             self.hostname,
-                            orig_dest,
+                            orig_dest_hostname,
                             "SuccessfullyPings",
-                            f"Successfully pinged from {self.hostname} to {orig_dest}",
+                            f"Successfully pinged from {self.hostname} to {orig_dest_hostname}",
                         )
-                        session.puzzle.RegisterPingTestSuccess(self.hostname, orig_dest)
+                        session.puzzle.RegisterPingTestSuccess(
+                            self.hostname, orig_dest_hostname
+                        )
                         # We mark this as complete too, but the test for 'WithoutLoop' happens later
                         mark_test_as_completed(
                             self.hostname,
                             orig_dest,
                             "SuccessfullyPingsWithoutLoop",
-                            f"Successfully pinged from {self.hostname} to {orig_dest} without a network loop.",
+                            f"Successfully pinged from {self.hostname} to {orig_dest_hostname} without a network loop.",
                         )
 
                     mark_test_as_completed(
