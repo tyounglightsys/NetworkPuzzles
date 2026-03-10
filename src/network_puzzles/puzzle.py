@@ -158,7 +158,8 @@ class Puzzle(ItemBase):
                             f"create link {test.get('shost')} {test.get('dhost')}"
                         )
                 case (
-                    "SuccessfullyPings"
+                    "FailedPing"
+                    | "SuccessfullyPings"
                     | "SuccessfullyPingsAgain"
                     | "SuccessfullyPingsWithoutLoop"
                 ):
