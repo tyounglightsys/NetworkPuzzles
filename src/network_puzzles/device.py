@@ -987,7 +987,7 @@ class Device(ItemBase):
                         # We mark this as complete too, but the test for 'WithoutLoop' happens later
                         mark_test_as_completed(
                             self.hostname,
-                            orig_dest,
+                            orig_dest_hostname,
                             "SuccessfullyPingsWithoutLoop",
                             f"Successfully pinged from {self.hostname} to {orig_dest_hostname} without a network loop.",
                         )
