@@ -204,12 +204,17 @@ class GUI(UI):
         self.redraw()
 
     def process_packets(self, tick_pct):
-        # clear all connection entries in preparation to process all packets
-        # session.puzzle.ClearAllConnectionEntries()
+        # NOTE: In the GUI this runs multiple times per second, regardless of
+        # whether there are active packets or not. This affects how some
+        # processing, such as clearing of connection entries, is handled.
+
         # If we created packets, process them until done.
         if self.puzzle.packets_need_processing():
+            # NOTE: Can't clear all connection entries in preparation to
+            # process all packets in one go; this has to be done connection by
+            # connection at the moment it's "consumed."
             session.puzzle.process_packets(tick_pct=tick_pct)
-        session.puzzle.AfterPacketsNoticeFailedPings()
+            session.puzzle.AfterPacketsNoticeFailedPings()
 
     def quit(self):
         self.app.stop()

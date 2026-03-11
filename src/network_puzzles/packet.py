@@ -27,7 +27,7 @@ class Packet(ItemBase):
         "statusmessage": "",
         "payload": "",
         "justcreated": False,
-        "key": "", #encryption key; used for VPNs
+        "key": "",  # encryption key; used for VPNs
         "packetlocation": "",  # where the packet is.  Should almost always be a link name
         "packetDirection": 0,  # Which direction are we going on a network link.  1=src to dest, 2=dest to src
         "packetDistance": 0,  # The % distance the packet has traversed.  This is incremented until it reaches 100%
@@ -175,8 +175,12 @@ class Packet(ItemBase):
 
     @payload.setter
     def payload(self, value):
-        #the payload will often be a packet, or a dict
-        if not isinstance(value, dict) and not isinstance(value, Packet) and value is not None:
+        # the payload will often be a packet, or a dict
+        if (
+            not isinstance(value, dict)
+            and not isinstance(value, Packet)
+            and value is not None
+        ):
             raise ValueError(f"Invalid type for payload: {type(value)}")
         self.json["payload"] = value
 
@@ -233,13 +237,15 @@ class Packet(ItemBase):
 
     def remove_from_packet_list(self):
         """Convenience function for managing packets."""
-        if 'payload' in self.json and isinstance(self.json["payload"], Packet):
-            #the payload is a packet.  Kill that packet the same way this was (whether failed or done)
+        if "payload" in self.json and isinstance(self.json["payload"], Packet):
+            # the payload is a packet.  Kill that packet the same way this was (whether failed or done)
             self.json["payload"].status = self.status
             self.json["payload"].remove_from_packet_list()
-        #if self in self.session.puzzle.packets:
+        # if self in self.session.puzzle.packets:
         self.session.puzzle.packets.remove(self)
-        logging.debug(f"removed packet.  Packets left: {len(self.session.puzzle.packets)}")
+        logging.debug(
+            f"removed packet.  Packets left: {len(self.session.puzzle.packets)}"
+        )
 
     def apply_possible_damage(self, tick_pct):
         """Damage the packet if near enough to microwave (wireless connection) or light (wired connection)."""
@@ -250,7 +256,7 @@ class Packet(ItemBase):
                 f"Unable to apply damage because no `Link` found for `Packet`: {self.json}"
             )
             return
-        
+
         # List damage-causing devices in puzzle.
         risky_devices = []
         for dev_json in self.session.puzzle.devices:
@@ -334,6 +340,9 @@ class Packet(ItemBase):
         src_nic_data = device.getDeviceNicFromLinkNicRec(src_nic_myid)
         dest_nic_data = device.getDeviceNicFromLinkNicRec(dest_nic_myid)
         return (Nic(src_nic_data), Nic(dest_nic_data))
+
+    def __str__(self):
+        return f"<packet: {self.packettype} from {self.source_ip} to {self.destination_ip}>"
 
 
 def distance(sx, sy, dx, dy):

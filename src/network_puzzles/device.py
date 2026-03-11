@@ -84,6 +84,20 @@ class Device(ItemBase):
         self.json["hostname"] = name
 
     @property
+    def ip_connections(self):
+        if self.json.get("IPConnections") is None:
+            self.json["IPConnections"] = []  # make an empty array
+        return self.json.get("IPConnections")
+
+    @ip_connections.setter
+    def ip_connections(self, value):
+        if not isinstance(value, list):
+            raise ValueError(
+                f"Cannot set {self.__class__.__name__}.ip_connections to non-list value: {value}"
+            )
+        self.json["IPConnections"] = value
+
+    @property
     def is_dhcp(self) -> bool:
         if self.json.get("isdhcp", "").lower() in ("true", "yes"):
             value = True
@@ -636,8 +650,6 @@ class Device(ItemBase):
         src_ip: the IP address of the source
         packettype: 'ping, ping-response, etc.
         response: One of  none|accept|masq|drop|reject"""
-        if "IPConnections" not in self.json:
-            self.json["IPConnections"] = []  # make an empty array
 
         newrec = {
             "dest": packet.justIP(dest_ip),
@@ -646,7 +658,7 @@ class Device(ItemBase):
             "response": response.lower(),
             "masqsrc": packet.justIP(src_ip),
         }
-        self.json["IPConnections"].append(newrec)
+        self.ip_connections.append(newrec)
         return newrec
 
     def ReturnIPConnectionEntry(self, dest_ip, src_ip, packettype):
@@ -662,10 +674,7 @@ class Device(ItemBase):
         if packettype == "traceroute-request":
             check_type = "traceroute-response"
 
-        if "IPConnections" not in self.json:
-            self.json["IPConnections"] = []  # make an empty array
-            return None
-        for onerec in self.json["IPConnections"]:
+        for onerec in self.ip_connections[:]:
             logging.debug(
                 f"checking for response {packet.justIP(dest_ip)}, {packet.justIP(src_ip)} {packettype} check_type: {check_type}"
             )
@@ -678,19 +687,21 @@ class Device(ItemBase):
                 and onerec["packettype"] == packettype
             ):
                 # outbound packet
-                pass
+                continue
             if (
                 onerec["src"] == packet.justIP(dest_ip)
                 and onerec["dest"] == packet.justIP(src_ip)
                 and onerec["packettype"] == check_type
             ):
                 logging.debug("found one!")
+                # Connection has been consumed. Remove it now.
+                self.ip_connections.remove(onerec)
                 return onerec
 
         return None
 
     def ClearIPConnections(self):
-        self.json["IPConnections"] = []  # empty them
+        self.ip_connections = []
 
     def begin_ingress_on_nic(self, nic, pkt):
         """Begin the packet entering a device.  It enters via a nic, and then is processed.
@@ -749,7 +760,7 @@ class Device(ItemBase):
                 pkt.destination_ip, pkt.source_ip, pkt.packettype
             )
             if connection_info is not None:
-                logging.debug(f"Found a return packet {connection_info}")
+                logging.debug(f"Found a return packet: {connection_info}")
                 if connection_info["response"] == "masq":
                     logging.debug(
                         f"Packet was masqueraded.  Switching it back {connection_info['src']} -> {connection_info['masqsrc']}"
@@ -848,7 +859,7 @@ class Device(ItemBase):
             # nothing more to be done
             return False
         # We would check if it was frozen.  That is a test, not a status.  We do not have that check yet.
-        logging.debug(f"Receiving packet in {self.hostname} - {pkt.packettype}")
+        logging.debug(f"Receiving packet in {self.hostname}: {pkt}")
         # Deal with DHCP.
         # If it is a request and this is a DHCP server, serve an IP back.
         if pkt.packettype == "DHCP-Request":
@@ -919,7 +930,7 @@ class Device(ItemBase):
             self.json, pkt.destination_ip
         ):
             pkt.status = "done"
-            logging.info(f"Packet '{pkt.packettype}' arrived at destination")
+            logging.info(f"Packet '{pkt}' arrived at destination")
 
             # ping, send ping packet back
             if pkt.packettype == "ping":
@@ -1708,7 +1719,8 @@ def findLocalNICInterface(targetIPstring: str, nic, skip_zeros=False):
         return None
     if isinstance(nic, dict):
         nic = Nic(nic)  # change it to a class for the rest of the function
-    if isinstance(nic, dict) and nic["type"][0] == "port":
+    # if isinstance(nic, dict) and nic["type"][0] == "port":
+    if nic.type == "port":
         return None  # Ports have no IP address
     # loop through all the interfaces and return any that might be local.
     for oneIF in nic.interfaces:
@@ -1739,9 +1751,7 @@ def doInputFromLink(pkt, nic):
     dev = Device(thisDevice)
     pkt.in_host = dev.hostname
     logging.debug("-----------------------------------------")
-    logging.debug(
-        f"Packet arrived at device: {dev.hostname} TTL:{pkt.ttl} {pkt.packettype} {pkt.source_ip} -> {pkt.destination_ip}"
-    )
+    logging.debug(f"Packet arrived at device: {dev.hostname} TTL:{pkt.ttl} {pkt}")
     logging.debug("-----------------------------------------")
 
     # Do the simple stuff
@@ -2138,9 +2148,7 @@ def packetFromTo(src, dest, packettype: str):
         nPacket.destination_ip = dest  # this should now be the IP
         # If the IP is local, we use the MAC of the host. Otherwise it is the MAC of the gateway,
         nPacket.destination_mac = globalArpLookup(dest)
-        logging.debug(
-            f"Packet created: {nPacket.source_ip} -> {nPacket.destination_ip}"
-        )
+        logging.debug(f"Packet created: {nPacket}")
         if ip_is_broadcast_for_device(src, dest):
             # It is a broadcast, use the broadcast MAC
             logging.debug("It is a broadcast, using broadcast MAC")
