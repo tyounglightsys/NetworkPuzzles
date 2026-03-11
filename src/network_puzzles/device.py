@@ -57,6 +57,30 @@ class Device(ItemBase):
             self.powered_on = True  # when it blows up, the power gets turned off
 
     @property
+    def dhcp_list(self):
+        """Returns a dict of DHCP entries."""
+        if self.json.get("dhcp_list") is None:
+            self.json["dhcplist"] = {}
+        return self.json.get("dhcplist")
+
+    @property
+    def does_vlans(self):
+        """Return `True` if the device does VLANs, `False` if it does not."""
+        match self.mytype:
+            case "net_switch" | "firewall" | "router":
+                return True
+        return False
+
+    @property
+    def firewall_rules(self):
+        current_rules = self.json.get("firewallrule")
+        if current_rules is None:
+            self.json["firewallrule"] = list()
+        elif not isinstance(current_rules, list):
+            self.json["firewallrule"] = [current_rules]
+        return self.json.get("firewallrule")
+
+    @property
     def frozen(self):
         return session.puzzle.device_is_frozen(self.json)
 
@@ -113,6 +137,21 @@ class Device(ItemBase):
         self.json["isdhcp"] = value
 
     @property
+    def is_firewall(self) -> bool:
+        """Returns `True` if firewall is activated, `False` if not."""
+        if self.json.get("hasadvfirewall", "").lower() in ("true", "yes"):
+            value = True
+        else:
+            value = False
+        return value
+
+    @is_firewall.setter
+    def is_firewall(self, value):
+        if isinstance(value, bool):
+            value = str(value)
+        self.json["hasadvfirewall"] = value
+
+    @property
     def is_invisible(self) -> bool:
         if self.json.get("isinvisible", "").lower() in ("true", "yes"):
             # The device is hidden.
@@ -167,7 +206,16 @@ class Device(ItemBase):
         self.json["poweroff"] = value
 
     @property
+    def routes_packets(self):
+        """Return `True` if the device routes packets, `False` if it does not."""
+        match self.mytype:
+            case "router" | "wrouter" | "firewall":
+                return True
+        return False
+
+    @property
     def routes(self):
+        """Returns a list of static routes."""
         if self.json.get("route") is None:
             self.json["route"] = []
         if not isinstance(self.json.get("route"), list):
@@ -448,31 +496,25 @@ class Device(ItemBase):
                     f"route: {oneroute['ip']}/{oneroute['mask']} GW:{oneroute['gateway']}"
                 )
 
-        if len(self.AllFirewallRules()) > 0:
+        if len(self.firewall_rules) > 0:
             session.print("Firewall Rules:")
-            for onerule in self.AllFirewallRules():
+            for onerule in self.firewall_rules:
                 session.print(
                     f"  {onerule.get('source')} - {onerule.get('destination')} -> {onerule.get('action')}"
                 )
 
     # firewall pieces
     @property
-    def CanDoFirewall(self):
+    def does_firewall(self):
+        """Return `True` if the device does firewalls, `False` if it does not."""
         # If it does not exist at all
-        if self.mytype == "firewall":
-            return True
-        if self.mytype == "wrouter":
+        if self.mytype in ["firewall", "wrouter"]:
             return True
         return False
 
     @property
     def HasAdvancedFirewall(self):
-        # If it does not exist at all
-        if "firewallrule" not in self.json:
-            return False
-        if len(self.json.get("firewallrule")) == 0:
-            return False
-        return True
+        return len(self.firewall_rules) > 0
 
     def AutoJoinWireless(self):
         """If the device has a wlan port, create links between the device and
@@ -577,20 +619,11 @@ class Device(ItemBase):
         # If we get here, we were unable to autojoin.
         return False
 
-    def AllFirewallRules(self):
-        if not self.HasAdvancedFirewall:
-            # it is an empty list
-            return []
-        if not isinstance(self.json.get("firewallrule"), list):
-            # make sure it is a list.
-            self.json["firewallrule"] = [self.json.get("firewallrule")]
-        return self.json["firewallrule"]
-
     def AdvFirewallAllows(self, InInterface: str, OutInterface: str):
         if not self.HasAdvancedFirewall:
             return True  # We can go out the firewall if no rules
         # logging.debug("Testing firewall rule. in {InInterface} - out {OutInterface}")
-        for onerule in self.AllFirewallRules():
+        for onerule in self.firewall_rules:
             if (
                 onerule.get("source") == InInterface
                 and onerule.get("destination") == OutInterface
@@ -609,7 +642,7 @@ class Device(ItemBase):
         )
         # if we have a rule with the same src/dest, we replace the target
         # if not, we add a new rule with the specified info
-        for onerule in self.AllFirewallRules():
+        for onerule in self.firewall_rules:
             if (
                 onerule.get("source") == InInterface
                 and onerule.get("destination") == OutInterface
@@ -631,7 +664,7 @@ class Device(ItemBase):
         )
         # if we have a rule with the same src/dest/targer, we drop it
         # if not, we return "false"
-        for onerule in self.AllFirewallRules():
+        for onerule in self.firewall_rules:
             if (
                 onerule.get("source") == InInterface
                 and onerule.get("destination") == OutInterface
@@ -787,7 +820,7 @@ class Device(ItemBase):
         if (
             pkt.destination_mac == nic.mac
             or packet.is_broadcast_mac(pkt.destination_mac)
-            or routesPackets(self.json)
+            or self.routes_packets
             or self.is_wireless_forwarder
             or nic.type == "port"
             or nic.type == "wport"
@@ -894,9 +927,7 @@ class Device(ItemBase):
                 return True
 
         # If the packet is destined for here, process that
-        # print("Checking destination.  Looking for " + packet.justIP(pkt.destination_ip))
-        # print("   Checking against" + str(allIPStrings(thisDevice)))
-        if routesPackets(self.json) or deviceHasIP(self.json, pkt.destination_ip):
+        if self.routes_packets or deviceHasIP(self.json, pkt.destination_ip):
             # decrement the ttl with every router
             pkt.ttl -= 1
             if pkt.ttl <= 0:
@@ -1090,7 +1121,7 @@ class Device(ItemBase):
             # If it is a wireless router, we might route the packet out the WAN too
 
         # if the packet is not done and we route, route
-        if pkt.status != "done" and routesPackets(self.json):
+        if pkt.status != "done" and self.routes_packets:
             # print("routing")
             if not packet.is_broadcast_mac(pkt.destination_mac):
                 # we do not route broadcast packets
@@ -1228,22 +1259,6 @@ def routesPackets(deviceRec):
     """return true if the device routes packets, false if it does not"""
     match deviceRec["mytype"]:
         case "router" | "wrouter" | "firewall":
-            return True
-    return False
-
-
-def doesVLANs(deviceRec):
-    """return true if the device does vlans, false if it does not"""
-    match deviceRec["mytype"]:
-        case "net_switch" | "firewall" | "router":
-            return True
-    return False
-
-
-def servesDHCP(deviceRec):
-    """return true if the device can serve dhcp, false if it can not"""
-    match deviceRec["mytype"]:
-        case "firewall" | "wrouter" | "server":
             return True
     return False
 
@@ -1803,22 +1818,23 @@ def beginIngressOnInterface(pkt, interfaceRec):
 
 
 def send_out_hubswitch(thisDevice, pkt, nic=None):
+    t_device = Device(thisDevice)
+
     # Ensure Packet object.
     if not isinstance(pkt, packet.Packet):
         raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
     # We loop through all nics. (minus the one we came in from)
     onlyport = ""
-    if thisDevice.get("mytype") == "net_switch":
-        if pkt.destination_mac in thisDevice.get("port_arps", {}):
+    if t_device.mytype == "net_switch":
+        if pkt.destination_mac in t_device.json.get("port_arps", {}):
             # we just send this out the one port.
-            onlyport = thisDevice.get("port_arps").get(pkt.destination_mac)
+            onlyport = t_device.json.get("port_arps").get(pkt.destination_mac)
 
-    logging.debug(f"Sending packet out switch {thisDevice.get('hostname')}")
-    t_device = Device(thisDevice)
+    logging.debug(f"Sending packet out switch {t_device.hostname}")
 
     # print("We are forwarding.")
-    for onenic in thisDevice["nic"]:
+    for onenic in t_device.all_nics():
         n = Nic(onenic)
         # we duplicate the packet and send it out each port-type
         # find the link connected to the port
@@ -1840,7 +1856,7 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
                 # Reset distance to the beginning of outgoing link.
                 tpacket.distance = 0
                 # Set direction.
-                if tlink["SrcNic"]["hostname"] == thisDevice.get("hostname"):
+                if tlink["SrcNic"]["hostname"] == t_device.hostname:
                     tpacket.direction = 1  # Src to Dest
                 else:
                     tpacket.direction = 2  # Dest to Source
@@ -1848,23 +1864,21 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
 
     # The packet that came in gets killed since it was replicated everywhere else.
     # but only if we are a not a router.
-    if not routesPackets(thisDevice):
+    if not t_device.routes_packets:
         pkt.status = "done"
         return True
 
 
 def makeDHCPResponse(pkt, thisDevice, nic):
+    t_device = Device(thisDevice)
     # Ensure Packet object.
     if not isinstance(pkt, packet.Packet):
         raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
-    if "dhcplist" not in thisDevice:
-        thisDevice["dhcplist"] = {}
-
     tnic = nic
     if nic.type == "port":
         # We want to grab stuff from the management interface
-        tnic = Nic(Device(thisDevice).nic_from_name("management_interface0"))
+        tnic = Nic(t_device.nic_from_name("management_interface0"))
         logging.debug(f"The nic is now {nic.name}")
 
     inboundip = tnic.interfaces[0]["myip"]["ip"]
@@ -1873,7 +1887,7 @@ def makeDHCPResponse(pkt, thisDevice, nic):
     )
     iprange = None
     available_ip = ""  # start with it empty.  Fill it if we can
-    for onerange in thisDevice["dhcprange"]:
+    for onerange in t_device.json["dhcprange"]:
         if onerange["ip"] == inboundip:
             iprange = onerange
 
@@ -1890,7 +1904,7 @@ def makeDHCPResponse(pkt, thisDevice, nic):
         for i in range(rangestart, rangeend):
             newip = ipprepend + str(i)
             found = False
-            for dhcpentry in thisDevice["dhcplist"].values():
+            for dhcpentry in t_device.dhcp_list.values():
                 if dhcpentry == newip:
                     found = True
                     break
@@ -1898,15 +1912,15 @@ def makeDHCPResponse(pkt, thisDevice, nic):
                 available_ip = newip
                 break
     # Now, check to see if we have an entry already.
-    if pkt.source_mac in thisDevice["dhcplist"]:
+    if pkt.source_mac in t_device.dhcp_list:
         # we already have an entry. Use it
-        available_ip = thisDevice["dhcplist"][pkt.source_mac]
+        available_ip = t_device.dhcp_list.get(pkt.source_mac)
     else:
         logging.debug(f"DHCP: Making an IP reservation {available_ip} {pkt.source_mac}")
 
     if available_ip != "":
         # stash it.  if it already exists, we use the same value.
-        thisDevice["dhcplist"][pkt.source_mac] = available_ip
+        t_device.dhcp_list[pkt.source_mac] = available_ip
         # Now, make a new DHCP response packet
         nPacket = packet.Packet()
         nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
@@ -1917,16 +1931,16 @@ def makeDHCPResponse(pkt, thisDevice, nic):
         nPacket.payload = {
             "ip": available_ip,
             "subnet": tnic.interfaces[0]["myip"]["mask"],
-            "gateway": thisDevice["gateway"]["ip"],
+            "gateway": t_device.json["gateway"]["ip"],
         }
         # if the dhcp server is a router/firewall, use the nic IP as the gateway
-        if routesPackets(thisDevice):
+        if t_device.routes_packets:
             nPacket.payload["gateway"] = inboundip
         destlink = nic.get_connected_link()
         nPacket.packet_location = destlink["hostname"]
         logging.debug(f"  The DHCP packet is: {nPacket.json}")
         logging.debug(f"  And it is being sent out the link: {destlink}")
-        if destlink["SrcNic"]["hostname"] == thisDevice["hostname"]:
+        if destlink["SrcNic"]["hostname"] == t_device.hostname:
             nPacket.direction = 1  # Src to Dest
         else:
             nPacket.direction = 2  # Dest to Source
