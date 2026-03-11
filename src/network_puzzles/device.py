@@ -985,7 +985,10 @@ class Device(ItemBase):
                         and orig_dest != ""
                         and orig_dest != pkt.destination_ip
                     ):
-                        orig_dest_hostname = orig_dest.get("hostname")
+                        if isinstance(orig_dest, dict):
+                            orig_dest_hostname = orig_dest.get("hostname")
+                        else:
+                            orig_dest_hostname = orig_dest
                         mark_test_as_completed(
                             self.hostname,
                             orig_dest_hostname,
