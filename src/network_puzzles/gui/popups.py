@@ -30,6 +30,12 @@ class ActionPopup(ThemedPopup):
         self.dismiss()
 
 
+class DevicePopup(ActionPopup):
+    def __init__(self, device=None, **kwargs):
+        self.device = device
+        super().__init__(**kwargs)
+
+
 class BaseIpPopup(ActionPopup):
     """Base class for IP-address-related popups."""
 
@@ -52,9 +58,8 @@ class BaseIpPopup(ActionPopup):
             self.ip_address.gateway = input_inst.text
 
 
-class ChooseNicPopup(ActionPopup):
-    def __init__(self, devicew, **kwargs):
-        self.device = devicew
+class ChooseNicPopup(DevicePopup):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.selected_nic = None
         free_nics = [n for n in self.device.nics if n.get_connected_link() is None]
@@ -79,9 +84,8 @@ class DeviceCommandsPopup(ThemedPopup):
     pass
 
 
-class EditDhcpPopup(ActionPopup):
-    def __init__(self, devicew, **kwargs):
-        self.device = devicew
+class EditDhcpPopup(DevicePopup):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._add_dhcp_configs()
 
@@ -147,15 +151,19 @@ class EditDhcpPopup(ActionPopup):
             self.ids.dhcp_configs_layout.add_widget(bl)
 
 
+class EditFirewallPopup(DevicePopup):
+    pass
+
+
 class EditIpPopup(BaseIpPopup):
-    def __init__(self, device_popup, ip_address, **kwargs):
-        super().__init__(ip_address=ip_address, **kwargs)
+    def __init__(self, device_popup, **kwargs):
+        super().__init__(**kwargs)
         self.ids.gateway_input.disabled = True
         self.device_popup = device_popup
 
     def on_okay(self):
         # Add updating command.
-        self.device_popup.puzzle_commands.append(
+        self.app.commands_queue.append(
             f"set {self.device_popup.device.hostname} {self.device_popup.selected_nic} {self.ip_address.address}/{self.ip_address.netmask}"
         )
         # Update IPs in IPs list.
@@ -174,11 +182,11 @@ class EditNicPopup(ActionPopup):
     def on_okay(self):
         if self.nic.encryption_key != self.encryption_key_orig:
             # set firewall1 key vpn0 Key
-            self.device_popup.puzzle_commands.append(
+            self.app.commands_queue.append(
                 f"set {self.device_popup.device.hostname} key {self.device_popup.selected_nic} {self.nic.encryption_key}"
             )
         if self.nic.endpoint != self.endpoint_orig:
-            self.device_popup.puzzle_commands.append(
+            self.app.commands_queue.append(
                 f"set {self.device_popup.device.hostname} endpoint {self.device_popup.selected_nic} {self.nic.endpoint}"
             )
         super().on_okay()
@@ -248,11 +256,7 @@ class NewRoutePopup(BaseIpPopup):
         super().on_okay()
 
 
-class PingHostPopup(ActionPopup):
-    def __init__(self, dev, **kwargs):
-        self.device = dev
-        super().__init__(**kwargs)
-
+class PingHostPopup(DevicePopup):
     def on_okay(self, dest):
         self.app.ui.parse(f"ping {self.device.hostname} {dest}")
         super().on_okay()
