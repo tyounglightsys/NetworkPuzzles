@@ -280,11 +280,10 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
 
 
 class EditDevicePopup(ActionPopup):
-    # TODO: Decide which changes should be made immediately and which ones
-    # should only be made when clicking "Okay". Consider: add/remove NICs,
-    # add/remove IPs, enable/disable DHCP/firewall, configure DHCP/firewall. One
-    # idea is on "Cancel" an equal number of "redo" functions is run that
-    # correspond to the number of commands run since the Popup was opened.
+    # TODO: Refactor so that all changes happen immediately, while saving the
+    # previous state in "history". Each popup will then need to save the current
+    # state at the moment the window was opened, so that "Cancel" will return
+    # the puzzle to that pre-modified state.
 
     def __init__(self, dev, **kwargs):
         # Use copy of data for displaying in UI b/c real changes will be
@@ -309,11 +308,8 @@ class EditDevicePopup(ActionPopup):
     def on_dhcp_button(self):
         EditDhcpPopup(self.device).open()
 
-    def on_dhcp_chkbox(self):
-        if self.dhcp_checkbox.state == "normal":  # unchecked
-            self.device.is_dhcp = False
-        elif self.dhcp_checkbox.state == "down":  # checked
-            self.device.is_dhcp = True
+    def on_dhcp_checkbox(self, inst, value):
+        self.device.is_dhcp = value
 
     def on_gateway(self):
         if not self.ids.gateway.focus:
@@ -321,7 +317,13 @@ class EditDevicePopup(ActionPopup):
                 f"set {self.device.hostname} gateway {self.ids.gateway.text}"
             )
 
-    def on_routes(self):
+    def on_firewall_button(self):
+        raise NotImplementedError
+
+    def on_firewall_checkbox(self, inst, value):
+        self.device.is_firewall = value
+
+    def on_routes_button(self):
         EditRoutesPopup(self).open()
 
     def on_vlans(self):
@@ -409,22 +411,41 @@ class EditDevicePopup(ActionPopup):
         super().on_okay()
 
     def _add_conditional_widgets(self):
-        if self.device.mytype in ["server"]:
+        """Add buttons and checkboxes for features that are only available for
+        certain types of devices."""
+        # Add DHCP.
+        if self.device.serves_dhcp:
             # Handle DHCP checkbox, label, and button.
-            l_cb = SingleRowLayout(
-                padding=0,
-            )
+            l_cb = SingleRowLayout(padding=0)
             if self.device.is_dhcp:
                 state = "down"
             else:
                 state = "normal"
-            self.dhcp_checkbox = DHCPCheckBox(size_hint_x=0.1, state=state)
+            self.dhcp_checkbox = ThemedCheckBox(size_hint_x=0.1, state=state)
+            self.dhcp_checkbox.bind(active=self.on_dhcp_checkbox)
             t = CheckBoxLabel(text=f"{_('DHCP Server')}", size_hint_x=0.4)
             b = ThemedButton(text=f"{_('Edit DHCP')}", on_release=self.on_dhcp_button)
             for w in [self.dhcp_checkbox, t, b]:
                 l_cb.add_widget(w)
             self.root.ids.left_panel.add_widget(l_cb)
-        if self.device.mytype in ["router", "switch"]:
+        # Add Firewall.
+        if self.device.does_firewall:
+            l_cb = SingleRowLayout(padding=0)
+            if self.device.is_firewall:
+                state = "down"
+            else:
+                state = "normal"
+            self.firewall_checkbox = FirewallCheckBox(size_hint_x=0.1, state=state)
+            self.firewall_checkbox.bind(active=self.on_firewall_checkbox)
+            t = CheckBoxLabel(text=f"{_('Firewall')}", size_hint_x=0.4)
+            b = ThemedButton(
+                text=f"{_('Firewall')}", on_release=self.on_firewall_button
+            )
+            for w in [self.firewall_checkbox, t, b]:
+                l_cb.add_widget(w)
+            self.root.ids.left_panel.add_widget(l_cb)
+        # Add VLANs.
+        if self.device.does_vlans:
             # Handle VLANs button.
             b = ThemedButton(text=f"{_('VLANs')}", on_release=self.on_vlans)
             self.root.ids.left_panel.add_widget(b)
@@ -473,3 +494,17 @@ class DHCPCheckBox(ThemedCheckBox):
     def on_activate(self):
         if self.popup:
             self.popup.on_dhcp_chkbox()
+
+
+class FirewallCheckBox(ThemedCheckBox):
+    @property
+    def popup(self):
+        w = self
+        while w:
+            if hasattr(w.parent, "on_firewall_chkbox"):
+                return w.parent
+            w = w.parent
+
+    def on_activate(self):
+        if self.popup:
+            self.popup.on_firewall_chkbox()
