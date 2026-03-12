@@ -169,8 +169,21 @@ class EditFirewallPopup(DevicePopup):
         if self.selected_rule:
             raise NotImplementedError
 
-    def on_new_rule(self):
+    def on_add_rule(self):
         raise NotImplementedError
+
+    def on_remove_rule(self):
+        if self.selected_rule:
+            logging.debug(f"Popups: {self.selected_rule=}")
+            rule_data = self.selected_rule.get("data")
+            src = rule_data.get("source")
+            dst = rule_data.get("destination")
+            action = rule_data.get("action").lower()
+            cmd = f"firewall {self.device.hostname} del {src} {dst} {action}"
+            # TODO: This will be obsolete when undo becomes based on states.
+            self.device.firewall_rules.remove(rule_data)
+            self.app.ui.parse(cmd)
+            self.ids.firewall_rules_list.update_data()
 
 
 class EditIpPopup(BaseIpPopup):

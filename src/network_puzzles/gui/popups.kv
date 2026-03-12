@@ -93,13 +93,16 @@
             ThemedButton:
                 text: "+"
                 id: add_button
+                on_release: root.on_add_rule()
             ThemedButton:
                 text: "-"
                 id: remove_button
+                on_release: root.on_remove_rule()
                 disabled: True
             ThemedButton:
                 text: _("Edit")
                 id: edit_button
+                on_release: root.on_edit_rule()
                 disabled: True
         Widget:
         ActionPopupButtons:
