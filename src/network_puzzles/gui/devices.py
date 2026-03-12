@@ -291,17 +291,8 @@ class EditDevicePopup(DevicePopup):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.selected_ip = None
-        self._selected_nic = None
+        self.selected_nic = None
         self._add_conditional_widgets()
-
-    @property
-    def selected_nic(self):
-        return self._selected_nic
-
-    @selected_nic.setter
-    def selected_nic(self, value):
-        # Remove "connected" character & MAC address from displayed value.
-        self._selected_nic = value.replace("*", ";").split(";")[0]
 
     def on_dhcp_button(self):
         EditDhcpPopup(device=self.device).open()
@@ -322,7 +313,7 @@ class EditDevicePopup(DevicePopup):
         self.device.is_firewall = value
 
     def on_routes_button(self):
-        EditRoutesPopup(self).open()
+        EditRoutesPopup(device=self.device).open()
 
     def on_vlans(self):
         raise NotImplementedError
@@ -334,8 +325,9 @@ class EditDevicePopup(DevicePopup):
 
     def on_ips_add(self):
         # Send correct NIC and interface data to IP Popup.
-        n = self.device.get_nic(self.selected_nic)
-        ip_config = self._get_ip_config_from_nic(n, n.name)
+        ip_config = self._get_ip_config_from_nic(
+            self.selected_nic, self.selected_nic.name
+        )
         if ip_config:
             EditIpPopup(self, ip_address=ip_config).open()
 
@@ -343,15 +335,12 @@ class EditDevicePopup(DevicePopup):
         if not self.selected_ip:
             logging.warning("Devices: No IP selected for editing.")
             return
-        ip_config = self._get_ip_config_from_nic(
-            self.device.get_nic(self.selected_nic), self.selected_ip
-        )
+        ip_config = self._get_ip_config_from_nic(self.selected_nic, self.selected_ip)
         if ip_config:
             EditIpPopup(self, ip_address=ip_config).open()
 
     def on_ips_remove(self):
-        n = self.device.get_nic(self.selected_nic)
-        ip_config = self._get_ip_config_from_nic(n, self.selected_ip)
+        ip_config = self._get_ip_config_from_nic(self.selected_nic, self.selected_ip)
         if ip_config:
             ip_config.address = "0.0.0.0"
             ip_config.netmask = "0.0.0.0"
@@ -360,12 +349,12 @@ class EditDevicePopup(DevicePopup):
             self._set_ips()
             # Add command to be applied.
             self.app.commands_queue.append(
-                f"set {self.device.hostname} {self.selected_nic} {ip_config.address}/{ip_config.netmask}"
+                f"set {self.device.hostname} {self.selected_nic.name} {ip_config.address}/{ip_config.netmask}"
             )
 
-    def on_nic_selection(self, selected_nic_text):
+    def on_nic_selection(self, selected_nic):
         self.selected_ip = None
-        self.selected_nic = selected_nic_text
+        self.selected_nic = selected_nic.get("data")
         self.root.ids.add_ip.disabled = False
         self.root.ids.edit_ip.disabled = True
         self.root.ids.remove_ip.disabled = True
@@ -377,20 +366,18 @@ class EditDevicePopup(DevicePopup):
         raise NotImplementedError
 
     def on_nics_edit(self):
-        EditNicPopup(self, self.device.get_nic(self.selected_nic)).open()
+        EditNicPopup(self.selected_nic, device=self.device).open()
 
     def on_nics_replace(self):
         # De-select label.
         for c in self.ids.nics_list.children[0].children:
-            if c.text.startswith(self.selected_nic):
+            if c.text.startswith(self.selected_nic.name):
                 c.selected = False
                 break
         # Replace NIC.
-        self.app.ui.parse(f"replace {self.device.hostname} {self.selected_nic}")
+        self.app.ui.parse(f"replace {self.device.hostname} {self.selected_nic.name}")
         # Update device with new data.
-        self.device = GuiDevice(
-            json_data=deepcopy(self.app.ui.get_device(self.device.hostname))
-        )
+        self.device = GuiDevice(json_data=deepcopy(self.device.json))
         # Update NIC list.
         self.ids.nics_list.update_data(self.device.nics, management=True)
 
@@ -472,6 +459,7 @@ class EditDevicePopup(DevicePopup):
         return "/" in value
 
     def _set_ips(self):
-        n = self.device.get_nic(self.selected_nic)
-        logging.debug(f"Devices: {n.name} ifaces: {n.interfaces}")
-        self.ids.ips_list.update_data(n.ip_addresses)
+        logging.debug(
+            f"Devices: {self.selected_nic.name} ifaces: {self.selected_nic.interfaces}"
+        )
+        self.ids.ips_list.update_data(self.selected_nic.ip_addresses)

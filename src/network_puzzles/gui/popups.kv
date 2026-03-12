@@ -37,9 +37,9 @@
     ThemedBoxLayout:
         orientation: "vertical"
         NICsRecView:
+            id: nics_list
             size_hint_y: 0.8
             root: root
-            id: nics_list
         ActionPopupButtons:
             on_cancel: root.on_cancel()
             on_okay: root.on_okay()
@@ -81,12 +81,37 @@
             on_cancel: root.on_cancel()
             on_okay: root.on_okay()
 
+<EditFirewallPopup>:
+    size_hint_x: 0.25
+    title: _("Edit Firewall configuration")
+    ThemedBoxLayout:
+        orientation: "vertical"
+        FirewallRulesRecView:
+            id: firewall_rules_list
+            root: root
+        SingleRowLayout:
+            ThemedButton:
+                text: "+"
+                id: add_button
+            ThemedButton:
+                text: "-"
+                id: remove_button
+                disabled: True
+            ThemedButton:
+                text: _("Edit")
+                id: edit_button
+                disabled: True
+        Widget:
+        ActionPopupButtons:
+            on_cancel: root.on_cancel()
+            on_okay: root.on_okay()
+
 <EditIpPopup>:
     title: _("Edit IP configuration")
 
 <EditNicPopup>:
     size_hint_x: 0.5
-    title: f"{_('Edit')} {root.nic.name}"
+    title: f"{_('Edit')} {self.device.hostname} > {self.nic.name}"
     ThemedBoxLayout:
         orientation: "vertical"
         SingleRowLayout:
@@ -137,22 +162,22 @@
             on_okay: root.on_okay()
 
 <EditRoutesPopup>:
-    title: f"{_('Routes')} ({root.device_popup.device.hostname})"
+    title: f"{_('Routes')} ({self.device.hostname})"
     size_hint: (0.5, 0.75)
     ThemedBoxLayout:
         orientation: "vertical"
-        # ScrollView w/selectable rows (2x-click to edit)
         CheckBoxLabel:
             text: _("Routes from NICs (read-only)")
         RoutesRecView:
             size_hint_y: 0.66
             id: nic_routes_list
+            root: root
         CheckBoxLabel:
             text: _("Static routes (editable)")
         RoutesRecView:
             size_hint_y: 0.33
             id: static_routes_list
-            on_touch_down: root.check_for_selection(self)
+            root: root
         SingleRowLayout:
             Widget:
                 size_hint_x: 0.5
@@ -195,7 +220,7 @@
             on_release: root.dismiss()
 
 <NewRoutePopup>:
-    title: f"{_('Create route')} ({self.routes_popup.device_popup.device.hostname})"
+    title: f"{_('Create route')} ({self.routes_popup.device.hostname})"
 
 <PingHostPopup>:
     size_hint: (0.5, 0.4)

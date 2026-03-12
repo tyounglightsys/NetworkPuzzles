@@ -2,7 +2,8 @@
     viewclass: 'SelectableLabel'
     bar_color: app.theme.detail
     bar_inactive_color: self.bar_color
-    bar_width: dp(3)
+    bar_width: dp(5)
+    effect_cls: "ScrollEffect"
     SelectableRecycleBoxLayout:
         orientation: 'vertical'
         default_size: None, dp(56)
@@ -11,6 +12,8 @@
         height: self.minimum_height
 
 <ThemedScrollView@ScrollView>:
+    bar_color: app.theme.detail
+    bar_inactive_color: self.bar_color
     bar_width: dp(5)
     effect_cls: "ScrollEffect"
     scroll_type: ['bars', 'content']

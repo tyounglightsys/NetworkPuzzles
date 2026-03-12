@@ -32,6 +32,8 @@ class ActionPopup(ThemedPopup):
 
 class DevicePopup(ActionPopup):
     def __init__(self, device=None, **kwargs):
+        if device is None:
+            raise ValueError('DevicePopup requires "device" kwarg.')
         self.device = device
         super().__init__(**kwargs)
 
@@ -65,12 +67,11 @@ class ChooseNicPopup(DevicePopup):
         free_nics = [n for n in self.device.nics if n.get_connected_link() is None]
         self.ids.nics_list.update_data(free_nics, management=False)
 
-    def on_nic_selection(self, selected_nic_text):
-        # Strip MAC info from NIC text.
-        self.selected_nic = selected_nic_text.split(";")[0]
+    def on_nic_selection(self, selected_nic):
+        self.selected_nic = selected_nic.get("data")
 
     def on_okay(self):
-        self.app.chosen_nic = self.selected_nic
+        self.app.chosen_nic = self.selected_nic.name
         super().on_okay()
 
 
@@ -152,7 +153,24 @@ class EditDhcpPopup(DevicePopup):
 
 
 class EditFirewallPopup(DevicePopup):
-    pass
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.selected_rule = None
+
+    def on_open(self):
+        self.ids.firewall_rules_list.update_data()
+
+    def on_rule_selection(self, rule_data):
+        self.selected_rule = rule_data
+        self.ids.edit_button.disabled = False
+        self.ids.remove_button.disabled = False
+
+    def on_edit_rule(self):
+        if self.selected_rule:
+            raise NotImplementedError
+
+    def on_new_rule(self):
+        raise NotImplementedError
 
 
 class EditIpPopup(BaseIpPopup):
@@ -164,16 +182,15 @@ class EditIpPopup(BaseIpPopup):
     def on_okay(self):
         # Add updating command.
         self.app.commands_queue.append(
-            f"set {self.device_popup.device.hostname} {self.device_popup.selected_nic} {self.ip_address.address}/{self.ip_address.netmask}"
+            f"set {self.device_popup.device.hostname} {self.device_popup.selected_nic.name} {self.ip_address.address}/{self.ip_address.netmask}"
         )
         # Update IPs in IPs list.
         self.device_popup._set_ips()
         super().on_okay()
 
 
-class EditNicPopup(ActionPopup):
-    def __init__(self, device_popup, nic, **kwargs):
-        self.device_popup = device_popup
+class EditNicPopup(DevicePopup):
+    def __init__(self, nic, **kwargs):
         self.nic = nic
         super().__init__(**kwargs)
         self.encryption_key_orig = self.nic.encryption_key
@@ -181,13 +198,12 @@ class EditNicPopup(ActionPopup):
 
     def on_okay(self):
         if self.nic.encryption_key != self.encryption_key_orig:
-            # set firewall1 key vpn0 Key
             self.app.commands_queue.append(
-                f"set {self.device_popup.device.hostname} key {self.device_popup.selected_nic} {self.nic.encryption_key}"
+                f"set {self.device.hostname} key {self.nic.name} {self.nic.encryption_key}"
             )
         if self.nic.endpoint != self.endpoint_orig:
             self.app.commands_queue.append(
-                f"set {self.device_popup.device.hostname} endpoint {self.device_popup.selected_nic} {self.nic.endpoint}"
+                f"set {self.device.hostname} endpoint {self.nic.name} {self.nic.endpoint}"
             )
         super().on_okay()
 
@@ -203,23 +219,22 @@ class EditNicPopup(ActionPopup):
             self.nic.encryption_key = input_inst.text
 
 
-class EditRoutesPopup(ActionPopup):
-    def __init__(self, device_popup, **kwargs):
-        self.device_popup = device_popup
+class EditRoutesPopup(DevicePopup):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.ids.nic_routes_list.set_routes(
-            self.device_popup.device.get_routes_from_nics()
-        )
-        self.ids.static_routes_list.set_routes(self.device_popup.device.routes)
+        self.selected_route = None
 
-    def check_for_selection(self, inst):
-        if inst.selected_item:
-            self.ids.edit_button.disabled = False
+    def on_open(self):
+        self.ids.nic_routes_list.update_data()
+        self.ids.static_routes_list.update_data(static=True)
+
+    def on_route_selection(self, route_data):
+        self.selected_route = route_data
+        self.ids.edit_button.disabled = False
 
     def on_edit(self):
         # FIXME
-        route = self.ids.static_routes_list.selected_item
-        logging.debug(f'TEST: "Edit" clicked; "{route}" selected')
+        logging.debug(f'TEST: "Edit" clicked; selected route: "{self.selected_route}"')
         raise NotImplementedError
 
     def on_new(self):
@@ -244,13 +259,13 @@ class NewRoutePopup(BaseIpPopup):
 
     def on_okay(self):
         # logging.debug(f"{self.ip_address=}")
-        dev = self.routes_popup.device_popup.device.hostname
+        dev = self.routes_popup.device.hostname
         ip = self.ip_address.address
         mask = self.ip_address.netmask
         gw = self.ip_address.gateway
         # Update intermediate popup data.
-        self.routes_popup.device_popup.device.route_add(f"{ip}/{mask}", gw)
-        self.routes_popup.ids.static_routes_list.update_data()
+        self.routes_popup.device.route_add(f"{ip}/{mask}", gw)
+        self.routes_popup.ids.static_routes_list.update_data(static=True)
         # Update puzzle data
         self.app.ui.parse(f"route {dev} add {ip}/{mask} {gw}")
         super().on_okay()
