@@ -25,10 +25,11 @@ from .buttons import CommandButton, ThemedButton
 from .labels import CheckBoxLabel
 from .layouts import SingleRowLayout, ThemedBoxLayout
 from .popups import (
-    ActionPopup,
     ChooseNicPopup,  # noqa: F401
     DeviceCommandsPopup,
+    DevicePopup,
     EditDhcpPopup,
+    EditFirewallPopup,
     EditIpPopup,
     EditNicPopup,
     EditRoutesPopup,
@@ -226,7 +227,7 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         for command in commands:
             if command == _("Ping [host]"):
                 cb = PingHostPopup(
-                    self, title=f"{_('Ping [host] from')} {self.hostname}"
+                    device=self, title=f"{_('Ping [host] from')} {self.hostname}"
                 ).open
             elif command == _("Edit"):
                 cb = self._edit_device
@@ -262,7 +263,14 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         return text
 
     def _edit_device(self, *args):
-        EditDevicePopup(title=f"{_('Edit')} {self.hostname}", dev=self).open()
+        # Use copy of data for displaying in UI b/c real changes will be
+        # applied via parser commands when "Okay" is clicked.
+        # TODO: Refactor so that all changes happen immediately, while saving the
+        # previous state in "history". Each popup will then need to save the current
+        # state at the moment the window was opened, so that "Cancel" will return
+        # the puzzle to that pre-modified state.
+        dev = GuiDevice(json_data=deepcopy(self.json))
+        EditDevicePopup(title=f"{_('Edit')} {self.hostname}", device=dev).open()
 
     def _set_image(self):
         devices = NETWORK_ITEMS.get("devices").get("user") | NETWORK_ITEMS.get(
@@ -279,50 +287,33 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
             lnk.hide(False)
 
 
-class EditDevicePopup(ActionPopup):
-    # TODO: Decide which changes should be made immediately and which ones
-    # should only be made when clicking "Okay". Consider: add/remove NICs,
-    # add/remove IPs, enable/disable DHCP/firewall, configure DHCP/firewall. One
-    # idea is on "Cancel" an equal number of "redo" functions is run that
-    # correspond to the number of commands run since the Popup was opened.
-
-    def __init__(self, dev, **kwargs):
-        # Use copy of data for displaying in UI b/c real changes will be
-        # applied via parser commands when "Okay" is clicked.
-        self.device = GuiDevice(json_data=deepcopy(dev.json))
+class EditDevicePopup(DevicePopup):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.selected_ip = None
-        self._selected_nic = None
-        self.puzzle_commands = list()
-        self.dhcp_checkbox = None
+        self.selected_nic = None
         self._add_conditional_widgets()
 
-    @property
-    def selected_nic(self):
-        return self._selected_nic
-
-    @selected_nic.setter
-    def selected_nic(self, value):
-        # Remove "connected" character & MAC address from displayed value.
-        self._selected_nic = value.replace("*", ";").split(";")[0]
-
     def on_dhcp_button(self):
-        EditDhcpPopup(self.device).open()
+        EditDhcpPopup(device=self.device).open()
 
-    def on_dhcp_chkbox(self):
-        if self.dhcp_checkbox.state == "normal":  # unchecked
-            self.device.is_dhcp = False
-        elif self.dhcp_checkbox.state == "down":  # checked
-            self.device.is_dhcp = True
+    def on_dhcp_checkbox(self, inst, value):
+        self.device.is_dhcp = value
 
     def on_gateway(self):
         if not self.ids.gateway.focus:
-            self.puzzle_commands.append(
+            self.app.commands_queue.append(
                 f"set {self.device.hostname} gateway {self.ids.gateway.text}"
             )
 
-    def on_routes(self):
-        EditRoutesPopup(self).open()
+    def on_firewall_button(self):
+        EditFirewallPopup(device=self.device).open()
+
+    def on_firewall_checkbox(self, inst, value):
+        self.device.is_firewall = value
+
+    def on_routes_button(self):
+        EditRoutesPopup(device=self.device).open()
 
     def on_vlans(self):
         raise NotImplementedError
@@ -334,24 +325,22 @@ class EditDevicePopup(ActionPopup):
 
     def on_ips_add(self):
         # Send correct NIC and interface data to IP Popup.
-        n = self.device.get_nic(self.selected_nic)
-        ip_config = self._get_ip_config_from_nic(n, n.name)
+        ip_config = self._get_ip_config_from_nic(
+            self.selected_nic, self.selected_nic.name
+        )
         if ip_config:
-            EditIpPopup(self, ip_config).open()
+            EditIpPopup(self, ip_address=ip_config).open()
 
     def on_ips_edit(self):
         if not self.selected_ip:
             logging.warning("Devices: No IP selected for editing.")
             return
-        ip_config = self._get_ip_config_from_nic(
-            self.device.get_nic(self.selected_nic), self.selected_ip
-        )
+        ip_config = self._get_ip_config_from_nic(self.selected_nic, self.selected_ip)
         if ip_config:
-            EditIpPopup(self, ip_config).open()
+            EditIpPopup(self, ip_address=ip_config).open()
 
     def on_ips_remove(self):
-        n = self.device.get_nic(self.selected_nic)
-        ip_config = self._get_ip_config_from_nic(n, self.selected_ip)
+        ip_config = self._get_ip_config_from_nic(self.selected_nic, self.selected_ip)
         if ip_config:
             ip_config.address = "0.0.0.0"
             ip_config.netmask = "0.0.0.0"
@@ -359,13 +348,13 @@ class EditDevicePopup(ActionPopup):
             # Update IPs in IPs list.
             self._set_ips()
             # Add command to be applied.
-            self.puzzle_commands.append(
-                f"set {self.device.hostname} {self.selected_nic} {ip_config.address}/{ip_config.netmask}"
+            self.app.commands_queue.append(
+                f"set {self.device.hostname} {self.selected_nic.name} {ip_config.address}/{ip_config.netmask}"
             )
 
-    def on_nic_selection(self, selected_nic_text):
+    def on_nic_selection(self, selected_nic):
         self.selected_ip = None
-        self.selected_nic = selected_nic_text
+        self.selected_nic = selected_nic.get("data")
         self.root.ids.add_ip.disabled = False
         self.root.ids.edit_ip.disabled = True
         self.root.ids.remove_ip.disabled = True
@@ -375,32 +364,27 @@ class EditDevicePopup(ActionPopup):
 
     def on_nics_add(self):
         raise NotImplementedError
-        # # Add command to be applied.
-        # self.puzzle_commands.append(
-        #     f"create {self.device.hostname} {self.selected_nic}"
-        # )
 
     def on_nics_edit(self):
-        EditNicPopup(self, self.device.get_nic(self.selected_nic)).open()
+        EditNicPopup(self.selected_nic, device=self.device).open()
 
     def on_nics_replace(self):
         # De-select label.
         for c in self.ids.nics_list.children[0].children:
-            if c.text.startswith(self.selected_nic):
+            if c.text.startswith(self.selected_nic.name):
                 c.selected = False
                 break
         # Replace NIC.
-        self.app.ui.parse(f"replace {self.device.hostname} {self.selected_nic}")
+        self.app.ui.parse(f"replace {self.device.hostname} {self.selected_nic.name}")
         # Update device with new data.
-        self.device = GuiDevice(
-            json_data=deepcopy(self.app.ui.get_device(self.device.hostname))
-        )
+        self.device = GuiDevice(json_data=deepcopy(self.device.json))
         # Update NIC list.
         self.ids.nics_list.update_data(self.device.nics, management=True)
 
     def on_okay(self):
         logging.info(f"Devices: Updating {self.device.hostname}:")
-        for cmd in self.puzzle_commands:
+        while self.app.commands_queue:
+            cmd = self.app.commands_queue.pop(0)
             logging.info(f"Devices: > {cmd}")
             self.app.ui.parse(cmd)
         # Update GUI helps b/c it will trigger tooltip updates, which are needed
@@ -409,22 +393,41 @@ class EditDevicePopup(ActionPopup):
         super().on_okay()
 
     def _add_conditional_widgets(self):
-        if self.device.mytype in ["server"]:
+        """Add buttons and checkboxes for features that are only available for
+        certain types of devices."""
+        # Add DHCP.
+        if self.device.serves_dhcp:
             # Handle DHCP checkbox, label, and button.
-            l_cb = SingleRowLayout(
-                padding=0,
-            )
+            l_cb = SingleRowLayout(padding=0)
             if self.device.is_dhcp:
                 state = "down"
             else:
                 state = "normal"
-            self.dhcp_checkbox = DHCPCheckBox(size_hint_x=0.1, state=state)
+            cb = ThemedCheckBox(size_hint_x=0.1, state=state)
+            cb.bind(active=self.on_dhcp_checkbox)
             t = CheckBoxLabel(text=f"{_('DHCP Server')}", size_hint_x=0.4)
-            b = ThemedButton(text=f"{_('Edit DHCP')}", on_release=self.on_dhcp_button)
-            for w in [self.dhcp_checkbox, t, b]:
+            b = ThemedButton(text=f"{_('DHCP')}", on_release=self.on_dhcp_button)
+            for w in [cb, t, b]:
                 l_cb.add_widget(w)
             self.root.ids.left_panel.add_widget(l_cb)
-        if self.device.mytype in ["router", "switch"]:
+        # Add Firewall.
+        if self.device.does_firewall:
+            l_cb = SingleRowLayout(padding=0)
+            if self.device.is_firewall:
+                state = "down"
+            else:
+                state = "normal"
+            cb = ThemedCheckBox(size_hint_x=0.1, state=state)
+            cb.bind(active=self.on_firewall_checkbox)
+            t = CheckBoxLabel(text=f"{_('Firewall')}", size_hint_x=0.4)
+            b = ThemedButton(
+                text=f"{_('Firewall')}", on_release=self.on_firewall_button
+            )
+            for w in [cb, t, b]:
+                l_cb.add_widget(w)
+            self.root.ids.left_panel.add_widget(l_cb)
+        # Add VLANs.
+        if self.device.does_vlans:
             # Handle VLANs button.
             b = ThemedButton(text=f"{_('VLANs')}", on_release=self.on_vlans)
             self.root.ids.left_panel.add_widget(b)
@@ -456,20 +459,7 @@ class EditDevicePopup(ActionPopup):
         return "/" in value
 
     def _set_ips(self):
-        n = self.device.get_nic(self.selected_nic)
-        logging.debug(f"Devices: {n.name} ifaces: {n.interfaces}")
-        self.ids.ips_list.update_data(n.ip_addresses)
-
-
-class DHCPCheckBox(ThemedCheckBox):
-    @property
-    def popup(self):
-        w = self
-        while w:
-            if hasattr(w.parent, "on_dhcp_chkbox"):
-                return w.parent
-            w = w.parent
-
-    def on_activate(self):
-        if self.popup:
-            self.popup.on_dhcp_chkbox()
+        logging.debug(
+            f"Devices: {self.selected_nic.name} ifaces: {self.selected_nic.interfaces}"
+        )
+        self.ids.ips_list.update_data(self.selected_nic.ip_addresses)

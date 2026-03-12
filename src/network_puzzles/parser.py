@@ -466,7 +466,7 @@ class Parser:
             )
             return False
         d_target_device = device.Device(target_device)
-        if not d_target_device.CanDoFirewall:
+        if not d_target_device.does_firewall:
             session.print(f"invalid device: {args[0]} not allowed to have a firewall")
             return False
         if args[1].lower() not in ["add", "del", "remove"]:
@@ -566,7 +566,7 @@ class Parser:
                 session.print(f"No such host {args[0]}")
 
     def set_dhcp_value(self, dev_obj, value):
-        if not device.servesDHCP(dev_obj.json):
+        if not dev_obj.serves_dhcp:
             session.print(f"{dev_obj.hostname} can not be a dhcp server")
             return False
         pastvalue = "false"
@@ -589,7 +589,7 @@ class Parser:
         )
 
     def set_dhcp_range(self, dev_obj, value):
-        if not device.servesDHCP(dev_obj.json):
+        if not dev_obj.serves_dhcp:
             # The device is incapable of being a DHCP server
             session.print(f"{dev_obj.hostname} is not a dhcp server")
             return False

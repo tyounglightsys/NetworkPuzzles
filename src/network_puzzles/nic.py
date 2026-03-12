@@ -72,6 +72,10 @@ class Nic(ItemBase):
 
     @property
     def encryption_key(self):
+        if self.json.get("encryptionkey") is None:
+            # Some JSON files have this set as `null`, which translates to
+            # `None`, but we need a string for GUI use.
+            self.json["encryptionkey"] = ""
         return self.json.get("encryptionkey", "")
 
     @encryption_key.setter
@@ -88,7 +92,7 @@ class Nic(ItemBase):
 
     @property
     def endpoint(self):
-        return self.tunnel_endpoint.get("ip")
+        return self.tunnel_endpoint.get("ip", "")
 
     @endpoint.setter
     def endpoint(self, value: str):
@@ -97,7 +101,7 @@ class Nic(ItemBase):
     @property
     def tunnel_endpoint(self):
         if self.json.get("tunnelendpoint") is None:
-            self.json.get["tunnelendpoint"] = {}
+            self.json["tunnelendpoint"] = {}
         return self.json.get("tunnelendpoint")
 
     @property

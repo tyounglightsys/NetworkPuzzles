@@ -96,6 +96,7 @@ class NetworkPuzzlesApp(App):
         Window.bind(on_resize=self.draw_puzzle)
         # Set intial values for variables.
         self.selected_puzzle = None  # used to reset puzzle after changes
+        self.commands_queue = list()
         self.reset_vars()
 
         self.packetmgr = PacketManager(self)
@@ -379,7 +380,7 @@ class NetworkPuzzlesApp(App):
     def user_select_nic(self, devicew):
         if not hasattr(self, "chosen_nic"):
             self.chosen_nic = None
-            ChooseNicPopup(devicew).open()
+            ChooseNicPopup(device=devicew).open()
         elif self.chosen_nic:
             logging.info(f"App: User selected NIC: {self.chosen_nic}")
 
