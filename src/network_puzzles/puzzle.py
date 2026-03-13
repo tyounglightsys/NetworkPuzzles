@@ -649,6 +649,8 @@ class Puzzle(ItemBase):
         }
         if nictype == "vpn":
             newnic["tunnelendpoint"] = {"ip": "0.0.0.0", "mask": "0.0.0.0"}
+        if nictype in {"eth", "wlan"}:
+            newnic["usesdhcp"] = "True"
         Nic(newnic).ensure_mac()
         thedevicejson["nic"].append(newnic)
         return newnic
