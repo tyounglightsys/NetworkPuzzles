@@ -139,6 +139,16 @@ class LightColorTheme(LightGrayscaleTheme):
     bg3 = (204 / 255, 227 / 255, 249 / 255, 1)  # text highlighting; light blue
 
 
+def get_device_image_path_by_type(mytype):
+    devices = NETWORK_ITEMS.get("devices").get("user") | NETWORK_ITEMS.get(
+        "devices"
+    ).get("infrastructure")
+    img = devices.get(mytype).get("img")
+    if img is None:
+        raise TypeError(f"Unhandled device type: {mytype}")
+    return str(IMAGES_DIR / img)
+
+
 def get_effective_size(size):
     return (size[0] - 2 * PADDING, size[1] - 2 * PADDING)
 
