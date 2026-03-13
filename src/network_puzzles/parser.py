@@ -704,13 +704,14 @@ class Parser:
             if tnic is None:
                 session.print(f"Invalid nicname {nicname}:")
                 return False
+            tnic = nic.Nic(tnic)
             if session.puzzle.item_is_locked(dev_obj.hostname, "LockNic"):
                 session.print(
                     "Cannot change the encryption on this nic.  Puzzle has it locked."
                 )
                 return False
             if tnic.type == "wport" or tnic.type == "wlan":
-                nic.Nic(tnic).encryption_key = newkey
+                tnic.encryption_key = newkey
         else:
             # We are setting the encryption on a WAP, hopefully
             didsomething = False
@@ -731,13 +732,14 @@ class Parser:
             if tnic is None:
                 session.print(f"Invalid nicname {nicname}:")
                 return False
+            tnic = nic.Nic(tnic)
             if session.puzzle.item_is_locked(dev_obj.hostname, "LockNic"):
                 session.print(
                     "Cannot change the ssid on this nic.  Puzzle has it locked."
                 )
                 return False
             if tnic.type == "wport" or tnic.type == "wlan":
-                nic.Nic(tnic).ssid = newssid
+                tnic.ssid = newssid
         else:
             # We are setting the encryption on a WAP, hopefully
             didsomething = False
