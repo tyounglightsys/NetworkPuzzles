@@ -7,9 +7,14 @@
             Image:
                 source: root.src_img_path
                 size_hint_x: 0.25
+            Widget:
+                size_hint_x: 0.125
             Image:
                 source: root.link_img_path
-                size_hint_x: 0.5
+                height: self.parent.height / 2
+                size_hint: (0.25, None)
+            Widget:
+                size_hint_x: 0.125
             Image:
                 source: root.dest_img_path
                 size_hint_x: 0.25
@@ -17,9 +22,13 @@
             ThemedLabel:
                 text: f"{root.link.src}:{root.link.src_nic_name}"
                 size_hint_x: 0.25
+            Widget:
+                size_hint_x: 0.125
             ThemedLabel:
                 text: f'{_("link type:")} "{root.link.linktype}"'
-                size_hint_x: 0.5
+                size_hint_x: 0.25
+            Widget:
+                size_hint_x: 0.125
             ThemedLabel:
                 text: f"{root.link.dest}:{root.link.dest_nic_name}"
                 size_hint_x: 0.25
