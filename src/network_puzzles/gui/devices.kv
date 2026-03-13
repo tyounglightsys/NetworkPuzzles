@@ -34,13 +34,14 @@
                     text: _("Hostname")
                 ValueInput:  # device.hostname
                     text: root.device.hostname
+                    on_focus: self.schedule_select_all() if self.focus else None
             SingleRowLayout:
                 CheckBoxLabel:  # Gateway
                     text: _("Gateway")
                 ValueInput:  # device.gateway
                     id: gateway
                     text: root.device.gateway
-                    on_focus: root.on_gateway()
+                    on_focus: on_focus: self.schedule_select_all() if self.focus else root.on_gateway()
             PopupButton:  # Routes
                 text: _("Routes")
                 on_release: root.on_routes_button()
