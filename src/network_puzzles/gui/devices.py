@@ -12,10 +12,10 @@ from kivy.uix.widget import Widget
 from .. import _, interface, nic, session
 from ..device import Device
 from .base import (
-    NETWORK_ITEMS,
     HelpHighlight,
     LockEmblem,
     ThemedCheckBox,
+    get_device_image_path_by_type,
     get_layout_height,
     hide_widget,
     location_to_pos,
@@ -273,13 +273,7 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         EditDevicePopup(title=f"{_('Edit')} {self.hostname}", device=dev).open()
 
     def _set_image(self):
-        devices = NETWORK_ITEMS.get("devices").get("user") | NETWORK_ITEMS.get(
-            "devices"
-        ).get("infrastructure")
-        img = devices.get(self.mytype).get("img")
-        if img is None:
-            raise TypeError(f"Unhandled device type: {self.mytype}")
-        self.button.background_normal = str(self.app.IMAGES / img)
+        self.button.background_normal = get_device_image_path_by_type(self.mytype)
 
     def _post_move(self, *args):
         # Show hidden links.

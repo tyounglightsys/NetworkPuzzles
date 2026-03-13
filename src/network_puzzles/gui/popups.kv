@@ -12,20 +12,20 @@
                 text: _("IP Address:")
             ValueInput:
                 text: root.ip_address.address
-                on_focus: root.set_address(self)
+                on_focus: self.schedule_select_all() if self.focus else root.set_address(self)
         SingleRowLayout:
             CheckBoxLabel:
                 text: _("Netmask:")
             ValueInput:
                 text: root.ip_address.netmask
-                on_focus: root.set_netmask(self)
+                on_focus: self.schedule_select_all() if self.focus else root.set_netmask(self)
         SingleRowLayout:
             CheckBoxLabel:
                 text: _("Gateway:")
             ValueInput:
                 id: gateway_input
                 text: root.ip_address.gateway
-                on_focus: root.set_gateway(self)
+                on_focus: self.schedule_select_all() if self.focus else root.set_gateway(self)
         Widget:
         ActionPopupButtons:
             on_cancel: root.on_cancel()
@@ -51,7 +51,8 @@
         orientation: "vertical"
         ValueInput:
             id: text_input
-            on_text_validate: root.on_okay()
+            on_focus: self.schedule_select_all() if self.focus else None
+            on_text_validate: root.on_okay()  # called when "Enter" is pressed
         ActionPopupButtons:  # cancel/okay
             on_cancel: root.on_cancel()
             on_okay: root.on_okay()
@@ -152,13 +153,13 @@
                 text: _("VPN Endpoint")
             ValueInput:
                 text: root.nic.endpoint
-                on_focus: root.set_endpoint(self)
+                on_focus: self.schedule_select_all() if self.focus else root.set_endpoint(self)
         SingleRowLayout:
             RightAlignedLabel:
                 text: _("Encryption key")
             ValueInput:
                 text: root.nic.encryption_key
-                on_focus: root.set_encryption_key(self)
+                on_focus: self.schedule_select_all() if self.focus else root.set_encryption_key(self)
         Widget:
         ActionPopupButtons:
             on_cancel: root.on_cancel()
@@ -172,28 +173,33 @@
         CheckBoxLabel:
             text: _("Routes from NICs (read-only)")
         RoutesRecView:
-            size_hint_y: 0.66
             id: nic_routes_list
             root: root
         CheckBoxLabel:
             text: _("Static routes (editable)")
         RoutesRecView:
-            size_hint_y: 0.33
             id: static_routes_list
             root: root
         SingleRowLayout:
             Widget:
                 size_hint_x: 0.5
             ThemedButton:
+                id: add_button
+                size_hint_x: 0.125
+                text: "+"
+                on_release: root.on_add()
+            ThemedButton:
+                id: remove_button
+                size_hint_x: 0.125
+                text: "-"
+                on_release: root.on_remove()
+                disabled: True
+            ThemedButton:
                 id: edit_button
                 size_hint_x: 0.25
                 text: _("Edit")
                 disabled: True
                 on_release: root.on_edit()
-            ThemedButton:
-                size_hint_x: 0.25
-                text: _("New")
-                on_release: root.on_new()
         Widget:
             size_hint_y: 0.1
         ActionPopupButtons:
@@ -232,6 +238,7 @@
         ValueInput:
             id: host
             hint_text: _("hostname or IP")
+            on_focus: self.schedule_select_all() if self.focus else None
             on_text_validate: root.on_okay(root.ids.host.text)
         Widget:
         ActionPopupButtons:

@@ -3,8 +3,9 @@ from kivy.properties import ListProperty
 from kivy.uix.widget import Widget
 
 from .. import session
+from ..device import Device
 from ..link import Link
-from .base import hide_widget
+from .base import IMAGES_DIR, get_device_image_path_by_type, hide_widget
 from .popups import ThemedPopup
 
 
@@ -113,9 +114,20 @@ class GuiLink(Widget, Link):
 
 class LinkPopup(ThemedPopup):
     def __init__(self, widget, **kwargs):
-        super().__init__(**kwargs)
         self.link = widget
-        self.title = self.link.hostname
+        img = "link.png"
+        if self.link.linktype == "wireless":
+            img = "WAP.png"
+        self.link_img_path = str(IMAGES_DIR / img)
+        src_dev = Device(
+            json_data=self.link.app.ui.puzzle.device_from_name(self.link.src)
+        )
+        dest_dev = Device(
+            json_data=self.link.app.ui.puzzle.device_from_name(self.link.dest)
+        )
+        self.src_img_path = get_device_image_path_by_type(src_dev.mytype)
+        self.dest_img_path = get_device_image_path_by_type(dest_dev.mytype)
+        super().__init__(**kwargs)
 
     def delete(self):
         self.app.ui.parse(f"delete {self.link.hostname}")

@@ -241,17 +241,24 @@ class EditRoutesPopup(DevicePopup):
         self.ids.nic_routes_list.update_data()
         self.ids.static_routes_list.update_data(static=True)
 
-    def on_route_selection(self, route_data):
-        self.selected_route = route_data
-        self.ids.edit_button.disabled = False
+    def on_route_selection(self, route_data, inst):
+        if inst is self.ids.static_routes_list.__ref__():
+            self.selected_route = route_data
+            self.ids.edit_button.disabled = False
+            self.ids.remove_button.disabled = False
+
+    def on_add(self):
+        NewRoutePopup(self).open()
 
     def on_edit(self):
         # FIXME
         logging.debug(f'TEST: "Edit" clicked; selected route: "{self.selected_route}"')
         raise NotImplementedError
 
-    def on_new(self):
-        NewRoutePopup(self).open()
+    def on_remove(self):
+        # FIXME
+        logging.debug(f'TEST: "-" clicked; selected route: "{self.selected_route}"')
+        raise NotImplementedError
 
 
 class ExceptionPopup(ThemedPopup):

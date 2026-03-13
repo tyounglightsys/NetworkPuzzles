@@ -1,11 +1,42 @@
 <LinkPopup>:
-    size_hint: (0.25, 0.33)
+    title: _("Link")
+    size_hint: (0.25, 0.25)
     ThemedBoxLayout:
-        orientation: 'vertical'
-        #size_hint_y: None
-        PopupButton:
-            text: _("Delete")
-            on_release: root.delete()
-        PopupButton:
-            text: _("Edit")
-            on_release: root.edit()
+        orientation: "vertical"
+        ThemedBoxLayout:  # images
+            Image:
+                source: root.src_img_path
+                size_hint_x: 0.25
+            Widget:
+                size_hint_x: 0.125
+            Image:
+                source: root.link_img_path
+                height: self.parent.height / 2
+                size_hint: (0.25, None)
+            Widget:
+                size_hint_x: 0.125
+            Image:
+                source: root.dest_img_path
+                size_hint_x: 0.25
+        SingleRowLayout:
+            ThemedLabel:
+                text: f"{root.link.src}:{root.link.src_nic_name}"
+                size_hint_x: 0.25
+            Widget:
+                size_hint_x: 0.125
+            ThemedLabel:
+                text: f'{_("link type:")} "{root.link.linktype}"'
+                size_hint_x: 0.25
+            Widget:
+                size_hint_x: 0.125
+            ThemedLabel:
+                text: f"{root.link.dest}:{root.link.dest_nic_name}"
+                size_hint_x: 0.25
+        Widget:
+        SingleRowLayout:
+            PopupButton:
+                text: _("Delete")
+                on_release: root.delete()
+            PopupButton:
+                text: _("Edit")
+                on_release: root.edit()

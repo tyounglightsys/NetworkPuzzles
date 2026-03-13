@@ -78,7 +78,7 @@ class RoutesRecView(AppRecView):
         super().__init__(**kwargs)
 
     def on_selection(self, index):
-        self.root.on_route_selection(self.data[index])
+        self.root.on_route_selection(self.data[index], inst=self)
 
     def update_data(self, static=False):
         def t(data):
