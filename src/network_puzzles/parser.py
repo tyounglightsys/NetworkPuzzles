@@ -709,13 +709,14 @@ class Parser:
                     "Cannot change the encryption on this nic.  Puzzle has it locked."
                 )
                 return False
-            nic.Nic(tnic).encryption_key = newkey
+            if tnic.type == "wport" or tnic.type == "wlan":
+                nic.Nic(tnic).encryption_key = newkey
         else:
             # We are setting the encryption on a WAP, hopefully
             didsomething = False
             for onenic in dev_obj.all_nics():
                 tnic = nic.Nic(onenic)
-                if tnic.type == "wport":
+                if tnic.type == "wport" or tnic.type == "wlan":
                     tnic.encryption_key = newkey
                     didsomething = True
             if didsomething:
@@ -735,17 +736,18 @@ class Parser:
                     "Cannot change the ssid on this nic.  Puzzle has it locked."
                 )
                 return False
-            nic.Nic(tnic).ssid = newssid
+            if tnic.type == "wport" or tnic.type == "wlan":
+                nic.Nic(tnic).ssid = newssid
         else:
             # We are setting the encryption on a WAP, hopefully
             didsomething = False
             for onenic in dev_obj.all_nics():
                 tnic = nic.Nic(onenic)
-                if tnic.type == "wport":
+                if tnic.type == "wport" or tnic.type == "wlan":
                     tnic.ssid = newssid
                     didsomething = True
             if didsomething:
-                session.print(f"Key on {dev_obj.hostname} set to {newssid}")
+                session.print(f"SSID on {dev_obj.hostname} set to {newssid}")
 
     def set_endpoint(self, dev_obj: device.Device, nicname, endpoint):
         # set encryption, used on VPNs and wireless links
