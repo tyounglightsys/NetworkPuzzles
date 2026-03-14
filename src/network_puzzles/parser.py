@@ -700,6 +700,7 @@ class Parser:
             # If we change one port, change them all.  wlans can have different ssids
             nicname = ""
         if nicname != "":
+            # Setting encryption key for VPN, presumably.
             tnic = dev_obj.nic_from_name(nicname)
             if tnic is None:
                 session.print(f"Invalid nicname {nicname}:")
@@ -710,7 +711,7 @@ class Parser:
                     "Cannot change the encryption on this nic.  Puzzle has it locked."
                 )
                 return False
-            if tnic.type == "wport" or tnic.type == "wlan":
+            if tnic.type == "vpn":
                 tnic.encryption_key = newkey
         else:
             # We are setting the encryption on a WAP, hopefully
