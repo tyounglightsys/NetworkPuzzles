@@ -117,18 +117,19 @@
             on_okay: root.on_okay()
 
 <EditIpPopup>:
-    title: _("Edit IP configuration")
+    title: f'{_("Edit IP configuration:")} {self.device_popup.selected_nic.name}'
 
 <EditNicPopup>:
     size_hint_x: 0.5
-    title: f"{_('Edit')} {self.device.hostname}:{self.nic.name}"
     ThemedBoxLayout:
         orientation: "vertical"
         SingleRowLayout:
             RightAlignedLabel:
                 text: _("NIC type")
-            CheckBoxLabel:
+            ValueInput:
                 text: root.nic.type
+                disabled: False if len(root.nic.type) == 0 else True
+                on_focus: self.schedule_select_all() if self.focus else root.set_nic_type(self)
         SingleRowLayout:
             RightAlignedLabel:
                 text: _("MAC address")
