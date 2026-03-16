@@ -43,14 +43,10 @@ class UI:
             puzzle:int - the index of the puzzle to load
             filter:str - a valid regex filter.  Like ".*DNS.*"  Or None
         """
-        val = None
         if filter is not None:
-            val = self.parser.parse("load " + puzzle_ref + " " + filter, False)
+            self.parser.parse("load " + puzzle_ref + " " + filter, False)
         else:
-            val = self.parser.parse("load " + puzzle_ref, False)
-
-        # Save selected puzzle to session variable.
-        session.puzzle = puzzle.Puzzle(val.get("value"))
+            self.parser.parse("load " + puzzle_ref, False)
 
     def notify_if_puzzle_completed(self):
         if self.puzzle.is_solved():

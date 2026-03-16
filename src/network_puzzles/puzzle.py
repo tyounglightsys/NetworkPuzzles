@@ -1033,6 +1033,7 @@ def choosePuzzle(what, filter=None):
         what: str - use choosePuzzleFromName
         filter: str - this is a filter to use.  For example ".*DHCP.*".  Then the int would apply to the index in the filtered list
     """
+    logging.debug(f'Looking for puzzle "{what}"')
     readPuzzle()
     if filter is not None:
         # We have a filter.  We need to try to look up the item from the filtered list
