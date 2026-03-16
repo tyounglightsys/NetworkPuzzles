@@ -118,7 +118,7 @@ class EditDhcpPopup(DevicePopup):
             unset_configs.append(data)
         return unset_configs
 
-    def on_okay(self):
+    def on_okay(self, *args):
         old_configs = [c.values() for c in self.dhcp_configs]
         for row in self.ids.dhcp_configs_layout.children:
             # Child widgets' order is the opposite of how they were added.
@@ -147,8 +147,10 @@ class EditDhcpPopup(DevicePopup):
             ip = CheckBoxLabel(text=data.get("ip"))
             start = ValueInput(text=data.get("mask"))
             start.bind(focus=start.schedule_select_all)
+            start.bind(on_text_validate=self.on_okay)
             end = ValueInput(text=data.get("gateway"))
             end.bind(focus=end.schedule_select_all)
+            end.bind(on_text_validate=self.on_okay)
             for w in [ip, start, end]:
                 bl.add_widget(w)
             self.ids.dhcp_configs_layout.add_widget(bl)
