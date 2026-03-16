@@ -39,78 +39,87 @@ class Parser:
     def exit_app(self, code=0):
         sys.exit(code)
 
-    def open_puzzle(self, cmd, args):
-        val = None
+    def open_puzzle(self, args):
+        # logging.debug(f"{args=}")
+        retval = 1
         if 0 < len(args) < 3:
-            val = puzzle.choosePuzzle(*args)
+            puz = puzzle.choosePuzzle(*args)
+            if puz:
+                retval = 0
         else:
             print("loading: ")
-        return {"command": cmd, "value": val}
+        return retval
 
     def parse(self, command: str, fromuser=True, fromundo=False):
         retval = None
         # We will make this a lot more interesting later.  For now, just do a very simple thing
-        if command is not None and command.startswith("#"):
-            # ignore comments.  Usually coming from the testing files
-            return
+        if command is not None:
+            if command.startswith("#") or len(command) == 0:
+                # Ignore empty commands and comments; usually coming from the
+                # testing files.
+                logging.info("Ignoring non-command.")
+                return
         logging.debug(f"{command=}")
         session.packetstorm = False  # We are starting something new. It is false until we determine otherwise
-        command = command.replace(
-            ",", " "
-        )  # replace commas with spaces.  This fixes x,y coords
-        items = command.split()  # break at all whitespace
+
+        # Replace commas with spaces for x,y coord tokenization.
+        command = command.replace(",", " ")
+
         if fromuser:
-            session.history.append(command)  # add commands to the history
-        if len(items) > 0:
-            # we have stuff. Process it
-            cmd = items[0].lower()
-            args = items[1:]
-            match cmd:
-                case "create":
-                    retval = self.create_something(args)
-                case "help" | "?":
-                    retval = self.printhelp()
-                case "history":
-                    retval = self.show_info(["history"])
-                case "puzzles" | "search":
-                    retval = self.get_puzzles(cmd, args)
-                case "load" | "open":
-                    val = self.open_puzzle(cmd, args)
-                    # If debugging, show what we just loaded.
-                    if logging.getLogger().level < logging.WARNING:
-                        self.show_info(["puzzle"])
-                    retval = val
-                case "delete":
-                    retval = self.delete_item(args)
-                case "dhcp":
-                    retval = self.do_dhcp(args)
-                case "exit" | "quit" | "stop":
-                    self.exit_app()
-                case "firewall" | "fw":
-                    retval = self.process_firewall(args)
-                case "ping":
-                    retval = self.run_ping(args)
-                case "replace":
-                    retval = self.replace_something(args)
-                case "route":
-                    retval = self.change_route(args)
-                case "show" | "list":
-                    retval = self.show_info(args)
-                case "set":
-                    retval = self.setvalue(args, fromuser)
-                case "traceroute" | "tracert":
-                    retval = self.run_traceroute(args)
-                case "undo":
-                    retval = self.try_undo()
-                case "redo":
-                    retval = self.try_redo()
-                case "ups" | "addups":
-                    retval = self.add_ups(args)
-                case _:
-                    session.print(f"unknown: {command}")
-        else:
-            # If command is empty, do nothing. The prompt will just be reshown.
-            pass
+            # Add commands to the history.
+            session.history.append(command)
+
+        # Split command into tokens.
+        args = command.split(" ")
+        cmd = args.pop(0).lower()
+
+        # Ignore extra args due to repeated spaces.
+        args = [a for a in args if len(a) > 0]
+        logging.debug(f"{cmd=}; {args=}")
+
+        match cmd:
+            case "create":
+                retval = self.create_something(args)
+            case "help" | "?":
+                retval = self.printhelp()
+            case "history":
+                retval = self.show_info(["history"])
+            case "puzzles" | "search":
+                retval = self.get_puzzles(cmd, args)
+            case "load" | "open":
+                retval = self.open_puzzle(args)
+                # If debugging, show what we just loaded.
+                if logging.getLogger().level < logging.WARNING:
+                    self.show_info(["puzzle"])
+            case "delete":
+                retval = self.delete_item(args)
+            case "dhcp":
+                retval = self.do_dhcp(args)
+            case "exit" | "quit" | "stop":
+                self.exit_app()
+            case "firewall" | "fw":
+                retval = self.process_firewall(args)
+            case "ping":
+                retval = self.run_ping(args)
+            case "replace":
+                retval = self.replace_something(args)
+            case "route":
+                retval = self.change_route(args)
+            case "show" | "list":
+                retval = self.show_info(args)
+            case "set":
+                retval = self.setvalue(args, fromuser)
+            case "traceroute" | "tracert":
+                retval = self.run_traceroute(args)
+            case "undo":
+                retval = self.try_undo()
+            case "redo":
+                retval = self.try_redo()
+            case "ups" | "addups":
+                retval = self.add_ups(args)
+            case _:
+                session.print(f"unknown: {command}")
+
         # after we do anything, rebuild network wires if needed.
         if session is not None and session.puzzle is not None:
             session.puzzle.AutoJoinAllWireless()
@@ -930,12 +939,13 @@ class Parser:
             case "gateway" | "gw":
                 self.set_gateway_value(dev_obj, values[0])
             case "key" | "encryption":
-                if len(values) == 2:
-                    # set key firewall0 vpn0 newkey
-                    self.set_encryption(dev_obj, values[0], values[1])
                 if len(values) == 1:
                     # set key fwap0 newkey - when we do it for wireless devices, we do it across all wports
                     self.set_encryption(dev_obj, "", values[0])
+                else:
+                    # set key firewall0 vpn0 newkey
+                    # Rejoin values in case the passed key contains spaces.
+                    self.set_encryption(dev_obj, values[0], " ".join(values[1:]))
             case "ssid":
                 if len(values) == 2:
                     # set key firewall0 vpn0 newkey
@@ -949,7 +959,12 @@ class Parser:
                     session.print("invalid number of arguments.")
                 self.set_endpoint(dev_obj, values[0], values[1])
             case "location" | "position" | "pos":
-                self.set_position_value(dev_obj, values[0], values[1])
+                # Split property values on comma.
+                if len(values) == 1 and "," in values[0]:
+                    values = values.split(",")
+                if len(values) != 2:
+                    raise ValueError(f"Not enough values for location: {values}")
+                self.set_position_value(dev_obj, *values)
             case _:
                 # Set IP address of NIC, where nicname == prop.
                 if (
