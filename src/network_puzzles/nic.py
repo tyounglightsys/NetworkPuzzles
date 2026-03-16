@@ -80,6 +80,10 @@ class Nic(ItemBase):
 
     @encryption_key.setter
     def encryption_key(self, value: str):
+        # Key can't contain "," because parser replaces "," with " " during
+        # tokenization.
+        if "," in value:
+            raise ValueError("Invalid character: ,")
         self.json["encryptionkey"] = value
 
     @property
