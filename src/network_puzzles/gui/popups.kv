@@ -11,14 +11,18 @@
             CheckBoxLabel:
                 text: _("IP Address:")
             ValueInput:
+                id: ip_address_input
                 text: root.ip_address.address
                 on_focus: self.schedule_select_all() if self.focus else root.set_address(self)
+                on_text_validate: root.on_okay()
         SingleRowLayout:
             CheckBoxLabel:
                 text: _("Netmask:")
             ValueInput:
+                id: netmask_input
                 text: root.ip_address.netmask
                 on_focus: self.schedule_select_all() if self.focus else root.set_netmask(self)
+                on_text_validate: root.on_okay()
         SingleRowLayout:
             CheckBoxLabel:
                 text: _("Gateway:")
@@ -26,6 +30,7 @@
                 id: gateway_input
                 text: root.ip_address.gateway
                 on_focus: self.schedule_select_all() if self.focus else root.set_gateway(self)
+                on_text_validate: root.on_okay()
         Widget:
         ActionPopupButtons:
             on_cancel: root.on_cancel()
@@ -166,6 +171,9 @@
             on_cancel: root.on_cancel()
             on_okay: root.on_okay()
 
+<EditRoutePopup>:
+    title: f"{_('Edit route')} ({self.routes_popup.device.hostname})"
+
 <EditRoutesPopup>:
     title: f"{_('Routes')} ({self.device.hostname})"
     size_hint: (0.5, 0.75)
@@ -228,9 +236,6 @@
             size_hint_x: 0.2
             text: _("Okay")
             on_release: root.dismiss()
-
-<NewRoutePopup>:
-    title: f"{_('Create route')} ({self.routes_popup.device.hostname})"
 
 <PingHostPopup>:
     size_hint: (0.5, 0.4)
