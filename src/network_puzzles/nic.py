@@ -58,13 +58,21 @@ class Nic(ItemBase):
     def name(self):
         return self.json.get("nicname", "")
 
+    @name.setter
+    def name(self, value):
+        self.json["nicname"] = value
+
     @property
     def type(self):
         # NOTE: The JSON data defines nictype as a list of two identical
         # strings. We simply return the first one.
-        nictype = self.json.get("nictype", list())
-        if nictype:
-            return self.json.get("nictype")[0]
+        if self.json.get("nictype") is None:
+            self.type = ""
+        return self.json.get("nictype")[0]
+
+    @type.setter
+    def type(self, value):
+        self.json["nictype"] = [value, value]
 
     @property
     def uniqueidentifier(self):
@@ -110,6 +118,8 @@ class Nic(ItemBase):
 
     @property
     def uses_dhcp(self):
+        if self.json.get("usesdhcp") is None:
+            self.json["usesdhcp"] = "false"
         return self.json.get("usesdhcp").lower() in ["true", "yes"]
 
     @uses_dhcp.setter
