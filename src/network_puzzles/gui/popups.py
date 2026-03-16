@@ -146,7 +146,9 @@ class EditDhcpPopup(DevicePopup):
             bl = SingleRowLayout()
             ip = CheckBoxLabel(text=data.get("ip"))
             start = ValueInput(text=data.get("mask"))
+            start.bind(focus=start.schedule_select_all)
             end = ValueInput(text=data.get("gateway"))
+            end.bind(focus=end.schedule_select_all)
             for w in [ip, start, end]:
                 bl.add_widget(w)
             self.ids.dhcp_configs_layout.add_widget(bl)
