@@ -76,3 +76,8 @@ class IpAddress(ItemBase):
     @gateway.setter
     def gateway(self, value):
         self.json["gateway"] = value
+
+    def __str__(self):
+        return (
+            f"{self.__class__.__name__}({self.address}/{self.netmask} {self.gateway})"
+        )

@@ -30,14 +30,6 @@ class ActionPopup(ThemedPopup):
         self.dismiss()
 
 
-class DevicePopup(ActionPopup):
-    def __init__(self, device=None, **kwargs):
-        if device is None:
-            raise ValueError('DevicePopup requires "device" kwarg.')
-        self.device = device
-        super().__init__(**kwargs)
-
-
 class BaseIpPopup(ActionPopup):
     """Base class for IP-address-related popups."""
 
@@ -58,6 +50,14 @@ class BaseIpPopup(ActionPopup):
     def set_gateway(self, input_inst):
         if not input_inst.focus:
             self.ip_address.gateway = input_inst.text
+
+
+class DevicePopup(ActionPopup):
+    def __init__(self, device=None, **kwargs):
+        if device is None:
+            raise ValueError('DevicePopup requires "device" kwarg.')
+        self.device = device
+        super().__init__(**kwargs)
 
 
 class ChooseNicPopup(DevicePopup):
@@ -118,7 +118,7 @@ class EditDhcpPopup(DevicePopup):
             unset_configs.append(data)
         return unset_configs
 
-    def on_okay(self):
+    def on_okay(self, *args):
         old_configs = [c.values() for c in self.dhcp_configs]
         for row in self.ids.dhcp_configs_layout.children:
             # Child widgets' order is the opposite of how they were added.
@@ -146,7 +146,11 @@ class EditDhcpPopup(DevicePopup):
             bl = SingleRowLayout()
             ip = CheckBoxLabel(text=data.get("ip"))
             start = ValueInput(text=data.get("mask"))
+            start.bind(focus=start.schedule_select_all)
+            start.bind(on_text_validate=self.on_okay)
             end = ValueInput(text=data.get("gateway"))
+            end.bind(focus=end.schedule_select_all)
+            end.bind(on_text_validate=self.on_okay)
             for w in [ip, start, end]:
                 bl.add_widget(w)
             self.ids.dhcp_configs_layout.add_widget(bl)
@@ -232,6 +236,36 @@ class EditNicPopup(DevicePopup):
             self.nic.encryption_key = input_inst.text
 
 
+class EditRoutePopup(BaseIpPopup):
+    def __init__(self, routes_popup, **kwargs):
+        self.routes_popup = routes_popup
+        super().__init__(**kwargs)
+        if "ip_address" not in kwargs.keys():
+            self.old_target_ip = None
+            self.old_gateway = None
+        else:
+            self.old_target_ip = f"{self.ip_address.address}/{self.ip_address.netmask}"
+            self.old_gateway = self.ip_address.gateway
+
+    def on_okay(self):
+        # Remove focus from inputs so that variables are set.
+        for w in (
+            self.ids.ip_address_input,
+            self.ids.netmask_input,
+            self.ids.gateway_input,
+        ):
+            w.focus = False
+        # logging.debug(f"{self.ip_address=}")
+        target_ip = f"{self.ip_address.address}/{self.ip_address.netmask}"
+        if self.old_target_ip:
+            self.routes_popup._edit_route(
+                self.old_target_ip, self.old_gateway, target_ip, self.ip_address.gateway
+            )
+        else:
+            self.routes_popup._add_route(target_ip, self.ip_address.gateway)
+        super().on_okay()
+
+
 class EditRoutesPopup(DevicePopup):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
@@ -248,17 +282,40 @@ class EditRoutesPopup(DevicePopup):
             self.ids.remove_button.disabled = False
 
     def on_add(self):
-        NewRoutePopup(self).open()
+        EditRoutePopup(self).open()
 
     def on_edit(self):
-        # FIXME
-        logging.debug(f'TEST: "Edit" clicked; selected route: "{self.selected_route}"')
-        raise NotImplementedError
+        ip_address = interface.IpAddress(self.selected_route.get("data"))
+        EditRoutePopup(self, ip_address=ip_address).open()
 
     def on_remove(self):
-        # FIXME
-        logging.debug(f'TEST: "-" clicked; selected route: "{self.selected_route}"')
-        raise NotImplementedError
+        route = self.selected_route.get("data")
+        target_ip = f"{route.get('ip')}/{route.get('mask')}"
+        gateway = route.get("gateway")
+        self._remove_route(target_ip, gateway)
+
+    def _add_route(self, target_ip, gateway):
+        self._apply_route_action("add", target_ip, gateway)
+
+    def _edit_route(self, old_target_ip, old_gw, new_target_ip, new_gw):
+        self._remove_route(old_target_ip, old_gw)
+        self._add_route(new_target_ip, new_gw)
+
+    def _apply_route_action(self, action, target_ip, gateway):
+        cmd = f"route {self.device.hostname} {action} {target_ip} {gateway}"
+        self.app.ui.parse(cmd)
+        # -----
+        # TODO: The following will need to be removed once state-based UNDO is
+        # implemented.
+        if action.startswith("add"):
+            self.device.route_add(target_ip, gateway)
+        elif action.startswith("del"):
+            self.device.route_del(target_ip, gateway)
+        # -----
+        self.ids.static_routes_list.update_data(static=True)
+
+    def _remove_route(self, target_ip, gateway):
+        self._apply_route_action("del", target_ip, gateway)
 
 
 class ExceptionPopup(ThemedPopup):
@@ -270,25 +327,6 @@ class ExceptionPopup(ThemedPopup):
     # def on_dismiss(self):
     #     # Don't allow the app to continue running.
     #     self.app.stop()
-
-
-class NewRoutePopup(BaseIpPopup):
-    def __init__(self, routes_popup, **kwargs):
-        self.routes_popup = routes_popup
-        super().__init__(**kwargs)
-
-    def on_okay(self):
-        # logging.debug(f"{self.ip_address=}")
-        dev = self.routes_popup.device.hostname
-        ip = self.ip_address.address
-        mask = self.ip_address.netmask
-        gw = self.ip_address.gateway
-        # Update intermediate popup data.
-        self.routes_popup.device.route_add(f"{ip}/{mask}", gw)
-        self.routes_popup.ids.static_routes_list.update_data(static=True)
-        # Update puzzle data
-        self.app.ui.parse(f"route {dev} add {ip}/{mask} {gw}")
-        super().on_okay()
 
 
 class PingHostPopup(DevicePopup):
