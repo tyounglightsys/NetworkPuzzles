@@ -263,14 +263,11 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         return text
 
     def _edit_device(self, *args):
-        # Use copy of data for displaying in UI b/c real changes will be
-        # applied via parser commands when "Okay" is clicked.
         # TODO: Refactor so that all changes happen immediately, while saving the
         # previous state in "history". Each popup will then need to save the current
         # state at the moment the window was opened, so that "Cancel" will return
         # the puzzle to that pre-modified state.
-        dev = GuiDevice(json_data=deepcopy(self.json))
-        EditDevicePopup(title=f"{_('Edit')} {self.hostname}", device=dev).open()
+        EditDevicePopup(title=f"{_('Edit')} {self.hostname}", device=self).open()
 
     def _set_image(self):
         self.button.background_normal = get_device_image_path_by_type(self.mytype)
@@ -357,10 +354,10 @@ class EditDevicePopup(DevicePopup):
         self._set_ips()
 
     def on_nics_add(self):
-        raise NotImplementedError
+        EditNicPopup(device_popup=self, device=self.device).open()
 
     def on_nics_edit(self):
-        EditNicPopup(self.selected_nic, device=self.device).open()
+        EditNicPopup(self.selected_nic, device_popup=self, device=self.device).open()
 
     def on_nics_replace(self):
         # De-select label.
