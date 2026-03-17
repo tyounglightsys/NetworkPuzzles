@@ -96,7 +96,6 @@ class NetworkPuzzlesApp(App):
         Window.bind(on_resize=self.draw_puzzle)
         # Set intial values for variables.
         self.selected_puzzle = None  # used to reset puzzle after changes
-        self.commands_queue = list()
         self.reset_vars()
 
         self.packetmgr = PacketManager(self)

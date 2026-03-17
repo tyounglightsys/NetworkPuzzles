@@ -293,7 +293,7 @@ class EditDevicePopup(DevicePopup):
 
     def on_gateway(self):
         if not self.ids.gateway.focus:
-            self.app.commands_queue.append(
+            self.app.ui.parse(
                 f"set {self.device.hostname} gateway {self.ids.gateway.text}"
             )
 
@@ -339,7 +339,7 @@ class EditDevicePopup(DevicePopup):
             # Update IPs in IPs list.
             self._set_ips()
             # Add command to be applied.
-            self.app.commands_queue.append(
+            self.app.ui.parse(
                 f"set {self.device.hostname} {self.selected_nic.name} {ip_config.address}/{ip_config.netmask}"
             )
 
@@ -373,11 +373,6 @@ class EditDevicePopup(DevicePopup):
         self.ids.nics_list.update_data(self.device.nics, management=True)
 
     def on_okay(self):
-        logging.info(f"Devices: Updating {self.device.hostname}:")
-        while self.app.commands_queue:
-            cmd = self.app.commands_queue.pop(0)
-            logging.info(f"Devices: > {cmd}")
-            self.app.ui.parse(cmd)
         # Update GUI helps b/c it will trigger tooltip updates, which are needed
         # b/c IP data has likely changed.
         self.app.update_help()

@@ -206,8 +206,8 @@ class EditIpPopup(BaseIpPopup):
         self.ids.gateway_input.disabled = True
 
     def on_okay(self):
-        # Add updating command.
-        self.app.commands_queue.append(
+        # Run updating command.
+        self.app.ui.parse(
             f"set {self.device_popup.device.hostname} {self.device_popup.selected_nic.name} {self.ip_address.address}/{self.ip_address.netmask}"
         )
         # Update IPs in IPs list.
