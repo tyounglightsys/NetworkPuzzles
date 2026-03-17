@@ -184,9 +184,9 @@ class NetworkPuzzlesApp(App):
 
     def draw_puzzle(self, *args):
         """Clear puzzle layout area; draw all elements related to current puzzle."""
-        logging.debug(
-            f"App: {self.root.ids.layout.__class__.__name__}: pos={self.root.ids.layout.pos}; size={self.root.ids.layout.size}"
-        )
+        # logging.debug(
+        #     f"App: {self.root.ids.layout.__class__.__name__}: pos={self.root.ids.layout.pos}; size={self.root.ids.layout.size}"
+        # )
         if not self.ui.puzzle:
             logging.warning("GUI: No puzzle is loaded.")
             return
@@ -427,7 +427,7 @@ class NetworkPuzzlesApp(App):
             for n, t in ((test.shost, test.name) for test in uncompleted_tests):
                 d = self.ui.get_device(n)
                 if d is None:
-                    logging.info(f'App: Ignoring highlight of non-device "{n}"')
+                    # logging.info(f'App: Ignoring highlight of non-device "{n}"')
                     continue
                 w = self.get_widget_by_hostname(n)
                 if isinstance(w, GuiDevice) and not w.is_invisible:

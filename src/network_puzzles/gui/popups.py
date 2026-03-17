@@ -23,15 +23,30 @@ class ActionPopup(ThemedPopup):
         if self.app.ui.puzzle:
             self.initial_state = deepcopy(self.app.ui.puzzle.json)
 
-    def on_cancel(self):
+    def cancel_changes(self):
         if self.initial_state:
             # Reset to previous state.
-            logging.info('User clicked "Cancel". Resetting puzzle to pre-popup state.')
+            logging.info(
+                'User did not click "Okay"; resetting puzzle to pre-popup state.'
+            )
             self.app.ui.puzzle.json = self.initial_state
-        self.dismiss()
+            # Inform user that changes have been reset.
+            self.app.ui.console_write("Popup cancelled; changes have been reset.")
+            # Redraw puzzle so that JSON data is applied to all devices.
+            self.app.draw_puzzle()
+
+    def on_cancel(self):
+        # self.cancel_changes()
+        self.dismiss(okay=False)
+
+    def dismiss(self, okay=None):
+        if okay is not True:
+            self.cancel_changes()
+        super().dismiss()
 
     def on_okay(self):
-        self.dismiss()
+        # Don't cancel changes.
+        self.dismiss(okay=True)
 
 
 class BaseIpPopup(ActionPopup):
