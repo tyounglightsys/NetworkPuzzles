@@ -263,14 +263,11 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         return text
 
     def _edit_device(self, *args):
-        # Use copy of data for displaying in UI b/c real changes will be
-        # applied via parser commands when "Okay" is clicked.
         # TODO: Refactor so that all changes happen immediately, while saving the
         # previous state in "history". Each popup will then need to save the current
         # state at the moment the window was opened, so that "Cancel" will return
         # the puzzle to that pre-modified state.
-        dev = GuiDevice(json_data=deepcopy(self.json))
-        EditDevicePopup(title=f"{_('Edit')} {self.hostname}", device=dev).open()
+        EditDevicePopup(title=f"{_('Edit')} {self.hostname}", device=self).open()
 
     def _set_image(self):
         self.button.background_normal = get_device_image_path_by_type(self.mytype)
@@ -296,7 +293,7 @@ class EditDevicePopup(DevicePopup):
 
     def on_gateway(self):
         if not self.ids.gateway.focus:
-            self.app.commands_queue.append(
+            self.app.ui.parse(
                 f"set {self.device.hostname} gateway {self.ids.gateway.text}"
             )
 
@@ -342,7 +339,7 @@ class EditDevicePopup(DevicePopup):
             # Update IPs in IPs list.
             self._set_ips()
             # Add command to be applied.
-            self.app.commands_queue.append(
+            self.app.ui.parse(
                 f"set {self.device.hostname} {self.selected_nic.name} {ip_config.address}/{ip_config.netmask}"
             )
 
@@ -357,10 +354,10 @@ class EditDevicePopup(DevicePopup):
         self._set_ips()
 
     def on_nics_add(self):
-        raise NotImplementedError
+        EditNicPopup(device_popup=self, device=self.device).open()
 
     def on_nics_edit(self):
-        EditNicPopup(self.selected_nic, device=self.device).open()
+        EditNicPopup(self.selected_nic, device_popup=self, device=self.device).open()
 
     def on_nics_replace(self):
         # De-select label.
@@ -376,11 +373,6 @@ class EditDevicePopup(DevicePopup):
         self.ids.nics_list.update_data(self.device.nics, management=True)
 
     def on_okay(self):
-        logging.info(f"Devices: Updating {self.device.hostname}:")
-        while self.app.commands_queue:
-            cmd = self.app.commands_queue.pop(0)
-            logging.info(f"Devices: > {cmd}")
-            self.app.ui.parse(cmd)
         # Update GUI helps b/c it will trigger tooltip updates, which are needed
         # b/c IP data has likely changed.
         self.app.update_help()

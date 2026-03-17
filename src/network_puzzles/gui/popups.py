@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from kivy.uix.popup import Popup
 
-from .. import interface, nic, session
+from .. import _, interface, nic, session
 from .inputs import ValueInput
 from .labels import CheckBoxLabel
 from .layouts import SingleRowLayout
@@ -11,23 +11,42 @@ from .views import PuzzlesRecView  # needed by PuzzleChooserPopup #  noqa: F401
 
 
 class ThemedPopup(Popup):
-    def __init__(self, **kwargs):
-        # TODO: This popup automatically generates a GridLayout with 3 child
-        # widgets: BoxLayout, Widget, Label. Better to set the content
-        # explicitly when the popup is instantiated elsewhere.
-        super().__init__(**kwargs)
-
     @property
     def app(self):
         return session.app
 
 
 class ActionPopup(ThemedPopup):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.initial_state = None
+        if self.app.ui.puzzle:
+            self.initial_state = deepcopy(self.app.ui.puzzle.json)
+
+    def cancel_changes(self):
+        if self.initial_state:
+            # Reset to previous state.
+            logging.info(
+                'User did not click "Okay"; resetting puzzle to pre-popup state.'
+            )
+            self.app.ui.puzzle.json = self.initial_state
+            # Inform user that changes have been reset.
+            self.app.ui.console_write("Popup cancelled; changes have been reset.")
+            # Redraw puzzle so that JSON data is applied to all devices.
+            self.app.draw_puzzle()
+
     def on_cancel(self):
-        self.dismiss()
+        # self.cancel_changes()
+        self.dismiss(okay=False)
+
+    def dismiss(self, okay=None):
+        if okay is not True:
+            self.cancel_changes()
+        super().dismiss()
 
     def on_okay(self):
-        self.dismiss()
+        # Don't cancel changes.
+        self.dismiss(okay=True)
 
 
 class BaseIpPopup(ActionPopup):
@@ -58,6 +77,11 @@ class DevicePopup(ActionPopup):
             raise ValueError('DevicePopup requires "device" kwarg.')
         self.device = device
         super().__init__(**kwargs)
+
+    def on_okay(self):
+        # FIXME: Update JSON data (will be obsolete after switch to state-based UNDO).
+        self.device.json = self.app.ui.puzzle.device_from_name(self.device.hostname)
+        super().on_okay()
 
 
 class ChooseNicPopup(DevicePopup):
@@ -192,13 +216,13 @@ class EditFirewallPopup(DevicePopup):
 
 class EditIpPopup(BaseIpPopup):
     def __init__(self, device_popup, **kwargs):
+        self.device_popup = device_popup
         super().__init__(**kwargs)
         self.ids.gateway_input.disabled = True
-        self.device_popup = device_popup
 
     def on_okay(self):
-        # Add updating command.
-        self.app.commands_queue.append(
+        # Run updating command.
+        self.app.ui.parse(
             f"set {self.device_popup.device.hostname} {self.device_popup.selected_nic.name} {self.ip_address.address}/{self.ip_address.netmask}"
         )
         # Update IPs in IPs list.
@@ -207,21 +231,38 @@ class EditIpPopup(BaseIpPopup):
 
 
 class EditNicPopup(DevicePopup):
-    def __init__(self, nic, **kwargs):
-        self.nic = nic
+    def __init__(self, current_nic=None, device_popup=None, **kwargs):
+        if current_nic is None:
+            current_nic = nic.Nic()
+            current_nic.ensure_mac()
+        self.nic = current_nic
         super().__init__(**kwargs)
+        if device_popup is None:
+            raise ValueError("Missing required kwarg 'device_popup'")
+        self.device_popup = device_popup
+        # Set title.
+        if self.nic.name:
+            self.title = f"{_('Edit')} {self.device.hostname}:{self.nic.name}"
+        else:
+            self.title = f"{_('Add NIC to')} {self.device.hostname}"
         self.encryption_key_orig = self.nic.encryption_key
         self.endpoint_orig = self.nic.endpoint
 
     def on_okay(self):
+        if not self.nic.name:  # add NIC
+            self.app.ui.parse(f"create nic {self.device.hostname} {self.nic.type}")
+            # Get JSON for newly-created NIC (last listed).
+            self.nic.name = self.device.all_nics()[-1].get("nicname")
         if self.nic.encryption_key != self.encryption_key_orig:
-            self.app.commands_queue.append(
+            self.app.ui.parse(
                 f"set {self.device.hostname} key {self.nic.name} {self.nic.encryption_key}"
             )
         if self.nic.endpoint != self.endpoint_orig:
-            self.app.commands_queue.append(
+            self.app.ui.parse(
                 f"set {self.device.hostname} endpoint {self.nic.name} {self.nic.endpoint}"
             )
+        # Update NIC list.
+        self.device_popup.ids.nics_list.update_data(self.device.nics, management=True)
         super().on_okay()
 
     def on_uses_dhcp(self, inst):
@@ -234,6 +275,10 @@ class EditNicPopup(DevicePopup):
     def set_encryption_key(self, input_inst):
         if not input_inst.focus:
             self.nic.encryption_key = input_inst.text
+
+    def set_nic_type(self, input_inst):
+        if not input_inst.focus:
+            self.nic.type = input_inst.text
 
 
 class EditRoutePopup(BaseIpPopup):

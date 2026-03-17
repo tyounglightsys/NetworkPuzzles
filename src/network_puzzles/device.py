@@ -59,7 +59,7 @@ class Device(ItemBase):
     @property
     def dhcp_list(self):
         """Returns a dict of DHCP entries."""
-        if self.json.get("dhcp_list") is None:
+        if self.json.get("dhcplist") is None:
             self.json["dhcplist"] = {}
         return self.json.get("dhcplist")
 
@@ -1871,6 +1871,7 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
 
 def makeDHCPResponse(pkt, thisDevice, nic):
     t_device = Device(thisDevice)
+    logging.debug(f"TEST: {t_device.dhcp_list=}")
     # Ensure Packet object.
     if not isinstance(pkt, packet.Packet):
         raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
