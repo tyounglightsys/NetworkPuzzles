@@ -78,11 +78,6 @@ class DevicePopup(ActionPopup):
         self.device = device
         super().__init__(**kwargs)
 
-    def on_okay(self):
-        # FIXME: Update JSON data (will be obsolete after switch to state-based UNDO).
-        self.device.json = self.app.ui.puzzle.device_from_name(self.device.hostname)
-        super().on_okay()
-
 
 class ChooseNicPopup(DevicePopup):
     def __init__(self, **kwargs):
