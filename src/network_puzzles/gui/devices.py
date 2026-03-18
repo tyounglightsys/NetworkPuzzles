@@ -44,6 +44,7 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         self.highlighting = None
         self.lock_icon = None
         self.loc_init = self.location
+        self.loc_last = self.loc_init
         self._location_locked = False
         # Set final attributes.
         self._set_image()
@@ -163,8 +164,13 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
             # Ignore pos change until device widget is fully placed.
             return True
         loc = pos_to_location(self.center, self.app.root.ids.layout.size)
-        if loc != self.loc_init:
-            self.move(loc)
+        if loc != self.loc_last:
+            dx = loc[0] - self.loc_last[0]
+            dy = loc[1] - self.loc_last[1]
+            d = (dx**2 + dy**2) ** 0.5
+            if d > 50:
+                self.move(loc)
+                self.loc_last = loc
 
     def on_release(self):
         if hasattr(self.app, "chosen_device"):

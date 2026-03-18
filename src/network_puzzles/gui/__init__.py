@@ -338,9 +338,9 @@ class NetworkPuzzlesApp(App):
         self.root.ids.help_slider.value = self.ui.puzzle.default_help_level
 
     def update_help(self, inst=None, value=None):
-        if value is None:
-            value = self.root.ids.help_slider.value
         if self.ui.puzzle:
+            if value is None:
+                value = self.root.ids.help_slider.value
             self._help_highlight_devices(value)
             self._help_update_tooltips(value)
 
@@ -416,7 +416,7 @@ class NetworkPuzzlesApp(App):
                 self.root.ids.layout.remove_widget(c)
         # Add any required highlights.
         if help_level > 0:
-            # TODO: This only highlights layout devices. We still need to work
+            # FIXME: This only highlights layout devices. We still need to work
             # in highlighting of other on-screen elements.
             uncompleted_tests = []
             for test_data in self.ui.all_tests():
