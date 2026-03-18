@@ -445,7 +445,7 @@ class EditDevicePopup(DevicePopup):
         return "/" in value
 
     def _set_ips(self):
-        logging.debug(
-            f"Devices: {self.selected_nic.name} ifaces: {self.selected_nic.interfaces}"
-        )
+        # logging.debug(
+        #     f"Devices: {self.selected_nic.name} ifaces: {self.selected_nic.interfaces}"
+        # )
         self.ids.ips_list.update_data(self.selected_nic.ip_addresses)
