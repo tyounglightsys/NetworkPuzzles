@@ -39,6 +39,7 @@ class PacketManager:
 
     @property
     def gui_packets(self):
+        """Return list of existing packet widgets."""
         return self.app.packets
 
     @property
@@ -66,6 +67,10 @@ class PacketManager:
         changing their locations, or by removing them.
         """
 
+        # Exit quickly if there are no packets to add or update.
+        if not self.app.ui.puzzle.packets and not self.gui_packets:
+            return
+
         # Packet draw index needs to be above link lines but below devices,
         # which means it needs to be one less than the lowest link index, which
         # can change during the course of solving the puzzle if links are added
@@ -78,8 +83,7 @@ class PacketManager:
 
         # Remove expired packets.
         for p in self.gui_packets:
-            hashes = [h for h in self.packet_ids]
-            if p.base.hash_id not in hashes:
+            if p.base.hash_id not in [h for h in self.packet_ids]:
                 self.app.root.ids.layout.remove_widget(p)
 
         # Add or update packets in layout.
