@@ -814,7 +814,7 @@ class Device(ItemBase):
             logging.debug(
                 "This packet was killed.  There was a problem.  No such destination.  No MAC Address that matched"
             )
-            pkt.status = "Failed"
+            pkt.status = "failed"
             return False
 
         if (
