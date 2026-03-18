@@ -1,4 +1,4 @@
-import logging
+# import logging
 
 from kivy.uix.recycleview import RecycleView
 
@@ -27,7 +27,7 @@ class FirewallRulesRecView(AppRecView):
 
     def update_data(self):
         self.data = []
-        logging.debug(f"Views: {len(self.root.device.firewall_rules)=}")
+        # logging.debug(f"Views: {len(self.root.device.firewall_rules)=}")
         for rule in self.root.device.firewall_rules:
             text = f"  {rule.get('source')} - {rule.get('destination')} -> {rule.get('action')}"
             self.data.append({"text": text, "data": rule})

@@ -202,7 +202,7 @@ class EditFirewallPopup(DevicePopup):
 
     def on_remove_rule(self):
         if self.selected_rule:
-            logging.debug(f"Popups: {self.selected_rule=}")
+            # logging.debug(f"Popups: {self.selected_rule=}")
             rule_data = self.selected_rule.get("data")
             src = rule_data.get("source")
             dst = rule_data.get("destination")

@@ -202,7 +202,7 @@ def location_to_rel_pos(location: iter, size) -> tuple:
         raise ValueError(f"Base: location length != 2: {location}")
     pos = location_to_pos(location, size)
     rel_pos = pos_to_rel_pos(pos, size)
-    logging.debug(f"Base: {location=} -> {rel_pos=}")
+    # logging.debug(f"Base: {location=} -> {rel_pos=}")
     return rel_pos
 
 
@@ -234,7 +234,7 @@ def pos_to_location(pos, size) -> tuple:
         round(effective_rel_pos[0] * LOCATION_MAX_X),
         round((1 - effective_rel_pos[1]) * LOCATION_MAX_Y),
     )
-    logging.debug(f"Base: {pos=} -> {loc=}")
+    # logging.debug(f"Base: {pos=} -> {loc=}")
     return loc
 
 

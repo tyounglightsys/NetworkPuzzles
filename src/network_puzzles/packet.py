@@ -10,6 +10,16 @@ from .link import Link
 from .nic import Nic
 
 BROADCAST_MAC = "FFFFFFFFFFFF"
+PACKET_TYPES = (
+    "dhcp",
+    "dhcp-request",
+    "dhcp-response",
+    "ping",
+    "ping-response",
+    "traceroute-request",
+    "traceroute-response",
+    "tunnel",
+)
 
 
 class Packet(ItemBase):
@@ -135,13 +145,15 @@ class Packet(ItemBase):
 
     @property
     def packettype(self):
-        return self.json.get("packettype")
+        return self.json.get("packettype", "").lower()
 
     @packettype.setter
     def packettype(self, value):
         if not isinstance(value, str):
             raise ValueError(f"Invalid type for `packettype`: {type(value)}")
-        self.json["packettype"] = value
+        elif value.lower() not in PACKET_TYPES:
+            raise ValueError(f"Invalid value for `packettype`: {value}")
+        self.json["packettype"] = value.lower()
 
     @property
     def key(self):

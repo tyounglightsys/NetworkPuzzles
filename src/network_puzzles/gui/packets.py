@@ -6,6 +6,14 @@ from ..packet import Packet
 
 
 class GuiPacket(Widget):
+    COLORS = {
+        "dhcp": (237 / 255, 51 / 255, 59 / 255),  # red:#ED333B
+        "none": (0.5, 0.5, 0.5),  # gray
+        "ping": (98 / 255, 160 / 255, 234 / 255),  # blue:#62A0EA
+        "traceroute": (192 / 255, 191 / 255, 188 / 255),  # white:#C0BFBC
+        "tunnel": (246 / 255, 211 / 255, 45 / 255),  # yellow:#F8E45C -> #F6D32D
+    }
+
     def __init__(self, base_packet=None, **kwargs):
         if isinstance(base_packet, Packet):
             self.base = base_packet
@@ -14,6 +22,13 @@ class GuiPacket(Widget):
         else:
             raise ValueError(f"Argument is not a `Packet` type: {type(base_packet)}")
         super().__init__(**kwargs)
+
+    @property
+    def color(self):
+        base_type = self.base.packettype.split("-")[0]
+        if base_type not in self.COLORS:
+            base_type = "none"
+        return self.COLORS.get(base_type)
 
 
 class PacketManager:
@@ -42,7 +57,7 @@ class PacketManager:
     def get_link_widget(self, link_name):
         link_data = self.app.ui.get_link(link_name)
         if link_data is None:
-            #This would cause stuff the next line to explode
+            # This would cause stuff the next line to explode
             return None
         return self.app.get_widget_by_hostname(link_data.get("hostname"))
 
