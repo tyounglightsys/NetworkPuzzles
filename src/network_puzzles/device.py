@@ -895,7 +895,7 @@ class Device(ItemBase):
         logging.debug(f"Receiving packet in {self.hostname}: {pkt}")
         # Deal with DHCP.
         # If it is a request and this is a DHCP server, serve an IP back.
-        if pkt.packettype == "DHCP-Request":
+        if pkt.packettype == "dhcp-request":
             if self.serves_dhcp:
                 if self.is_dhcp and "dhcprange" in self.json:
                     session.print(f"Arrived at DHCP server: {self.hostname}")
@@ -903,7 +903,7 @@ class Device(ItemBase):
                     pkt.status = "done"
                     return True
         # If it is a DHCP answer, update the device IP address.
-        elif pkt.packettype == "DHCP-Response":
+        elif pkt.packettype == "dhcp-response":
             if pkt.destination_mac == nic.mac and nic.uses_dhcp is True:
                 logging.info(
                     f"Recieved DHCP response.  Dealing with it. payload: {pkt.payload}"
@@ -1871,7 +1871,6 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
 
 def makeDHCPResponse(pkt, thisDevice, nic):
     t_device = Device(thisDevice)
-    logging.debug(f"TEST: {t_device.dhcp_list=}")
     # Ensure Packet object.
     if not isinstance(pkt, packet.Packet):
         raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
