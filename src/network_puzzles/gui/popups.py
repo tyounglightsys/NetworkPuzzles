@@ -17,12 +17,6 @@ class ThemedPopup(Popup):
 
 
 class ActionPopup(ThemedPopup):
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-        self.initial_state = None
-        if self.app.ui.puzzle:
-            self.initial_state = deepcopy(self.app.ui.puzzle.json)
-
     def cancel_changes(self):
         if self.initial_state:
             # Reset to previous state.
@@ -35,18 +29,27 @@ class ActionPopup(ThemedPopup):
             # Redraw puzzle so that JSON data is applied to all devices.
             self.app.draw_puzzle()
 
-    def on_cancel(self):
-        # self.cancel_changes()
-        self.dismiss(okay=False)
-
     def dismiss(self, okay=None):
         if okay is not True:
             self.cancel_changes()
         super().dismiss()
 
+    def on_cancel(self):
+        # self.cancel_changes()
+        self.dismiss(okay=False)
+
     def on_okay(self):
         # Don't cancel changes.
         self.dismiss(okay=True)
+
+    def on_open(self):
+        self.initial_state = None
+        if self.app.ui.puzzle:
+            if self.app.ui.puzzle.packets:
+                self.app.ui.console_write("Please wait for packets to clear.")
+                super().dismiss()  # close window
+                return True  # stop the "on_open" signal
+            self.initial_state = deepcopy(self.app.ui.puzzle.json)
 
 
 class BaseIpPopup(ActionPopup):
@@ -77,11 +80,6 @@ class DevicePopup(ActionPopup):
             raise ValueError('DevicePopup requires "device" kwarg.')
         self.device = device
         super().__init__(**kwargs)
-
-    def on_okay(self):
-        # FIXME: Update JSON data (will be obsolete after switch to state-based UNDO).
-        self.device.json = self.app.ui.puzzle.device_from_name(self.device.hostname)
-        super().on_okay()
 
 
 class ChooseNicPopup(DevicePopup):

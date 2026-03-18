@@ -226,9 +226,7 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         content = GridLayout(cols=1, spacing=dp(5))
         for command in commands:
             if command == _("Ping [host]"):
-                cb = PingHostPopup(
-                    device=self, title=f"{_('Ping [host] from')} {self.hostname}"
-                ).open
+                cb = self._ping_host
             elif command == _("Edit"):
                 cb = self._edit_device
             else:
@@ -268,6 +266,11 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         # state at the moment the window was opened, so that "Cancel" will return
         # the puzzle to that pre-modified state.
         EditDevicePopup(title=f"{_('Edit')} {self.hostname}", device=self).open()
+
+    def _ping_host(self, *args):
+        PingHostPopup(
+            device=self, title=f"{_('Ping [host] from')} {self.hostname}"
+        ).open()
 
     def _set_image(self):
         self.button.background_normal = get_device_image_path_by_type(self.mytype)
