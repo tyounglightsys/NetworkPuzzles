@@ -293,6 +293,7 @@ class EditDevicePopup(DevicePopup):
         self.selected_ip = None
         self.selected_nic = None
         self._add_conditional_widgets()
+        logging.debug(f"TEST: {self.device.arp_table=}")
 
     def on_dhcp_button(self):
         EditDhcpPopup(device=self.device).open()

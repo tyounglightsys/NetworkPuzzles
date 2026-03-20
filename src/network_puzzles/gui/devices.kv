@@ -103,8 +103,10 @@
         ThemedBoxLayout:
             size_hint_x: 0.4
             orientation: "vertical"
-            TextInput:  # ARP table
-                text: "XXXXXXXX"
+            CheckBoxLabel:
+                text: _("ARP Table")
+            TextInput:
+                text: "\n".join([e for e in root.device.arp_table])
             ActionPopupButtons:
                 on_cancel: root.on_cancel()
                 on_okay: root.on_okay()

@@ -774,108 +774,6 @@ class Device(ItemBase):
     def ClearIPConnections(self):
         self.ip_connections = []
 
-    def begin_ingress_on_nic(self, nic, pkt):
-        """Begin the packet entering a device.  It enters via a nic, and then is processed.
-        Args:
-            nic: a `nic.Nic` object - the NIC the packet enters into
-            pkt: a `packet.Packet` object - the packet entering the device
-        returns: nothing
-        """
-        # logging.debug(f"Test: Device.begin_ingress_on_nic: {self.hostname}:{nic.name}")
-        # Notes from EduNetworkBuilder
-        # Check to see if we have tests that break stuff.
-        # - DeviceNicSprays (nic needs to be replaced)
-        # - Device is frozen (packet is dropped)
-        # - Device is burned (packet is dropped)
-        # - Device is powered off (packet is dropped)
-        #
-        # - Check to see if we are firewalled.  Drop packet if needed
-        # If none of the above...
-        # if the packet is destined for this NIC/interface, then we accept and pass it to the device to see if we should respond
-        # If the packet is a broadcast, check to see if we should respond
-        # - We might both route it and respond to a broadcast (broadcast ping and switch responds)
-        # If we route packets, accept it for routing.
-        #
-
-        # in certain cases we track inbound traffic; remembering where it came from.
-        trackPackets = False
-
-        # if it is a port (swicth/hub) or wport (wireless devices)
-        if isinstance(nic, dict):
-            nic = Nic(nic)  # if it was json that was passed in
-        if nic.type in ("port", "wport"):
-            trackPackets = True
-        if self.is_wireless_forwarder and nic.type == "wlan":
-            trackPackets = True
-        if nic.type == "port" and self.mytype == "wap":
-            trackPackets = True
-        if trackPackets:
-            # We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
-            if "port_arps" not in self.json:
-                self.json["port_arps"] = {}
-            if pkt.source_mac not in self.json.get("port_arps"):
-                self.json["port_arps"][pkt.source_mac] = nic.name
-
-        # Look better tracking for network loops
-        # If the same packet hits the same switch, we determine it is a loop
-        # Check if the hostname is already in the path of the packet.  If so, it is a loop
-        if self.hostname in pkt.path:
-            session.packetstorm = True
-        pkt.path.append(self.hostname)
-
-        # If we are entering a WAN port, see if we should be blocked or if it is a return packet
-        if nic.type == "vpn":
-            logging.debug(f"Coming in a VPN link: {pkt.json}")
-        if nic.type == "wan":
-            connection_info = self.ReturnIPConnectionEntry(
-                pkt.destination_ip, pkt.source_ip, pkt.packettype
-            )
-            if connection_info is not None:
-                logging.debug(f"Found a return packet: {connection_info}")
-                if connection_info["response"] == "masq":
-                    logging.debug(
-                        f"Packet was masqueraded.  Switching it back {connection_info['src']} -> {connection_info['masqsrc']}"
-                    )
-                    pkt.destination_ip = connection_info["masqsrc"]
-            else:
-                # we do not have a record of this.  Packets coming into the WAN, unless it is destined for here, are dropped.
-                # see if the packet is destined for us.
-                t_nic = self.nic_from_ip(pkt.destination_ip)
-                if t_nic is None:
-                    logging.debug(
-                        "No record of this and not destined for this machine.  Drop it for now"
-                    )
-                    pkt.status = "done"
-                    return False
-        if pkt.destination_mac is None:
-            # The packet was improperly crafted or no such machine exists.  Drop
-            logging.debug(
-                "This packet was killed.  There was a problem.  No such destination.  No MAC Address that matched"
-            )
-            pkt.status = "failed"
-            return False
-
-        if (
-            pkt.destination_mac == nic.mac
-            or packet.is_broadcast_mac(pkt.destination_mac)
-            or self.routes_packets
-            or self.is_wireless_forwarder
-            or nic.type == "port"
-            or nic.type == "wport"
-        ):
-            # The packet is good, and has reached the computer.  Pass it on to the device
-            logging.debug("Packet entering device: {self.hostname}")
-            return self.receive_packet(pkt, nic)
-        else:
-            logging.debug("packet did not match.  Dropping")
-            # print (pkt.json)
-            thostname = devicename_from_mac(pkt.destination_mac)
-            logging.debug(
-                f"  packet dst MAC {pkt.destination_mac} ({thostname}) vs this NIC  {nic.mac}"
-            )
-            pkt.status = "dropped"
-            return False
-
     def process_tunneled_packet(self, pkt):
         packetpayload = pkt.payload
         pkt.payload = (
@@ -896,28 +794,41 @@ class Device(ItemBase):
             # if packetpayload not in session.puzzle.packets:
             # session.puzzle.packets.append(packetpayload)
             vpninterface = None
-            vpnnic = None
 
             for onenic in self.all_nics():
-                vpnnic = onenic
-                vpninterface = findLocalNICInterface(
-                    packetpayload.json["tdestIP"], onenic, True
+                nic_obj = Nic(onenic)
+                vpninterface = nic_obj.find_local_interface(
+                    packetpayload.json["tdestIP"], True
                 )
                 if vpninterface is not None:
                     break
             if vpninterface is not None:
                 # we have a VPN interface that is local to the tunneled packet.
                 #  Send the packet down that way
-                if pkt.key == vpnnic.get("encryptionkey"):
-                    beginIngressOnInterface(packetpayload, vpninterface)
-                    self.begin_ingress_on_nic(vpnnic, packetpayload)
+                if pkt.key == nic_obj.encryption_key:
+                    nic_obj.begin_ingress(packetpayload, self)
                     return True
                 else:
                     session.print("Key mismatch.  Cannot decrypt")
                     logging.debug(
-                        f"Key mismatch.  Cannot decrypt: key1 {pkt.key} - key2 {vpnnic.get('encryptionkey')}"
+                        f"Key mismatch.  Cannot decrypt: key1 {pkt.key} - key2 {nic_obj.encryption_key}"
                     )
         return False
+
+    def accept_packet(self, pkt, nic):
+        """Initial processing to see if device can receive packets."""
+        pkt.in_host = self.hostname
+        logging.debug("-----------------------------------------")
+        logging.debug(f"Packet arrived at device: {self.hostname} TTL:{pkt.ttl} {pkt}")
+        logging.debug("-----------------------------------------")
+
+        # Do the simple stuff
+        if not self.powered_on or self.frozen:
+            pkt.status = "done"
+            # nothing more to be done
+            return
+        # Send packet on to NIC.
+        nic.receive_packet(pkt, self)
 
     def receive_packet(self, pkt, nic):
         """When a packet enters a device, coming from an interface and network card.  Here we respond to stuff, route, or switch..."""
@@ -977,7 +888,6 @@ class Device(ItemBase):
                     )
                     # we need to generate a traceroute response
                     nPacket = packetFromTo(self.json, dest, "traceroute-response")
-                    # nPacket.packettype = "traceroute-response"
                     nPacket.payload = pkt.payload
                     sendPacketOutDevice(nPacket, self.json)
                     nPacket.payload["tempDest"] = nPacket.source_ip
@@ -1308,7 +1218,7 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
             skipzeroes = True
             if destinationIPString == "255.255.255.255":
                 skipzeroes = False
-            localInterface = findLocalNICInterface(destinationIPString, nic, skipzeroes)
+            localInterface = nic.find_local_interface(destinationIPString, skipzeroes)
             if localInterface is not None:
                 # We found it.  Use it.
                 routeRec["nic"] = nic.json
@@ -1327,7 +1237,7 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
         logging.debug(f"Finding nic to use for routerec: {routeRec}")
         for oneNic in theDeviceRec["nic"]:
             nic = Nic(oneNic)
-            localInterface = findLocalNICInterface(routeRec["gateway"], nic, True)
+            localInterface = nic.find_local_interface(routeRec["gateway"], True)
             if localInterface is not None:
                 # We found it.  Use it.
                 routeRec["nic"] = nic.json
@@ -1423,8 +1333,9 @@ def destIP(srcDevice, dstDevice):
     # If the device has a gateway, choose the IP address that is local to the gateway
     tDevice = Device(dstDevice)
     for onenic in tDevice.all_nics():
-        one_interface = findLocalNICInterface(
-            srcDevice.get("gateway")["ip"], onenic, True
+        nic_obj = Nic(onenic)
+        one_interface = nic_obj.find_local_interface(
+            srcDevice.get("gateway")["ip"], True
         )
         if one_interface is not None:
             oneDip = Interface(one_interface).ipaddress
@@ -1664,11 +1575,6 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
     return interfacelist
 
 
-def interfaceIP(interfaceRec):
-    """pull out the interface IP address for the specified interface.  Put it into a function so we can make it work for IPv4 and IPv6"""
-    return interfaceRec["myip"]["ip"] + "/" + interfaceRec["myip"]["mask"]
-
-
 def deviceHasIP(deviceRec, IPString: str):
     # FIXME: This should be a Device class method.
     if deviceRec is None:
@@ -1716,99 +1622,9 @@ def ip_is_broadcast_for_nic(nic, ipstr: str):
     # loop through all the interfaces and return any that might be local.
     for oneIF in nic.interfaces:
         # logging.debug(f"    Checking {ipstr} with {str(interfaceIP(oneIF))}")
-        if packet.isBroadcast(ipstr, str(interfaceIP(oneIF))):
+        if packet.isBroadcast(ipstr, str(Interface(oneIF).ipaddress)):
             return True
     return False
-
-
-def findLocalNICInterface(targetIPstring: str, nic, skip_zeros=False):
-    """Return the network interface record that has an IP address that is local to the IP specified as the target
-    Args:
-        targetIPstring:str - a string IP address, which we are trying to find a local interface for
-        nic:nic.Nic - a network card object, which may contain multiple interfaces
-    returns: the interface record that is local to the target IP, or None"""
-    if nic is None:
-        return None
-    if isinstance(nic, dict):
-        nic = Nic(nic)  # change it to a class for the rest of the function
-    # if isinstance(nic, dict) and nic["type"][0] == "port":
-    if nic.type == "port":
-        return None  # Ports have no IP address
-    # loop through all the interfaces and return any that might be local.
-    for oneIF in nic.interfaces:
-        if skip_zeros and interfaceIP(oneIF) == "0.0.0.0/0.0.0.0":
-            logging.debug("Found 0.0.0.0.  skipping")
-            continue
-        if packet.isLocal(targetIPstring, interfaceIP(oneIF)):
-            return oneIF
-    return None
-
-
-def findPrimaryNICInterface(nic):
-    """return the primary nic interface.  Turns out this is always interface 0"""
-    # NOTE: Nic.type returns None if not set.
-    return nic.type
-
-
-def doInputFromLink(pkt, nic):
-    # zero these out.  We will set them below
-    pkt.in_host = ""
-    pkt.in_interface = ""
-    # figure out what device belongs to the nic
-    host_id = nic.my_id.host_id
-    thisDevice = session.puzzle.device_from_uid(host_id)
-    if thisDevice is None:
-        raise ValueError(f"Device not found: {host_id}")
-
-    dev = Device(thisDevice)
-    pkt.in_host = dev.hostname
-    logging.debug("-----------------------------------------")
-    logging.debug(f"Packet arrived at device: {dev.hostname} TTL:{pkt.ttl} {pkt}")
-    logging.debug("-----------------------------------------")
-
-    # Do the simple stuff
-    if not dev.powered_on or dev.frozen:
-        pkt.status = "done"
-        # nothing more to be done
-        return False
-
-    # If the packet is a DHCP answer, process that here.  To be done later
-    # If the packet is a DHCP request, and this is a DHCP server, process that.  To be done later.
-
-    # Find the network interface.  It might be none if the IP does not match, or if it is a switch/hub device.
-    tInterface = findLocalNICInterface(pkt.json.get("tdestIP"), nic)
-    # if this is None, try the primary interface, which is always Nic.type.
-    if tInterface is None:
-        tInterface = findPrimaryNICInterface(nic)
-    # the interface still might be none if we are a switch/hub port
-    # Verify the interface.  This is mainly to work with SSIDs, VLANs, VPNs, etc.
-    if tInterface is not None:
-        # we track where it came in on.  We do it it here to track vlan info too.
-        if isinstance(tInterface, str):
-            pkt.in_interface = tInterface
-        else:
-            pkt.in_interface = tInterface.get("nicname")
-        logging.debug(f"Beginning on interface: {tInterface}")
-        beginIngressOnInterface(pkt, tInterface)
-
-    # the packet status should show dropped or something if we have a problem.
-    # but for now, pass it onto the NIC
-    # logging.debug(f"We are routing.  Here is the packet: {pkt.json}")
-    # logging.debug(f"We are routing.  Here is the nic: {nic.json}")
-    pkt.justcreated = False
-    logging.debug(f"Beginning on nic: {nic.name}")
-    return dev.begin_ingress_on_nic(nic, pkt)
-    # The NIC passes it onto the device if needed.  We are done with this.
-
-
-def beginIngressOnInterface(pkt, interfaceRec):
-    """Here we would do anything needed to be done with the interface.
-    VLAN
-    SSID
-    Tunnel/VPN
-    """
-    # right now, we let pass it back
-    return True
 
 
 def send_out_hubswitch(thisDevice, pkt, nic=None):
