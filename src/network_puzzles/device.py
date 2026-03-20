@@ -34,6 +34,12 @@ class Device(ItemBase):
             self.json = json_data if json_data else {}
 
     @property
+    def arp_table(self):
+        if self.json.get("maclist") is None:
+            self.json["maclist"] = list()
+        return self.json.get("maclist")
+
+    @property
     def blown_up(self) -> bool:
         value = False
         if "blownup" in self.json:
@@ -515,6 +521,38 @@ class Device(ItemBase):
     @property
     def HasAdvancedFirewall(self):
         return len(self.firewall_rules) > 0
+
+    def arp_lookup(self, ip):
+        """find a mac address, with the source being the specified device
+        Args:
+            srcDevice:str the hostname of the device we are looking at
+            srcDevice:device the device record we are looking at
+            ip:str the string ip address we are trying to find
+            ip:ipaddress the ip address we are trying to find
+        """
+
+        if isinstance(ip, str):
+            if ip == "0.0.0.0":
+                return None  # Never find a destination for this one
+            ip = ipaddress.IPv4Address(ip)
+            logging.info("ARP: Converting ip: " + packet.justIP(ip))
+
+        # The maclist on a device should have the port on which the MAC is found.  Particularly on switches.
+        # Does the device arp list have any records?  If so, use that.
+        for oneMAC in self.arp_table:
+            # print ("ARP: comparing: " + justIP(oneMAC['ip']) + " to " + justIP(ip))
+            if packet.justIP(oneMAC["ip"]) == packet.justIP(ip):
+                logging.info("Found the MAC for IP " + packet.justIP(ip))
+                return oneMAC["mac"]  # Return the one in the local arp.
+        # If we cannot find it on the device, look it up from the global list
+        tmac = globalArpLookup(ip)
+        if tmac is not None:
+            # Store the mac address in the local list
+            arp = {"ip": ip, "mac": tmac}
+            self.arp_table.append(arp)
+            # we asked for the mac address corresponding to the IP.  Return just the MAC
+            return tmac
+        return None
 
     def AutoJoinWireless(self):
         """If the device has a wlan port, create links between the device and
@@ -1202,51 +1240,6 @@ def devicename_from_mac(mac: str):
     return ""
 
 
-def arpLookup(srcDevice, ip):
-    """find a mac address, with the source being the specified device
-    Args:
-        srcDevice:str the hostname of the device we are looking at
-        srcDevice:device the device record we are looking at
-        ip:str the string ip address we are trying to find
-        ip:ipaddress the ip address we are trying to find
-    """
-    oldsrc = ""
-    if srcDevice is None:
-        logging.error("Error: source to arpLookup is None")
-    if isinstance(srcDevice, str):
-        # We need to look the device up
-        oldsrc = srcDevice
-        srcDevice = session.puzzle.device_from_name(srcDevice)
-    if srcDevice is None:
-        logging.error("Error: Unable to find source for arpLookup: " + oldsrc)
-    # If we are here, src should be a valid device
-    if isinstance(ip, str):
-        if ip == "0.0.0.0":
-            return None  # Never find a destination for this one
-        ip = ipaddress.IPv4Address(ip)
-        logging.info("ARP: Converting ip: " + packet.justIP(ip))
-    if "maclist" not in srcDevice:
-        srcDevice[
-            "maclist"
-        ] = []  # make an empty list.  That way we can itterate through it
-    # The maclist on a device should have the port on which the MAC is found.  Particularly on switches.
-    # Does the device arp list have any records?  If so, use that.
-    for oneMAC in srcDevice["maclist"]:
-        # print ("ARP: comparing: " + justIP(oneMAC['ip']) + " to " + justIP(ip))
-        if packet.justIP(oneMAC["ip"]) == packet.justIP(ip):
-            logging.info("Found the MAC for IP " + packet.justIP(ip))
-            return oneMAC["mac"]  # Return the one in the local arp.
-    # If we cannot find it on the device, look it up from the global list
-    tmac = globalArpLookup(ip)
-    if tmac is not None:
-        # Store the mac address in the local list
-        arp = {"ip": ip, "mac": tmac}
-        srcDevice["maclist"].append(arp)
-        # we asked for the mac address corresponding to the IP.  Return just the MAC
-        return tmac
-    return None
-
-
 def forwardsPackets(deviceRec):
     """return true if the device does packet forwarding (switch/hub/etc), false if it does not"""
     match deviceRec["mytype"]:
@@ -1473,41 +1466,39 @@ def sourceIP(src, dstIP, isBroadcast: bool = False):
         destIP:str - connect to this ip.  Eg: "192.168.1.1"
     return: an IP address string, or None
     """
+    # FIXME: This should be a Device class method.
     srcDevice = src
     if "hostname" not in src:
         srcDevice = session.puzzle.device_from_name(src)
     if srcDevice is None:
         logging.error("Error: passed in an invalid source to function: sourceIP")
         return None
+    src_dev = Device(srcDevice)
+
     # Get all the IPs from this device
     allIPs = DeviceIPs(src)
     if allIPs is None:
         return None
 
     # return the IP that has a static route to it (add this later).
-    if "route" in srcDevice:
-        if not isinstance(srcDevice["route"], list):
-            srcDevice["route"] = [srcDevice["route"]]
-        for oneroute in srcDevice["route"]:
-            staticroute = ipaddress.ip_network(
-                oneroute["ip"] + "/" + oneroute["mask"], False
+    for route in src_dev.routes:
+        staticroute = ipaddress.ip_network(route["ip"] + "/" + route["mask"], False)
+        logging.info(f"We are looking for a static route to: {staticroute}")
+        if dstIP in staticroute:
+            # We found the route.  But we need to find the IP address that is local to the route
+            routeip = ipaddress.ip_network(
+                route["gateway"] + "/" + route["mask"], False
             )
-            logging.info(f"We are looking for a static route to: {staticroute}")
-            if dstIP in staticroute:
-                # We found the route.  But we need to find the IP address that is local to the route
-                routeip = ipaddress.ip_network(
-                    oneroute["gateway"] + "/" + oneroute["mask"], False
-                )
-                logging.info("A static route matched.  Finding the IP for that route")
-                # logging.info(f"looking for {routeip} through routes {allIPs}")
-                for oneip in allIPs:
-                    # oneip=ipaddress.IPv4Interface
-                    if oneip in routeip:
-                        logging.info(
-                            "We found a local interface that worked with the route"
-                        )
-                        logging.debug(oneip.ip)
-                        return oneip
+            logging.info("A static route matched.  Finding the IP for that route")
+            # logging.info(f"looking for {routeip} through routes {allIPs}")
+            for oneip in allIPs:
+                # oneip=ipaddress.IPv4Interface
+                if oneip in routeip:
+                    logging.info(
+                        "We found a local interface that worked with the route"
+                    )
+                    logging.debug(oneip.ip)
+                    return oneip
 
     # return the IP that is local to the dest IP
     for oneip in allIPs:
@@ -1521,18 +1512,16 @@ def sourceIP(src, dstIP, isBroadcast: bool = False):
             logging.debug(oneip.ip)
             return oneip
     # if we get here, we do not have a nic that is local to the destination.  Return the nic that the GW is on
-    # tmpval = f"{srcDevice['gateway']['ip']}/{srcDevice['gateway']['mask']}"
-    tmpval = f"{srcDevice['gateway']['ip']}"
-    GW = ipaddress.ip_address(tmpval)
+    gw = ipaddress.ip_address(src_dev.gateway)
     for oneip in allIPs:
-        if GW in oneip.network:
+        if gw in oneip.network:
             # print("The gateway is the way forward ")
             # print(oneip.ip)
             return oneip
 
     # if we do not have a GW, we need to report, "no route to host"
     logging.info(
-        f"sourceIP Giving 'No Route to host' from {srcDevice['hostname']} when looking for {dstIP}"
+        f"sourceIP Giving 'No Route to host' from {src_dev.hostname} when looking for {dstIP}"
     )
     session.print("No route to host")
     return None
@@ -1546,6 +1535,7 @@ def deviceCaptions(deviceRec, howmuch: str):
         howmuch:str - one of: 'none', 'full', 'host','host_ip','ip'
     returns an array of strings to be printed next to each device
     """
+    # FIXME: This should be a Device class method.
     captionstrings = []
     match howmuch:
         # case 'none':
@@ -1573,6 +1563,7 @@ def DeviceIPs(src, ignoreLoopback=True):
     Returns:
         A list of IP4Interface records (ip+mask)
     """
+    # FIXME: This should be a Device class method.
     interfacelist = []
     srcDevice = src
     if "hostname" not in src:
@@ -1613,6 +1604,7 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
     Returns:
         A list of strings (ip+mask)
     """
+    # FIXME: This should be a Device class method.
     interfacelist = []
     srcDevice = src
     if "hostname" not in src:
@@ -1678,6 +1670,7 @@ def interfaceIP(interfaceRec):
 
 
 def deviceHasIP(deviceRec, IPString: str):
+    # FIXME: This should be a Device class method.
     if deviceRec is None:
         return None
     tocheck = packet.justIP(IPString)
@@ -1699,6 +1692,7 @@ def deviceHasIP(deviceRec, IPString: str):
 
 def ip_is_broadcast_for_device(deviceRec, ipstr: str):
     """Return True if the specified ipstring is a broadcast IP for any of the interfaces defined on the device"""
+    # FIXME: This should be a Device class method.
     # logging.debug("Checking to see if our device has a broadcast IP")
     if not isinstance(deviceRec["nic"], list):
         # If it is not a list, turn it into a list so we can iterate it
@@ -1961,6 +1955,7 @@ def untunnel_packet(pkt, thedevice):
 
 def sendPacketOutDevice(pkt, theDevice):
     """Send the packet out of the device."""
+    # FIXME: This should be a Device class method.
     # Ensure Packet object.
     if not isinstance(pkt, packet.Packet):
         raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
@@ -2129,12 +2124,15 @@ def packetFromTo(src, dest, packettype: str):
             "Error: packetFromTo function must have a valid device as src.  None was passed in."
         )
         return None
+    src_dev = Device(src)
+
     # dest should be a device, an ip address, or a hostname
     if dest is None:
         logging.error(
             "Error: You must have a destination for packetFromTo.  None was passed in."
         )
         return None
+
     if isinstance(dest, str) and not packet.is_ipv4(dest):
         # If it is a string, but not a string that is an IP address
         # print("using dest as a hostname")
@@ -2160,7 +2158,7 @@ def packetFromTo(src, dest, packettype: str):
         nPacket = packet.Packet()
         nPacket.source_ip = sourceIP(src, dest, False)
         # The MAC address of the above IP
-        nPacket.source_mac = arpLookup(src, nPacket.source_ip)
+        nPacket.source_mac = src_dev.arp_lookup(nPacket.source_ip)
         # Figure this out
         nPacket.destination_ip = dest  # this should now be the IP
         # If the IP is local, we use the MAC of the host. Otherwise it is the MAC of the gateway,
