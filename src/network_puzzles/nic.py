@@ -179,10 +179,8 @@ class Nic(ItemBase):
             trackPackets = True
         if trackPackets:
             # We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
-            if "port_arps" not in dev.json:
-                dev.json["port_arps"] = {}
-            if pkt.source_mac not in dev.json.get("port_arps"):
-                dev.json["port_arps"][pkt.source_mac] = self.name
+            if pkt.source_mac not in dev.port_arps:
+                dev.port_arps[pkt.source_mac] = self.name
 
         # Look better tracking for network loops
         # If the same packet hits the same switch, we determine it is a loop

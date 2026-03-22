@@ -212,6 +212,12 @@ class Device(ItemBase):
         self.json["poweroff"] = value
 
     @property
+    def port_arps(self):
+        if self.json.get("port_arps") is None:
+            self.json["port_arps"] = {}
+        return self.json.get("port_arps")
+
+    @property
     def routes_packets(self):
         """Return `True` if the device routes packets, `False` if it does not."""
         match self.mytype:
@@ -522,6 +528,21 @@ class Device(ItemBase):
     def HasAdvancedFirewall(self):
         return len(self.firewall_rules) > 0
 
+    def accept_packet(self, pkt, nic):
+        """Initial processing to see if device can receive packets."""
+        pkt.in_host = self.hostname
+        logging.debug("-----------------------------------------")
+        logging.debug(f"Packet arrived at device: {self.hostname} TTL:{pkt.ttl} {pkt}")
+        logging.debug("-----------------------------------------")
+
+        # Do the simple stuff
+        if not self.powered_on or self.frozen:
+            pkt.status = "done"
+            # nothing more to be done
+            return
+        # Send packet on to NIC.
+        nic.receive_packet(pkt, self)
+
     def arp_lookup(self, ip):
         """find a mac address, with the source being the specified device
         Args:
@@ -814,21 +835,6 @@ class Device(ItemBase):
                         f"Key mismatch.  Cannot decrypt: key1 {pkt.key} - key2 {nic_obj.encryption_key}"
                     )
         return False
-
-    def accept_packet(self, pkt, nic):
-        """Initial processing to see if device can receive packets."""
-        pkt.in_host = self.hostname
-        logging.debug("-----------------------------------------")
-        logging.debug(f"Packet arrived at device: {self.hostname} TTL:{pkt.ttl} {pkt}")
-        logging.debug("-----------------------------------------")
-
-        # Do the simple stuff
-        if not self.powered_on or self.frozen:
-            pkt.status = "done"
-            # nothing more to be done
-            return
-        # Send packet on to NIC.
-        nic.receive_packet(pkt, self)
 
     def receive_packet(self, pkt, nic):
         """When a packet enters a device, coming from an interface and network card.  Here we respond to stuff, route, or switch..."""
