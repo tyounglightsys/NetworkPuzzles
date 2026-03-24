@@ -33,13 +33,10 @@ from .base import (
     PACKET_DIMS,
     HelpHighlight,
     LightColorTheme,
-    pos_to_location,
     print_layout_info,
-    show_grid,  # noqa: F401
+    show_grid,
 )
-from .buttons import MenuButton
-from .devices import ChooseNicPopup, GuiDevice
-from .links import GuiLink
+from .devices import GuiDevice
 from .packets import PacketManager
 from .popups import (
     CommandPopup,
@@ -112,46 +109,15 @@ class NetworkPuzzlesApp(App):
         if self.ui.update_puzzle_completion_status():
             PuzzleCompletePopup().open()
 
-    def add_device(self, devicew=None, dtype=None):
-        self._add_item(data=devicew, itemtype="device", devicetype=dtype)
-
-    def _add_item(self, data=None, itemtype=None, devicetype=None):
-        if isinstance(data, dict):
-            if itemtype == "device":
-                data = GuiDevice(json_data=data)
-            elif itemtype == "link":
-                data = GuiLink(json_data=data)
-        if isinstance(data, GuiDevice):
-            self.root.ids.layout.add_device(data)
-            return
-        elif isinstance(data, GuiLink):
-            self.root.ids.layout.add_link(data)
-            return
-        # Ensure new item menus are closed.
-        self.root.ids.layout.close_trays()
-
-        if isinstance(data, MenuButton):
-            if itemtype == "device":
-                # Initiate new device creation sequence.
-                self._new_device_type = devicetype
-                Clock.schedule_once(self._new_device)
-            elif itemtype == "link":
-                # Initiate new link creation sequence.
-                Clock.schedule_once(self._new_link)
-
-    def add_link(self, linkw=None):
-        self._add_item(data=linkw, itemtype="link")
-
     def add_terminal_line(self, line):
         if not line.endswith("\n"):
             line += "\n"
         self.root.ids.terminal.text += f"{self.ui.PS1} {line}"
 
     def draw_links(self, *args):
-        link_widgets = (
-            GuiLink(json_data=d) for d in self.ui.puzzle.links if d is not None
+        self.root.ids.layout.draw_links(
+            d for d in self.ui.puzzle.links if d is not None
         )
-        self.root.ids.layout.draw_links(link_widgets)
         self._print_stats()
 
     def draw_puzzle(self, *args):
@@ -182,9 +148,7 @@ class NetworkPuzzlesApp(App):
         # self.root.ids.help_slider.value = self.ui.puzzle.default_help_level
 
         # Add devices.
-        self.root.ids.layout.draw_devices(
-            (GuiDevice(json_data=d) for d in self.ui.puzzle.devices)
-        )
+        self.root.ids.layout.draw_devices(self.ui.puzzle.devices)
 
         # Some setup needs to be done one tick after devices, because their
         # positions depend on the devices' positions.
@@ -234,19 +198,6 @@ class NetworkPuzzlesApp(App):
     def on_undo(self):
         self.ui.undo()
 
-    def remove_item(self, item):
-        """Remove widget from layout by widget or item JSON data."""
-        # TODO: Add parser command to also remove widget from puzzle JSON.
-        widget = None
-        if isinstance(item, GuiLink) or isinstance(item, GuiDevice):
-            widget = item
-        elif isinstance(item, dict):
-            widget = self.root.ids.layout.get_widget_by_hostname(item.get("hostname"))
-        else:
-            raise TypeError(f"{type(item)=}")
-        if widget:
-            self.root.ids.layout.remove_widget(widget)
-
     def reset_display(self):
         """Clear display without clearing loaded puzzle data."""
         # Reset the layout area.
@@ -261,22 +212,9 @@ class NetworkPuzzlesApp(App):
         # Set variables to intial values.
         self.filtered_puzzles = []
         self.filters = []
-
-        # Delete temporary variables.
-        if hasattr(self, "new_device_data"):
-            del self.new_device_data
-        if hasattr(self, "new_link_data"):
-            del self.new_link_data
-        if hasattr(self, "chosen_device"):
-            del self.chosen_device
-        if hasattr(self, "chosen_nic"):
-            del self.chosen_nic
-        if hasattr(self, "chosen_pos"):
-            del self.chosen_pos
-
-        # Cancel scheduled functions.
-        Clock.unschedule(self._new_device)
-        Clock.unschedule(self._new_link)
+        if self.root:
+            # Delete temporary variables.
+            self.root.ids.layout.reset_vars()
 
     def setup_puzzle(self, *args):
         self.reset_vars()
@@ -315,26 +253,6 @@ class NetworkPuzzlesApp(App):
 
         set_state(self.root.ids.undo, session.undolist)
         set_state(self.root.ids.redo, session.redolist)
-
-    def user_select_device(self):
-        # TODO: Add on-screen indicator that a device needs to be selected.
-        if not hasattr(self, "chosen_device"):
-            self.chosen_device = None
-        elif self.chosen_device:
-            logging.info(f"App: User selected device: {self.chosen_device.hostname}")
-
-    def user_select_nic(self, devicew):
-        if not hasattr(self, "chosen_nic"):
-            self.chosen_nic = None
-            ChooseNicPopup(device=devicew).open()
-        elif self.chosen_nic:
-            logging.info(f"App: User selected NIC: {self.chosen_nic}")
-
-    def user_select_position(self):
-        if not hasattr(self, "chosen_pos"):
-            self.chosen_pos = None
-        elif self.chosen_pos:
-            logging.info(f"App: User selected pos: {self.chosen_pos}")
 
     def _help_highlight_devices(self, help_level=None):
         """
@@ -394,72 +312,6 @@ class NetworkPuzzlesApp(App):
             d = self.root.ids.layout.get_widget_by_hostname(dev)
             if hasattr(d, "button"):
                 d.update_tooltip_text(help_text)
-
-    def _new_device(self, *args):
-        """Create a new device in the puzzle layout.
-
-        This method is called repeatedly until each aspect of the new device is
-        defined and the device is created.
-        """
-        if not hasattr(self, "new_device_data"):
-            self.new_device_data = [self._new_device_type]
-            del self._new_device_type
-            Clock.schedule_once(self._new_device)
-        elif len(self.new_device_data) == 1:
-            # Set position.
-            self.user_select_position()
-            if self.chosen_pos:
-                # Convert pos to puzzle coords.
-                loc = pos_to_location(self.chosen_pos, self.root.ids.layout.size)
-                loc_str = ",".join([str(e) for e in loc])
-                self.new_device_data.append(loc_str)
-                del self.chosen_pos
-            Clock.schedule_once(self._new_device)
-        else:
-            cmd = ["create", "device", *self.new_device_data]
-            del self.new_device_data
-            self.ui.parse(" ".join(cmd))
-
-    def _new_link(self, *args):
-        """Create a new link in the puzzle layout.
-
-        This method is called repeatedly until each aspect of the new link is
-        defined and the link is created.
-        """
-        if not hasattr(self, "new_link_data"):
-            self.new_link_data = []
-            Clock.schedule_once(self._new_link)
-        elif len(self.new_link_data) < 1:
-            self.user_select_device()
-            if self.chosen_device:
-                self.new_link_data.append(self.chosen_device.hostname)
-                del self.chosen_device
-            Clock.schedule_once(self._new_link)
-        elif len(self.new_link_data) < 2:
-            srcdev = self.root.ids.layout.get_widget_by_hostname(self.new_link_data[0])
-            self.user_select_nic(srcdev)
-            if self.chosen_nic:
-                self.new_link_data.append(self.chosen_nic)
-                del self.chosen_nic
-            Clock.schedule_once(self._new_link)
-        elif len(self.new_link_data) < 3:
-            self.user_select_device()
-            if self.chosen_device:
-                self.new_link_data.append(self.chosen_device.hostname)
-                del self.chosen_device
-            Clock.schedule_once(self._new_link)
-        elif len(self.new_link_data) < 4:
-            dstdev = self.root.ids.layout.get_widget_by_hostname(self.new_link_data[2])
-            self.user_select_nic(dstdev)
-            if self.chosen_nic:
-                self.new_link_data.append(self.chosen_nic)
-                del self.chosen_nic
-            Clock.schedule_once(self._new_link)
-        else:
-            # Construct the parser command.
-            cmd = ["create", "link", *self.new_link_data]
-            del self.new_link_data
-            self.ui.parse(" ".join(cmd))
 
     def _print_stats(self, *args, grid=False):
         if grid:

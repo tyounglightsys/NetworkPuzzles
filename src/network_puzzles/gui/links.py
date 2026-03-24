@@ -131,7 +131,7 @@ class LinkPopup(ThemedPopup):
 
     def delete(self):
         self.app.ui.parse(f"delete {self.link.hostname}")
-        self.app.remove_item(self.link)
+        self.app.root.ids.layout.remove_item(self.link)
         self.dismiss()
 
     def edit(self):

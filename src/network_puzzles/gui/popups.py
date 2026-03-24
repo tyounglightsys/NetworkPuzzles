@@ -93,7 +93,7 @@ class ChooseNicPopup(DevicePopup):
         self.selected_nic = selected_nic.get("data")
 
     def on_okay(self):
-        self.app.chosen_nic = self.selected_nic.name
+        self.app.root.ids.layout.chosen_nic = self.selected_nic.name
         super().on_okay()
 
 

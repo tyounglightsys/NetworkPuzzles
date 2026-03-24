@@ -22,7 +22,6 @@ from .base import (
 from .buttons import CommandButton
 from .layouts import ThemedBoxLayout
 from .popups import (
-    ChooseNicPopup,  # noqa: F401
     DeviceCommandsPopup,
     DevicePopup,
     EditDhcpPopup,
@@ -170,8 +169,8 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
                 self.loc_last = loc
 
     def on_release(self):
-        if hasattr(self.app, "chosen_device"):
-            self.app.chosen_device = self
+        if hasattr(self.app.root.ids.layout, "chosen_device"):
+            self.app.root.ids.layout.chosen_device = self
             return
         self._build_commands_popup().open()
 
