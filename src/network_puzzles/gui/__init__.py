@@ -208,15 +208,6 @@ class NetworkPuzzlesApp(App):
     def on_language(self):
         raise NotImplementedError
 
-    def on_new_infra_device(self, inst):
-        self.root.ids.layout.infra_devices_tray.toggle()
-
-    def on_new_item(self, inst):
-        self.root.ids.layout.items_tray.toggle()
-
-    def on_new_user_device(self, inst):
-        self.root.ids.layout.user_devices_tray.toggle()
-
     def on_puzzle_chooser(self, *args):
         PuzzleChooserPopup().open()
 

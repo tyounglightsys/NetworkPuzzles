@@ -121,7 +121,7 @@ class PuzzleLayout(RelativeLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.items_menu_button = MenuButton(
-            props={"text": "+", "cb": self.app.on_new_item, "info": "add new item"},
+            props={"text": "+", "cb": self.on_new_item, "info": "add new item"},
             pos_hint={"x": 0.005, "top": 0.99},
         )
 
@@ -208,6 +208,15 @@ class PuzzleLayout(RelativeLayout):
     def get_widget_by_hostname(self, hostname):
         return self._get_widget_by_prop("hostname", hostname)
 
+    def on_new_infra_device(self, inst):
+        self.infra_devices_tray.toggle()
+
+    def on_new_item(self, inst):
+        self.items_tray.toggle()
+
+    def on_new_user_device(self, inst):
+        self.user_devices_tray.toggle()
+
     def on_touch_up(self, touch):
         if self.collide_point(*touch.pos):
             if touch.button == "left" or touch.button is None:
@@ -247,12 +256,12 @@ class PuzzleLayout(RelativeLayout):
             {"img": "link.png", "cb": self.app.add_link, "info": "add link"},
             {
                 "img": "Switch.png",
-                "cb": self.app.on_new_infra_device,
+                "cb": self.on_new_infra_device,
                 "info": "infrastructure devices",
             },
             {
                 "img": "PC.png",
-                "cb": self.app.on_new_user_device,
+                "cb": self.on_new_user_device,
                 "info": "user devices",
             },
         ]
