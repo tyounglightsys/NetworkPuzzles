@@ -45,6 +45,41 @@
             PopupButton:  # Routes
                 text: _("Routes")
                 on_release: root.on_routes_button()
+            # Conditional widgets.
+            SingleRowLayout:  # DHCP
+                id: dhcp_box
+                ThemedCheckBox:
+                    size_hint_x: 0.1
+                    state: "down" if root.device.is_dhcp else "normal"
+                    on_active: root.on_dhcp_checkbox(self, self.active)
+                CheckBoxLabel:
+                    size_hint_x: 0.4
+                    text: _("DHCP server")
+                ThemedButton:
+                    size_hint_x: 0.5
+                    text: _("DHCP")
+                    on_release: root.on_dhcp_button()
+            SingleRowLayout:  # firewall
+                id: firewall_box
+                ThemedCheckBox:
+                    size_hint_x: 0.1
+                    state: "down" if root.device.is_firewall else "normal"
+                    on_active: root.on_firewall_checkbox(self, self.active)
+                CheckBoxLabel:
+                    size_hint_x: 0.4
+                    text: _("Firewall")
+                ThemedButton:
+                    size_hint_x: 0.5
+                    text: _("Firewall")
+                    on_release: root.on_firewall_button()
+            ThemedButton:  # VLANs
+                id: vlans_button
+                text: _("VLANs")
+                on_release: root.on_vlans_button()
+            Widget:
+            #ActionPopupButtons:
+            #    on_cancel: root.on_cancel()
+            #    on_okay: root.on_okay()
         ThemedBoxLayout:  # center 1/3
             size_hint_x: 0.3
             orientation: "vertical"

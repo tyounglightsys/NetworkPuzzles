@@ -7,23 +7,20 @@ from kivy.metrics import dp
 from kivy.uix.behaviors import DragBehavior
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
-from kivy.uix.widget import Widget
 
 from .. import _, interface, nic, session
 from ..device import Device
 from .base import (
     HelpHighlight,
     LockEmblem,
-    ThemedCheckBox,
     get_device_image_path_by_type,
     get_layout_height,
     hide_widget,
     location_to_pos,
     pos_to_location,
 )
-from .buttons import CommandButton, ThemedButton
-from .labels import CheckBoxLabel
-from .layouts import SingleRowLayout, ThemedBoxLayout
+from .buttons import CommandButton
+from .layouts import ThemedBoxLayout
 from .popups import (
     ChooseNicPopup,  # noqa: F401
     DeviceCommandsPopup,
@@ -292,7 +289,9 @@ class EditDevicePopup(DevicePopup):
         super().__init__(**kwargs)
         self.selected_ip = None
         self.selected_nic = None
-        self._add_conditional_widgets()
+        # TODO: Consider adding an "ARP table" button, if it needs to be accessed
+        # from time to time.
+        self._update_conditional_widgets()
 
     def on_dhcp_button(self):
         EditDhcpPopup(device=self.device).open()
@@ -300,23 +299,20 @@ class EditDevicePopup(DevicePopup):
     def on_dhcp_checkbox(self, inst, value):
         self.device.is_dhcp = value
 
-    def on_gateway(self):
-        if not self.ids.gateway.focus:
-            self.app.ui.parse(
-                f"set {self.device.hostname} gateway {self.ids.gateway.text}"
-            )
-
     def on_firewall_button(self):
         EditFirewallPopup(device=self.device).open()
 
     def on_firewall_checkbox(self, inst, value):
         self.device.is_firewall = value
 
+    def on_gateway(self):
+        if not self.ids.gateway.focus:
+            self.app.ui.parse(
+                f"set {self.device.hostname} gateway {self.ids.gateway.text}"
+            )
+
     def on_routes_button(self):
         EditRoutesPopup(device=self.device).open()
-
-    def on_vlans(self):
-        raise NotImplementedError
 
     def on_ip_selection(self, selected_ip):
         self.selected_ip = selected_ip
@@ -387,47 +383,18 @@ class EditDevicePopup(DevicePopup):
         self.app.update_help()
         super().on_okay()
 
-    def _add_conditional_widgets(self):
-        """Add buttons and checkboxes for features that are only available for
+    def on_vlans_button(self):
+        raise NotImplementedError
+
+    def _update_conditional_widgets(self):
+        """Hide buttons and checkboxes for features that are only available for
         certain types of devices."""
-        # Add DHCP.
-        if self.device.serves_dhcp:
-            # Handle DHCP checkbox, label, and button.
-            l_cb = SingleRowLayout(padding=0)
-            if self.device.is_dhcp:
-                state = "down"
-            else:
-                state = "normal"
-            cb = ThemedCheckBox(size_hint_x=0.1, state=state)
-            cb.bind(active=self.on_dhcp_checkbox)
-            t = CheckBoxLabel(text=f"{_('DHCP Server')}", size_hint_x=0.4)
-            b = ThemedButton(text=f"{_('DHCP')}", on_release=self.on_dhcp_button)
-            for w in [cb, t, b]:
-                l_cb.add_widget(w)
-            self.root.ids.left_panel.add_widget(l_cb)
-        # Add Firewall.
-        if self.device.does_firewall:
-            l_cb = SingleRowLayout(padding=0)
-            if self.device.is_firewall:
-                state = "down"
-            else:
-                state = "normal"
-            cb = ThemedCheckBox(size_hint_x=0.1, state=state)
-            cb.bind(active=self.on_firewall_checkbox)
-            t = CheckBoxLabel(text=f"{_('Firewall')}", size_hint_x=0.4)
-            b = ThemedButton(
-                text=f"{_('Firewall')}", on_release=self.on_firewall_button
-            )
-            for w in [cb, t, b]:
-                l_cb.add_widget(w)
-            self.root.ids.left_panel.add_widget(l_cb)
-        # Add VLANs.
-        if self.device.does_vlans:
-            # Handle VLANs button.
-            b = ThemedButton(text=f"{_('VLANs')}", on_release=self.on_vlans)
-            self.root.ids.left_panel.add_widget(b)
-        # Add empty widget at end to push all other widgets to the top.
-        self.root.ids.left_panel.add_widget(Widget())
+        if not self.device.serves_dhcp:
+            self.ids.left_panel.remove_widget(self.ids.dhcp_box)
+        if not self.device.does_firewall:
+            self.ids.left_panel.remove_widget(self.ids.firewall_box)
+        if not self.device.does_vlans:
+            self.ids.left_panel.remove_widget(self.ids.vlans_button)
 
     def _get_ip_config_from_nic(self, nic_obj, value):
         """Return IP config object from NIC.
