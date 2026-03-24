@@ -317,6 +317,7 @@ class EditRoutesPopup(DevicePopup):
     def on_open(self):
         self.ids.nic_routes_list.update_data()
         self.ids.static_routes_list.update_data(static=True)
+        super().on_open()
 
     def on_route_selection(self, route_data, inst):
         if inst is self.ids.static_routes_list.__ref__():
