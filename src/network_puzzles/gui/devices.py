@@ -62,7 +62,7 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
     @property
     def links(self):
         links = list()
-        for lnk in self.app.links:
+        for lnk in self.app.root.ids.layout.links:
             if self.hostname in lnk.hostname:
                 links.append(lnk)
         return links

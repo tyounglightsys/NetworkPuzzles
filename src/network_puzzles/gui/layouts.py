@@ -1,3 +1,5 @@
+import logging
+
 from kivy.metrics import dp, sp
 from kivy.properties import NumericProperty, StringProperty
 from kivy.uix.behaviors import FocusBehavior
@@ -142,8 +144,39 @@ class PuzzleLayout(RelativeLayout):
     def app(self):
         return session.app
 
+    @property
+    def devices(self):
+        return self._get_widgets_by_class_name("GuiDevice")
+
+    @property
+    def links(self):
+        return self._get_widgets_by_class_name("GuiLink")
+
+    @property
+    def packets(self):
+        return self._get_widgets_by_class_name("GuiPacket")
+
+    def add_device(self, devicew):
+        """Add pre-defined device widget to the layout."""
+        # Hide invisible devices.
+        if devicew.is_invisible:
+            devicew.hide()
+
+        # Add device to layout.
+        self.add_widget(devicew)
+
     def add_items_menu_button(self):
         self.add_widget(self.items_menu_button)
+
+    def add_link(self, linkw):
+        # Hide links connected to invisible devices.
+        for host in (linkw.src, linkw.dest):
+            w = self.get_widget_by_hostname(host)
+            if w.is_invisible:
+                linkw.hide()
+
+        # Add link to z-index = 99 to ensure it's drawn under devices.
+        self.add_widget(linkw, 99)
 
     def close_trays(self):
         # Close tray and subtrays if open.
@@ -153,6 +186,27 @@ class PuzzleLayout(RelativeLayout):
             self.items_tray,
         ):
             tray.close()
+
+    def draw_devices(self, device_widgets):
+        for d in device_widgets:
+            self.add_device(d)
+
+    def draw_links(self, link_widgets):
+        for link_widget in link_widgets:
+            self.add_link(link_widget)
+
+    def get_first_link_index(self):
+        first_index = None
+        for w in self.links:
+            idx = self.children.index(w)
+            if first_index is None:
+                first_index = idx
+            else:
+                first_index = min((idx, first_index))
+        return first_index
+
+    def get_widget_by_hostname(self, hostname):
+        return self._get_widget_by_prop("hostname", hostname)
 
     def on_touch_up(self, touch):
         if self.collide_point(*touch.pos):
@@ -169,6 +223,15 @@ class PuzzleLayout(RelativeLayout):
                 # widgets can receive it; e.g. so that Device buttons are able
                 # to be "pressed".
                 return super().on_touch_up(touch)
+
+    def reset(self):
+        # Remove any remaining child widgets from puzzle layout.
+        self.clear_widgets()
+        # Redraw the "+" button for adding new items.
+        self.add_items_menu_button()
+
+    def show_devices_with_open_ports(self):
+        logging.debug(f"TEST: ")
 
     def _get_infra_devices_choices(self):
         choices = []
@@ -202,3 +265,15 @@ class PuzzleLayout(RelativeLayout):
             choice["orientation"] = "horizontal"
             choices.append(choice)
         return choices
+
+    def _get_widget_by_prop(self, prop, value):
+        for w in self.children:
+            if hasattr(w, prop) and getattr(w, prop) == value:
+                return w
+
+    def _get_widgets_by_class_name(self, name):
+        widgets = []
+        for w in self.children:
+            if w.__class__.__name__ == name:
+                widgets.append(w)
+        return widgets

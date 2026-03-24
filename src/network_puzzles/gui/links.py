@@ -80,14 +80,14 @@ class GuiLink(Widget, Link):
 
     def _set_endpoint(self, end_dev=None):
         if end_dev is None:
-            end_dev = self.app.get_widget_by_hostname(
+            end_dev = self.app.root.ids.layout.get_widget_by_hostname(
                 self.json.get("DstNic").get("hostname")
             )
         self.end = end_dev.button.center
 
     def _set_startpoint(self, start_dev=None):
         if start_dev is None:
-            start_dev = self.app.get_widget_by_hostname(
+            start_dev = self.app.root.ids.layout.get_widget_by_hostname(
                 self.json.get("SrcNic").get("hostname")
             )
         self.start = start_dev.button.center
