@@ -86,6 +86,12 @@ class LockEmblem(Widget):
         super().__init__(**kwargs)
 
 
+class DeviceIndicator(Widget):
+    def __init__(self, device=None, **kwargs):
+        self.device = device
+        super().__init__(**kwargs)
+
+
 class HelpSlider(Slider):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)

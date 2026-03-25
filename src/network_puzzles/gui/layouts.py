@@ -10,7 +10,7 @@ from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.uix.relativelayout import RelativeLayout
 
 from .. import _, session
-from .base import NETWORK_ITEMS, pos_to_location
+from .base import NETWORK_ITEMS, DeviceIndicator, pos_to_location
 from .buttons import MenuButton
 
 
@@ -247,6 +247,15 @@ class PuzzleLayout(RelativeLayout):
                 first_index = min((idx, first_index))
         return first_index
 
+    def get_min_link_index(self):
+        idx = None
+        for lnk in self.links:
+            if idx is None:
+                idx = self.children.index(lnk)
+            else:
+                idx = min(idx, self.children.index(lnk))
+        return idx
+
     def get_widget_by_hostname(self, hostname):
         return self._get_widget_by_prop("hostname", hostname)
 
@@ -336,6 +345,14 @@ class PuzzleLayout(RelativeLayout):
                     if len(touch.grab_list) == 0:
                         self.chosen_pos = self.to_widget(*touch.pos)
                     return True
+                elif hasattr(self, "chosen_device"):
+                    if len(touch.grab_list) == 0:
+                        # User clicked on empty space while choosing device;
+                        # cancel addition of new link (the only reason for
+                        # device selection).
+                        # NOTE: Event is allowed to propagate because there are
+                        # no other widgets
+                        self.reset_link_addition()
                 # NOTE: The touch has to be explicitly passed on so that child
                 # widgets can receive it; e.g. so that Device buttons are able
                 # to be "pressed".
@@ -364,31 +381,66 @@ class PuzzleLayout(RelativeLayout):
         # Redraw the "+" button for adding new items.
         self.add_items_menu_button()
 
-    def reset_vars(self):
-        # Delete temporary variables.
+    def reset_device_addition(self):
+        # Stop the continuation of the function.
+        Clock.unschedule(self._new_device)
+        # Reset temporary vars.
+        if hasattr(self, "new_device_type"):
+            del self.new_device_type
         if hasattr(self, "new_device_data"):
             del self.new_device_data
+        if hasattr(self, "chosen_pos"):
+            del self.chosen_pos
+
+    def reset_link_addition(self):
+        # Stop the continuation of the function.
+        Clock.unschedule(self._new_link)
+        # Remove device indicatiors.
+        self.show_devices_with_open_ports(clear=True)
+        # Reset temporary vars.
         if hasattr(self, "new_link_data"):
             del self.new_link_data
         if hasattr(self, "chosen_device"):
             del self.chosen_device
         if hasattr(self, "chosen_nic"):
             del self.chosen_nic
-        if hasattr(self, "chosen_pos"):
-            del self.chosen_pos
 
-        # Cancel scheduled functions.
-        Clock.unschedule(self._new_device)
-        Clock.unschedule(self._new_link)
+    def reset_vars(self):
+        # Delete temporary variables.
+        self.reset_link_addition()
+        self.reset_device_addition()
 
-    def show_devices_with_open_ports(self):
-        logging.debug(f"TEST: {self.devices=}")
+    def show_devices_with_open_ports(self, clear=False):
+        if clear:
+            for w in self._get_widgets_by_class_name("DeviceIndicator"):
+                self.remove_widget(w)
+            return
+
+        # Set index so that indicators will be placed just "above" links.
+        idx = self.get_min_link_index()
+        for dev in self.devices:
+            # Exclude devices with no available nics.
+            if not dev.get_available_nics():
+                continue
+            # Exclude currently selected device if adding link.
+            if (
+                hasattr(self, "new_link_data")
+                and len(self.new_link_data) > 0
+                and dev.hostname == self.new_link_data[0]
+            ):
+                continue
+            # Place indicator just "above" links.
+            self.add_widget(DeviceIndicator(dev), idx)
 
     def user_select_device(self):
-        # TODO: Add on-screen indicator that a device needs to be selected.
         if not hasattr(self, "chosen_device"):
+            self.show_devices_with_open_ports()
             self.chosen_device = None
+        elif self.chosen_device is None:
+            # Awaiting device selection.
+            pass
         elif self.chosen_device:
+            self.show_devices_with_open_ports(clear=True)
             logging.info(
                 f"layouts: User selected device: {self.chosen_device.hostname}"
             )
