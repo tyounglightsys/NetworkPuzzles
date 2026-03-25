@@ -48,6 +48,15 @@ class Interface(ItemBase):
             self.json["VLAN"] = [self.json.get("VLAN")]
         return self.json.get("VLANS")
 
+    def begin_ingress(self, pkt):
+        """Here we would do anything needed to be done with the interface.
+        VLAN
+        SSID
+        Tunnel/VPN
+        """
+        # right now, we let pass it back
+        return True
+
 
 class IpAddress(ItemBase):
     def __init__(self, json_data=None):
