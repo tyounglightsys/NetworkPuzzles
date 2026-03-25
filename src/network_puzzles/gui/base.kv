@@ -78,3 +78,14 @@
     min: 0
     max: 3
     step: 1
+
+<DeviceIndicator>:
+    size: (self.device.width * 2, self.device.width * 2)
+    size_hint: (None, None)
+    center: self.device.center
+    canvas  :
+        Color:
+            rgba: (2, 2, 2, 0.5)
+        Ellipse:
+            size: self.size
+            pos: self.pos

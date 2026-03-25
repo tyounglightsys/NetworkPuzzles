@@ -40,7 +40,7 @@ class PacketManager:
     @property
     def gui_packets(self):
         """Return list of existing packet widgets."""
-        return self.app.packets
+        return self.app.root.ids.layout.packets
 
     @property
     def packet_ids(self):
@@ -60,7 +60,9 @@ class PacketManager:
         if link_data is None:
             # This would cause stuff the next line to explode
             return None
-        return self.app.get_widget_by_hostname(link_data.get("hostname"))
+        return self.app.root.ids.layout.get_widget_by_hostname(
+            link_data.get("hostname")
+        )
 
     def update_packets(self, *args):
         """Updates drawn packet widgets in the puzzle, either by adding new ones,
@@ -75,7 +77,7 @@ class PacketManager:
         # which means it needs to be one less than the lowest link index, which
         # can change during the course of solving the puzzle if links are added
         # or removed.
-        link_idx = self.app.get_first_link_index()
+        link_idx = self.app.root.ids.layout.get_first_link_index()
         if link_idx is None:
             # No links loaded; therefore, no packets can be added or removed.
             return

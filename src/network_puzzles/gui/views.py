@@ -57,9 +57,6 @@ class NICsRecView(AppRecView):
             # Add MAC address to NIC description.
             text += f"; {n.mac}"
             data.append({"text": text, "data": n})
-        item = {"text": "management_interface0"}
-        if not management and item in data:
-            data.remove(item)
         self.data = data
 
 

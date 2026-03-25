@@ -1,3 +1,6 @@
+import logging
+
+from kivy.clock import Clock
 from kivy.metrics import dp, sp
 from kivy.properties import NumericProperty, StringProperty
 from kivy.uix.behaviors import FocusBehavior
@@ -7,7 +10,7 @@ from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.uix.relativelayout import RelativeLayout
 
 from .. import _, session
-from .base import NETWORK_ITEMS
+from .base import NETWORK_ITEMS, DeviceIndicator, pos_to_location
 from .buttons import MenuButton
 
 
@@ -119,7 +122,7 @@ class PuzzleLayout(RelativeLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.items_menu_button = MenuButton(
-            props={"text": "+", "cb": self.app.on_new_item, "info": "add new item"},
+            props={"text": "+", "cb": self.on_new_item, "info": "add new item"},
             pos_hint={"x": 0.005, "top": 0.99},
         )
 
@@ -142,8 +145,76 @@ class PuzzleLayout(RelativeLayout):
     def app(self):
         return session.app
 
+    @property
+    def devices(self):
+        return self._get_widgets_by_class_name("GuiDevice")
+
+    @property
+    def links(self):
+        return self._get_widgets_by_class_name("GuiLink")
+
+    @property
+    def packets(self):
+        return self._get_widgets_by_class_name("GuiPacket")
+
+    def add_device(self, devicew, devicetype=None):
+        # Handle creation of new link.
+        if isinstance(devicew, MenuButton):
+            self._add_item(data=devicew, itemtype="device", devicetype=devicetype)
+            return
+
+        # Hide invisible devices.
+        if devicew.is_invisible:
+            devicew.hide()
+
+        # Add device to layout.
+        self.add_widget(devicew)
+
+    def _add_item(self, data=None, itemtype=None, devicetype=None):
+        # Import here to avoid circular imports.
+        from .devices import GuiDevice
+        from .links import GuiLink
+
+        if isinstance(data, dict):
+            if itemtype == "device":
+                data = GuiDevice(json_data=data)
+            elif itemtype == "link":
+                data = GuiLink(json_data=data)
+        if isinstance(data, GuiDevice):
+            self.add_device(data)
+            return
+        elif isinstance(data, GuiLink):
+            self.add_link(data)
+            return
+        # Ensure new item menus are closed.
+        self.close_trays()
+
+        if isinstance(data, MenuButton):
+            if itemtype == "device":
+                # Initiate new device creation sequence.
+                self._new_device_type = devicetype
+                Clock.schedule_once(self._new_device)
+            elif itemtype == "link":
+                # Initiate new link creation sequence.
+                Clock.schedule_once(self._new_link)
+
     def add_items_menu_button(self):
         self.add_widget(self.items_menu_button)
+
+    def add_link(self, linkw=None):
+        # Handle creation of new link.
+        if isinstance(linkw, MenuButton):
+            self._add_item(data=linkw, itemtype="link")
+            return
+
+        # Hide links connected to invisible devices.
+        for host in (linkw.src, linkw.dest):
+            w = self.get_widget_by_hostname(host)
+            if w.is_invisible:
+                linkw.hide()
+
+        # Add link to z-index = 99 to ensure it's drawn under devices.
+        self.add_widget(linkw, 99)
 
     def close_trays(self):
         # Close tray and subtrays if open.
@@ -154,42 +225,262 @@ class PuzzleLayout(RelativeLayout):
         ):
             tray.close()
 
+    def draw_devices(self, devices):
+        from .devices import GuiDevice  # avoid circular import
+
+        for d in devices:
+            self.add_device(GuiDevice(json_data=d))
+
+    def draw_links(self, links):
+        from .links import GuiLink  # avoid circular import
+
+        for d in links:
+            self.add_link(GuiLink(json_data=d))
+
+    def get_first_link_index(self):
+        first_index = None
+        for w in self.links:
+            idx = self.children.index(w)
+            if first_index is None:
+                first_index = idx
+            else:
+                first_index = min((idx, first_index))
+        return first_index
+
+    def get_min_link_index(self):
+        idx = None
+        for lnk in self.links:
+            if idx is None:
+                idx = self.children.index(lnk)
+            else:
+                idx = min(idx, self.children.index(lnk))
+        return idx
+
+    def get_widget_by_hostname(self, hostname):
+        return self._get_widget_by_prop("hostname", hostname)
+
+    def _new_device(self, *args):
+        """Create a new device in the puzzle layout.
+
+        This method is called repeatedly until each aspect of the new device is
+        defined and the device is created.
+        """
+        if not hasattr(self, "new_device_data"):
+            self.new_device_data = [self._new_device_type]
+            del self._new_device_type
+            Clock.schedule_once(self._new_device)
+        elif len(self.new_device_data) == 1:
+            # Set position.
+            self.user_select_position()
+            if self.chosen_pos:
+                # Convert pos to puzzle coords.
+                loc = pos_to_location(self.chosen_pos, self.size)
+                loc_str = ",".join([str(e) for e in loc])
+                self.new_device_data.append(loc_str)
+                del self.chosen_pos
+            Clock.schedule_once(self._new_device)
+        else:
+            cmd = ["create", "device", *self.new_device_data]
+            del self.new_device_data
+            self.app.ui.parse(" ".join(cmd))
+
+    def _new_link(self, *args):
+        """Create a new link in the puzzle layout.
+
+        This method is called repeatedly until each aspect of the new link is
+        defined and the link is created.
+        """
+        if not hasattr(self, "new_link_data"):
+            self.new_link_data = []
+            Clock.schedule_once(self._new_link)
+        elif len(self.new_link_data) < 1:
+            self.user_select_device()
+            if self.chosen_device:
+                self.new_link_data.append(self.chosen_device.hostname)
+                del self.chosen_device
+            Clock.schedule_once(self._new_link)
+        elif len(self.new_link_data) < 2:
+            srcdev = self.get_widget_by_hostname(self.new_link_data[0])
+            self.user_select_nic(srcdev)
+            if self.chosen_nic:
+                self.new_link_data.append(self.chosen_nic)
+                del self.chosen_nic
+            Clock.schedule_once(self._new_link)
+        elif len(self.new_link_data) < 3:
+            self.user_select_device()
+            if self.chosen_device:
+                self.new_link_data.append(self.chosen_device.hostname)
+                del self.chosen_device
+            Clock.schedule_once(self._new_link)
+        elif len(self.new_link_data) < 4:
+            dstdev = self.get_widget_by_hostname(self.new_link_data[2])
+            self.user_select_nic(dstdev)
+            if self.chosen_nic:
+                self.new_link_data.append(self.chosen_nic)
+                del self.chosen_nic
+            Clock.schedule_once(self._new_link)
+        else:
+            # Construct the parser command.
+            cmd = ["create", "link", *self.new_link_data]
+            del self.new_link_data
+            self.app.ui.parse(" ".join(cmd))
+
+    def on_new_infra_device(self, inst):
+        self.infra_devices_tray.toggle()
+
+    def on_new_item(self, inst):
+        self.items_tray.toggle()
+
+    def on_new_user_device(self, inst):
+        self.user_devices_tray.toggle()
+
     def on_touch_up(self, touch):
         if self.collide_point(*touch.pos):
             if touch.button == "left" or touch.button is None:
-                if hasattr(self.app, "chosen_pos"):
+                if hasattr(self, "chosen_pos"):
                     # NOTE: If touch.grab_list is populated it means that a
                     # widget was touched instead of empty space. Do not set the
                     # chosen_pos, wait instead for another touch. Either way, True
                     # should be returned so that the touch is not propagated.
                     if len(touch.grab_list) == 0:
-                        self.app.chosen_pos = self.to_widget(*touch.pos)
+                        self.chosen_pos = self.to_widget(*touch.pos)
                     return True
+                elif hasattr(self, "chosen_device"):
+                    if len(touch.grab_list) == 0:
+                        # User clicked on empty space while choosing device;
+                        # cancel addition of new link (the only reason for
+                        # device selection).
+                        # NOTE: Event is allowed to propagate because there are
+                        # no other widgets
+                        self.reset_link_addition()
                 # NOTE: The touch has to be explicitly passed on so that child
                 # widgets can receive it; e.g. so that Device buttons are able
                 # to be "pressed".
                 return super().on_touch_up(touch)
 
+    def remove_item(self, item):
+        """Remove widget from layout by widget or item JSON data."""
+        # Import here to avoid circular imports.
+        from .devices import GuiDevice
+        from .links import GuiLink
+
+        # TODO: Add parser command to also remove widget from puzzle JSON.
+        widget = None
+        if isinstance(item, GuiLink) or isinstance(item, GuiDevice):
+            widget = item
+        elif isinstance(item, dict):
+            widget = self.get_widget_by_hostname(item.get("hostname"))
+        else:
+            raise TypeError(f"{type(item)=}")
+        if widget:
+            self.remove_widget(widget)
+
+    def reset(self):
+        # Remove any remaining child widgets from puzzle layout.
+        self.clear_widgets()
+        # Redraw the "+" button for adding new items.
+        self.add_items_menu_button()
+
+    def reset_device_addition(self):
+        # Stop the continuation of the function.
+        Clock.unschedule(self._new_device)
+        # Reset temporary vars.
+        if hasattr(self, "new_device_type"):
+            del self.new_device_type
+        if hasattr(self, "new_device_data"):
+            del self.new_device_data
+        if hasattr(self, "chosen_pos"):
+            del self.chosen_pos
+
+    def reset_link_addition(self):
+        # Stop the continuation of the function.
+        Clock.unschedule(self._new_link)
+        # Remove device indicatiors.
+        self.show_devices_with_open_ports(clear=True)
+        # Reset temporary vars.
+        if hasattr(self, "new_link_data"):
+            del self.new_link_data
+        if hasattr(self, "chosen_device"):
+            del self.chosen_device
+        if hasattr(self, "chosen_nic"):
+            del self.chosen_nic
+
+    def reset_vars(self):
+        # Delete temporary variables.
+        self.reset_link_addition()
+        self.reset_device_addition()
+
+    def show_devices_with_open_ports(self, clear=False):
+        if clear:
+            for w in self._get_widgets_by_class_name("DeviceIndicator"):
+                self.remove_widget(w)
+            return
+
+        # Set index so that indicators will be placed just "above" links.
+        idx = self.get_min_link_index()
+        for dev in self.devices:
+            # Exclude devices with no available nics.
+            if not dev.get_available_nics():
+                continue
+            # Exclude currently selected device if adding link.
+            if (
+                hasattr(self, "new_link_data")
+                and len(self.new_link_data) > 0
+                and dev.hostname == self.new_link_data[0]
+            ):
+                continue
+            # Place indicator just "above" links.
+            self.add_widget(DeviceIndicator(dev), idx)
+
+    def user_select_device(self):
+        if not hasattr(self, "chosen_device"):
+            self.show_devices_with_open_ports()
+            self.chosen_device = None
+        elif self.chosen_device is None:
+            # Awaiting device selection.
+            pass
+        elif self.chosen_device:
+            self.show_devices_with_open_ports(clear=True)
+            logging.info(
+                f"layouts: User selected device: {self.chosen_device.hostname}"
+            )
+
+    def user_select_nic(self, devicew):
+        if not hasattr(self, "chosen_nic"):
+            self.chosen_nic = None
+            # Import popup here to avoid circular imports.
+            from .popups import ChooseNicPopup
+
+            ChooseNicPopup(device=devicew).open()
+        elif self.chosen_nic:
+            logging.info(f"layouts: User selected NIC: {self.chosen_nic}")
+
+    def user_select_position(self):
+        if not hasattr(self, "chosen_pos"):
+            self.chosen_pos = None
+        elif self.chosen_pos:
+            logging.info(f"layouts: User selected pos: {self.chosen_pos}")
+
     def _get_infra_devices_choices(self):
         choices = []
         for dtype, choice in NETWORK_ITEMS.get("devices").get("infrastructure").items():
-            choice["cb"] = self.app.add_device
-            choice["cb_kwargs"] = {"dtype": dtype}
+            choice["cb"] = self.add_device
+            choice["cb_kwargs"] = {"devicetype": dtype}
             choice["orientation"] = "horizontal"
             choices.append(choice)
         return choices
 
     def _get_items_choices(self):
         return [
-            {"img": "link.png", "cb": self.app.add_link, "info": "add link"},
+            {"img": "link.png", "cb": self.add_link, "info": "add link"},
             {
                 "img": "Switch.png",
-                "cb": self.app.on_new_infra_device,
+                "cb": self.on_new_infra_device,
                 "info": "infrastructure devices",
             },
             {
                 "img": "PC.png",
-                "cb": self.app.on_new_user_device,
+                "cb": self.on_new_user_device,
                 "info": "user devices",
             },
         ]
@@ -197,8 +488,20 @@ class PuzzleLayout(RelativeLayout):
     def _get_user_devices_choices(self):
         choices = []
         for dtype, choice in NETWORK_ITEMS.get("devices").get("user").items():
-            choice["cb"] = self.app.add_device
-            choice["cb_kwargs"] = {"dtype": dtype}
+            choice["cb"] = self.add_device
+            choice["cb_kwargs"] = {"devicetype": dtype}
             choice["orientation"] = "horizontal"
             choices.append(choice)
         return choices
+
+    def _get_widget_by_prop(self, prop, value):
+        for w in self.children:
+            if hasattr(w, prop) and getattr(w, prop) == value:
+                return w
+
+    def _get_widgets_by_class_name(self, name):
+        widgets = []
+        for w in self.children:
+            if w.__class__.__name__ == name:
+                widgets.append(w)
+        return widgets

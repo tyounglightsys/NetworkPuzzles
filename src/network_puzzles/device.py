@@ -795,6 +795,120 @@ class Device(ItemBase):
     def ClearIPConnections(self):
         self.ip_connections = []
 
+    def begin_ingress_on_nic(self, nic, pkt):
+        """Begin the packet entering a device.  It enters via a nic, and then is processed.
+        Args:
+            nic: a `nic.Nic` object - the NIC the packet enters into
+            pkt: a `packet.Packet` object - the packet entering the device
+        returns: nothing
+        """
+        # logging.debug(f"Test: Device.begin_ingress_on_nic: {self.hostname}:{nic.name}")
+        # Notes from EduNetworkBuilder
+        # Check to see if we have tests that break stuff.
+        # - DeviceNicSprays (nic needs to be replaced)
+        # - Device is frozen (packet is dropped)
+        # - Device is burned (packet is dropped)
+        # - Device is powered off (packet is dropped)
+        #
+        # - Check to see if we are firewalled.  Drop packet if needed
+        # If none of the above...
+        # if the packet is destined for this NIC/interface, then we accept and pass it to the device to see if we should respond
+        # If the packet is a broadcast, check to see if we should respond
+        # - We might both route it and respond to a broadcast (broadcast ping and switch responds)
+        # If we route packets, accept it for routing.
+        #
+
+        # in certain cases we track inbound traffic; remembering where it came from.
+        trackPackets = False
+
+        # if it is a port (swicth/hub) or wport (wireless devices)
+        if isinstance(nic, dict):
+            nic = Nic(nic)  # if it was json that was passed in
+        if nic.type in ("port", "wport"):
+            trackPackets = True
+        if self.is_wireless_forwarder and nic.type == "wlan":
+            trackPackets = True
+        if nic.type == "port" and self.mytype == "wap":
+            trackPackets = True
+        if trackPackets:
+            # We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
+            if "port_arps" not in self.json:
+                self.json["port_arps"] = {}
+            if pkt.source_mac not in self.json.get("port_arps"):
+                self.json["port_arps"][pkt.source_mac] = nic.name
+
+        # Look better tracking for network loops
+        # If the same packet hits the same switch, we determine it is a loop
+        # Check if the hostname is already in the path of the packet.  If so, it is a loop
+        if self.hostname in pkt.path:
+            session.packetstorm = True
+        pkt.path.append(self.hostname)
+
+        # If we are entering a WAN port, see if we should be blocked or if it is a return packet
+        if nic.type == "vpn":
+            logging.debug(f"Coming in a VPN link: {pkt.json}")
+        if nic.type == "wan":
+            connection_info = self.ReturnIPConnectionEntry(
+                pkt.destination_ip, pkt.source_ip, pkt.packettype
+            )
+            if connection_info is not None:
+                logging.debug(f"Found a return packet: {connection_info}")
+                if connection_info["response"] == "masq":
+                    logging.debug(
+                        f"Packet was masqueraded.  Switching it back {connection_info['src']} -> {connection_info['masqsrc']}"
+                    )
+                    pkt.destination_ip = connection_info["masqsrc"]
+            else:
+                # we do not have a record of this.  Packets coming into the WAN, unless it is destined for here, are dropped.
+                # see if the packet is destined for us.
+                t_nic = self.nic_from_ip(pkt.destination_ip)
+                if t_nic is None:
+                    logging.debug(
+                        "No record of this and not destined for this machine.  Drop it for now"
+                    )
+                    pkt.status = "done"
+                    return False
+        if pkt.destination_mac is None:
+            # The packet was improperly crafted or no such machine exists.  Drop
+            logging.debug(
+                "This packet was killed.  There was a problem.  No such destination.  No MAC Address that matched"
+            )
+            pkt.status = "failed"
+            return False
+
+        if (
+            pkt.destination_mac == nic.mac
+            or packet.is_broadcast_mac(pkt.destination_mac)
+            or self.routes_packets
+            or self.is_wireless_forwarder
+            or nic.type == "port"
+            or nic.type == "wport"
+        ):
+            # The packet is good, and has reached the computer.  Pass it on to the device
+            logging.debug("Packet entering device: {self.hostname}")
+            return self.receive_packet(pkt, nic)
+        else:
+            logging.debug("packet did not match.  Dropping")
+            # print (pkt.json)
+            thostname = devicename_from_mac(pkt.destination_mac)
+            logging.debug(
+                f"  packet dst MAC {pkt.destination_mac} ({thostname}) vs this NIC  {nic.mac}"
+            )
+            pkt.status = "dropped"
+            return False
+
+    def get_available_nics(self):
+        nics = []
+        for nic in self.nics:
+            # Exclude management_interface.
+            if nic.name in ("lo0", "management_interface0"):
+                continue
+            # Exclude connected nics.
+            if nic.get_connected_link():
+                continue
+            nics.append(nic)
+        return nics
+
     def process_tunneled_packet(self, pkt):
         packetpayload = pkt.payload
         pkt.payload = (

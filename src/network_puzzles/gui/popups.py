@@ -86,14 +86,13 @@ class ChooseNicPopup(DevicePopup):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.selected_nic = None
-        free_nics = [n for n in self.device.nics if n.get_connected_link() is None]
-        self.ids.nics_list.update_data(free_nics, management=False)
+        self.ids.nics_list.update_data(self.device.get_available_nics())
 
     def on_nic_selection(self, selected_nic):
         self.selected_nic = selected_nic.get("data")
 
     def on_okay(self):
-        self.app.chosen_nic = self.selected_nic.name
+        self.app.root.ids.layout.chosen_nic = self.selected_nic.name
         super().on_okay()
 
 
@@ -260,7 +259,7 @@ class EditNicPopup(DevicePopup):
                 f"set {self.device.hostname} endpoint {self.nic.name} {self.nic.endpoint}"
             )
         # Update NIC list.
-        self.device_popup.ids.nics_list.update_data(self.device.nics, management=True)
+        self.device_popup.ids.nics_list.update_data(self.device.nics)
         super().on_okay()
 
     def on_uses_dhcp(self, inst):
@@ -317,6 +316,7 @@ class EditRoutesPopup(DevicePopup):
     def on_open(self):
         self.ids.nic_routes_list.update_data()
         self.ids.static_routes_list.update_data(static=True)
+        super().on_open()
 
     def on_route_selection(self, route_data, inst):
         if inst is self.ids.static_routes_list.__ref__():
