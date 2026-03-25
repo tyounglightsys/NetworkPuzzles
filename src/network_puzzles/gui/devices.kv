@@ -108,7 +108,7 @@
                 id: nics_list
                 size_hint_y: 0.35
                 root: root
-                on_parent: self.update_data(root.device.nics, management=True)
+                on_parent: self.update_data(root.device.nics)
             SingleRowLayout:  # IPs label/buttons
                 CheckBoxLabel:  # IPs
                     size_hint_x: 0.25

@@ -372,9 +372,10 @@ class EditDevicePopup(DevicePopup):
         # Replace NIC.
         self.app.ui.parse(f"replace {self.device.hostname} {self.selected_nic.name}")
         # Update device with new data.
+        # TODO: Verify that this is redudant b/c data is now modified directly.
         self.device = GuiDevice(json_data=deepcopy(self.device.json))
         # Update NIC list.
-        self.ids.nics_list.update_data(self.device.nics, management=True)
+        self.ids.nics_list.update_data(self.device.nics)
 
     def on_okay(self):
         # Update GUI helps b/c it will trigger tooltip updates, which are needed
