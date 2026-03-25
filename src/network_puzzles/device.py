@@ -838,6 +838,18 @@ class Device(ItemBase):
             pkt.status = "dropped"
             return False
 
+    def get_available_nics(self):
+        nics = []
+        for nic in self.nics:
+            # Exclude management_interface.
+            if nic.name in ("lo0", "management_interface0"):
+                continue
+            # Exclude connected nics.
+            if nic.get_connected_link():
+                continue
+            nics.append(nic)
+        return nics
+
     def process_tunneled_packet(self, pkt):
         packetpayload = pkt.payload
         pkt.payload = (
