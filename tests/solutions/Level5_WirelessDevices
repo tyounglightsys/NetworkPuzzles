@@ -1,0 +1,18 @@
+load Level5_WirelessDevices
+create device tablet 200 150
+create device cellphone 200 200
+create device laptop 200 250
+set tablet0 key wlan0 TheKey
+set tablet0 ssid wlan0 my_ssid
+show tablet0
+set laptop0 key wlan0 TheKey
+set laptop0 ssid wlan0 my_ssid
+show laptop0
+set cellphone0 key wlan0 TheKey
+set cellphone0 ssid wlan0 my_ssid
+show cellphone0
+dhcp tablet0
+dhcp laptop0
+dhcp cellphone0
+ping cellphone0 tablet0
+ping cellphone0 laptop0

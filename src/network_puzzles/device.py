@@ -1909,7 +1909,7 @@ def untunnel_packet(pkt, thedevice):
         return False
 
 
-def sendPacketOutDevice(pkt, theDevice, nic_in=None):
+def sendPacketOutDevice(pkt, theDevice, nic_in=None, nic_out=None):
     """Send the packet out of the device."""
     # FIXME: This should be a Device class method.
     # Ensure Packet object.
@@ -1922,8 +1922,12 @@ def sendPacketOutDevice(pkt, theDevice, nic_in=None):
     routeRec = routeRecFromDestIP(theDevice, pkt.destination_ip)
     destlink = None
 
+    if nic_out is not None:
+        #We have a specific NIC we are sending this out.
+        destlink = Nic(nic_out).get_connected_link()
+
     # set the source MAC address on the packet as from the nic
-    if routeRec is not None:
+    if routeRec is not None and destlink is None:
         logging.debug(f"Found a route rec. {routeRec}")
         routeRec["nic"] = Nic(routeRec["nic"]).ensure_mac()
         pkt.source_mac = routeRec["nic"]["Mac"]
@@ -1945,6 +1949,7 @@ def sendPacketOutDevice(pkt, theDevice, nic_in=None):
         if routeRec["nic"]["nicname"] == "management_interface0":
             # If we are exiting a switch / hub; we go out the ports
             send_out_hubswitch(theDevice, pkt, nic_in)
+            pkt.status = "done"
             return
         else:
             # set the packet location being the link associated with the nic
@@ -2223,7 +2228,7 @@ def doDHCP(srcHostname):
             nPacket.destination_ip = "255.255.255.255"
             nPacket.destination_mac = packet.BROADCAST_MAC
             nPacket.packettype = "DHCP-Request"
-            sendPacketOutDevice(nPacket, srcDevice)
+            sendPacketOutDevice(nPacket, srcDevice, None, nic)
             nPacket.add_to_packet_list()
 
 
