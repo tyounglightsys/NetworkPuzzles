@@ -1041,6 +1041,13 @@ class Device(ItemBase):
                 # we need to generate a ping response
                 nPacket = packetFromTo(self.json, dest, "ping-response")
                 # logging.debug(f"Created new packet : {dest}")
+                if nPacket is None:
+                    #This rarely happens, but it can
+                    #kill the original packet
+                    pkt.status = "done"
+                    #And move on
+                    logging.error(f"Unable to create a return ping-response packet. {self.hostname} -> {packet.justIP(str(pkt.source_ip))}")
+                    return
                 nPacket.json["origPingDest"] = deepcopy(pkt.json.get("origPingDest"))
                 # nPacket.packettype = "ping-response"
                 sendPacketOutDevice(nPacket, self.json)
@@ -1448,6 +1455,10 @@ def destIP(srcDevice, dstDevice):
     logging.debug("No match so far.  Looking to find the local address")
     for oneDip in dstIPs:
         # compare each of them to find one that is local
+        logging.debug(f"Making return packet {packet.justIP(dstDevice.get("gateway")["ip"])} {oneDip}")
+        if packet.justIP(oneDip) == "0.0.0.0":
+            #skip over undefined addresses
+            continue
         if ipaddress.IPv4Interface(dstDevice.get("gateway")["ip"]) in oneDip.network:
             return oneDip
     # If the device has a gateway, choose the IP address that is local to the gateway

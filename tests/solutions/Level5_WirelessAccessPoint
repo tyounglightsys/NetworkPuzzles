@@ -1,0 +1,8 @@
+load Level5_WirelessAccessPoint
+set wap0 key myKey
+dhcp laptop1
+dhcp cellphone0
+dhcp tablet0
+ping laptop1 pc0
+ping cellphone0 pc0
+ping tablet0 pc0
