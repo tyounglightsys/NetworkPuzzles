@@ -319,7 +319,7 @@ class Nic(ItemBase):
                     return True
         return False
 
-    def receive_packet(self, pkt, dev):
+    def receive_packet(self, pkt, dev, nic = None):
         # Zero this out. We will set it below.
         pkt.in_interface = ""
 

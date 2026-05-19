@@ -60,6 +60,16 @@ class Parser:
                 logging.info("Ignoring non-command.")
                 return
         logging.debug(f"{command=}")
+
+        if ";" in command:
+            #Our command is multiple commands in one.  Run each of them individually
+            commands = command.split(";")
+            #parse each of them separately
+            for onestring in commands:
+                self.parse(onestring,fromuser, fromundo)
+            #call it done.
+            return
+
         session.packetstorm = False  # We are starting something new. It is false until we determine otherwise
 
         # Replace commas with spaces for x,y coord tokenization.
@@ -720,7 +730,8 @@ class Parser:
                     "Cannot change the encryption on this nic.  Puzzle has it locked."
                 )
                 return False
-            if tnic.type == "vpn":
+            #We specify a nic.  Should be wlan
+            if tnic.type == "vpn" or tnic.type == "wlan":
                 tnic.encryption_key = newkey
         else:
             # We are setting the encryption on a WAP, hopefully

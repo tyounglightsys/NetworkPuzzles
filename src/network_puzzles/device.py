@@ -541,7 +541,7 @@ class Device(ItemBase):
             # nothing more to be done
             return
         # Send packet on to NIC.
-        nic.receive_packet(pkt, self)
+        nic.receive_packet(pkt, self, nic)
 
     def arp_lookup(self, ip):
         """find a mac address, with the source being the specified device
@@ -1009,7 +1009,7 @@ class Device(ItemBase):
                     # we need to generate a traceroute response
                     nPacket = packetFromTo(self.json, dest, "traceroute-response")
                     nPacket.payload = pkt.payload
-                    sendPacketOutDevice(nPacket, self.json)
+                    sendPacketOutDevice(nPacket, self.json, nic)
                     nPacket.payload["tempDest"] = nPacket.source_ip
                     nPacket.add_to_packet_list()
                     pkt.status = "done"
@@ -1194,7 +1194,7 @@ class Device(ItemBase):
             if not packet.is_broadcast_mac(pkt.destination_mac):
                 # we do not route broadcast packets
                 logging.debug(f"Sending packet out device. {self.hostname}")
-                sendPacketOutDevice(pkt, self.json)
+                sendPacketOutDevice(pkt, self.json, nic)
             else:
                 # if it is a broadcast, the packet stops here.
                 pkt.status = "done"
@@ -1339,7 +1339,7 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
             if destinationIPString == "255.255.255.255":
                 skipzeroes = False
             localInterface = nic.find_local_interface(destinationIPString, skipzeroes)
-            if localInterface is not None:
+            if localInterface is not None:            
                 # We found it.  Use it.
                 routeRec["nic"] = nic.json
                 routeRec["interface"] = localInterface
@@ -1761,14 +1761,16 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
             # we just send this out the one port.
             onlyport = t_device.json.get("port_arps").get(pkt.destination_mac)
 
-    logging.debug(f"Sending packet out switch {t_device.hostname}")
+    if nic is not None:
+        logging.debug(f"Sending packet out switch {t_device.hostname} coming in from {nic.name}")
+    else:
+        logging.debug(f"Sending packet out switch {t_device.hostname}")
 
     # print("We are forwarding.")
     for onenic in t_device.all_nics():
         n = Nic(onenic)
         # we duplicate the packet and send it out each port-type
         # find the link connected to the port
-        logging.debug(f"Should we send out port: {n.name} {n.type}")
         if n.type != "port" and n.type != "wport" and t_device.mytype != "wap":
             # we do not send packets out eth, vpn, etc.  We do send it out wap eth ports
             # logging.debug ("  No.  Not sent out port")
@@ -1777,6 +1779,7 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
         if tlink is not None and (
             nic is None or nic.uniqueidentifier != n.uniqueidentifier
         ):
+            logging.debug(f"Sending packet out port: {n.name} {n.type}")
             # We have a network wire connected to the NIC.  Send the packet out
             # if it is a switch-port, then we check first if we know where the packet goes - undone
             if onlyport == "" or onlyport == n.name:
@@ -1791,6 +1794,9 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
                 else:
                     tpacket.direction = 2  # Dest to Source
                 tpacket.add_to_packet_list()
+        else:
+            if nic is not None and nic.uniqueidentifier == n.uniqueidentifier:
+                logging.debug(f"skipping port we came in on: {nic.name}")
 
     # The packet that came in gets killed since it was replicated everywhere else.
     # but only if we are a not a router.
@@ -1806,7 +1812,7 @@ def makeDHCPResponse(pkt, thisDevice, nic):
         raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
     tnic = nic
-    if nic.type == "port":
+    if nic.type == "port" or nic.type == "wport":
         # We want to grab stuff from the management interface
         tnic = Nic(t_device.nic_from_name("management_interface0"))
         logging.debug(f"The nic is now {nic.name}")
@@ -1840,7 +1846,10 @@ def makeDHCPResponse(pkt, thisDevice, nic):
                     break
             if not found:
                 available_ip = newip
+                logging.debug(f"New ip address would be {newip}")
                 break
+    else:
+        logging.debug(f"Unable to find a DHCP range in {t_device.hostname}")
     # Now, check to see if we have an entry already.
     if pkt.source_mac in t_device.dhcp_list:
         # we already have an entry. Use it
@@ -1889,7 +1898,7 @@ def untunnel_packet(pkt, thedevice):
         return False
 
 
-def sendPacketOutDevice(pkt, theDevice):
+def sendPacketOutDevice(pkt, theDevice, nic_in=None):
     """Send the packet out of the device."""
     # FIXME: This should be a Device class method.
     # Ensure Packet object.
@@ -1924,7 +1933,7 @@ def sendPacketOutDevice(pkt, theDevice):
 
         if routeRec["nic"]["nicname"] == "management_interface0":
             # If we are exiting a switch / hub; we go out the ports
-            send_out_hubswitch(theDevice, pkt)
+            send_out_hubswitch(theDevice, pkt, nic_in)
             return
         else:
             # set the packet location being the link associated with the nic
