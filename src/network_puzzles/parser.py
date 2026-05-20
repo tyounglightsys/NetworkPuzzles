@@ -524,6 +524,8 @@ class Parser:
             if len(linklist) > 0:
                 session.print("----links----")
             for one in linklist:
+                if one["hostname"] is None:
+                    logging.error(f"hostname is None. About to explode: {one}")
                 if one is not None:
                     session.print(one["hostname"])
 
