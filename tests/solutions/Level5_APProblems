@@ -1,0 +1,6 @@
+load Level5_APProblems
+set wap0 power on
+dhcp laptop2
+dhcp tablet0
+dhcp cellphone0
+ping cellphone0 pc0
