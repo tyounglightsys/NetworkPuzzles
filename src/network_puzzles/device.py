@@ -1782,8 +1782,8 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
         n = Nic(onenic)
         # we duplicate the packet and send it out each port-type
         # find the link connected to the port
-        if n.type != "port" and n.type != "wport" and t_device.mytype != "wap":
-            # we do not send packets out eth, vpn, etc.  We do send it out wap eth ports
+        if n.type != "port" and n.type != "wport" and t_device.mytype != "wap" and t_device.mytype != "wbridge":
+            # we do not send packets out eth, vpn, etc.  We do send it out wap and wbridge eth ports
             # logging.debug ("  No.  Not sent out port")
             continue
         tlink = n.get_connected_link()

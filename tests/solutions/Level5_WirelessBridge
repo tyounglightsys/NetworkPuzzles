@@ -1,0 +1,4 @@
+load Level5_WirelessBridge
+ping pc3 pc1
+ping pc3 pc0
+ping pc3 printer0
