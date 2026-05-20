@@ -2621,7 +2621,7 @@
             "hostname": "wrouter1",
             "nicname": "wport6"
           },
-          "hostname": null,
+          "hostname": "wbridge0_wrouter1",
           "linktype": "wireless",
           "uniqueidentifier": "269"
         }
