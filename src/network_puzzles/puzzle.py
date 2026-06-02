@@ -618,7 +618,7 @@ class Puzzle(ItemBase):
         while (thedevice.nic_from_name(f"{nictype}{count}")) is not None:
             count = count + 1
         newnicname = f"{nictype}{count}"
-        if nictype not in {"eth", "vpn", "wan", "wlan", "port"}:
+        if nictype not in {"eth", "vpn", "wan", "wlan", "port", "wport", "lo", "management_interface"}:
             logging.debug(f"Oops.  Cannot create a nic of type: {nictype}")
             return None
         newid = self.issueUniqueIdentifier()
@@ -721,6 +721,7 @@ class Puzzle(ItemBase):
                 for _ in range(4):
                     self.createNIC(newdevice, "wport")
             case "wrepeater":
+                self.createNIC(newdevice, "management_interface")
                 self.createNIC(newdevice, "wport")
                 self.createNIC(newdevice, "wlan")
             case "wrouter":
@@ -1037,7 +1038,6 @@ def choosePuzzle(what, filter=None):
         what: str - use choosePuzzleFromName
         filter: str - this is a filter to use.  For example ".*DHCP.*".  Then the int would apply to the index in the filtered list
     """
-    logging.debug(f'Looking for puzzle "{what}"')
     readPuzzle()
     if filter is not None:
         # We have a filter.  We need to try to look up the item from the filtered list

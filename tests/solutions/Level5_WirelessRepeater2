@@ -1,0 +1,8 @@
+load Level5_WirelessRepeater2
+create device wrepeater 300 500
+set wrepeater0 ssid wlan1 my_SSID
+set wrepeater0 key wlan1 myKey
+set wrepeater0 ssid wport2 my_SSID
+set wrepeater0 key wport2 myKey
+ping pc1 printer0
+ping pc1 pc3

@@ -736,7 +736,7 @@ class Parser:
                 )
                 return False
             #We specify a nic.  Should be wlan
-            if tnic.type == "vpn" or tnic.type == "wlan":
+            if tnic.type == "vpn" or tnic.type == "wlan" or tnic.type == "wport":
                 tnic.encryption_key = newkey
         else:
             # We are setting the encryption on a WAP, hopefully
