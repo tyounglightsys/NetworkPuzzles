@@ -527,7 +527,10 @@ class Parser:
                 if one["hostname"] is None:
                     logging.error(f"hostname is None. About to explode: {one}")
                 if one is not None:
-                    session.print(one["hostname"])
+                    if one.get('linktype') == 'wireless':
+                        session.print(f"{one['hostname']} distance: {device.LinkDistance(link.Link(one)):.2f}")
+                    else:
+                        session.print(one["hostname"])
 
         if len(args) == 1:
             thedevice = session.puzzle.device_from_name(args[0])

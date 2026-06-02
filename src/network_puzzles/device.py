@@ -637,11 +637,12 @@ class Device(ItemBase):
 
                 for onedevice in session.puzzle.all_devices():
                     t_onedevice = Device(onedevice)
-                    if t_onedevice.is_wireless_forwarder:
-                        logging.debug(f"Can we connect it to: {t_onedevice.hostname}")
+                    if t_onedevice.is_wireless_forwarder and t_onedevice.hostname != self.hostname:
+                        #logging.debug(f"Can we connect it to: {t_onedevice.hostname}")
                         # Check to see if ssid and key match.  And if so, does it have an empty port to connect to?
-                        for dstnic in t_onedevice.all_nics():
+                        for dstnic in t_onedevice.all_nics():                            
                             t_dstnic = Nic(dstnic)
+                            #logging.debug(f"Checking out {t_dstnic.type} {t_dstnic.encryption_key} {t_dstnic.ssid}" )
                             if (
                                 t_dstnic.type == "wport"
                                 and t_dstnic.encryption_key == tnic.encryption_key
@@ -656,14 +657,19 @@ class Device(ItemBase):
                                         closest_distance = t_dst_distance
                                         closest_dev = t_onedevice
                                         closest_nic = t_dstnic
-                                        break  # we found one, break out of the for loop
-                                    else:
                                         logging.debug(
-                                            f"{t_onedevice.hostname} not close enough for {self.hostname}"
+                                            f"{t_onedevice.hostname} {t_dstnic.name} {t_dst_distance:.2f} is closer to {self.hostname}"
                                         )
+                                        break  # we found one, break out of the for loop
+#                                    else:
+#                                        logging.debug(
+#                                            f"{t_onedevice.hostname} {t_dstnic.name} {t_dst_distance:.2f} not close enough for {self.hostname}"
+#                                        )
+                                else:
+                                    logging.debug(f"{t_onedevice.hostname} {t_dstnic.name} already has a link")
 
                 # We now have closest_dev being the closest device that is a possibility.  If it is close enough, make a link.
-                logging.debug(f"closest_distance is: {closest_distance}")
+                logging.debug(f"closest_distance is: {closest_distance:.2f} Needs to be < {session.WirelessReconnectDistance}")
                 if closest_distance <= session.WirelessReconnectDistance:
                     # we can make this link
                     session.puzzle.createLink(
@@ -828,7 +834,7 @@ class Device(ItemBase):
             trackPackets = True
         if self.is_wireless_forwarder and nic.type == "wlan":
             trackPackets = True
-        if nic.type == "port" and self.mytype == "wap":
+        if nic.type == "port" and (self.mytype == "wap" or self.mytype == "wrepeater"):
             trackPackets = True
         if trackPackets:
             # We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
@@ -1401,6 +1407,26 @@ def deviceFromIP(what):
                         return oneDevice
     return None
 
+def LinkDistance(thelink:Link):
+    """This should tell us the distance between two endpoints of a link"""
+    if thelink.dest is None:
+        return 0
+    if thelink.src is None:
+        return 0
+    
+    _sdevice = session.puzzle.device_from_name(thelink.src)
+    _ddevice = session.puzzle.device_from_name(thelink.dest)
+    if _sdevice is None:
+        return 0 
+    if _ddevice is None:
+        return 0
+    sdevice = Device(_sdevice)
+    ddevice = Device(_ddevice)
+    sx, sy = sdevice.location
+    dx, dy = ddevice.location
+    t_dst_distance = packet.distance(sx, sy, dx, dy)
+    return t_dst_distance
+
 
 def destIP(srcDevice, dstDevice):
     """
@@ -1782,9 +1808,11 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
         n = Nic(onenic)
         # we duplicate the packet and send it out each port-type
         # find the link connected to the port
-        if n.type != "port" and n.type != "wport" and t_device.mytype != "wap" and t_device.mytype != "wbridge":
+        #logging.debug(f"#### device type is {t_device.mytype} nic {n.type}")
+        if n.type != "port" and n.type != "wport" and t_device.mytype not in {"wap", "wbridge", "wrepeater"}:
             # we do not send packets out eth, vpn, etc.  We do send it out wap and wbridge eth ports
-            # logging.debug ("  No.  Not sent out port")
+            # logging.debug ("  No.  Not sent out port"
+            #logging.debug("   skipped")
             continue
         tlink = n.get_connected_link()
         if tlink is not None and (

@@ -1,0 +1,4 @@
+load Level5_WirelessRepeater
+set wrepeater0 location 290 480
+ping pc1 printer0
+ping pc1 pc3

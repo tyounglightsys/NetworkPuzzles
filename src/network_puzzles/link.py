@@ -52,3 +52,5 @@ class Link(ItemBase):
         session.print(f"type: {self.linktype}")
         session.print(f"source: {self.src} - {self.src_nic_name}")
         session.print(f"dest: {self.dest} - {self.dest_nic_name}")
+
+
