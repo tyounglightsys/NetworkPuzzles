@@ -1,0 +1,4 @@
+load Level5_WirelessCorruption
+set microwave0 location 500 100
+ping pc1 printer0
+ping pc1 pc3

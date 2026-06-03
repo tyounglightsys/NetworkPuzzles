@@ -1,0 +1,8 @@
+load Level5_WirelessCorruption
+#Test that the locked items cannot be moved.
+#If we moved them to this point, the packet would not be corrupted
+set wrepeater0 location 600 200
+set wbridge0 location 650 250
+set wrouter1 location 700 300
+ping pc1 printer0
+ping pc1 pc3

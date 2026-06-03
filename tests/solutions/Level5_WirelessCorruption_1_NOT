@@ -1,0 +1,5 @@
+#Make sure the corruption is taking effect
+#By not moving the microwave, we make sure the packet is corrupted
+load Level5_WirelessCorruption
+ping pc1 printer0
+ping pc1 pc3
