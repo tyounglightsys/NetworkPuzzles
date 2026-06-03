@@ -3061,7 +3061,7 @@
             "hostname": "wap0",
             "nicname": "wport2"
           },
-          "hostname": null,
+          "hostname": "wbridge0_link_wap0",
           "linktype": "wireless",
           "uniqueidentifier": "344"
         }

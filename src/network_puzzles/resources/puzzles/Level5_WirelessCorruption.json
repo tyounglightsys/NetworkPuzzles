@@ -1581,7 +1581,7 @@
             "hostname": "wrepeater0",
             "nicname": "wport2"
           },
-          "hostname": null,
+          "hostname": "wbridge0_link_wrepeater0",
           "linktype": "wireless",
           "uniqueidentifier": "338"
         },
@@ -1598,7 +1598,7 @@
             "hostname": "wrouter1",
             "nicname": "wport6"
           },
-          "hostname": null,
+          "hostname": "wrepeater0_link_wrouter1",
           "linktype": "wireless",
           "uniqueidentifier": "339"
         }

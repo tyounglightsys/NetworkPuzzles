@@ -5125,7 +5125,7 @@
             "hostname": "net_switch1",
             "nicname": "port5"
           },
-          "hostname": null,
+          "hostname": "wap2_link_net_switch1",
           "linktype": "normal",
           "uniqueidentifier": "536"
         },
@@ -5142,7 +5142,7 @@
             "hostname": "wap2",
             "nicname": "wport2"
           },
-          "hostname": null,
+          "hostname": "laptop0_link_wap2",
           "linktype": "wireless",
           "uniqueidentifier": "541"
         },
@@ -5159,7 +5159,7 @@
             "hostname": "wap0",
             "nicname": "wport2"
           },
-          "hostname": null,
+          "hostname": "wbridge0_link_wap0",
           "linktype": "wireless",
           "uniqueidentifier": "542"
         }
