@@ -273,6 +273,8 @@ class Packet(ItemBase):
         risky_devices = []
         for dev_json in self.session.puzzle.devices:
             dev = device.Device(dev_json)
+            if dev.mytype == "tree" and lnk.linktype == "wireless":
+                risky_devices.append(dev)
             if dev.mytype == "microwave" and lnk.linktype == "wireless":
                 risky_devices.append(dev)
             if dev.mytype == "fluorescent" and lnk.linktype != "wireless":
@@ -289,6 +291,12 @@ class Packet(ItemBase):
             dx += halfsize
             dy += halfsize
 
+            #for microwaves and fluorescent...
+            damage_distance = 43
+            if dev.mytype == "tree":
+                #it needs to hit the tree.
+                damage_distance = 12
+
             # Now compare locations to each point along the distance.
             for px, py in self.get_distance_points(tick_pct):
                 # NOTE: It seems unnecessary (or possibly erroneous) to
@@ -300,11 +308,16 @@ class Packet(ItemBase):
                 # unintended consequences on already-designed puzzles. so it
                 # has been left as an int accordingly.
                 # Compare distance between device and packet with threshold.
-                if int(distance(px, py, dx, dy)) <= 43:
+                if int(distance(px, py, dx, dy)) <= damage_distance:
                     self.health -= 1
                     self.damage_count += 1
+                    if dev.mytype == "tree":
+                        logging.debug("BOOM. Packet hit a tree.  End of packet.")
+                        self.status = "done"  # the packet dies silently
+                        break
                     if self.health <= 0:
                         self.status = "done"  # the packet dies silently
+                        break
             if self.health_init > self.health:
                 logging.debug(f"Packet damaged: {self.packettype} {self.health}")
 

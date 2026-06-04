@@ -684,7 +684,7 @@ class Puzzle(ItemBase):
             },
             "nic": list(),
         }
-        if device_type not in ("tree", "fluorescent"):
+        if device_type not in ("tree", "fluorescent","microwave"):
             self.createNIC(newdevice, "lo")
         match device_type:
             case "cellphone" | "tablet":

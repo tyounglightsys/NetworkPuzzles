@@ -689,7 +689,8 @@ class Device(ItemBase):
                             tnic.name,
                             closest_dev.hostname,
                             closest_nic.name,
-                        ]
+                        ],
+                        "wireless"
                     )
                     return True
         # If we get here, we were unable to autojoin.
