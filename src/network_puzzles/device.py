@@ -617,6 +617,17 @@ class Device(ItemBase):
                     distance = packet.distance(sx, sy, dx, dy)
                     if distance > session.WirelessReconnectDistance:
                         link_needs_destroying = True
+                    dnic=None
+                    if tlink.dest == self.hostname:
+                        dnic = Nic(dst.nic_from_name(tlink.dest_nic_name))
+                    else:
+                        dnic = Nic(dst.nic_from_name(tlink.src_nic_name))
+
+                    #Destroy the link if the ssid or key does not match
+                    if(tnic.encryption_key != dnic.encryption_key):
+                        link_needs_destroying = True
+                    if(tnic.ssid != dnic.ssid):
+                        link_needs_destroying = True
 
                 if link_needs_destroying:
                     # destroy the link, and attempt to make another
