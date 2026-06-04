@@ -1,0 +1,8 @@
+load Level5_HereComesTrouble
+set pc1 eth0 192.168.2.15/24
+set wrouter1 gw 192.168.6.1
+set wrouter1 key vpn0 myKey
+ping pc1 pc0
+set laptop2 key wlan2 myKey
+set laptop2 gw 192.168.2.1
+ping laptop2 pc0
