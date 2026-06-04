@@ -1,0 +1,3 @@
+load Level5_LostPacket
+set wrouter0 endpoint vpn0 192.168.6.2
+ping pc0 pc1
