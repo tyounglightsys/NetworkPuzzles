@@ -3,7 +3,7 @@ import logging
 from copy import deepcopy
 
 from . import packet, session
-from .core import ItemBase
+from .core import ItemBase, get_puzzle_distance
 from .interface import UNSET_IP, Interface
 from .link import Link
 from .nic import Nic
@@ -612,7 +612,7 @@ class Device(ItemBase):
                 else:
                     sx, sy = self.location
                     dx, dy = dst.location
-                    distance = packet.distance(sx, sy, dx, dy)
+                    distance = get_puzzle_distance(sx, sy, dx, dy)
                     if distance > session.WirelessReconnectDistance:
                         link_needs_destroying = True
 
@@ -653,7 +653,7 @@ class Device(ItemBase):
                                     # the key and ssid match, and the port is available.  Track the distance.
                                     sx, sy = self.location
                                     dx, dy = t_onedevice.location
-                                    t_dst_distance = packet.distance(sx, sy, dx, dy)
+                                    t_dst_distance = get_puzzle_distance(sx, sy, dx, dy)
                                     if t_dst_distance <= closest_distance:
                                         closest_distance = t_dst_distance
                                         closest_dev = t_onedevice
@@ -1446,7 +1446,7 @@ def LinkDistance(thelink: Link):
     ddevice = Device(_ddevice)
     sx, sy = sdevice.location
     dx, dy = ddevice.location
-    t_dst_distance = packet.distance(sx, sy, dx, dy)
+    t_dst_distance = get_puzzle_distance(sx, sy, dx, dy)
     return t_dst_distance
 
 

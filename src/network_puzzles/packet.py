@@ -359,12 +359,6 @@ class Packet(ItemBase):
         return f"<packet: {self.packettype} from {self.source_ip} to {self.destination_ip}>"
 
 
-def distance(sx, sy, dx, dy):
-    # we have a 5/5 grid that we are working with.
-    # The ** is the exponent.  **2 is squared, **.5 is the square-root
-    return ((((sx - dx) ** 2) + ((sy - dy) ** 2)) ** 0.5) / 5
-
-
 def is_ipv6(string):
     """
     return True if the string is a valid IPv4 address.
