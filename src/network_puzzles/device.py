@@ -1369,11 +1369,12 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
                 logging.debug(" Adding nic and interface to routeRec")
                 break
 
-    # if not a nic, use the default gateway
-    if "gateway" not in routeRec and "nic" not in routeRec:
+    # if not a device nic, use the default gateway
+    if "nic" not in routeRec and "gateway" not in routeRec:
         # use the device default gateway
-        routeRec["gateway"] = theDeviceRec["gateway"]["ip"]
-        logging.debug(f"Still no idea.  Using default gateway: {routeRec['gateway']}")
+        gw = theDeviceRec["gateway"]["ip"]
+        logging.debug(f"Still no idea. Using default gateway: {gw}")
+        routeRec["gateway"] = gw
 
     # if we have a gateway but do not know the nic and interface, find the right one
     if "gateway" in routeRec and "nic" not in routeRec:
@@ -1386,14 +1387,23 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
                 routeRec["nic"] = nic.json
                 routeRec["interface"] = localInterface
                 break
+        if "interface" not in routeRec:
+            logging.warning(
+                f"Device: interface not found for gateway: {routeRec.get('gateway')}"
+            )
 
     # We should now have a good routeRec.  gateway might be blank, if it is local
     # But we should have a nic and interface set
-    if "interface" not in routeRec:
-        # We could not figure out the route.  return None.
+    if "nic" not in routeRec:
+        session.print(f"No valid NIC found for device: {theDeviceRec.get('hostname')}")
         return None
-    # logging.debug(f" Using routerec: {routeRec}")
-    return routeRec
+    elif "interface" not in routeRec:
+        # We could not figure out the route.  return None.
+        session.print(f"No interface found for NIC: {routeRec.get('nic')}")
+        return None
+    else:
+        # logging.debug(f" Using routerec: {routeRec}")
+        return routeRec
 
 
 def canUseDHCP(srcDevice):
