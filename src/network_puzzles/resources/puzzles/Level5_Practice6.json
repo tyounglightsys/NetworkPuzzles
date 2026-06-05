@@ -4793,7 +4793,7 @@
           "SrcNic": {
             "hostid": "190",
             "nicid": "192",
-            "hostname": "server0",
+            "hostname": "google.com",
             "nicname": "eth0"
           },
           "DstNic": {
