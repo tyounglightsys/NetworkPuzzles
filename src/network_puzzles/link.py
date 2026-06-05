@@ -1,5 +1,37 @@
 from . import session
-from .core import ItemBase
+from .core import ItemBase, get_puzzle_distance
+
+
+class EndNic(ItemBase):
+    """Endpoint NIC as defined for a link; not to be confused with `nic.Nic`"""
+
+    # a link nic rec looks like: { "hostid": "100", "nicid": "102", "hostname": "pc0", "nicname": "eth0" }
+
+    def __init__(self, json_data=None):
+        super().__init__(json_data)
+
+    def __str__(self) -> str:
+        return f"{self.host_name}:{self.nic_name}"
+
+    @property
+    def host_id(self) -> str:
+        return self.json.get("hostid")
+
+    @property
+    def host_name(self) -> str:
+        return self.json.get("hostname")
+
+    @property
+    def nic_id(self) -> str:
+        return self.json.get("nicid")
+
+    @property
+    def nic_name(self) -> str:
+        return self.json.get("nicname")
+
+    @property
+    def device(self):
+        return session.puzzle.device_obj_from_name(self.host_name)
 
 
 class Link(ItemBase):

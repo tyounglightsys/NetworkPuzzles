@@ -212,6 +212,9 @@ class Puzzle(ItemBase):
     def device_from_name(self, name):
         return self._item_by_attrib(self.devices, "hostname", name)
 
+    def device_obj_from_name(self, name):
+        return device.Device(self.device_from_name(name))
+
     def device_from_uid(self, uid):
         uid = str(uid)  # ensure not an integer
         return self._item_by_attrib(self.devices, "uniqueidentifier", uid)
