@@ -5,7 +5,7 @@ import time
 from copy import deepcopy
 
 from . import device, session
-from .core import ItemBase
+from .core import ItemBase, get_puzzle_distance
 from .link import Link
 from .nic import Nic
 
@@ -302,7 +302,7 @@ class Packet(ItemBase):
                 # unintended consequences on already-designed puzzles. so it
                 # has been left as an int accordingly.
                 # Compare distance between device and packet with threshold.
-                if int(distance(px, py, dx, dy)) <= 43:
+                if int(get_puzzle_distance(px, py, dx, dy)) <= 43:
                     self.health -= 1
                     self.damage_count += 1
                     if self.health <= 0:
