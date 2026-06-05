@@ -187,9 +187,7 @@ class Device(ItemBase):
     def location(self) -> tuple:
         loc = self.json.get("location")
         if loc:
-            location = loc.split(",")
-            location = (int(location[0]), int(location[1]))
-            return location
+            return tuple((int(c) for c in loc.split(",")))
         raise ValueError(f"Invalid JSON location data for '{self.hostname}'")
 
     @property
