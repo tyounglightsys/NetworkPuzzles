@@ -2253,7 +2253,7 @@ def doDHCP(srcHostname):
             # We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
             nPacket.source_ip = "255.255.255.255"
             nPacket.source_mac = nic.get("Mac")
-            nPacket.destination_ip = "255.255.255.255"
+            nPacket.destination_ip = packet.BROADCAST_IP4
             nPacket.destination_mac = packet.BROADCAST_MAC
             nPacket.packettype = "DHCP-Request"
             sendPacketOutDevice(nPacket, srcDevice, None, nic)

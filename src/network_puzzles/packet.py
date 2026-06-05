@@ -9,6 +9,8 @@ from .core import ItemBase
 from .link import Link
 from .nic import Nic
 
+BROADCAST_IP4 = "255.255.255.255"
+GENERIC_IP4 = "0.0.0.0"
 BROADCAST_MAC = "FFFFFFFFFFFF"
 PACKET_TYPES = (
     "dhcp",
@@ -462,8 +464,8 @@ def isEmpty(iptocheck: str):
         logging.debug("  Is empty")
         return True
     if isinstance(iptocheck, ipaddress.IPv4Address) and (
-        iptocheck == ipaddress.IPv4Interface("0.0.0.0/0")
-        or iptocheck == ipaddress.IPv4Address("0.0.0.0")
+        iptocheck == ipaddress.IPv4Interface(f"{GENERIC_IP4}/0")
+        or iptocheck == ipaddress.IPv4Address(GENERIC_IP4)
     ):
         # logging.debug("  Is empty")
         return True
