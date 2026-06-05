@@ -62,12 +62,12 @@ class Parser:
         logging.debug(f"{command=}")
 
         if ";" in command:
-            #Our command is multiple commands in one.  Run each of them individually
+            # Our command is multiple commands in one.  Run each of them individually
             commands = command.split(";")
-            #parse each of them separately
+            # parse each of them separately
             for onestring in commands:
-                self.parse(onestring,fromuser, fromundo)
-            #call it done.
+                self.parse(onestring, fromuser, fromundo)
+            # call it done.
             return
 
         session.packetstorm = False  # We are starting something new. It is false until we determine otherwise
@@ -735,7 +735,7 @@ class Parser:
                     "Cannot change the encryption on this nic.  Puzzle has it locked."
                 )
                 return False
-            #We specify a nic.  Should be wlan
+            # We specify a nic.  Should be wlan
             if tnic.type == "vpn" or tnic.type == "wlan" or tnic.type == "wport":
                 tnic.encryption_key = newkey
         else:
