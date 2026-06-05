@@ -985,18 +985,17 @@ class Device(ItemBase):
         # If it is a DHCP answer, update the device IP address.
         elif pkt.packettype == "dhcp-response":
             if pkt.destination_mac == nic.mac and nic.uses_dhcp is True:
-                logging.info(
-                    f"Recieved DHCP response.  Dealing with it. payload: {pkt.payload}"
-                )
-                logging.info("packet matches this nic.")
+                logging.info("Handling DHCP response.")
+                logging.debug(f"packet matches this nic; {pkt.payload=}")
+                # Set IP and netmask.
                 session.ui.parser.parse(
                     f"set {self.hostname} {nic.name} {pkt.payload.get('ip')}/{pkt.payload.get('subnet')}",
                     False,
                 )
-                if packet.isEmpty(self.json["gateway"]["ip"]):
-                    session.ui.parser.parse(
-                        f"set {self.hostname} gateway {pkt.payload.get('gateway')}"
-                    )
+                # Set gateway.
+                session.ui.parser.parse(
+                    f"set {self.hostname} gateway {pkt.payload.get('gateway')}"
+                )
                 pkt.status = "done"
                 return True
         elif pkt.packettype == "tunnel":
