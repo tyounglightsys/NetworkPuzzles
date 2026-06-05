@@ -1427,28 +1427,6 @@ def deviceFromIP(what):
     return None
 
 
-def LinkDistance(thelink: Link):
-    """This should tell us the distance between two endpoints of a link"""
-    # FIXME: This should be a Link class method.
-    if thelink.dest is None:
-        return 0
-    if thelink.src is None:
-        return 0
-
-    _sdevice = session.puzzle.device_from_name(thelink.src)
-    _ddevice = session.puzzle.device_from_name(thelink.dest)
-    if _sdevice is None:
-        return 0
-    if _ddevice is None:
-        return 0
-    sdevice = Device(_sdevice)
-    ddevice = Device(_ddevice)
-    sx, sy = sdevice.location
-    dx, dy = ddevice.location
-    t_dst_distance = get_puzzle_distance(sx, sy, dx, dy)
-    return t_dst_distance
-
-
 def destIP(srcDevice, dstDevice):
     """
     Find the destination IP address of the specified device, if going there from the source device.
