@@ -303,15 +303,15 @@ class Nic(ItemBase):
         for link_data in session.puzzle.links:
             link = Link(link_data)
             # Check if NIC is used by host device as src or dest.
-            if self.my_id.hostname == link.src and self.name == link.src_nic.get(
-                "nicname"
+            if (
+                self.my_id.hostname == link.src and self.name == link.src_nic.nic_name
             ):  # NIC used as link src
                 if link.linktype == "broken":
                     return False
                 else:
                     return True
-            if self.my_id.hostname == link.dest and self.name == link.dest_nic.get(
-                "nicname"
+            if (
+                self.my_id.hostname == link.dest and self.name == link.dest_nic.nic_name
             ):  # NIC used as link dest
                 if link.linktype == "broken":
                     return False

@@ -346,13 +346,13 @@ class Packet(ItemBase):
     def get_current_link_endpoint_nics(self):
         """Return tuple of (SrcNic, DstNic)."""
         current_link = self.get_current_link()
-        src_nic_myid = current_link.src_nic
-        dest_nic_myid = current_link.dest_nic
+        link_src_nic = current_link.src_nic
+        link_dest_nic = current_link.dest_nic
         if self.direction == 1:
-            dest_nic_myid = current_link.src_nic
-            src_nic_myid = current_link.dest_nic
-        src_nic_data = device.getDeviceNicFromLinkNicRec(src_nic_myid)
-        dest_nic_data = device.getDeviceNicFromLinkNicRec(dest_nic_myid)
+            link_dest_nic = current_link.src_nic
+            link_src_nic = current_link.dest_nic
+        src_nic_data = device.getDeviceNicFromLinkNicRec(link_src_nic.json)
+        dest_nic_data = device.getDeviceNicFromLinkNicRec(link_dest_nic.json)
         return (Nic(src_nic_data), Nic(dest_nic_data))
 
     def __str__(self):
