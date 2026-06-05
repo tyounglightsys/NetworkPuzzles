@@ -295,7 +295,7 @@ class Packet(ItemBase):
             damage_distance = 43
             if dev.mytype == "tree":
                 #it needs to hit the tree.
-                damage_distance = 12
+                damage_distance = 9
 
             # Now compare locations to each point along the distance.
             for px, py in self.get_distance_points(tick_pct):
@@ -308,11 +308,12 @@ class Packet(ItemBase):
                 # unintended consequences on already-designed puzzles. so it
                 # has been left as an int accordingly.
                 # Compare distance between device and packet with threshold.
-                if int(distance(px, py, dx, dy)) <= damage_distance:
+                thedistance = int(distance(px, py, dx, dy))
+                if thedistance <= damage_distance:
                     self.health -= 1
                     self.damage_count += 1
                     if dev.mytype == "tree":
-                        logging.debug("BOOM. Packet hit a tree.  End of packet.")
+                        logging.debug(f"BOOM. Packet hit a tree. ({dev.hostname}) with a distance of {thedistance}   End of packet.")
                         self.status = "done"  # the packet dies silently
                         break
                     if self.health <= 0:
