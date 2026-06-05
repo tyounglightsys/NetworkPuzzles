@@ -1,7 +1,7 @@
 {
   "EduNetworkBuilder": {
     "Network": {
-      "en_message": null,
+      "en_message": "Something is wrong with this puzzle",
       "en_title": "Practice2",
       "en_url": null,
       "height": "1024",
