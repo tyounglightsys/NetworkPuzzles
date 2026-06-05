@@ -1,0 +1,5 @@
+load Level5_Practice3
+set net_switch2 power on
+replace net_switch2
+set net_switch2 power on
+ping pc1 server0
