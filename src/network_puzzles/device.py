@@ -637,12 +637,15 @@ class Device(ItemBase):
 
                 for onedevice in session.puzzle.all_devices():
                     t_onedevice = Device(onedevice)
-                    if t_onedevice.is_wireless_forwarder and t_onedevice.hostname != self.hostname:
-                        #logging.debug(f"Can we connect it to: {t_onedevice.hostname}")
+                    if (
+                        t_onedevice.is_wireless_forwarder
+                        and t_onedevice.hostname != self.hostname
+                    ):
+                        # logging.debug(f"Can we connect it to: {t_onedevice.hostname}")
                         # Check to see if ssid and key match.  And if so, does it have an empty port to connect to?
-                        for dstnic in t_onedevice.all_nics():                            
+                        for dstnic in t_onedevice.all_nics():
                             t_dstnic = Nic(dstnic)
-                            #logging.debug(f"Checking out {t_dstnic.type} {t_dstnic.encryption_key} {t_dstnic.ssid}" )
+                            # logging.debug(f"Checking out {t_dstnic.type} {t_dstnic.encryption_key} {t_dstnic.ssid}" )
                             if (
                                 t_dstnic.type == "wport"
                                 and t_dstnic.encryption_key == tnic.encryption_key
@@ -661,15 +664,19 @@ class Device(ItemBase):
                                             f"{t_onedevice.hostname} {t_dstnic.name} {t_dst_distance:.2f} is closer to {self.hostname}"
                                         )
                                         break  # we found one, break out of the for loop
-#                                    else:
-#                                        logging.debug(
-#                                            f"{t_onedevice.hostname} {t_dstnic.name} {t_dst_distance:.2f} not close enough for {self.hostname}"
-#                                        )
+                                #                                    else:
+                                #                                        logging.debug(
+                                #                                            f"{t_onedevice.hostname} {t_dstnic.name} {t_dst_distance:.2f} not close enough for {self.hostname}"
+                                #                                        )
                                 else:
-                                    logging.debug(f"{t_onedevice.hostname} {t_dstnic.name} already has a link")
+                                    logging.debug(
+                                        f"{t_onedevice.hostname} {t_dstnic.name} already has a link"
+                                    )
 
                 # We now have closest_dev being the closest device that is a possibility.  If it is close enough, make a link.
-                logging.debug(f"closest_distance is: {closest_distance:.2f} Needs to be < {session.WirelessReconnectDistance}")
+                logging.debug(
+                    f"closest_distance is: {closest_distance:.2f} Needs to be < {session.WirelessReconnectDistance}"
+                )
                 if closest_distance <= session.WirelessReconnectDistance:
                     # we can make this link
                     session.puzzle.createLink(
@@ -1048,11 +1055,13 @@ class Device(ItemBase):
                 nPacket = packetFromTo(self.json, dest, "ping-response")
                 # logging.debug(f"Created new packet : {dest}")
                 if nPacket is None:
-                    #This rarely happens, but it can
-                    #kill the original packet
+                    # This rarely happens, but it can
+                    # kill the original packet
                     pkt.status = "done"
-                    #And move on
-                    logging.error(f"Unable to create a return ping-response packet. {self.hostname} -> {packet.justIP(str(pkt.source_ip))}")
+                    # And move on
+                    logging.error(
+                        f"Unable to create a return ping-response packet. {self.hostname} -> {packet.justIP(str(pkt.source_ip))}"
+                    )
                     return
                 nPacket.json["origPingDest"] = deepcopy(pkt.json.get("origPingDest"))
                 # nPacket.packettype = "ping-response"
@@ -1320,7 +1329,10 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     if packet.isEmpty(destinationIPString):
         return None
 
+    # routeRec must contain 'nic' and 'interface', and may contain 'gateway'.
     routeRec = {}
+
+    # Set gateway if dest IP is in device routes.
     if "route" not in theDeviceRec:
         theDeviceRec["route"] = []
     if not isinstance(theDeviceRec["route"], list):
@@ -1342,7 +1354,7 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
             )
             break
 
-    # if not a device route, look through nics
+    # if not a device route, look through device nics
     if "gateway" not in routeRec:
         # We did not find it in the static routes.  Loop through all nics and see if one is local
         logging.debug("No gateway set in routerec.  Looking through nics")
@@ -1352,7 +1364,7 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
             if destinationIPString == "255.255.255.255":
                 skipzeroes = False
             localInterface = nic.find_local_interface(destinationIPString, skipzeroes)
-            if localInterface is not None:            
+            if localInterface is not None:
                 # We found it.  Use it.
                 routeRec["nic"] = nic.json
                 routeRec["interface"] = localInterface
@@ -1388,7 +1400,7 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
 
 def canUseDHCP(srcDevice):
     for nic in Device(srcDevice).all_nics():
-        if nic.get("usesdhcp") == "True":
+        if nic.get("usesdhcp").lower() == "true":
             return True
     return False
 
@@ -1407,17 +1419,19 @@ def deviceFromIP(what):
                         return oneDevice
     return None
 
-def LinkDistance(thelink:Link):
+
+def LinkDistance(thelink: Link):
     """This should tell us the distance between two endpoints of a link"""
+    # FIXME: This should be a Link class method.
     if thelink.dest is None:
         return 0
     if thelink.src is None:
         return 0
-    
+
     _sdevice = session.puzzle.device_from_name(thelink.src)
     _ddevice = session.puzzle.device_from_name(thelink.dest)
     if _sdevice is None:
-        return 0 
+        return 0
     if _ddevice is None:
         return 0
     sdevice = Device(_sdevice)
@@ -1442,6 +1456,7 @@ def destIP(srcDevice, dstDevice):
         the string IP address of the nic that is local betwee the two devices, or the IP address on the destination
         that is connected to its gateway IP.  None if the IP cannot be determined
     """
+    # FIXME: This should be a Device class method.
     if srcDevice is None:
         logging.error("Error: function destIP: None passed in as source.")
         return None
@@ -1481,9 +1496,11 @@ def destIP(srcDevice, dstDevice):
     logging.debug("No match so far.  Looking to find the local address")
     for oneDip in dstIPs:
         # compare each of them to find one that is local
-        logging.debug(f"Making return packet {packet.justIP(dstDevice.get("gateway")["ip"])} {oneDip}")
+        logging.debug(
+            f"Making return packet {packet.justIP(dstDevice.get('gateway')['ip'])} {oneDip}"
+        )
         if packet.justIP(oneDip) == "0.0.0.0":
-            #skip over undefined addresses
+            # skip over undefined addresses
             continue
         if ipaddress.IPv4Interface(dstDevice.get("gateway")["ip"]) in oneDip.network:
             return oneDip
@@ -1771,6 +1788,7 @@ def ip_is_broadcast_for_device(deviceRec, ipstr: str):
 
 def ip_is_broadcast_for_nic(nic, ipstr: str):
     """Return True if the specified ipstring is a broadcast IP for the specified NIC"""
+    # FIXME: This should be a Nic class method.
     # logging.debug("Checking to see if our nic has broadcast IP")
     if nic is None:
         return False
@@ -1785,6 +1803,7 @@ def ip_is_broadcast_for_nic(nic, ipstr: str):
 
 
 def send_out_hubswitch(thisDevice, pkt, nic=None):
+    # FIXME: This should be a Device class method.
     t_device = Device(thisDevice)
 
     # Ensure Packet object.
@@ -1799,7 +1818,9 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
             onlyport = t_device.json.get("port_arps").get(pkt.destination_mac)
 
     if nic is not None:
-        logging.debug(f"Sending packet out switch {t_device.hostname} coming in from {nic.name}")
+        logging.debug(
+            f"Sending packet out switch {t_device.hostname} coming in from {nic.name}"
+        )
     else:
         logging.debug(f"Sending packet out switch {t_device.hostname}")
 
@@ -1808,11 +1829,15 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
         n = Nic(onenic)
         # we duplicate the packet and send it out each port-type
         # find the link connected to the port
-        #logging.debug(f"#### device type is {t_device.mytype} nic {n.type}")
-        if n.type != "port" and n.type != "wport" and t_device.mytype not in {"wap", "wbridge", "wrepeater"}:
+        # logging.debug(f"#### device type is {t_device.mytype} nic {n.type}")
+        if (
+            n.type != "port"
+            and n.type != "wport"
+            and t_device.mytype not in {"wap", "wbridge", "wrepeater"}
+        ):
             # we do not send packets out eth, vpn, etc.  We do send it out wap and wbridge eth ports
             # logging.debug ("  No.  Not sent out port"
-            #logging.debug("   skipped")
+            # logging.debug("   skipped")
             continue
         tlink = n.get_connected_link()
         if tlink is not None and (
@@ -1845,6 +1870,7 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
 
 
 def makeDHCPResponse(pkt, thisDevice, nic):
+    # FIXME: This should be a Device class method.
     t_device = Device(thisDevice)
     # Ensure Packet object.
     if not isinstance(pkt, packet.Packet):
@@ -1951,7 +1977,7 @@ def sendPacketOutDevice(pkt, theDevice, nic_in=None, nic_out=None):
     destlink = None
 
     if nic_out is not None:
-        #We have a specific NIC we are sending this out.
+        # We have a specific NIC we are sending this out.
         destlink = Nic(nic_out).get_connected_link()
 
     # set the source MAC address on the packet as from the nic
@@ -2239,6 +2265,7 @@ def doDHCP(srcHostname):
     network cards that request DHCP
     Args:
         srcHostname:str the hostname to do a DHCP request on"""
+    # FIXME: This should be a Device class method.
     # see if we can do a dhcp request from the specified hostname
     srcDevice = session.puzzle.device_from_name(srcHostname)
     if srcDevice is None:
@@ -2247,11 +2274,13 @@ def doDHCP(srcHostname):
     if not canUseDHCP(srcHostname):
         return
     for nic in Device(srcDevice).all_nics():
-        if nic.get("usesdhcp") == "True":
+        if nic.get("usesdhcp").lower() == "true":
             # This NIC can do DHCP.  Send out a request.
             nPacket = packet.Packet()
             # We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
-            nPacket.source_ip = "255.255.255.255"
+            # FIXME: Use "0.0.0.0" for source_ip instead of "255.255.255.255"?
+            #   ref: https://www.computernetworkingnotes.com/ccna-study-guide/how-dhcp-works-explained-with-examples.html
+            nPacket.source_ip = packet.BROADCAST_IP4
             nPacket.source_mac = nic.get("Mac")
             nPacket.destination_ip = packet.BROADCAST_IP4
             nPacket.destination_mac = packet.BROADCAST_MAC

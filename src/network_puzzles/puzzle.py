@@ -618,7 +618,16 @@ class Puzzle(ItemBase):
         while (thedevice.nic_from_name(f"{nictype}{count}")) is not None:
             count = count + 1
         newnicname = f"{nictype}{count}"
-        if nictype not in {"eth", "vpn", "wan", "wlan", "port", "wport", "lo", "management_interface"}:
+        if nictype not in {
+            "eth",
+            "vpn",
+            "wan",
+            "wlan",
+            "port",
+            "wport",
+            "lo",
+            "management_interface",
+        }:
             logging.debug(f"Oops.  Cannot create a nic of type: {nictype}")
             return None
         newid = self.issueUniqueIdentifier()
