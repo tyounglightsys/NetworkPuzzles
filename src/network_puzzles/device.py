@@ -1322,8 +1322,10 @@ def getDeviceNicFromLinkNicRec(linkNicRec):
 
 def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     """return a routing record given a destination IP string.  The device record has the route, nic, interface, and gateway"""
+    # FIXME: This should be a Device class method.
     # go through the device routes.
     if packet.isEmpty(destinationIPString):
+        logging.debug("routeRec failed; empty destination IP address")
         return None
 
     # routeRec must contain 'nic' and 'interface', and may contain 'gateway'.
@@ -1869,7 +1871,7 @@ def makeDHCPResponse(pkt, thisDevice, nic):
 
     inboundip = tnic.interfaces[0]["myip"]["ip"]
     logging.debug(
-        f"making a dhcp response on nic {tnic.name}  {tnic.interfaces[0]['myip']['ip']}"
+        f"making a dhcp response on nic {tnic.name}; {tnic.interfaces[0]['myip']['ip']}"
     )
     iprange = None
     available_ip = ""  # start with it empty.  Fill it if we can
@@ -1902,6 +1904,7 @@ def makeDHCPResponse(pkt, thisDevice, nic):
         logging.debug(f"Unable to find a DHCP range in {t_device.hostname}")
     # Now, check to see if we have an entry already.
     if pkt.source_mac in t_device.dhcp_list:
+        # FIXME: How to remove bad DHCP entry from list and add new one?
         # we already have an entry. Use it
         available_ip = t_device.dhcp_list.get(pkt.source_mac)
     else:
@@ -1914,7 +1917,7 @@ def makeDHCPResponse(pkt, thisDevice, nic):
         nPacket = packet.Packet()
         nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
         nPacket.source_mac = tnic.mac
-        nPacket.destination_ip = "0.0.0.0"
+        nPacket.destination_ip = packet.GENERIC_IP4
         nPacket.destination_mac = pkt.source_mac
         nPacket.packettype = "DHCP-Response"
         nPacket.payload = {
@@ -1959,8 +1962,13 @@ def sendPacketOutDevice(pkt, theDevice, nic_in=None, nic_out=None):
     # determine which interface/nic we are exiting out of - routing
     pkt.distance = 0  # always reset this
     routeRec = routeRecFromDestIP(theDevice, pkt.destination_ip)
-    destlink = None
+    if routeRec is None:
+        msg = f"Unable to determine route from {theDevice.get('hostname')} to IP {pkt.destination_ip}"
+        session.print(msg)
+        pkt.status = "done"
+        return
 
+    destlink = None
     if nic_out is not None:
         # We have a specific NIC we are sending this out.
         destlink = Nic(nic_out).get_connected_link()
