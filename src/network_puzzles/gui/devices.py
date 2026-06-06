@@ -343,12 +343,12 @@ class EditDevicePopup(DevicePopup):
             ip_config.address = "0.0.0.0"
             ip_config.netmask = "0.0.0.0"
             ip_config.gateway = "0.0.0.0"
-            # Update IPs in IPs list.
-            self._set_ips()
             # Add command to be applied.
             self.app.ui.parse(
                 f"set {self.device.hostname} {self.selected_nic.name} {ip_config.address}/{ip_config.netmask}"
             )
+            # Update IPs in IPs list.
+            self._set_ips()
 
     def on_nic_selection(self, selected_nic):
         self.selected_ip = None
@@ -418,7 +418,8 @@ class EditDevicePopup(DevicePopup):
                 if iface.nicname == nic_obj.name:
                     ip_config = iface_ip_config
                     break
-        return ip_config
+        # Changes should only be made via parser commands, so return copy of data here.
+        return deepcopy(ip_config)
 
     def _is_ip_and_gateway(self, value):
         return "/" in value
