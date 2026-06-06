@@ -6,6 +6,7 @@ import logging
 import sys
 
 from . import device, link, nic, packet, puzzle, session
+from .interface import GENERIC_IP4
 
 
 class Parser:
@@ -62,12 +63,12 @@ class Parser:
         logging.debug(f"{command=}")
 
         if ";" in command:
-            #Our command is multiple commands in one.  Run each of them individually
+            # Our command is multiple commands in one.  Run each of them individually
             commands = command.split(";")
-            #parse each of them separately
+            # parse each of them separately
             for onestring in commands:
-                self.parse(onestring,fromuser, fromundo)
-            #call it done.
+                self.parse(onestring, fromuser, fromundo)
+            # call it done.
             return
 
         session.packetstorm = False  # We are starting something new. It is false until we determine otherwise
@@ -526,11 +527,12 @@ class Parser:
             for one in linklist:
                 if one["hostname"] is None:
                     logging.error(f"hostname is None. About to explode: {one}")
-                if one is not None:
-                    if one.get('linktype') == 'wireless':
-                        session.print(f"{one['hostname']} distance: {device.LinkDistance(link.Link(one)):.2f}")
-                    else:
-                        session.print(one["hostname"])
+                if one.get("linktype") == "wireless":
+                    session.print(
+                        f"{one['hostname']} distance: {link.Link(one).distance:.2f}"
+                    )
+                else:
+                    session.print(one["hostname"])
 
         if len(args) == 1:
             thedevice = session.puzzle.device_from_name(args[0])
@@ -677,15 +679,11 @@ class Parser:
             session.print("Could not find local IP connected to the ip range specified")
             return False
         # remove the previous record, if one existed
-        if dev_obj.json.get("dhcprange") is None:
-            dev_obj.json["dhcprange"] = {}
-        itemlist = [
-            record for record in dev_obj.json.get("dhcprange") if record["ip"] != ethip
-        ]
+        itemlist = [record for record in dev_obj.dhcp_range if record["ip"] != ethip]
         # Now, we create a record and store it.
         newitem = {"ip": ethip, "mask": startip, "gateway": endip, "type": "dhcp"}
         itemlist.append(newitem)
-        dev_obj.json["dhcprange"] = itemlist
+        dev_obj.dhcp_range = itemlist
         session.print(
             f"Setting DHCP range on {dev_obj.hostname} to: {ethip} {startip}-{endip}"
         )
@@ -735,7 +733,7 @@ class Parser:
                     "Cannot change the encryption on this nic.  Puzzle has it locked."
                 )
                 return False
-            #We specify a nic.  Should be wlan
+            # We specify a nic.  Should be wlan
             if tnic.type == "vpn" or tnic.type == "wlan" or tnic.type == "wport":
                 tnic.encryption_key = newkey
         else:
@@ -806,24 +804,28 @@ class Parser:
             nic = dev_obj.nic_from_name(nicname)
             if interface is not None:
                 # we found it.  Change the IP if we are able
-                if fromuser and nic.get("usesdhcp") == "True":
-                    # The user cannot set the IP manually if the NIC is set to use DHCP
-                    session.print(
-                        f"{nicname} is set for DHCP.  Cannot change it manually."
-                    )
-                    return
+                ip_data = interface.get("myip")
                 # we should have some better syntax checking here.
                 if mask == "":
-                    mask = interface["myip"]["mask"]
+                    mask = ip_data.get("mask")
+                if (
+                    # Check if new data is real or "reset" data.
+                    f"{ip}/{mask}" != f"{GENERIC_IP4}/{GENERIC_IP4}"
+                    and fromuser
+                    and nic.get("usesdhcp") == "True"
+                ):
+                    # The user cannot set the IP manually if the NIC is set to use DHCP
+                    session.print(
+                        f"{dev_obj.hostname}:{nicname} is set for DHCP.  Cannot change it manually."
+                    )
+                    return
                 session.add_undo_entry(
                     f"set {dev_obj.hostname} {nicname} {ip}/{mask}",
-                    f"set {dev_obj.hostname} {nicname} {interface['myip']['ip']}/{interface['myip']['mask']}",
+                    f"set {dev_obj.hostname} {nicname} {ip_data.get('ip')}/{ip_data.get('mask')}",
                 )
+                session.print(f"Setting {dev_obj.hostname}:{nicname} to: {ip}/{mask}")
                 interface["myip"]["ip"] = ip
                 interface["myip"]["mask"] = mask
-                print(
-                    f"Setting {dev_obj.hostname} {nicname} to: {interface['myip']['ip']} / {interface['myip']['mask']}"
-                )
                 session.puzzle.check_local_IP_test(dev_obj.json)
             else:
                 session.print(f"Could not find Nic: {nicname}")

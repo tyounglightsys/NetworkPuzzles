@@ -57,7 +57,7 @@ class BaseIpPopup(ActionPopup):
 
     def __init__(self, ip_address=None, **kwargs):
         if ip_address is None:
-            ip_address = interface.IpAddress(deepcopy(interface.UNSET_IP_CONFIG))
+            ip_address = interface.IpAddress(deepcopy(interface.UNSET_IP4_CONFIG))
         self.ip_address = ip_address
         super().__init__(**kwargs)
 
@@ -115,8 +115,8 @@ class EditDhcpPopup(DevicePopup):
     def dhcp_configs(self):
         return [
             ip_data
-            for ip_data in self.device.json.get("dhcprange", [])
-            if ip_data.get("ip") != interface.LOCALHOST_IP
+            for ip_data in self.device.dhcp_range
+            if ip_data.get("ip") != interface.LOCALHOST_IP4
         ]
 
     @property
@@ -127,15 +127,15 @@ class EditDhcpPopup(DevicePopup):
             ips = [
                 ip.get("ip")
                 for ip in n.ip_addresses
-                if ip.get("ip") != interface.LOCALHOST_IP
+                if ip.get("ip") != interface.LOCALHOST_IP4
             ]
             for ip in ips:
-                _data = deepcopy(interface.UNSET_IP_CONFIG)
+                _data = deepcopy(interface.UNSET_IP4_CONFIG)
                 _data["ip"] = ip
                 unset_configs.append(_data)
         if len(unset_configs) == 0:
-            data = deepcopy(interface.UNSET_IP_CONFIG)
-            data["ip"] = interface.UNSET_IP
+            data = deepcopy(interface.UNSET_IP4_CONFIG)
+            data["ip"] = interface.GENERIC_IP4
             unset_configs.append(data)
         return unset_configs
 
@@ -144,7 +144,7 @@ class EditDhcpPopup(DevicePopup):
         for row in self.ids.dhcp_configs_layout.children:
             # Child widgets' order is the opposite of how they were added.
             end, start, ip = [c.text for c in row.children]
-            if ip == interface.UNSET_IP:
+            if ip == interface.GENERIC_IP4:
                 # Fallback config.
                 continue
             elif [ip, start, end] in old_configs:

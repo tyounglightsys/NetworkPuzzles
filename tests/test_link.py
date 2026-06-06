@@ -1,7 +1,8 @@
 import json
 import unittest
-from network_puzzles import link
-from network_puzzles import ui
+
+from network_puzzles import link, ui
+
 from . import PUZZLES_DIR
 
 
@@ -23,6 +24,11 @@ class TestLinkProperties(unittest.TestCase):
         dests = [link.Link(k).dest for k in self.app.puzzle.links]
         for data_k in self.data.get("link"):
             self.assertTrue(data_k.get("DstNic").get("hostname") in dests)
+
+    def test_distance(self):
+        test_link = link.Link(list(self.app.puzzle.links)[0])
+        self.assertTrue(isinstance(test_link.distance, float))
+        self.assertTrue(test_link.distance > 0)
 
     def test_hostname(self):
         hostnames = [link.Link(k).hostname for k in self.app.puzzle.links]

@@ -2,12 +2,14 @@ import ipaddress
 
 from .core import ItemBase
 
-LOCALHOST_IP = "127.0.0.1"
-UNSET_IP = "0.0.0.0"
-UNSET_IP_CONFIG = {
-    "ip": UNSET_IP,
+BROADCAST_MAC = "FFFFFFFFFFFF"
+GENERIC_IP4 = "0.0.0.0"
+LOCALHOST_IP4 = "127.0.0.1"
+BROADCAST_IP4 = "255.255.255.255"
+UNSET_IP4_CONFIG = {
+    "ip": GENERIC_IP4,
     "mask": "255.255.255.0",
-    "gateway": "0.0.0.0",
+    "gateway": GENERIC_IP4,
     "type": "route",
 }
 
