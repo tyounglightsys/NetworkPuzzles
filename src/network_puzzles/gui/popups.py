@@ -115,7 +115,7 @@ class EditDhcpPopup(DevicePopup):
     def dhcp_configs(self):
         return [
             ip_data
-            for ip_data in self.device.json.get("dhcprange", [])
+            for ip_data in self.device.dhcp_range
             if ip_data.get("ip") != interface.LOCALHOST_IP
         ]
 

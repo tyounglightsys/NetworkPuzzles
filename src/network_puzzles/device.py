@@ -69,6 +69,24 @@ class Device(ItemBase):
             self.json["dhcplist"] = {}
         return self.json.get("dhcplist")
 
+    @dhcp_list.setter
+    def dhcp_list(self, value):
+        if isinstance(value, dict):
+            self.json["dhcplist"] = value
+
+    @property
+    def dhcp_range(self):
+        if self.json.get("dhcprange") is None:
+            self.json["dhcprange"] = list()
+        return self.json.get("dhcprange")
+
+    @dhcp_range.setter
+    def dhcp_range(self, value):
+        if isinstance(value, list):
+            # Reset obsolete DHCP list.
+            self.dhcp_list = {}
+            self.json["dhcprange"] = value
+
     @property
     def does_vlans(self):
         """Return `True` if the device does VLANs, `False` if it does not."""
@@ -483,11 +501,8 @@ class Device(ItemBase):
             session.print(f"poweroff: {self['poweroff']}")
         if self.is_dhcp:
             session.print(f"DHCP server: {self.is_dhcp}")
-            if self.json.get("dhcprange") is not None:
-                for item in self.json.get("dhcprange"):
-                    session.print(
-                        f"  Range: {item['ip']} {item['mask']}-{item['gateway']}"
-                    )
+            for item in self.dhcp_range:
+                session.print(f"  Range: {item['ip']} {item['mask']}-{item['gateway']}")
         session.print(f"gateway: {self.json['gateway']['ip']}")
         for onestring in allIPStrings(self.json, True, True):
             session.print(onestring)
@@ -977,7 +992,7 @@ class Device(ItemBase):
         # If it is a request and this is a DHCP server, serve an IP back.
         if pkt.packettype == "dhcp-request":
             if self.serves_dhcp:
-                if self.is_dhcp and "dhcprange" in self.json:
+                if self.is_dhcp and self.dhcp_range:
                     session.print(f"Arrived at DHCP server: {self.hostname}")
                     makeDHCPResponse(pkt, self.json, nic)
                     pkt.status = "done"
@@ -1875,7 +1890,7 @@ def makeDHCPResponse(pkt, thisDevice, nic):
     )
     iprange = None
     available_ip = ""  # start with it empty.  Fill it if we can
-    for onerange in t_device.json["dhcprange"]:
+    for onerange in t_device.dhcp_range:
         if onerange["ip"] == inboundip:
             iprange = onerange
 

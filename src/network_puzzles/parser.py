@@ -678,15 +678,11 @@ class Parser:
             session.print("Could not find local IP connected to the ip range specified")
             return False
         # remove the previous record, if one existed
-        if dev_obj.json.get("dhcprange") is None:
-            dev_obj.json["dhcprange"] = {}
-        itemlist = [
-            record for record in dev_obj.json.get("dhcprange") if record["ip"] != ethip
-        ]
+        itemlist = [record for record in dev_obj.dhcp_range if record["ip"] != ethip]
         # Now, we create a record and store it.
         newitem = {"ip": ethip, "mask": startip, "gateway": endip, "type": "dhcp"}
         itemlist.append(newitem)
-        dev_obj.json["dhcprange"] = itemlist
+        dev_obj.dhcp_range = itemlist
         session.print(
             f"Setting DHCP range on {dev_obj.hostname} to: {ethip} {startip}-{endip}"
         )
