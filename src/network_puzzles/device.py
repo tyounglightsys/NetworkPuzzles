@@ -609,24 +609,31 @@ class Device(ItemBase):
                 # If the wport is connected to something that is powered off, disconnect it
                 if not dst.powered_on:
                     link_needs_destroying = True
+                    logging.debug(f"{dst.hostname} is not powered on.  Removing wireless link connecting to it. {tlink.hostname}")
+                if not self.powered_on:
+                    logging.debug(f"{self.hostname} is not powered on.  Removing wireless link connecting to it. {tlink.hostname}")
+                    link_needs_destroying = True
 
                 # If the wport is connected to something too far away, disconnect it
-                else:
+                if not link_needs_destroying:
                     sx, sy = self.location
                     dx, dy = dst.location
                     distance = packet.distance(sx, sy, dx, dy)
                     if distance > session.WirelessReconnectDistance:
+                        logging.debug(f"Distance for the link is too great. {distance} > {session.WirelessFailureDistance}  Removing link: {tlink.hostname}")
                         link_needs_destroying = True
                     dnic=None
                     if tlink.dest == self.hostname:
-                        dnic = Nic(dst.nic_from_name(tlink.dest_nic_name))
-                    else:
                         dnic = Nic(dst.nic_from_name(tlink.src_nic_name))
+                    else:
+                        dnic = Nic(dst.nic_from_name(tlink.dest_nic_name))
 
                     #Destroy the link if the ssid or key does not match
                     if(tnic.encryption_key != dnic.encryption_key):
+                        logging.debug(f"key mismatch.  Removing link {tlink.hostname}")
                         link_needs_destroying = True
                     if(tnic.ssid != dnic.ssid):
+                        logging.debug(f"ssid mismatch.  Removing link {tlink.hostname}")
                         link_needs_destroying = True
 
                 if link_needs_destroying:
