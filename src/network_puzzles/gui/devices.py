@@ -8,7 +8,7 @@ from kivy.uix.behaviors import DragBehavior
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 
-from .. import _, interface, nic, session
+from .. import _, interface, nic, packet, session
 from ..device import Device
 from .base import (
     HelpHighlight,
@@ -306,6 +306,9 @@ class EditDevicePopup(DevicePopup):
 
     def on_gateway(self):
         if not self.ids.gateway.focus:
+            # Ensure field isn't empty.
+            if not self.ids.gateway.text:
+                self.ids.gateway.text = packet.GENERIC_IP4
             self.app.ui.parse(
                 f"set {self.device.hostname} gateway {self.ids.gateway.text}"
             )
