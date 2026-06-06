@@ -6,6 +6,7 @@ import logging
 import sys
 
 from . import device, link, nic, packet, puzzle, session
+from .interface import GENERIC_IP4
 
 
 class Parser:
@@ -809,7 +810,7 @@ class Parser:
                     mask = ip_data.get("mask")
                 if (
                     # Check if new data is real or "reset" data.
-                    f"{ip}/{mask}" != f"{packet.GENERIC_IP4}/{packet.GENERIC_IP4}"
+                    f"{ip}/{mask}" != f"{GENERIC_IP4}/{GENERIC_IP4}"
                     and fromuser
                     and nic.get("usesdhcp") == "True"
                 ):

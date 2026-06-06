@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from . import packet, session
 from .core import ItemBase, get_puzzle_distance
-from .interface import UNSET_IP, Interface
+from .interface import BROADCAST_IP4, BROADCAST_MAC, GENERIC_IP4, Interface
 from .link import Link
 from .nic import Nic
 
@@ -299,7 +299,7 @@ class Device(ItemBase):
             for interface in n.interfaces:
                 iface = Interface(interface)
                 # Use current IP config for gateway.
-                if iface.ip_data.get("gateway") == UNSET_IP:
+                if iface.ip_data.get("gateway") == GENERIC_IP4:
                     iface.ip_data["gateway"] = self.gateway
                 nic_routes.append(iface.ip_data)
         return nic_routes
@@ -1932,7 +1932,7 @@ def makeDHCPResponse(pkt, thisDevice, nic):
         nPacket = packet.Packet()
         nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
         nPacket.source_mac = tnic.mac
-        nPacket.destination_ip = packet.GENERIC_IP4
+        nPacket.destination_ip = GENERIC_IP4
         nPacket.destination_mac = pkt.source_mac
         nPacket.packettype = "DHCP-Response"
         nPacket.payload = {
@@ -1996,10 +1996,7 @@ def sendPacketOutDevice(pkt, theDevice, nic_in=None, nic_out=None):
         pkt.json["tdestIP"] = routeRec.get("gateway")  # track when we use a gateway
         # set the destination MAC to be the GW MAC if the destination is not local
         # this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
-        if (
-            pkt.destination_mac != packet.BROADCAST_MAC
-            and pkt.packettype != "DHCP-Response"
-        ):
+        if pkt.destination_mac != BROADCAST_MAC and pkt.packettype != "DHCP-Response":
             if routeRec.get("gateway") is not None:
                 # We are going out the gateway.  Find the ARP for that
                 pkt.destination_mac = globalArpLookup(routeRec.get("gateway"))
@@ -2190,7 +2187,7 @@ def packetFromTo(src, dest, packettype: str):
         if ip_is_broadcast_for_device(src, dest):
             # It is a broadcast, use the broadcast MAC
             logging.debug("It is a broadcast, using broadcast MAC")
-            nPacket.destination_mac = packet.BROADCAST_MAC
+            nPacket.destination_mac = BROADCAST_MAC
         nPacket.packettype = packettype
         if nPacket.destination_mac is None:
             return None
@@ -2288,10 +2285,10 @@ def doDHCP(srcHostname):
             # We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
             # FIXME: Use "0.0.0.0" for source_ip instead of "255.255.255.255"?
             #   ref: https://www.computernetworkingnotes.com/ccna-study-guide/how-dhcp-works-explained-with-examples.html
-            nPacket.source_ip = packet.BROADCAST_IP4
+            nPacket.source_ip = BROADCAST_IP4
             nPacket.source_mac = nic.get("Mac")
-            nPacket.destination_ip = packet.BROADCAST_IP4
-            nPacket.destination_mac = packet.BROADCAST_MAC
+            nPacket.destination_ip = BROADCAST_IP4
+            nPacket.destination_mac = BROADCAST_MAC
             nPacket.packettype = "DHCP-Request"
             sendPacketOutDevice(nPacket, srcDevice, None, nic)
             nPacket.add_to_packet_list()

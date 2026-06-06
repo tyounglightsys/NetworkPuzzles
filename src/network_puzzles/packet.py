@@ -6,12 +6,10 @@ from copy import deepcopy
 
 from . import device, session
 from .core import ItemBase, get_puzzle_distance
+from .interface import BROADCAST_MAC, GENERIC_IP4
 from .link import Link
 from .nic import Nic
 
-BROADCAST_IP4 = "255.255.255.255"
-GENERIC_IP4 = "0.0.0.0"
-BROADCAST_MAC = "FFFFFFFFFFFF"
 PACKET_TYPES = (
     "dhcp",
     "dhcp-request",
