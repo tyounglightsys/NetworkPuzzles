@@ -269,6 +269,12 @@ class Packet(ItemBase):
             )
             return
 
+        devices = self.get_current_link_endpoint_devices()
+        if devices is None or not isinstance(devices, tuple):
+            return None
+        src_device, dest_device = devices
+        sx, sy = src_device.location
+
         # List damage-causing devices in puzzle.
         risky_devices = []
         for dev_json in self.session.puzzle.devices:
@@ -279,6 +285,11 @@ class Packet(ItemBase):
                 risky_devices.append(dev)
             if dev.mytype == "fluorescent" and lnk.linktype != "wireless":
                 risky_devices.append(dev)
+
+        #We only need to calculate these values once        
+        AllPoints = self.get_distance_points(tick_pct)
+        LastPoints = AllPoints[-1]
+        FirstPoints = AllPoints[1]
 
         # Check if each device is close enough to damage packet.
         for dev in risky_devices:
@@ -298,7 +309,7 @@ class Packet(ItemBase):
                 damage_distance = 9
 
             # Now compare locations to each point along the distance.
-            for px, py in self.get_distance_points(tick_pct):
+            for px, py in AllPoints:
                 # NOTE: It seems unnecessary (or possibly erroneous) to
                 # convert the distance() value below into an int, because
                 # this would theoretically apply damage even when the
@@ -321,6 +332,13 @@ class Packet(ItemBase):
                         break
             if self.health_init > self.health:
                 logging.debug(f"Packet damaged: {self.packettype} {self.health}")
+        #Check the final end point we are looking at
+        px, py = LastPoints
+        fx, fy = FirstPoints
+        totdistance = int(distance(px, py, sx, sy))
+        if totdistance >= session.WirelessFailureDistance:
+            self.status="done"
+            logging.debug(f"Wireless signal too weak.  Packet dropped. Distance: {totdistance} SourcePoint: {sx},{sy} PacketLocation {px},{py}")                
 
     def get_distance_points(self, tick_pct):
         devices = self.get_current_link_endpoint_devices()
@@ -332,6 +350,10 @@ class Packet(ItemBase):
         # We now have a line that the packet is somewhere on; calculate progress.
         deltax = (dx - sx) / 100
         deltay = (dy - sy) / 100
+
+        if tick_pct > 100:
+            #We can only travel 100% of the wire
+            tick_pct = 100
 
         points = list()
         for a in range(int(self.distance), int(self.distance + tick_pct), 2):
@@ -360,7 +382,7 @@ class Packet(ItemBase):
         current_link = self.get_current_link()
         src_nic_myid = current_link.src_nic
         dest_nic_myid = current_link.dest_nic
-        if self.direction == 1:
+        if self.direction != 1:
             dest_nic_myid = current_link.src_nic
             src_nic_myid = current_link.dest_nic
         src_nic_data = device.getDeviceNicFromLinkNicRec(src_nic_myid)

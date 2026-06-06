@@ -498,14 +498,14 @@ class Puzzle(ItemBase):
                         logging.error(f"Bad Link: {current_link}")
                         logging.error(f"Direction = {pkt.direction}")
                         raise Exception("Could not find the endpoint of the link.")
-                    src_nic = end_nics[0]
-                    logging.debug(f"Packet: Arrived at NIC: {src_nic}")
+                    dest_nic = end_nics[1]
+                    logging.debug(f"Packet: Arrived at NIC: {dest_nic}")
                     # We are here. Call a function on the device to start the
                     # packet entering the device.
-                    dev_data = session.puzzle.device_from_uid(src_nic.my_id.host_id)
+                    dev_data = session.puzzle.device_from_uid(dest_nic.my_id.host_id)
                     if dev_data is None:
-                        raise Exception(f"Device not found for NIC: {src_nic.name}")
-                    device.Device(dev_data).accept_packet(pkt, src_nic)
+                        raise Exception(f"Device not found for NIC: {dest_nic.name}")
+                    device.Device(dev_data).accept_packet(pkt, dest_nic)
 
             if pkt.packet_location == "":
                 pkt.status = "done"
