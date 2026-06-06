@@ -803,24 +803,28 @@ class Parser:
             nic = dev_obj.nic_from_name(nicname)
             if interface is not None:
                 # we found it.  Change the IP if we are able
-                if fromuser and nic.get("usesdhcp") == "True":
-                    # The user cannot set the IP manually if the NIC is set to use DHCP
-                    session.print(
-                        f"{nicname} is set for DHCP.  Cannot change it manually."
-                    )
-                    return
+                ip_data = interface.get("myip")
                 # we should have some better syntax checking here.
                 if mask == "":
-                    mask = interface["myip"]["mask"]
+                    mask = ip_data.get("mask")
+                if (
+                    # Check if new data is real or "reset" data.
+                    f"{ip}/{mask}" != f"{packet.GENERIC_IP4}/{packet.GENERIC_IP4}"
+                    and fromuser
+                    and nic.get("usesdhcp") == "True"
+                ):
+                    # The user cannot set the IP manually if the NIC is set to use DHCP
+                    session.print(
+                        f"{dev_obj.hostname}:{nicname} is set for DHCP.  Cannot change it manually."
+                    )
+                    return
                 session.add_undo_entry(
                     f"set {dev_obj.hostname} {nicname} {ip}/{mask}",
-                    f"set {dev_obj.hostname} {nicname} {interface['myip']['ip']}/{interface['myip']['mask']}",
+                    f"set {dev_obj.hostname} {nicname} {ip_data.get('ip')}/{ip_data.get('mask')}",
                 )
+                session.print(f"Setting {dev_obj.hostname}:{nicname} to: {ip}/{mask}")
                 interface["myip"]["ip"] = ip
                 interface["myip"]["mask"] = mask
-                print(
-                    f"Setting {dev_obj.hostname} {nicname} to: {interface['myip']['ip']} / {interface['myip']['mask']}"
-                )
                 session.puzzle.check_local_IP_test(dev_obj.json)
             else:
                 session.print(f"Could not find Nic: {nicname}")
