@@ -415,7 +415,7 @@ class Device(ItemBase):
     # route add/del pieces
     def route_add(self, target, gateway):
         logging.debug(f"Adding route. {target} {gateway}")
-        # if we have a route with the same src/dest/targer, we drop it
+        # if we have a route with the same src/dest/target, we drop it
         # if not, we return "false"
         try:
             target_IP = ipaddress.ip_interface(target)

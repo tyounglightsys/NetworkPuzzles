@@ -347,14 +347,6 @@ class EditRoutesPopup(DevicePopup):
     def _apply_route_action(self, action, target_ip, gateway):
         cmd = f"route {self.device.hostname} {action} {target_ip} {gateway}"
         self.app.ui.parse(cmd)
-        # -----
-        # TODO: The following will need to be removed once state-based UNDO is
-        # implemented.
-        if action.startswith("add"):
-            self.device.route_add(target_ip, gateway)
-        elif action.startswith("del"):
-            self.device.route_del(target_ip, gateway)
-        # -----
         self.ids.static_routes_list.update_data(static=True)
 
     def _remove_route(self, target_ip, gateway):

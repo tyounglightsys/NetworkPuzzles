@@ -1,5 +1,7 @@
 # import logging
 
+from copy import deepcopy
+
 from kivy.uix.recycleview import RecycleView
 
 from .. import session
@@ -85,7 +87,8 @@ class RoutesRecView(AppRecView):
             return f"IP:{ip:<20.20} Mask:{mask:<20.20} GW:{gw:<20.20}"
 
         if static:
-            routes = self.root.device.routes
+            # Use copy of routes to avoid direct modification without parser command.
+            routes = deepcopy(self.root.device.routes)
         else:
             routes = self.root.device.get_routes_from_nics()
         self.data = [{"text": t(r), "data": r} for r in routes]

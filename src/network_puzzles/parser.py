@@ -467,8 +467,14 @@ class Parser:
             return False
         target_device = device.Device(target_device)
         if command == "add":
-            return target_device.route_add(target, gateway)
-        return target_device.route_del(target, gateway)
+            verb = "Adding"
+            prep = "to"
+        elif command == "del":
+            verb = "Removing"
+            prep = "from"
+        # Print action to terminal and run device method command.
+        session.print(f"{verb} route {target}->{gateway} {prep} {hostname}")
+        return getattr(target_device, f"route_{command}")(target, gateway)
 
     def process_firewall(self, args):
         if len(args) != 5:
