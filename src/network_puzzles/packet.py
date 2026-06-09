@@ -286,10 +286,10 @@ class Packet(ItemBase):
             if dev.mytype == "fluorescent" and lnk.linktype != "wireless":
                 risky_devices.append(dev)
 
-        #We only need to calculate these values once        
-        AllPoints = self.get_distance_points(tick_pct)
-        LastPoints = AllPoints[-1]
-        FirstPoints = AllPoints[1]
+        # We only need to calculate these values once
+        all_points = self.get_distance_points(tick_pct)
+        last_point = all_points[-1]
+        first_point = all_points[1]
 
         # Check if each device is close enough to damage packet.
         for dev in risky_devices:
@@ -302,14 +302,14 @@ class Packet(ItemBase):
             dx += halfsize
             dy += halfsize
 
-            #for microwaves and fluorescent...
+            # for microwaves and fluorescent...
             damage_distance = 43
             if dev.mytype == "tree":
-                #it needs to hit the tree.
+                # it needs to hit the tree.
                 damage_distance = 9
 
             # Now compare locations to each point along the distance.
-            for px, py in AllPoints:
+            for px, py in all_points:
                 # NOTE: It seems unnecessary (or possibly erroneous) to
                 # convert the distance() value below into an int, because
                 # this would theoretically apply damage even when the
@@ -324,7 +324,9 @@ class Packet(ItemBase):
                     self.health -= 1
                     self.damage_count += 1
                     if dev.mytype == "tree":
-                        logging.debug(f"BOOM. Packet hit a tree. ({dev.hostname}) with a distance of {thedistance}   End of packet.")
+                        logging.debug(
+                            f"BOOM. Packet hit a tree. ({dev.hostname}) with a distance of {thedistance}   End of packet."
+                        )
                         self.status = "done"  # the packet dies silently
                         break
                     if self.health <= 0:
@@ -332,13 +334,18 @@ class Packet(ItemBase):
                         break
             if self.health_init > self.health:
                 logging.debug(f"Packet damaged: {self.packettype} {self.health}")
-        #Check the final end point we are looking at
-        px, py = LastPoints
-        fx, fy = FirstPoints
+        # Check the final end point we are looking at
+        px, py = last_point
+        fx, fy = first_point
         totdistance = int(distance(px, py, sx, sy))
-        if totdistance >= session.WirelessFailureDistance:
-            self.status="done"
-            logging.debug(f"Wireless signal too weak.  Packet dropped. Distance: {totdistance} SourcePoint: {sx},{sy} PacketLocation {px},{py}")                
+        if (
+            lnk.linktype == "wireless"
+            and totdistance >= session.WirelessFailureDistance
+        ):
+            self.status = "done"
+            logging.debug(
+                f"Wireless signal too weak.  Packet dropped. Distance: {totdistance} SourcePoint: {sx},{sy} PacketLocation {px},{py}"
+            )
 
     def get_distance_points(self, tick_pct):
         devices = self.get_current_link_endpoint_devices()
@@ -352,7 +359,7 @@ class Packet(ItemBase):
         deltay = (dy - sy) / 100
 
         if tick_pct > 100:
-            #We can only travel 100% of the wire
+            # We can only travel 100% of the wire
             tick_pct = 100
 
         points = list()
