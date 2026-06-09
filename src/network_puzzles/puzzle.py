@@ -876,7 +876,7 @@ class Puzzle(ItemBase):
     def AutoJoinAllWireless(self):
         # logging.debug("Doing AutoJoinWirelsss")
         for onedevice in self.devices:
-            device.Device(onedevice).AutoJoinWireless()
+            device.Device(onedevice).autojoin_wireless()
 
     def ClearAllConnectionEntries(self):
         for onedevice in self.devices:
