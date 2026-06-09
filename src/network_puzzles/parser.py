@@ -62,12 +62,12 @@ class Parser:
         logging.debug(f"{command=}")
 
         if ";" in command:
-            #Our command is multiple commands in one.  Run each of them individually
+            # Our command is multiple commands in one.  Run each of them individually
             commands = command.split(";")
-            #parse each of them separately
+            # parse each of them separately
             for onestring in commands:
-                self.parse(onestring,fromuser, fromundo)
-            #call it done.
+                self.parse(onestring, fromuser, fromundo)
+            # call it done.
             return
 
         session.packetstorm = False  # We are starting something new. It is false until we determine otherwise
@@ -527,8 +527,10 @@ class Parser:
                 if one["hostname"] is None:
                     logging.error(f"hostname is None. About to explode: {one}")
                 if one is not None:
-                    if one.get('linktype') == 'wireless':
-                        session.print(f"{one['hostname']} distance: {device.LinkDistance(link.Link(one)):.2f}")
+                    if one.get("linktype") == "wireless":
+                        session.print(
+                            f"{one['hostname']} distance: {device.LinkDistance(link.Link(one)):.2f}"
+                        )
                     else:
                         session.print(one["hostname"])
 
