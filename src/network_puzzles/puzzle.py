@@ -551,45 +551,60 @@ class Puzzle(ItemBase):
                 for oneNic in oneDevice["nic"]:
                     oneNic = Nic(oneNic).ensure_mac()
 
-    def deleteItem(self, itemToDelete: str):
+    def delete_device_by_hostname(self, hostname):
+        existing_device = self.device_from_name(hostname)
+        if existing_device is None:
+            raise ValueError(f"Device does not exist: {hostname}")
+
+        if session.puzzle.device_is_critical(hostname):
+            session.print(f"Cannot delete {hostname}; the puzzle has it locked.")
+            return False
+            # We need to find any links connected to this device and delete them
+        for onenic in device.Device(existing_device).all_nics():
+            nic = Nic(onenic)
+            onelink = nic.get_connected_link()
+            if onelink is not None:
+                self.delete_item(onelink.get("hostname"))
+        session.print(f"Deleting: {hostname}")
+        session.add_undo_entry(
+            f"delete {hostname}", f"restore {hostname}", existing_device
+        )  # make entry using payload
+        if isinstance(self.json.get("device"), dict):
+            # Replace single-item dict with an empty list.
+            self.json["device"] = []
+        elif isinstance(self.json.get("device"), list):
+            idx = self.json["device"].index(existing_device)
+            del self.json["device"][idx]
+        return True
+
+    def delete_link_by_hostname(self, hostname):
+        existing_link = self.link_from_name(hostname)
+        if existing_link is None:
+            raise ValueError(f"Link does not exist: {hostname}")
+
+        session.print(f"Deleting: {hostname}")
+        session.add_undo_entry(
+            f"delete {hostname}", f"restore {hostname}", existing_link
+        )  # make entry using payload
+        if isinstance(self.json.get("link"), dict):
+            # Replace single-item dict with an empty list.
+            self.json["link"] = []
+        elif isinstance(self.json.get("link"), list):
+            # Delete item from list.
+            idx = self.json["link"].index(existing_link)
+            del self.json["link"][idx]
+        return True
+
+    def delete_item(self, itemToDelete: str):
+        """Attempt to remove device or link from the puzzle."""
         existing_device = self.device_from_name(itemToDelete)
         if existing_device:
-            if session.puzzle.device_is_critical(itemToDelete):
-                session.print(
-                    f"Cannot delete {itemToDelete}.  The puzzle has it locked."
-                )
-                return False
-            # We need to find any links connected to this device and delete them
-            for onenic in device.Device(existing_device).all_nics():
-                nic = Nic(onenic)
-                onelink = nic.get_connected_link()
-                if onelink is not None:
-                    self.deleteItem(onelink.get("hostname"))
-            session.print(f"Deleting: {itemToDelete}")
-            session.add_undo_entry(
-                f"delete {itemToDelete}", f"restore {itemToDelete}", existing_device
-            )  # make entry using payload
-            if isinstance(self.json.get("device"), dict):
-                # Replace single-item dict with an empty list.
-                self.json["device"] = []
-            elif isinstance(self.json.get("device"), list):
-                idx = self.json["device"].index(existing_device)
-                del self.json["device"][idx]
-            return True
+            return self.delete_device_by_hostname(itemToDelete)
+
         existing_link = self.link_from_name(itemToDelete)
         if existing_link:
-            session.print(f"Deleting: {itemToDelete}")
-            session.add_undo_entry(
-                f"delete {itemToDelete}", f"restore {itemToDelete}", existing_link
-            )  # make entry using payload
-            if isinstance(self.json.get("link"), dict):
-                # Replace single-item dict with an empty list.
-                self.json["link"] = []
-            elif isinstance(self.json.get("link"), list):
-                # Delete item from list.
-                idx = self.json["link"].index(existing_link)
-                del self.json["link"][idx]
-            return True
+            return self.delete_link_by_hostname(itemToDelete)
+
         return False
 
     def issueUniqueIdentifier(self):

@@ -45,6 +45,10 @@ class Link(ItemBase):
     def uniqueidentifier(self) -> str:
         return self.json.get("uniqueidentifier", "")
 
+    def remove(self):
+        """Remove this link from the puzzle cleanly."""
+        session.puzzle.delete_item(self.hostname)
+
     def show_info(self):
         """Print information about the link to the in-app terminal."""
         session.print("----Link----")
@@ -52,5 +56,3 @@ class Link(ItemBase):
         session.print(f"type: {self.linktype}")
         session.print(f"source: {self.src} - {self.src_nic_name}")
         session.print(f"dest: {self.dest} - {self.dest_nic_name}")
-
-
