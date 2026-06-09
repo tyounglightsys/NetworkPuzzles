@@ -482,9 +482,11 @@ class Puzzle(ItemBase):
             # logging.debug(f"Packet: On link: {current_link}, {pkt.status=}")
             if current_link is not None:
                 # the packet is traversing a link
-                # damagePacketIfNeeded(pkt, tick_pct)
                 pkt.apply_possible_damage(tick_pct)
                 pkt.distance += tick_pct
+                # logging.debug(
+                #     f"Packet: on link {current_link.hostname} at {pkt.distance}%"
+                # )
                 # logging.debug(f"Packet: Moved to {pkt.distance}; {pkt.health=}")
                 if pkt.distance > 50 and current_link.linktype == "broken":
                     # The link is broken.  The packet gets killed
@@ -499,13 +501,14 @@ class Puzzle(ItemBase):
                         logging.error(f"Direction = {pkt.direction}")
                         raise Exception("Could not find the endpoint of the link.")
                     dest_nic = end_nics[1]
-                    logging.debug(f"Packet: Arrived at NIC: {dest_nic}")
                     # We are here. Call a function on the device to start the
                     # packet entering the device.
                     dev_data = session.puzzle.device_from_uid(dest_nic.my_id.host_id)
                     if dev_data is None:
                         raise Exception(f"Device not found for NIC: {dest_nic.name}")
-                    device.Device(dev_data).accept_packet(pkt, dest_nic)
+                    dst_dev = device.Device(dev_data)
+                    logging.debug(f"Packet: Arrived at: {dst_dev.hostname}:{dest_nic}")
+                    dst_dev.accept_packet(pkt, dest_nic)
 
             if pkt.packet_location == "":
                 pkt.status = "done"
@@ -618,7 +621,16 @@ class Puzzle(ItemBase):
         while (thedevice.nic_from_name(f"{nictype}{count}")) is not None:
             count = count + 1
         newnicname = f"{nictype}{count}"
-        if nictype not in {"eth", "vpn", "wan", "wlan", "port", "wport", "lo", "management_interface"}:
+        if nictype not in {
+            "eth",
+            "vpn",
+            "wan",
+            "wlan",
+            "port",
+            "wport",
+            "lo",
+            "management_interface",
+        }:
             logging.debug(f"Oops.  Cannot create a nic of type: {nictype}")
             return None
         newid = self.issueUniqueIdentifier()
@@ -684,7 +696,7 @@ class Puzzle(ItemBase):
             },
             "nic": list(),
         }
-        if device_type not in ("tree", "fluorescent","microwave"):
+        if device_type not in ("tree", "fluorescent", "microwave"):
             self.createNIC(newdevice, "lo")
         match device_type:
             case "cellphone" | "tablet":
