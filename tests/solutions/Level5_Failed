@@ -1,0 +1,11 @@
+load Level5_Failed
+set wrouter1 isdhcp true
+set wrouter1 dhcp 192.168.2.1 192.168.2.10-192.168.2.20
+set tablet0 key wlan0 myKey
+set tablet0 ssid wlan0 my_SSID
+dhcp tablet0
+set cellphone0 key wlan0 myKey
+set cellphone0 ssid wlan0 my_SSID
+dhcp cellphone0
+ping tablet0 pc0
+ping cellphone0 pc0

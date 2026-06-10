@@ -1,0 +1,4 @@
+load Level5_Practice2
+set wbridge0 key wlan1 OfficeKey
+set wbridge0 ssid wlan1 OfficeNet
+ping server0 server1

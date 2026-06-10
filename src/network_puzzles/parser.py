@@ -205,7 +205,7 @@ class Parser:
                     f"restore {item.get('hostname')}",
                     item,
                 )
-                session.puzzle.deleteItem(item.get("hostname"))
+                session.puzzle.delete_item(item.get("hostname"))
                 linktype = item.get("linktype")
                 if linktype == "broken":
                     linktype = "normal"  # we replace broken links
@@ -442,7 +442,7 @@ class Parser:
             return False
         # check to see if we are able to delete.  Is it locked?
         # We will need to check for that later after the tests are done.
-        return session.puzzle.deleteItem(args[0])
+        return session.puzzle.delete_item(args[0])
 
     def change_route(self, args):
         if len(args) != 4:
@@ -841,7 +841,7 @@ class Parser:
             return False
 
     def set_position_value(self, dev_obj, x_in, y_in):
-        logging.debug("set_position_value entry")
+        logging.debug(f"set_position_value: {dev_obj.hostname=}; {x_in=}; {y_in=}")
         if session.puzzle.item_is_locked(dev_obj.hostname, "LockLocation"):
             session.print(f"Device cannot be moved: {dev_obj.hostname}")
             return False

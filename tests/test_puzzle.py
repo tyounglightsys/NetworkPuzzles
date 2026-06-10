@@ -160,10 +160,10 @@ class TestPuzzleClass(unittest.TestCase):
         self.app.load_puzzle(self.puzzle_name)  # sets session.puzzle
 
     def test_deleteitem_locked(self):
-        self.assertFalse(session.puzzle.deleteItem("pc0"))
+        self.assertFalse(session.puzzle.delete_item("pc0"))
 
     def test_deleteitem_success(self):
-        self.assertTrue(session.puzzle.deleteItem("pc1"))
+        self.assertTrue(session.puzzle.delete_item("pc1"))
 
     def test_ispuzzledone_false(self):
         self.assertFalse(session.puzzle.is_solved())

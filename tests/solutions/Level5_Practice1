@@ -1,0 +1,5 @@
+load Level5_Practice1
+set wap0 location 640 520
+ping server1 server0
+ping pc1 server0
+ping pc1 google.com

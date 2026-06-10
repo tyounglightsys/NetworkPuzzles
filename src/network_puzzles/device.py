@@ -304,6 +304,21 @@ class Device(ItemBase):
                 nic_routes.append(iface.ip_data)
         return nic_routes
 
+    def _get_wireless_nics_and_links(self):
+        nics_and_links = list()
+        for nic_data in self.all_nics():
+            nic = Nic(nic_data)
+            if nic.type != "wlan":
+                continue  # We only autoconnect wport ports
+            link_data = nic.get_connected_link()
+            logging.debug(f"wlans: {nic.name}: {link_data}")
+            if link_data:
+                tlink = Link(link_data)
+            else:
+                tlink = None
+            nics_and_links.append({"nic": nic, "link": tlink})
+        return nics_and_links
+
     def mac_list(self):
         """
         Return a list of all the MAC addresses of all the nics on the device
@@ -588,65 +603,94 @@ class Device(ItemBase):
             return tmac
         return None
 
-    def AutoJoinWireless(self):
+    def autojoin_wireless(self):
         """If the device has a wlan port, create links between the device and
         the nearest AP (wrouter, wap, etc) that has a matching ssid/key"""
         if not self.powered_on:
             return False  # Nothing to do if we are powered off
-        for onenic in self.all_nics():
-            tnic = Nic(onenic)
-            if tnic.type != "wlan":
-                continue  # We only autoconnect wport ports
-            olink = tnic.get_connected_link()
-            tlink = Link(olink)
 
-            # make a note of whether we need to try to replace the link
-            needs_replacing = False
+        # Connect first available and configured wireless NIC.
+        for nic_data in self._get_wireless_nics_and_links():
+            dev_nic = nic_data.get("nic")
+            dev_nic_link = nic_data.get("link")
 
             logging.debug(
-                f"AutoJoinWireless: {self.hostname} has wport {tnic.name}  {tnic.ssid} {tnic.encryption_key}"
+                f"Device.autojoin_wireless: {self.hostname} has wport '{dev_nic.name}';  {dev_nic.ssid=}; {dev_nic.encryption_key=}"
             )
-            # logging.debug(f"Looking at link: -{tlink}- {olink}")
 
-            if olink is not None and tlink is not None:
-                # find the destination at the end of the link
-                dst_hostname = None
-                if tlink.dest == self.hostname:
-                    dst_hostname = tlink.src
+            # Determine if existing link needs to be created.
+            create_link = False
+            if dev_nic_link is None:
+                # There is no link, make a new one.
+                create_link = True
+            else:
+                # Determine if existing link needs to be destroyed.
+                # Find the destination at the end of the link.
+                if dev_nic_link.dest == self.hostname:
+                    dst_hostname = dev_nic_link.src
                 else:
-                    dst_hostname = tlink.dest
+                    dst_hostname = dev_nic_link.dest
+                dst_dev = Device(session.puzzle.device_from_name(dst_hostname))
 
-                dst = Device(session.puzzle.device_from_name(dst_hostname))
+                # Set destroy status.
+                destroy_link = False
+                while destroy_link is False:
+                    # If the wport is connected to something that is powered off, disconnect it.
+                    if not dst_dev.powered_on:
+                        destroy_link = True
+                        logging.debug(
+                            f"{dst_dev.hostname} is not powered on; removing wireless link connected to it: {dev_nic_link.hostname}"
+                        )
+                        continue
 
-                link_needs_destroying = False
-                # If the wport is connected to something that is powered off, disconnect it
-                if not dst.powered_on:
-                    link_needs_destroying = True
-
-                # If the wport is connected to something too far away, disconnect it
-                else:
+                    # If the wport is connected to something too far away, disconnect it.
                     sx, sy = self.location
-                    dx, dy = dst.location
+                    dx, dy = dst_dev.location
                     distance = get_puzzle_distance(sx, sy, dx, dy)
                     if distance > session.WirelessReconnectDistance:
-                        link_needs_destroying = True
+                        logging.debug(
+                            f"Distance for the link {dev_nic_link.hostname} is too great; {distance} > {session.WirelessFailureDistance}; removing it."
+                        )
+                        destroy_link = True
+                        continue
 
-                if link_needs_destroying:
+                    # Destroy the link if the SSID or key does not match.
+                    dnic = None
+                    if dev_nic_link.dest == self.hostname:
+                        dnic = Nic(dst_dev.nic_from_name(dev_nic_link.src_nic_name))
+                    else:
+                        dnic = Nic(dst_dev.nic_from_name(dev_nic_link.dest_nic_name))
+                    if dev_nic.ssid != dnic.ssid:
+                        logging.debug(
+                            f"SSID mismatch; removing link {dev_nic_link.hostname}"
+                        )
+                        destroy_link = True
+                        continue
+                    elif dev_nic.encryption_key != dnic.encryption_key:
+                        logging.debug(
+                            f"key mismatch; removing link {dev_nic_link.hostname}"
+                        )
+                        destroy_link = True
+                        continue
+                    else:
+                        # Link is good; don't destroy it.
+                        break
+
+                if destroy_link:
                     # destroy the link, and attempt to make another
-                    session.puzzle.deleteItem(tlink.hostname)
-                    needs_replacing = True
-                    tlink = None  # mark it as gone, just in case
-            else:
-                # There is no link, make a new one
-                needs_replacing = True
+                    dev_nic_link.remove()
+                    create_link = True
+                    dev_nic_link = None  # mark it as gone, just in case
 
-            logging.debug(f"Link needs creating {needs_replacing}")
+            logging.debug(
+                f"Create link for {self.hostname}:{dev_nic.name}?: {create_link}"
+            )
 
-            if needs_replacing:
+            if create_link:
                 # We want to search for things that might match
                 closest_dev = None
                 closest_nic = None
-                closest_distance = 9999  # anything will be closer.
+                closest_distance = None
 
                 for onedevice in session.puzzle.all_devices():
                     t_onedevice = Device(onedevice)
@@ -661,15 +705,18 @@ class Device(ItemBase):
                             # logging.debug(f"Checking out {t_dstnic.type} {t_dstnic.encryption_key} {t_dstnic.ssid}" )
                             if (
                                 t_dstnic.type == "wport"
-                                and t_dstnic.encryption_key == tnic.encryption_key
-                                and t_dstnic.ssid == tnic.ssid
+                                and t_dstnic.encryption_key == dev_nic.encryption_key
+                                and t_dstnic.ssid == dev_nic.ssid
                             ):
                                 if t_dstnic.get_connected_link() is None:
                                     # the key and ssid match, and the port is available.  Track the distance.
                                     sx, sy = self.location
                                     dx, dy = t_onedevice.location
                                     t_dst_distance = get_puzzle_distance(sx, sy, dx, dy)
-                                    if t_dst_distance <= closest_distance:
+                                    if (
+                                        closest_distance is None
+                                        or t_dst_distance <= closest_distance
+                                    ):
                                         closest_distance = t_dst_distance
                                         closest_dev = t_onedevice
                                         closest_nic = t_dstnic
@@ -677,10 +724,6 @@ class Device(ItemBase):
                                             f"{t_onedevice.hostname} {t_dstnic.name} {t_dst_distance:.2f} is closer to {self.hostname}"
                                         )
                                         break  # we found one, break out of the for loop
-                                #                                    else:
-                                #                                        logging.debug(
-                                #                                            f"{t_onedevice.hostname} {t_dstnic.name} {t_dst_distance:.2f} not close enough for {self.hostname}"
-                                #                                        )
                                 else:
                                     logging.debug(
                                         f"{t_onedevice.hostname} {t_dstnic.name} already has a link"
@@ -688,19 +731,25 @@ class Device(ItemBase):
 
                 # We now have closest_dev being the closest device that is a possibility.  If it is close enough, make a link.
                 logging.debug(
-                    f"closest_distance is: {closest_distance:.2f} Needs to be < {session.WirelessReconnectDistance}"
+                    f"closest_distance is: {closest_distance}; needs to be < {session.WirelessReconnectDistance}"
                 )
-                if closest_distance <= session.WirelessReconnectDistance:
+                if (
+                    closest_distance
+                    and closest_distance <= session.WirelessReconnectDistance
+                ):
                     # we can make this link
                     session.puzzle.createLink(
                         [
                             self.hostname,
-                            tnic.name,
+                            dev_nic.name,
                             closest_dev.hostname,
                             closest_nic.name,
-                        ]
+                        ],
+                        "wireless",
                     )
+                    # NOTE: Returning here means only one wlan connection will be made.
                     return True
+
         # If we get here, we were unable to autojoin.
         return False
 

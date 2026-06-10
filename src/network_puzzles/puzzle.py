@@ -349,18 +349,19 @@ class Puzzle(ItemBase):
         return None
 
     def item_is_locked(self, shost, whattocheck, dhost=None):
+        # logging.debug(f"item_is_locked: {shost=}; {whattocheck=}; {dhost=}")
         for test in self.all_tests(shost):
+            # logging.debug(f"item_is_locked: {test=}")
             thetest = test.get("thetest")
             if thetest == "LockAll":
                 if whattocheck != "LockLocation":
                     return True
-            if thetest == whattocheck and whattocheck == "LockVlanNames":
-                return True
-            if thetest == whattocheck and whattocheck == "LockVLANsOnHost":
-                return True
-            if thetest == whattocheck and dhost and test.get("dhost") == dhost:
-                # if the source (hostname) and dest (, ping_desthostname, nic, etc) also match.
-                return True
+            elif thetest == whattocheck:
+                if whattocheck in ("LockLocation", "LockVlanNames", "LockVLANsOnHost"):
+                    return True
+                if dhost and test.get("dhost") == dhost:
+                    # if the source (hostname) and dest (, ping_desthostname, nic, etc) also match.
+                    return True
         return False
 
     def item_blows_up(self, shost):
@@ -485,9 +486,11 @@ class Puzzle(ItemBase):
             # logging.debug(f"Packet: On link: {current_link}, {pkt.status=}")
             if current_link is not None:
                 # the packet is traversing a link
-                # damagePacketIfNeeded(pkt, tick_pct)
                 pkt.apply_possible_damage(tick_pct)
                 pkt.distance += tick_pct
+                # logging.debug(
+                #     f"Packet: on link {current_link.hostname} at {pkt.distance}%"
+                # )
                 # logging.debug(f"Packet: Moved to {pkt.distance}; {pkt.health=}")
                 if pkt.distance > 50 and current_link.linktype == "broken":
                     # The link is broken.  The packet gets killed
@@ -501,14 +504,15 @@ class Puzzle(ItemBase):
                         logging.error(f"Bad Link: {current_link}")
                         logging.error(f"Direction = {pkt.direction}")
                         raise Exception("Could not find the endpoint of the link.")
-                    src_nic = end_nics[0]
-                    logging.debug(f"Packet: Arrived at NIC: {src_nic}")
+                    dest_nic = end_nics[1]
                     # We are here. Call a function on the device to start the
                     # packet entering the device.
-                    dev_data = session.puzzle.device_from_uid(src_nic.my_id.host_id)
+                    dev_data = session.puzzle.device_from_uid(dest_nic.my_id.host_id)
                     if dev_data is None:
-                        raise Exception(f"Device not found for NIC: {src_nic.name}")
-                    device.Device(dev_data).accept_packet(pkt, src_nic)
+                        raise Exception(f"Device not found for NIC: {dest_nic.name}")
+                    dst_dev = device.Device(dev_data)
+                    logging.debug(f"Packet: Arrived at: {dst_dev.hostname}:{dest_nic}")
+                    dst_dev.accept_packet(pkt, dest_nic)
 
             if pkt.packet_location == "":
                 pkt.status = "done"
@@ -551,45 +555,60 @@ class Puzzle(ItemBase):
                 for oneNic in oneDevice["nic"]:
                     oneNic = Nic(oneNic).ensure_mac()
 
-    def deleteItem(self, itemToDelete: str):
+    def delete_device_by_hostname(self, hostname):
+        existing_device = self.device_from_name(hostname)
+        if existing_device is None:
+            raise ValueError(f"Device does not exist: {hostname}")
+
+        if session.puzzle.device_is_critical(hostname):
+            session.print(f"Cannot delete {hostname}; the puzzle has it locked.")
+            return False
+            # We need to find any links connected to this device and delete them
+        for onenic in device.Device(existing_device).all_nics():
+            nic = Nic(onenic)
+            onelink = nic.get_connected_link()
+            if onelink is not None:
+                self.delete_item(onelink.get("hostname"))
+        session.print(f"Deleting: {hostname}")
+        session.add_undo_entry(
+            f"delete {hostname}", f"restore {hostname}", existing_device
+        )  # make entry using payload
+        if isinstance(self.json.get("device"), dict):
+            # Replace single-item dict with an empty list.
+            self.json["device"] = []
+        elif isinstance(self.json.get("device"), list):
+            idx = self.json["device"].index(existing_device)
+            del self.json["device"][idx]
+        return True
+
+    def delete_link_by_hostname(self, hostname):
+        existing_link = self.link_from_name(hostname)
+        if existing_link is None:
+            raise ValueError(f"Link does not exist: {hostname}")
+
+        session.print(f"Deleting: {hostname}")
+        session.add_undo_entry(
+            f"delete {hostname}", f"restore {hostname}", existing_link
+        )  # make entry using payload
+        if isinstance(self.json.get("link"), dict):
+            # Replace single-item dict with an empty list.
+            self.json["link"] = []
+        elif isinstance(self.json.get("link"), list):
+            # Delete item from list.
+            idx = self.json["link"].index(existing_link)
+            del self.json["link"][idx]
+        return True
+
+    def delete_item(self, itemToDelete: str):
+        """Attempt to remove device or link from the puzzle."""
         existing_device = self.device_from_name(itemToDelete)
         if existing_device:
-            if session.puzzle.device_is_critical(itemToDelete):
-                session.print(
-                    f"Cannot delete {itemToDelete}.  The puzzle has it locked."
-                )
-                return False
-            # We need to find any links connected to this device and delete them
-            for onenic in device.Device(existing_device).all_nics():
-                nic = Nic(onenic)
-                onelink = nic.get_connected_link()
-                if onelink is not None:
-                    self.deleteItem(onelink.get("hostname"))
-            session.print(f"Deleting: {itemToDelete}")
-            session.add_undo_entry(
-                f"delete {itemToDelete}", f"restore {itemToDelete}", existing_device
-            )  # make entry using payload
-            if isinstance(self.json.get("device"), dict):
-                # Replace single-item dict with an empty list.
-                self.json["device"] = []
-            elif isinstance(self.json.get("device"), list):
-                idx = self.json["device"].index(existing_device)
-                del self.json["device"][idx]
-            return True
+            return self.delete_device_by_hostname(itemToDelete)
+
         existing_link = self.link_from_name(itemToDelete)
         if existing_link:
-            session.print(f"Deleting: {itemToDelete}")
-            session.add_undo_entry(
-                f"delete {itemToDelete}", f"restore {itemToDelete}", existing_link
-            )  # make entry using payload
-            if isinstance(self.json.get("link"), dict):
-                # Replace single-item dict with an empty list.
-                self.json["link"] = []
-            elif isinstance(self.json.get("link"), list):
-                # Delete item from list.
-                idx = self.json["link"].index(existing_link)
-                del self.json["link"][idx]
-            return True
+            return self.delete_link_by_hostname(itemToDelete)
+
         return False
 
     def issueUniqueIdentifier(self):
@@ -696,7 +715,7 @@ class Puzzle(ItemBase):
             },
             "nic": list(),
         }
-        if device_type not in ("tree", "fluorescent"):
+        if device_type not in ("tree", "fluorescent", "microwave"):
             self.createNIC(newdevice, "lo")
         match device_type:
             case "cellphone" | "tablet":
@@ -861,7 +880,7 @@ class Puzzle(ItemBase):
     def AutoJoinAllWireless(self):
         # logging.debug("Doing AutoJoinWirelsss")
         for onedevice in self.devices:
-            device.Device(onedevice).AutoJoinWireless()
+            device.Device(onedevice).autojoin_wireless()
 
     def ClearAllConnectionEntries(self):
         for onedevice in self.devices:

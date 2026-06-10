@@ -1,0 +1,5 @@
+load Level5_LineOfSight
+set wap0 location 650 550
+set wbridge0 location 180 550
+ping pc1 google.com
+ping pc1 server0

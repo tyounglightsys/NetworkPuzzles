@@ -1,0 +1,5 @@
+load Level5_LineOfSight
+#by not moving it, this should fail.  The packet hits the trees
+set wbridge0 180 550
+ping pc1 google.com
+ping pc1 server0
