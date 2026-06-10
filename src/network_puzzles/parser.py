@@ -835,7 +835,7 @@ class Parser:
             return False
 
     def set_position_value(self, dev_obj, x_in, y_in):
-        logging.debug("set_position_value entry")
+        logging.debug(f"set_position_value: {dev_obj.hostname=}; {x_in=}; {y_in=}")
         if session.puzzle.item_is_locked(dev_obj.hostname, "LockLocation"):
             session.print(f"Device cannot be moved: {dev_obj.hostname}")
             return False

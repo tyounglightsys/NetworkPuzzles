@@ -346,18 +346,19 @@ class Puzzle(ItemBase):
         return None
 
     def item_is_locked(self, shost, whattocheck, dhost=None):
+        # logging.debug(f"item_is_locked: {shost=}; {whattocheck=}; {dhost=}")
         for test in self.all_tests(shost):
+            # logging.debug(f"item_is_locked: {test=}")
             thetest = test.get("thetest")
             if thetest == "LockAll":
                 if whattocheck != "LockLocation":
                     return True
-            if thetest == whattocheck and whattocheck == "LockVlanNames":
-                return True
-            if thetest == whattocheck and whattocheck == "LockVLANsOnHost":
-                return True
-            if thetest == whattocheck and dhost and test.get("dhost") == dhost:
-                # if the source (hostname) and dest (, ping_desthostname, nic, etc) also match.
-                return True
+            elif thetest == whattocheck:
+                if whattocheck in ("LockLocation", "LockVlanNames", "LockVLANsOnHost"):
+                    return True
+                if dhost and test.get("dhost") == dhost:
+                    # if the source (hostname) and dest (, ping_desthostname, nic, etc) also match.
+                    return True
         return False
 
     def item_blows_up(self, shost):
