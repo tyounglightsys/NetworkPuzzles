@@ -6,6 +6,7 @@ import logging
 import sys
 
 from . import device, link, nic, packet, puzzle, session
+from .interface import GENERIC_IP4
 
 
 class Parser:
@@ -466,8 +467,14 @@ class Parser:
             return False
         target_device = device.Device(target_device)
         if command == "add":
-            return target_device.route_add(target, gateway)
-        return target_device.route_del(target, gateway)
+            verb = "Adding"
+            prep = "to"
+        elif command == "del":
+            verb = "Removing"
+            prep = "from"
+        # Print action to terminal and run device method command.
+        session.print(f"{verb} route {target}->{gateway} {prep} {hostname}")
+        return getattr(target_device, f"route_{command}")(target, gateway)
 
     def process_firewall(self, args):
         if len(args) != 5:
@@ -526,13 +533,12 @@ class Parser:
             for one in linklist:
                 if one["hostname"] is None:
                     logging.error(f"hostname is None. About to explode: {one}")
-                if one is not None:
-                    if one.get("linktype") == "wireless":
-                        session.print(
-                            f"{one['hostname']} distance: {device.LinkDistance(link.Link(one)):.2f}"
-                        )
-                    else:
-                        session.print(one["hostname"])
+                if one.get("linktype") == "wireless":
+                    session.print(
+                        f"{one['hostname']} distance: {link.Link(one).distance:.2f}"
+                    )
+                else:
+                    session.print(one["hostname"])
 
         if len(args) == 1:
             thedevice = session.puzzle.device_from_name(args[0])
@@ -679,15 +685,11 @@ class Parser:
             session.print("Could not find local IP connected to the ip range specified")
             return False
         # remove the previous record, if one existed
-        if dev_obj.json.get("dhcprange") is None:
-            dev_obj.json["dhcprange"] = {}
-        itemlist = [
-            record for record in dev_obj.json.get("dhcprange") if record["ip"] != ethip
-        ]
+        itemlist = [record for record in dev_obj.dhcp_range if record["ip"] != ethip]
         # Now, we create a record and store it.
         newitem = {"ip": ethip, "mask": startip, "gateway": endip, "type": "dhcp"}
         itemlist.append(newitem)
-        dev_obj.json["dhcprange"] = itemlist
+        dev_obj.dhcp_range = itemlist
         session.print(
             f"Setting DHCP range on {dev_obj.hostname} to: {ethip} {startip}-{endip}"
         )
@@ -808,24 +810,28 @@ class Parser:
             nic = dev_obj.nic_from_name(nicname)
             if interface is not None:
                 # we found it.  Change the IP if we are able
-                if fromuser and nic.get("usesdhcp") == "True":
-                    # The user cannot set the IP manually if the NIC is set to use DHCP
-                    session.print(
-                        f"{nicname} is set for DHCP.  Cannot change it manually."
-                    )
-                    return
+                ip_data = interface.get("myip")
                 # we should have some better syntax checking here.
                 if mask == "":
-                    mask = interface["myip"]["mask"]
+                    mask = ip_data.get("mask")
+                if (
+                    # Check if new data is real or "reset" data.
+                    f"{ip}/{mask}" != f"{GENERIC_IP4}/{GENERIC_IP4}"
+                    and fromuser
+                    and nic.get("usesdhcp") == "True"
+                ):
+                    # The user cannot set the IP manually if the NIC is set to use DHCP
+                    session.print(
+                        f"{dev_obj.hostname}:{nicname} is set for DHCP.  Cannot change it manually."
+                    )
+                    return
                 session.add_undo_entry(
                     f"set {dev_obj.hostname} {nicname} {ip}/{mask}",
-                    f"set {dev_obj.hostname} {nicname} {interface['myip']['ip']}/{interface['myip']['mask']}",
+                    f"set {dev_obj.hostname} {nicname} {ip_data.get('ip')}/{ip_data.get('mask')}",
                 )
+                session.print(f"Setting {dev_obj.hostname}:{nicname} to: {ip}/{mask}")
                 interface["myip"]["ip"] = ip
                 interface["myip"]["mask"] = mask
-                print(
-                    f"Setting {dev_obj.hostname} {nicname} to: {interface['myip']['ip']} / {interface['myip']['mask']}"
-                )
                 session.puzzle.check_local_IP_test(dev_obj.json)
             else:
                 session.print(f"Could not find Nic: {nicname}")

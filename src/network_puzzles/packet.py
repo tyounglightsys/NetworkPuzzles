@@ -5,11 +5,11 @@ import time
 from copy import deepcopy
 
 from . import device, session
-from .core import ItemBase
+from .core import ItemBase, get_puzzle_distance
+from .interface import BROADCAST_MAC, GENERIC_IP4
 from .link import Link
 from .nic import Nic
 
-BROADCAST_MAC = "FFFFFFFFFFFF"
 PACKET_TYPES = (
     "dhcp",
     "dhcp-request",
@@ -317,7 +317,7 @@ class Packet(ItemBase):
                 # unintended consequences on already-designed puzzles. so it
                 # has been left as an int accordingly.
                 # Compare distance between device and packet with threshold.
-                thedistance = int(distance(px, py, dx, dy))
+                thedistance = int(get_puzzle_distance(px, py, dx, dy))
                 if thedistance <= damage_distance:
                     self.health -= 1
                     self.damage_count += 1
@@ -384,23 +384,17 @@ class Packet(ItemBase):
     def get_current_link_endpoint_nics(self):
         """Return tuple of (SrcNic, DstNic)."""
         current_link = self.get_current_link()
-        src_nic_myid = current_link.src_nic
-        dest_nic_myid = current_link.dest_nic
-        if self.direction != 1:
-            dest_nic_myid = current_link.src_nic
-            src_nic_myid = current_link.dest_nic
-        src_nic_data = device.getDeviceNicFromLinkNicRec(src_nic_myid)
-        dest_nic_data = device.getDeviceNicFromLinkNicRec(dest_nic_myid)
+        link_src_nic = current_link.src_nic
+        link_dest_nic = current_link.dest_nic
+        if self.direction == 1:
+            link_dest_nic = current_link.src_nic
+            link_src_nic = current_link.dest_nic
+        src_nic_data = device.getDeviceNicFromLinkNicRec(link_src_nic.json)
+        dest_nic_data = device.getDeviceNicFromLinkNicRec(link_dest_nic.json)
         return (Nic(src_nic_data), Nic(dest_nic_data))
 
     def __str__(self):
         return f"<packet: {self.packettype} from {self.source_ip} to {self.destination_ip}>"
-
-
-def distance(sx, sy, dx, dy):
-    # we have a 5/5 grid that we are working with.
-    # The ** is the exponent.  **2 is squared, **.5 is the square-root
-    return ((((sx - dx) ** 2) + ((sy - dy) ** 2)) ** 0.5) / 5
 
 
 def is_ipv6(string):
@@ -498,12 +492,12 @@ def is_broadcast_mac(mac: str):
 
 def isEmpty(iptocheck: str):
     # logging.debug(f"Checking if empty: {iptocheck} type of variable {type(iptocheck)}")
-    if isinstance(iptocheck, str) and justIP(iptocheck) == "0.0.0.0":
+    if isinstance(iptocheck, str) and justIP(iptocheck) == GENERIC_IP4:
         logging.debug("  Is empty")
         return True
     if isinstance(iptocheck, ipaddress.IPv4Address) and (
-        iptocheck == ipaddress.IPv4Interface("0.0.0.0/0")
-        or iptocheck == ipaddress.IPv4Address("0.0.0.0")
+        iptocheck == ipaddress.IPv4Interface(f"{GENERIC_IP4}/0")
+        or iptocheck == ipaddress.IPv4Address(GENERIC_IP4)
     ):
         # logging.debug("  Is empty")
         return True
