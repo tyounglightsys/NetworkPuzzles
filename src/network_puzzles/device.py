@@ -711,10 +711,6 @@ class Device(ItemBase):
                                             f"{t_onedevice.hostname} {t_dstnic.name} {t_dst_distance:.2f} is closer to {self.hostname}"
                                         )
                                         break  # we found one, break out of the for loop
-                                #                                    else:
-                                #                                        logging.debug(
-                                #                                            f"{t_onedevice.hostname} {t_dstnic.name} {t_dst_distance:.2f} not close enough for {self.hostname}"
-                                #                                        )
                                 else:
                                     logging.debug(
                                         f"{t_onedevice.hostname} {t_dstnic.name} already has a link"
