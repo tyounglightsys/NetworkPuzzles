@@ -1087,7 +1087,7 @@ class Device(ItemBase):
                         f"A traceroute timed out at {self.hostname}.  Making a return packet"
                     )
                     # we need to generate a traceroute response
-                    nPacket = packetFromTo(self.json, dest, "traceroute-response")
+                    nPacket = self.create_packet(dest, "traceroute-response")
                     nPacket.payload = pkt.payload
                     self.send_packet(nPacket, nic)
                     nPacket.payload["tempDest"] = nPacket.source_ip
@@ -1119,7 +1119,7 @@ class Device(ItemBase):
                 # logging.info(f"A ping came.  Making a return packet going to {dest}")
 
                 # we need to generate a ping response
-                nPacket = packetFromTo(self.json, dest, "ping-response")
+                nPacket = self.create_packet(dest, "ping-response")
                 # logging.debug(f"Created new packet : {dest}")
                 if nPacket is None:
                     # This rarely happens, but it can
@@ -1290,6 +1290,68 @@ class Device(ItemBase):
             return
         # If we get here, we might have forwarded.  If so, we mark the old packet as done.
         pkt.status = "done"
+
+    def create_packet(self, dest, packettype):
+        # dest should be given as a device, an ip address, or a hostname.
+
+        # Get device JSON data if dest is given as hostname.
+        if dest is None:
+            logging.error(
+                "You must have a destination to create a packet; 'None' was passed in."
+            )
+            return None
+        elif isinstance(dest, str) and not packet.is_ipv4(dest):
+            # hostname was passed as dest; get device JSON data
+            dest = session.puzzle.device_from_name(dest)
+            if dest is None:
+                # This means we were unable to figure out the dest.
+                logging.error(f"Not a valid hostname: {dest}")
+                session.print(f"Not a valid target: {dest}")
+                return None
+
+        # Get destination IP from JSON data.
+        if isinstance(dest, dict):
+            hostname = dest.get("hostname")
+            if hostname is None:
+                logging.error(f"Target has no hostname: {dest}")
+                session.print(f"Not a valid target: {dest}")
+                return None
+            logging.debug(f"Finding the IP for dest {hostname} ")
+            dest = destIP(self.json, dest)
+            if dest is None:
+                logging.error(f"Could not determine IP for {hostname}")
+                session.print(f"Not a valid target: {hostname}")
+                return None
+            logging.debug(f"Found IP {dest} for {hostname}")
+
+        # Verify IP address.
+        if isinstance(dest, str):  # It is a string of an IP.  We should try it.
+            dest = ipaddress.IPv4Address(dest)
+        if packet.isEmpty(dest):
+            # This means we were unable to figure out the dest.  No such host, or something
+            logging.info(f"Error: Not a valid target: {dest}")
+            session.print(f"Not a valid target: {dest}")
+            return None
+
+        logging.debug(f"Creating packet from {self.hostname} to {dest}")
+        # This is what we are hoping for; make an empty packet.
+        nPacket = packet.Packet()
+        nPacket.packettype = packettype
+        nPacket.source_ip = sourceIP(self.json, dest, False)
+        # The MAC address of the above IP
+        nPacket.source_mac = self.arp_lookup(nPacket.source_ip)
+        # Figure this out
+        nPacket.destination_ip = dest  # this should now be the IP
+        # If the IP is local, we use the MAC of the host. Otherwise it is the MAC of the gateway,
+        nPacket.destination_mac = globalArpLookup(dest)
+        if ip_is_broadcast_for_device(self.json, dest):
+            # It is a broadcast, use the broadcast MAC
+            logging.debug("It is a broadcast, using broadcast MAC")
+            nPacket.destination_mac = BROADCAST_MAC
+        if nPacket.destination_mac is None:
+            return None
+        logging.debug(f"Packet created: {nPacket.json}")
+        return nPacket
 
     def send_packet(self, pkt, nic_in=None, nic_out=None):
         """Send the packet out of the device."""
@@ -2177,74 +2239,22 @@ def packetFromTo(src, dest, packettype: str):
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
     """
-    # src should be a device, not just a name.  Sanity check.
     # logging.debug(f"starting a packet from {src} to {dest}")
-    if "hostname" not in src:
-        # The function is being improperly used. Can we fix it?
-        newsrc = session.puzzle.device_from_name(src)
-        if newsrc is not None:
-            src = newsrc
-        else:
-            # we were unable to fix it.  Complain bitterly
-            logging.error(
-                "Error: invalid source passed to packetFromTo.  src must be a device."
-            )
-            return None
     if src is None:
         # the function is being improperly used
         logging.error(
-            "Error: packetFromTo function must have a valid device as src.  None was passed in."
+            "packetFromTo function must have a valid device as src.  None was passed in."
         )
         return None
-    src_dev = Device(src)
+    elif isinstance(src, str):
+        # Assume a hostname was passed.
+        src = session.puzzle.device_from_name(src)
 
-    # dest should be a device, an ip address, or a hostname
-    if dest is None:
-        logging.error(
-            "Error: You must have a destination for packetFromTo.  None was passed in."
-        )
+    if isinstance(src, dict):
+        return Device(src).create_packet(dest, packettype)
+    else:
+        logging.error("Invalid source passed to packetFromTo.  src must be a device.")
         return None
-
-    if isinstance(dest, str) and not packet.is_ipv4(dest):
-        # If it is a string, but not a string that is an IP address
-        # print("using dest as a hostname")
-        dest = session.puzzle.device_from_name(dest)
-    if "hostname" in dest:
-        # print ("getting destination IP from a device")
-        # If we passed in a device or hostname, convert it to an IP
-        hostname = dest.get("hostname")
-        logging.debug(f"Finding the IP for dest {hostname} ")
-        dest = destIP(src, dest)
-        if dest is not None:
-            logging.debug(f"Found IP {dest} for {hostname}")
-
-    if dest is None or packet.isEmpty(dest):
-        # This means we were unable to figure out the dest.  No such host, or something
-        logging.info(f"Error: Not a valid target: {dest}")
-        session.print(f"Not a valid target {dest}")
-        return None
-    if isinstance(dest, str):  # It is a string of an IP.  We should try it.
-        dest = ipaddress.IPv4Address(dest)
-    logging.debug(f"We are about to make a packet: {dest} {type(dest)}")
-    if isinstance(dest, ipaddress.IPv4Address):
-        # This is what we are hoping for; make an empty packet.
-        nPacket = packet.Packet()
-        nPacket.source_ip = sourceIP(src, dest, False)
-        # The MAC address of the above IP
-        nPacket.source_mac = src_dev.arp_lookup(nPacket.source_ip)
-        # Figure this out
-        nPacket.destination_ip = dest  # this should now be the IP
-        # If the IP is local, we use the MAC of the host. Otherwise it is the MAC of the gateway,
-        nPacket.destination_mac = globalArpLookup(dest)
-        logging.debug(f"Packet created: {nPacket}")
-        if ip_is_broadcast_for_device(src, dest):
-            # It is a broadcast, use the broadcast MAC
-            logging.debug("It is a broadcast, using broadcast MAC")
-            nPacket.destination_mac = BROADCAST_MAC
-        nPacket.packettype = packettype
-        if nPacket.destination_mac is None:
-            return None
-        return nPacket
 
 
 def ping(src, dest):
