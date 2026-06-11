@@ -476,7 +476,9 @@ class Puzzle(ItemBase):
         counter = 0
         # logging.debug("Packet: Starting packetlist loop.")
         for pkt in self.packets:
-            # logging.debug(f"Packet: Current: {pkt}")
+            logging.debug(
+                f"Packet: {pkt.packet_location}; {pkt.direction}; {pkt.distance}; {pkt.source_ip} -> {pkt.destination_ip}"
+            )
             counter = counter + 1
             if pkt.status == "tunneled":
                 # These packets are being tunneled and are a payload in a VPN.  For now, we skip processing them

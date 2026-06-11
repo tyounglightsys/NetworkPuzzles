@@ -560,7 +560,9 @@ class Device(ItemBase):
         """Initial processing to see if device can receive packets."""
         pkt.in_host = self.hostname
         logging.debug("-----------------------------------------")
-        logging.debug(f"Packet arrived at device: {self.hostname} TTL:{pkt.ttl} {pkt}")
+        logging.debug(
+            f"Packet arrived at device: {self.hostname}; {pkt.packettype}; {pkt.ttl=}"
+        )
         logging.debug("-----------------------------------------")
 
         # Do the simple stuff
@@ -591,7 +593,9 @@ class Device(ItemBase):
         for oneMAC in self.arp_table:
             # print ("ARP: comparing: " + justIP(oneMAC['ip']) + " to " + justIP(ip))
             if packet.justIP(oneMAC["ip"]) == packet.justIP(ip):
-                logging.info("Found the MAC for IP " + packet.justIP(ip))
+                logging.info(
+                    f"Found the MAC for IP {packet.justIP(ip)}: {oneMAC['mac']}"
+                )
                 return oneMAC["mac"]  # Return the one in the local arp.
         # If we cannot find it on the device, look it up from the global list
         tmac = globalArpLookup(ip)
@@ -877,7 +881,9 @@ class Device(ItemBase):
             pkt: a `packet.Packet` object - the packet entering the device
         returns: nothing
         """
-        # logging.debug(f"Test: Device.begin_ingress_on_nic: {self.hostname}:{nic.name}")
+        # logging.debug(
+        #     f"Device.begin_ingress_on_nic: {self.hostname}:{nic.name}|{pkt.destination_mac=}"
+        # )
         # Notes from EduNetworkBuilder
         # Check to see if we have tests that break stuff.
         # - DeviceNicSprays (nic needs to be replaced)
@@ -1317,12 +1323,7 @@ def globalArpLookup(ip):
     Returns:
         The MAC address corresponding to the IP as a string or None.
     """
-    # print ("doing global ARP lookup for ")
-    # print (ip)
-    # if not isinstance(session.maclist,list):
     buildGlobalMACList()
-    # print("we have maclist")
-    # print(session.maclist)
     if isinstance(ip, str):
         if ip == "0.0.0.0":
             return None  # Never find a mac for this.  Possible many devices would match and it it not a valid IP
@@ -1540,8 +1541,8 @@ def destIP(srcDevice, dstDevice):
                     tNic = Device(srcDevice).nic_from_ip(str(oneSip))
                     if tNic is not None:
                         logging.debug(f" nictype  {tNic.get('nictype')[0]}")
-                    if tNic is not None and tNic.get("nictype")[0] == "vpn":
-                        continue  # We do not find a machine across the VPN
+                        if tNic.get("nictype")[0] == "vpn":
+                            continue  # We do not find a machine across the VPN
                     return oneDip
     # if we get here, we did not find a match
     logging.debug("No match so far.  Looking to find the local address")
@@ -2209,10 +2210,11 @@ def packetFromTo(src, dest, packettype: str):
     if "hostname" in dest:
         # print ("getting destination IP from a device")
         # If we passed in a device or hostname, convert it to an IP
-        logging.debug(f"Finding the IP for dest {dest['hostname']} ")
+        hostname = dest.get("hostname")
+        logging.debug(f"Finding the IP for dest {hostname} ")
         dest = destIP(src, dest)
         if dest is not None:
-            logging.debug(f"Found IP {dest}")
+            logging.debug(f"Found IP {dest} for {hostname}")
 
     if dest is None or packet.isEmpty(dest):
         # This means we were unable to figure out the dest.  No such host, or something

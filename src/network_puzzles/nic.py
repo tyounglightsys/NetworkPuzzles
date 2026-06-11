@@ -221,6 +221,7 @@ class Nic(ItemBase):
             pkt.status = "failed"
             return False
 
+        # logging.debug(f"Nic.begin_ingress: {dev.json=}")
         if (
             pkt.destination_mac == self.mac
             or packet.is_broadcast_mac(pkt.destination_mac)
@@ -233,9 +234,11 @@ class Nic(ItemBase):
             logging.debug(f"Packet entering device: {dev.hostname}")
             return dev.receive_packet(pkt, self)
         else:
-            logging.info("packet did not match.  Dropping")
             logging.info(
-                f"  packet dst MAC {pkt.destination_mac} ({dev.hostname}) vs this NIC  {self.mac}"
+                f"Dropping non-matching packet: destination MAC: {pkt.destination_mac}; this NIC MAC: {self.mac}"
+            )
+            logging.debug(
+                f"Nic.begin_ingress: {pkt.destination_mac=} ({dev.hostname=}) vs this NIC: {self.mac=} ({self.device.get('hostname')=})"
             )
             pkt.status = "dropped"
             return False
@@ -320,6 +323,7 @@ class Nic(ItemBase):
         return False
 
     def receive_packet(self, pkt, dev, nic=None):
+        # logging.debug(f"Nic.receive_packet: at {dev.hostname=}")
         # Zero this out. We will set it below.
         pkt.in_interface = ""
 
@@ -351,7 +355,7 @@ class Nic(ItemBase):
         # logging.debug(f"We are routing.  Here is the packet: {pkt.json}")
         # logging.debug(f"We are routing.  Here is the nic: {nic.json}")
         pkt.justcreated = False
-        logging.debug(f"Beginning on nic: {self.name}")
+        logging.debug(f"Beginning on nic: {self.name}; {self.mac=}")
         return self.begin_ingress(pkt, dev)
         # The NIC passes it onto the device if needed.  We are done with this.
 

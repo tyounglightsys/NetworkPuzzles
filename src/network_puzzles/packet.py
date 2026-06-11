@@ -77,6 +77,7 @@ class Packet(ItemBase):
 
     @property
     def direction(self) -> int | None:
+        """1 if packet travels in same direction as link hostname; 2 if it's reversed"""
         return self.json.get("packetDirection")
 
     @direction.setter
@@ -337,7 +338,7 @@ class Packet(ItemBase):
         if lnk.linktype == "wireless":
             # Check the final end point, which is farthest from the source.
             px, py = all_points[-1]
-            total_distance = int(distance(px, py, sx, sy))
+            total_distance = int(get_puzzle_distance(px, py, sx, sy))
             if total_distance >= session.WirelessFailureDistance:
                 logging.debug(
                     f"Wireless signal too weak; packet on link {lnk.hostname} from ({sx}, {sy}) to ({px}, {py}) dropped; {total_distance=}"
@@ -386,7 +387,7 @@ class Packet(ItemBase):
         current_link = self.get_current_link()
         link_src_nic = current_link.src_nic
         link_dest_nic = current_link.dest_nic
-        if self.direction == 1:
+        if self.direction == 2:
             link_dest_nic = current_link.src_nic
             link_src_nic = current_link.dest_nic
         src_nic_data = device.getDeviceNicFromLinkNicRec(link_src_nic.json)
