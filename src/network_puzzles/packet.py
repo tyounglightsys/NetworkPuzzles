@@ -491,7 +491,7 @@ def is_broadcast_mac(mac: str):
     return mac.replace(":", "").replace("-", "").upper() == BROADCAST_MAC
 
 
-def isEmpty(iptocheck: str):
+def isEmpty(iptocheck: str | ipaddress.IPv4Address):
     # logging.debug(f"Checking if empty: {iptocheck} type of variable {type(iptocheck)}")
     if isinstance(iptocheck, str) and justIP(iptocheck) == GENERIC_IP4:
         logging.debug("  Is empty")
