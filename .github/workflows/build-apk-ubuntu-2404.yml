@@ -1,4 +1,5 @@
 name: Build APK file on Ubuntu 24.04
+# NOTE: Buildozer fails due to autoconfig issues.
 on:
   workflow_dispatch:
   # push:
