@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+      - fix-buildozer-action
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
