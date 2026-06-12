@@ -1,0 +1,51 @@
+name: Build APK file w/ Docker
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  # push:
+  #   branches:
+  #     - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.12" #set your python version
+
+      # # Install pip dependencies
+      # - name: Install pip dependencies
+      #   run: |
+      #     pip install --upgrade pip
+      #     pip install cython==0.29.33 setuptools
+
+      - name: Install app python package
+        run: pip install .
+
+      # # Cache Buildozer files.  # doesn't seem to speed anything up
+      # - name: Cache Buildozer global directory
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: .buildozer_global
+      #     key: buildozer-global-${{ hashFiles('buildozer.spec') }} # Replace with your path
+
+      # Build APK
+      - name: Build with Buildozer Action
+        # uses: ArtemSBulgakov/buildozer-action@v1
+        uses: n8marti/buildozer-action@fix-ubuntu-2604
+        id: buildozer
+
+      # Upload artifacts
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: ${{ steps.buildozer.outputs.filename }}
