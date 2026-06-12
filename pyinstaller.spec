@@ -2,7 +2,7 @@
 
 
 a = Analysis(  # noqa: F821
-    ["NetworkPuzzles", "src/main.py"],
+    ["src/main.py"],
     pathex=[],
     binaries=[],
     datas=[],
