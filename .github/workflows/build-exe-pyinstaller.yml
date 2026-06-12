@@ -1,0 +1,39 @@
+name: Build EXE file w/ PyInstaller GH Action
+on:
+  workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+  # push:
+  #   branches:
+  #     - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # - name: Set up Python
+      #   uses: actions/setup-python@v2
+      #   with:
+      #     python-version: "3.12" #set your python version
+
+      - name: Install app python package
+        run: pip install .
+
+      - name: Build EXE with PyInstaller Action
+        uses: sayyid5416/pyinstaller@v1
+        id: pyinstaller
+        with:
+          python_ver: "3.12"
+          upload_exe_with_name: "NetworkPuzzles"
+          options: --onefile, --name "NetworkPuzzles", --windowed
+
+      # # Upload artifacts
+      # - name: Upload EXE artifact
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: package
+      #     path: ${{ steps.pyinstaller.outputs.filename }}
