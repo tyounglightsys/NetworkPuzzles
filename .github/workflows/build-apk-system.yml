@@ -76,8 +76,14 @@ jobs:
         id: buildozer
         run: |
           # update autoconfig
-          cd .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/build/other_builds/libffi/arm64-v8a__ndk_target_24/
+          ls -l
+          old_dir="$PWD"
+          new_dir="$(find -name arm64-v8a__ndk_target_24)"
+          echo "new_dir=$new_dir"
+          cd "$new_dir"
+          # cd .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/build/other_builds/libffi/arm64-v8a__ndk_target_24/
           autoupdate
+          cd "$old_dir"
           # run buildozer
           yes | buildozer -v android debug
           ls -l
