@@ -69,8 +69,6 @@ jobs:
       - name: Build with Buildozer
         id: buildozer
         run: |
-          # run buildozer
-          buildozer android clean
           buildozer -v android debug
           ls -l
 
