@@ -55,14 +55,12 @@ jobs:
         with:
           python-version: "3.12"
 
-      # # Install pip dependencies
-      # - name: Install pip dependencies
-      #   run: |
-      #     pip install --upgrade pip
-      #     pip install cython==0.29.33 setuptools
-
       - name: Install app python package
-        run: python3 -m pip install .[build]
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install legacy-cgi setuptools cython==0.29.34
+          python3 -m pip install git+https://github.com/kivy/buildozer
+          python3 -m pip install .
 
       # # Cache Buildozer files.  # doesn't seem to speed anything up
       # - name: Cache Buildozer global directory
@@ -75,15 +73,6 @@ jobs:
       - name: Build with Buildozer
         id: buildozer
         run: |
-          # update autoconfig
-          ls -l
-          old_dir="$PWD"
-          new_dir="$(find -name arm64-v8a__ndk_target_24)"
-          echo "new_dir=$new_dir"
-          cd "$new_dir"
-          # cd .buildozer/android/platform/build-arm64-v8a_armeabi-v7a/build/other_builds/libffi/arm64-v8a__ndk_target_24/
-          autoupdate
-          cd "$old_dir"
           # run buildozer
           yes | buildozer -v android debug
           ls -l
