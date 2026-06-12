@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -30,7 +30,6 @@ jobs:
           spec: ./pyinstaller.spec
           python_ver: "3.12"
           upload_exe_with_name: "NetworkPuzzles"
-          options: --onefile, --name "NetworkPuzzles", --windowed
 
       # # Upload artifacts
       # - name: Upload EXE artifact
