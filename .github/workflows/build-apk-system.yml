@@ -11,7 +11,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest # apt deps below are for 26.04
+    runs-on: ubuntu-26.04 # apt deps below are for 26.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -55,6 +55,7 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Install Python deps
       - name: Install app python package
         run: |
           python3 -m pip install --upgrade pip
@@ -74,6 +75,7 @@ jobs:
         id: buildozer
         run: |
           # run buildozer
+          buildozer clean
           yes | buildozer -v android debug
           ls -l
 
