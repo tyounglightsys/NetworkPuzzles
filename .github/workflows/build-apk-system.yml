@@ -62,7 +62,7 @@ jobs:
       #     pip install cython==0.29.33 setuptools
 
       - name: Install app python package
-        run: pip install .[build]
+        run: python3 -m pip install .[build]
 
       # # Cache Buildozer files.  # doesn't seem to speed anything up
       # - name: Cache Buildozer global directory
