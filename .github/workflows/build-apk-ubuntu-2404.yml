@@ -1,0 +1,81 @@
+name: Build APK file on Ubuntu 24.04
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Install dependencies
+      # ref: https://buildozer.readthedocs.io/en/latest/installation/#install-on-ubuntu-26-04
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            autopoint \
+            cmake \
+            gettext \
+            git \
+            libffi-dev \
+            libncurses5-dev \
+            libncursesw5-dev \
+            libssl-dev \
+            libtinfo6 \
+            libtool \
+            pkg-config \
+            unzip \
+            zip \
+            zlib1g-dev
+
+      # Set up Java 17 required by Gradle
+      - name: Setup Java 17 required by Gradle
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin" # or 'zulu', 'liberica', etc.
+          java-version: "17"
+
+      # Set up Python; allows for version other than what is installed by default.
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      # Install Python deps
+      - name: Install app python package
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install buildozer legacy-cgi setuptools cython==0.29.34
+          python3 -m pip install .
+
+      # # Cache Buildozer files.  # doesn't seem to speed anything up
+      # - name: Cache Buildozer global directory
+      #   uses: actions/cache@v4
+      #   with:
+      #     path: .buildozer_global
+      #     key: buildozer-global-${{ hashFiles('buildozer.spec') }} # Replace with your path
+
+      # Build with Buildozer
+      - name: Build with Buildozer
+        id: buildozer
+        run: |
+          # run buildozer
+          yes | buildozer -v android debug
+          ls -l
+
+      # Upload artifacts
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: ${{ steps.buildozer.outputs.filename }}
