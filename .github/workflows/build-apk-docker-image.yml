@@ -39,8 +39,8 @@ jobs:
 
       # Build APK
       - name: Build with Buildozer Action
-        uses: ArtemSBulgakov/buildozer-action@v1
-        # uses: n8marti/buildozer-action@fix-user-doesnt-exist
+        # uses: ArtemSBulgakov/buildozer-action@v1
+        uses: n8marti/buildozer-action@fix-ubuntu-2604
         id: buildozer
 
       # Upload artifacts
