@@ -35,18 +35,18 @@ jobs:
       #     name: mesa
       #     path: mesa/
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.12"
+      # - name: Set up Python
+      #   uses: actions/setup-python@v2
+      #   with:
+      #     python-version: "3.12"
 
-      - name: Install Python deps
-        run: |
-          python3 -m pip install --upgrade pip
-          # python3 -m pip install pyopengl pyopengl-accelerate
+      # - name: Install Python deps
+      #   run: |
+      #     python3 -m pip install --upgrade pip
+      #     # python3 -m pip install pyopengl pyopengl-accelerate
 
-      - name: Install app python package
-        run: python3 -m pip install .
+      # - name: Install app python package
+      #   run: python3 -m pip install .
 
       # - name: List files
       #   run: |
@@ -67,6 +67,8 @@ jobs:
           spec: ./pyinstaller.spec
           python_ver: "3.12"
           upload_exe_with_name: "NetworkPuzzles"
+          clean_checkout: false # don't remove existing files from workdir
+
 
       # # Upload artifacts
       # - name: Upload EXE artifact
