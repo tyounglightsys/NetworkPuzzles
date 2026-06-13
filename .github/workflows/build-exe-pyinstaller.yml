@@ -25,22 +25,6 @@ jobs:
           $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z"
           Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
           & "${env:ProgramFiles}\7-Zip\7z.exe" x "mesa.7z" -o"mesa" -y
-          dir
-          Copy-Item -Path "mesa/x64/opengl32.dll" -Destination "C:/Windows/System32/opengl32.dll" -Force
-
-      # - name: Download and Extract Mesa3D Software Rasterizer
-      #   shell: powershell
-      #   run: |
-      #     # Download a known working Mesa3D llvmpipe build (e.g., from an accessible release or your own artifact)
-      #     # Or alternatively use an open-source pre-built opengl32.dll wrapper
-      #     $mesaUrl = "YOUR_MESA_3D_DLLS_ZIP_URL"
-      #     Invoke-WebRequest -Uri $mesaUrl -OutFile mesa.zip
-      #     Expand-Archive mesa.zip -DestinationPath mesa_extracted
-
-      #     # Copy opengl32.dll next to your executable directory (or into C:\Windows\System32 if absolutely necessary, though working directory is safer)
-      #     # Assuming your binary is built in the 'build' folder:
-      #     # Copy-Item -Path "mesa_extracted/x64/opengl32.dll" -Destination "build/Release/opengl32.dll" -Force
-      #     Copy-Item -Path "mesa_extracted/x64/opengl32.dll" -Destination "C:/Windows/System32/opengl32.dll" -Force
 
       - name: Set up Python
         uses: actions/setup-python@v2
