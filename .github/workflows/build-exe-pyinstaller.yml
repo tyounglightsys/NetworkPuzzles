@@ -24,8 +24,7 @@ jobs:
           $version = "26.1.1"
           $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z"
           Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
-          # "C:/ProgramFiles/7-Zip/7z.exe" x "mesa.7z"
-          Expand-7Zip -ArchveFileName "mesa.7z" -OutputPath "mesa"
+          & "C:/ProgramFiles/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
           dir
           Copy-Item -Path "mesa/x64/opengl32.dll" -Destination "C:/Windows/System32/opengl32.dll" -Force
 
