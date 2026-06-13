@@ -29,6 +29,12 @@ jobs:
           dir mesa
           dir mesa/x64
 
+      # - name: Preserve mesa dir for later use
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: mesa
+      #     path: mesa/
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -42,11 +48,17 @@ jobs:
       - name: Install app python package
         run: python3 -m pip install .
 
-      - name: List files
-        run: |
-          dir
-          dir mesa
-          dir mesa/x64
+      # - name: List files
+      #   run: |
+      #     dir
+      #     dir mesa
+      #     dir mesa/x64
+
+      # - name: Insert saved mesa folder
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: mesa
+      #     path: mesa/
 
       - name: Build EXE with PyInstaller Action
         uses: sayyid5416/pyinstaller@v1

@@ -3,7 +3,7 @@
 from pathlib import Path
 
 d = Path.cwd()
-for i in d.rglob("*"):
+for i in sorted(list(d.iterdir())):
     print(i)
 
 a = Analysis(
