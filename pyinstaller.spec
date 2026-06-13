@@ -1,11 +1,15 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from pathlib import Path
+
+d = Path.cwd()
+for i in d.rglob("*"):
+    print(i)
 
 a = Analysis(
     ["src/main.py"],
     pathex=[],
-    # binaries=[("mesa/x64/opengl32.dll", ".")],
-    binaries=[("mesa/x64/*.dll", ".")],
+    binaries=[("mesa/x64/opengl32.dll", ".")],
     datas=[],
     hiddenimports=[],
     hookspath=[],
