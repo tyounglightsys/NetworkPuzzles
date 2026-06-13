@@ -18,47 +18,11 @@ jobs:
       - name: Install build prereqs
         shell: powershell
         run: |
-          # Install 7zip
-          # choco install 7zip.install
           # Install OpenGL support
           $version = "26.1.1"
           $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z"
           Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
           & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
-          dir
-          dir mesa
-          dir mesa/x64
-
-      # - name: Preserve mesa dir for later use
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: mesa
-      #     path: mesa/
-
-      # - name: Set up Python
-      #   uses: actions/setup-python@v2
-      #   with:
-      #     python-version: "3.12"
-
-      # - name: Install Python deps
-      #   run: |
-      #     python3 -m pip install --upgrade pip
-      #     # python3 -m pip install pyopengl pyopengl-accelerate
-
-      # - name: Install app python package
-      #   run: python3 -m pip install .
-
-      # - name: List files
-      #   run: |
-      #     dir
-      #     dir mesa
-      #     dir mesa/x64
-
-      # - name: Insert saved mesa folder
-      #   uses: actions/download-artifact@v4
-      #   with:
-      #     name: mesa
-      #     path: mesa/
 
       - name: Build EXE with PyInstaller Action
         uses: sayyid5416/pyinstaller@v1
@@ -68,11 +32,3 @@ jobs:
           python_ver: "3.12"
           upload_exe_with_name: "NetworkPuzzles"
           clean_checkout: false # don't remove existing files from workdir
-
-
-      # # Upload artifacts
-      # - name: Upload EXE artifact
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: package
-      #     path: ${{ steps.pyinstaller.outputs.filename }}
