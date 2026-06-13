@@ -19,14 +19,15 @@ jobs:
         shell: powershell
         run: |
           # Install 7zip
-          choco install 7zip.install
+          # choco install 7zip.install
           # Install OpenGL support
           $version = "26.1.1"
           $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z"
           Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
-          "C:/ProgramFiles/7-Zip/7z.exe" x "mesa.7z"
+          # "C:/ProgramFiles/7-Zip/7z.exe" x "mesa.7z"
+          Expand-7Zip -ArchveFileName "mesa.7z" -OutputPath "mesa"
           dir
-          Copy-Item -Path "x64/opengl32.dll" -Destination "C:/Windows/System32/opengl32.dll" -Force
+          Copy-Item -Path "mesa/x64/opengl32.dll" -Destination "C:/Windows/System32/opengl32.dll" -Force
 
       # - name: Download and Extract Mesa3D Software Rasterizer
       #   shell: powershell
