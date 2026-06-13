@@ -25,8 +25,6 @@ jobs:
           $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z"
           Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
           & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
-          dir
-          dir mesa
           dir mesa/x64
 
       - name: Set up Python
@@ -41,6 +39,9 @@ jobs:
 
       - name: Install app python package
         run: python3 -m pip install .
+
+      - name: List files
+        run: dir mesa/x64
 
       - name: Build EXE with PyInstaller Action
         uses: sayyid5416/pyinstaller@v1
