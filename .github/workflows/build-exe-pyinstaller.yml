@@ -15,13 +15,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # - name: Set up Python
-      #   uses: actions/setup-python@v2
-      #   with:
-      #     python-version: "3.12" #set your python version
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.12"
+
+      - name: Install Python deps
+        run: |
+          python3 -m pip install --upgrade
+          python3 -m pip install pyopengl pyopengl-accelerate
 
       - name: Install app python package
-        run: pip install .
+        run: python3 -m pip install .
 
       - name: Build EXE with PyInstaller Action
         uses: sayyid5416/pyinstaller@v1
