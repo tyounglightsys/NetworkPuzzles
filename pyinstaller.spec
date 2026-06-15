@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 
-a = Analysis(
+a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
     binaries=[("mesa/x64/opengl32.dll", ".")],
@@ -16,7 +16,7 @@ a = Analysis(
 )
 pyz = PYZ(a.pure)  # noqa: F821
 
-exe = EXE(
+exe = EXE(  # noqa: F821
     pyz,
     a.scripts,
     a.binaries,
