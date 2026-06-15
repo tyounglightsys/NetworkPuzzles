@@ -853,7 +853,8 @@ class Parser:
             if session.puzzle.item_is_locked(dev_obj.hostname, "LockLocation"):
                session.print(f"Device cannot be moved: {dev_obj.hostname}")
             else:
-                session.print(f"Item cannot be moved outside its boundaries. {dev_obj.hostname}")
+                if dev_obj.mytype != "tree":
+                    session.print(f"Item cannot be moved outside its boundaries. {dev_obj.hostname}")
             return False
         if x + 0 and y > 0:
             pastvalue = dev_obj.json.get("location")

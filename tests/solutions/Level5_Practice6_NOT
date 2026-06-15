@@ -1,0 +1,4 @@
+load Level5_Practice6
+dhcp laptop0
+ping laptop0 server0
+ping laptop0 google.com

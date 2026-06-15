@@ -380,7 +380,11 @@ class Puzzle(ItemBase):
     def item_can_be_moved_here(self, shost, newx, newy):
         # logging.debug(f"item_is_locked: {shost=}; {whattocheck=}; {dhost=}")
         mydevice = device.Device(self.device_from_name(shost))
-        logging.debug (f"Tests: {self.all_tests(shost)}")
+        if mydevice.mytype == "tree":
+            #we cannot move trees
+            logging.debug("Trees cannot be moved")
+            return False
+        #logging.debug (f"Tests: {self.all_tests(shost)}")
         newx=int(newx)
         newy=int(newy)
         for test in self.all_tests(shost):
