@@ -1,0 +1,3 @@
+load Level5_Practice4
+set wbridge0 location 185 490
+ping server0 server1

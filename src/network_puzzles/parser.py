@@ -553,9 +553,14 @@ class Parser:
                 session.print("--Tests--")
                 for onetest in session.puzzle.all_tests():
                     if onetest.get("thetest", "").startswith("Lock"):
-                        session.print(
-                            f"source: {onetest.get('shost')} test: {onetest.get('thetest')}"
-                        )
+                        if onetest.get("thetest", "") == "LockLocation":
+                            session.print(
+                                f"source: {onetest.get('shost')} dest {onetest.get('dhost')} test: {onetest.get('thetest')}"
+                            )
+                        else:
+                            session.print(
+                                f"source: {onetest.get('shost')} test: {onetest.get('thetest')}"
+                            )
                     else:
                         session.print(
                             f"source: {onetest.get('shost')} test: {onetest.get('thetest')}  dest: {onetest.get('dhost')} status: {onetest.get('completed', 'False')}"
@@ -842,11 +847,15 @@ class Parser:
 
     def set_position_value(self, dev_obj, x_in, y_in):
         logging.debug(f"set_position_value: {dev_obj.hostname=}; {x_in=}; {y_in=}")
-        if session.puzzle.item_is_locked(dev_obj.hostname, "LockLocation"):
-            session.print(f"Device cannot be moved: {dev_obj.hostname}")
+        x = int(x_in.replace(",", "")) + 0
+        y = int(y_in.replace(",", "")) + 0
+        if not session.puzzle.item_can_be_moved_here(dev_obj.hostname, x, y):
+            if session.puzzle.item_is_locked(dev_obj.hostname, "LockLocation"):
+               session.print(f"Device cannot be moved: {dev_obj.hostname}")
+            else:
+                if dev_obj.mytype != "tree":
+                    session.print(f"Item cannot be moved outside its boundaries. {dev_obj.hostname}")
             return False
-        x = int(x_in.replace(",", ""))
-        y = int(y_in.replace(",", ""))
         if x + 0 and y > 0:
             pastvalue = dev_obj.json.get("location")
             session.add_undo_entry(

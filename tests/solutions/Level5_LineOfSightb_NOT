@@ -1,0 +1,13 @@
+load Level5_LineOfSight
+#We are not supposed to be able to move trees
+set tree0 location 100 100
+set tree1 location 100 100
+set tree2 location 100 100
+set tree3 location 100 100
+set tree4 location 100 100
+set tree5 location 100 100
+set tree6 location 100 100
+set tree7 location 100 100
+set tree8 location 100 100
+ping pc1 server0
+ping pc1 google.com

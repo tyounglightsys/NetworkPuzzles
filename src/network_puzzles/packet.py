@@ -326,9 +326,16 @@ class Packet(ItemBase):
                         logging.debug(
                             f"BOOM. Packet hit a tree. ({dev.hostname}) with a distance of {thedistance}; end of packet."
                         )
+                        session.print(
+                            f"Packet Dropped: Wireless failed to reach other end: {lnk.hostname}"
+                        )
+
                         self.status = "done"  # the packet dies silently
                         break
                     if self.health <= 0:
+                        session.print(
+                            f"Packet Dropped: Wireless failed to reach other end: {lnk.hostname}"
+                        )
                         self.status = "done"  # the packet dies silently
                         break
             if self.health_init > self.health:
@@ -342,6 +349,9 @@ class Packet(ItemBase):
             if total_distance >= session.WirelessFailureDistance:
                 logging.debug(
                     f"Wireless signal too weak; packet on link {lnk.hostname} from ({sx}, {sy}) to ({px}, {py}) dropped; {total_distance=}"
+                )
+                session.print(
+                    f"Packet Dropped: Wireless signal too weak across link {lnk.hostname}"
                 )
                 self.status = "done"
 

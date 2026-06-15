@@ -624,6 +624,7 @@ class Device(ItemBase):
 
             # Determine if existing link needs to be created.
             create_link = False
+            replace_link = True
             if dev_nic_link is None:
                 # There is no link, make a new one.
                 create_link = True
@@ -690,12 +691,20 @@ class Device(ItemBase):
                 f"Create link for {self.hostname}:{dev_nic.name}?: {create_link}"
             )
 
-            if create_link:
+            if create_link or replace_link:
                 # We want to search for things that might match
                 closest_dev = None
                 closest_nic = None
                 closest_distance = None
 
+                current_distance=500
+
+                if dev_nic_link is not None:
+                    dst_dev = Device(session.puzzle.device_from_name(dst_hostname))
+                    sx, sy = self.location
+                    dx, dy = dst_dev.location
+                    current_distance = get_puzzle_distance(sx, sy, dx, dy)
+    
                 for onedevice in session.puzzle.all_devices():
                     t_onedevice = Device(onedevice)
                     if (
@@ -741,18 +750,28 @@ class Device(ItemBase):
                     closest_distance
                     and closest_distance <= session.WirelessReconnectDistance
                 ):
-                    # we can make this link
-                    session.puzzle.createLink(
-                        [
-                            self.hostname,
-                            dev_nic.name,
-                            closest_dev.hostname,
-                            closest_nic.name,
-                        ],
-                        "wireless",
-                    )
-                    # NOTE: Returning here means only one wlan connection will be made.
-                    return True
+                    if (closest_dev is not None and 
+                        dev_nic_link is not None and 
+                        closest_dev.hostname != dst_dev.hostname and 
+                        (closest_distance + 20 < current_distance)):
+                        #we need to drop the current link.  The new one is much better
+                        dev_nic_link.remove()
+                        create_link = True
+                        dev_nic_link = None  # mark it as gone, just in case
+
+                    if dev_nic_link is None:
+                        # we can make this link
+                        session.puzzle.createLink(
+                            [
+                                self.hostname,
+                                dev_nic.name,
+                                closest_dev.hostname,
+                                closest_nic.name,
+                            ],
+                            "wireless",
+                        )
+                        # NOTE: Returning here means only one wlan connection will be made.
+                        return True
 
         # If we get here, we were unable to autojoin.
         return False

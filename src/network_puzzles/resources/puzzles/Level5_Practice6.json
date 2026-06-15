@@ -291,10 +291,10 @@
               "interface": {
                 "nicname": "wlan2",
                 "myip": {
-                  "ip": "192.168.1.50",
-                  "mask": "255.255.255.0",
-                  "gateway": "192.168.1.1",
-                  "type": "route"
+                  "ip": "0.0.0.0",
+                  "mask": "0.0.0.0",
+                  "gateway": "0.0.0.0",
+                  "type": "ip"
                 },
                 "VLAN": {
                   "@ID": "1",

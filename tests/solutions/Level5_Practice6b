@@ -1,0 +1,9 @@
+load Level5_Practice6
+#set laptop0 location 180 390
+create device wap 120 590
+set wap3 key WirelessKey
+set wap3 ssid wport1 LAN
+create link wap3 net_switch0
+dhcp laptop0
+ping laptop0 server0
+ping laptop0 google.com
