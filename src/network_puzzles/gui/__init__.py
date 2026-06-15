@@ -6,9 +6,18 @@ root_logger = logging.getLogger()
 for handler in root_logger.handlers:
     root_logger.removeHandler(handler)
 
+from os import getenv
+
 from kivy.config import Config
 
 from .. import session
+
+# Allow build on github runners.
+if getenv("RUNNER_OS"):
+    logging.warning(f"Running on {getenv('RUNNER_OS')}")
+    logging.warning("Disabling strict anti-aliasing requirements.")
+    Config.set("graphics", "multisamples", "0")
+    # Config.write()
 
 if session.device_type == "desktop":
     # Disable right-click red dot.
