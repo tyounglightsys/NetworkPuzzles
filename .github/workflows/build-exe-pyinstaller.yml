@@ -12,6 +12,11 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+      - name: Identify runner OS
+        shell: bash
+        run: |
+          echo "RUNNER_OS: $RUNNER_OS"
+
       - name: Checkout code
         uses: actions/checkout@v6
 
@@ -22,7 +27,9 @@ jobs:
           $version = "26.1.1"
           $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-msvc.7z"
           Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
-          & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -y
+          & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
+          # Copy DLLs to current directory.
+          Copy-Item "mesa/x64/*" -Destination "."
 
       - name: Build EXE with PyInstaller Action
         uses: n8marti/pyinstaller@main
