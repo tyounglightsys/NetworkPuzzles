@@ -104,10 +104,12 @@ class Puzzle(ItemBase):
         """Return a list that contains all shapes in the puzzle."""
         if "shape" not in self.json:
             #this puzzle has no shapes
+            logging.debug("This puzzle has no shapes")
             return []
         shapes = []
         for item in self._get_items("shape"):
             shapes.append(Shape(item))
+
         return shapes
 
     def all_links(self):
@@ -379,6 +381,8 @@ class Puzzle(ItemBase):
         # logging.debug(f"item_is_locked: {shost=}; {whattocheck=}; {dhost=}")
         mydevice = device.Device(self.device_from_name(shost))
         logging.debug (f"Tests: {self.all_tests(shost)}")
+        newx=int(newx)
+        newy=int(newy)
         for test in self.all_tests(shost):
             # logging.debug(f"item_is_locked: {test=}")
             thetest = test.get("thetest")
@@ -387,28 +391,40 @@ class Puzzle(ItemBase):
             #    logging.debug(f"item is locked with LockAll {shost} {thetest}")
             #    return False #The item cannot be moved at all
             if thetest == "LockLocation":
+                logging.debug(f"item is locked with LockLocation {test}")
                 if test.get("dhost") is None or test.get("dhost") == "" or test.get("dhost") == "--":
                     #It is locked in location
                     logging.debug(f"item is locked with LockAll with no destination location: {test.get("dhost")}")
                     return False
-                myx, myy = mydevice.location
                 for oneshape in self.all_shapes():
                     if oneshape.name == test.get("dhost"):
                         #We are locked inside a shape
                         #see if our coordinates are within the shape bounds.
                         logging.debug(f"The lock location is a shape: {oneshape.name}")
                         sx, sy, dx, dy = oneshape.where
+                        sx = int(sx)
+                        sy = int(sy)
+                        dx = int(dx)
+                        dy = int(dy)
                         if newx < min(sx, dx):
                             #it is outside the shape
+                            logging.debug(f"The new location is outside of the shape: {oneshape.name}")
+                            logging.debug(f"x is smaller than min: {newx} {min(sx, dx)} ( {sx} {dx} )")
                             return False
-                        if newx + mydevice.size < max(sx,dx):
+                        if newx + mydevice.size > max(sx,dx):
                             #it is outside the shape
+                            logging.debug(f"The new location is outside of the shape: {oneshape.name}")
+                            logging.debug(f"x is larger than max:{newx} + {mydevice.size} = {newx + mydevice.size} {max(sx, dx)} ( {sx} {dx} )")
                             return False
                         if newy < min(sy, dy):
                             #it is outside the shape
+                            logging.debug(f"The new location is outside of the shape: {oneshape.name}")
+                            logging.debug(f"y is smaller than min: {newy} {min(sy, dy)} ( {sy} {dy} )")
                             return False
-                        if newy + mydevice.size < max(sy,dy):
+                        if newy + mydevice.size > max(sy,dy):
                             #it is outside the shape
+                            logging.debug(f"The new location is outside of the shape: {oneshape.name}")
+                            logging.debug(f"y is larger than the max: {newy} + {mydevice.size} = {newy + mydevice.size} {max(sy, dy)} ( {sy} {dy} )")
                             return False
 
         return True
@@ -941,7 +957,7 @@ class Puzzle(ItemBase):
     def _get_items(self, item_type: str):
         """
         Return a list of the given item_type.
-        Valid types include: "link", "device", "nettest", "packet"
+        Valid types include: "link", "device", "nettest", "packet", "shape
         """
         items = []
         only_one_item = False
@@ -954,7 +970,7 @@ class Puzzle(ItemBase):
                 case "link" | "device":
                     if "hostname" in item:
                         items.append(item)
-                case "nettest" | "packet":
+                case "nettest" | "packet" | "shape":
                     items.append(item)
             if only_one_item:
                 break  # stop iterating through dict keys

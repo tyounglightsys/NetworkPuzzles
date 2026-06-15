@@ -553,9 +553,14 @@ class Parser:
                 session.print("--Tests--")
                 for onetest in session.puzzle.all_tests():
                     if onetest.get("thetest", "").startswith("Lock"):
-                        session.print(
-                            f"source: {onetest.get('shost')} test: {onetest.get('thetest')}"
-                        )
+                        if onetest.get("thetest", "") == "LockLocation":
+                            session.print(
+                                f"source: {onetest.get('shost')} dest {onetest.get('dhost')} test: {onetest.get('thetest')}"
+                            )
+                        else:
+                            session.print(
+                                f"source: {onetest.get('shost')} test: {onetest.get('thetest')}"
+                            )
                     else:
                         session.print(
                             f"source: {onetest.get('shost')} test: {onetest.get('thetest')}  dest: {onetest.get('dhost')} status: {onetest.get('completed', 'False')}"
