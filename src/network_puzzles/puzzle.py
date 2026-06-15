@@ -12,6 +12,7 @@ from packaging.version import Version
 # define the global network list
 from . import device, packet, session
 from .core import ItemBase
+from .shape import Shape
 
 # from .link import Link
 from .nic import Nic
@@ -98,6 +99,16 @@ class Puzzle(ItemBase):
     def all_devices(self):
         """Return a list that contains all devices in the puzzle."""
         return self._get_items("device")
+    
+    def all_shapes(self):
+        """Return a list that contains all shapes in the puzzle."""
+        if "shape" not in self.json:
+            #this puzzle has no shapes
+            return []
+        shapes = []
+        for item in self._get_items("shape"):
+            shapes.append(Shape(item))
+        return shapes
 
     def all_links(self):
         """Return a list that contains all links in the puzzle."""
@@ -363,6 +374,45 @@ class Puzzle(ItemBase):
                     # if the source (hostname) and dest (, ping_desthostname, nic, etc) also match.
                     return True
         return False
+
+    def item_can_be_moved_here(self, shost, newx, newy):
+        # logging.debug(f"item_is_locked: {shost=}; {whattocheck=}; {dhost=}")
+        mydevice = device.Device(self.device_from_name(shost))
+        logging.debug (f"Tests: {self.all_tests(shost)}")
+        for test in self.all_tests(shost):
+            # logging.debug(f"item_is_locked: {test=}")
+            thetest = test.get("thetest")
+            #LockAll does not include locking the location
+            #if thetest == "LockAll":
+            #    logging.debug(f"item is locked with LockAll {shost} {thetest}")
+            #    return False #The item cannot be moved at all
+            if thetest == "LockLocation":
+                if test.get("dhost") is None or test.get("dhost") == "" or test.get("dhost") == "--":
+                    #It is locked in location
+                    logging.debug(f"item is locked with LockAll with no destination location: {test.get("dhost")}")
+                    return False
+                myx, myy = mydevice.location
+                for oneshape in self.all_shapes():
+                    if oneshape.name == test.get("dhost"):
+                        #We are locked inside a shape
+                        #see if our coordinates are within the shape bounds.
+                        logging.debug(f"The lock location is a shape: {oneshape.name}")
+                        sx, sy, dx, dy = oneshape.where
+                        if newx < min(sx, dx):
+                            #it is outside the shape
+                            return False
+                        if newx + mydevice.size < max(sx,dx):
+                            #it is outside the shape
+                            return False
+                        if newy < min(sy, dy):
+                            #it is outside the shape
+                            return False
+                        if newy + mydevice.size < max(sy,dy):
+                            #it is outside the shape
+                            return False
+
+        return True
+
 
     def item_blows_up(self, shost):
         print(f"Testing item blows up for {shost}")
