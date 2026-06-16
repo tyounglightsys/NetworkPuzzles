@@ -30,6 +30,8 @@ jobs:
           & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
           # Copy DLLs to current directory.
           Copy-Item "mesa/x64/*" -Destination "."
+          # Check folder contents
+          dir
 
       - name: Build EXE with PyInstaller Action
         uses: n8marti/pyinstaller@main
