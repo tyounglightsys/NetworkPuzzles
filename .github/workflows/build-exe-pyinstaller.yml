@@ -44,18 +44,19 @@ jobs:
         shell: bash
         run: |
           env | sort
-          ls -l ${RUNNER_TOOL_CACHE}/Python/*/x64/Scripts/
+          ls -l ${RUNNER_TOOL_CACHE}\\Python\\*\\x64\\Scripts\\
 
       - name: Upload kivy logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: kivy-logs
-          path: ${HOME}/.kivy/logs/*.txt
+          include-hidden-files: true
+          path: ~\\.kivy\\logs\\*.txt
 
       - name: Upload pyinstaller logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: pyinstaller-logs
-          path: ${{ github.workspace }}/build/pyinstaller/*.txt
+          path: ${{ github.workspace }}\\build\\pyinstaller\\*.txt
