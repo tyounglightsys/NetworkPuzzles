@@ -4,7 +4,8 @@
 a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
-    binaries=[("./opengl32.dll", ".")],
+    # binaries=[("./mesa/x64/opengl32.dll", ".")],
+    binaries=[],
     datas=[],
     hiddenimports=[],
     hookspath=[],
