@@ -24,9 +24,9 @@ jobs:
           Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
           & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
           # Copy DLLs to current directory.
-          Copy-Item "mesa/x64/*" -Destination "."
-          # Check folder contents
-          dir
+          #Copy-Item "mesa/x64/*" -Destination "."
+          # Add DLLs folder to $PATH
+          $env:Path += ";${{ env.GITHUB_WORKSPACE }}/mesa/x64/"
 
       - name: Build EXE with PyInstaller Action
         uses: n8marti/pyinstaller@main
@@ -42,15 +42,15 @@ jobs:
         if: always()
         shell: bash
         run: |
-            echo "HOME=$HOME"
-            echo "pyinstaller=$(which pyinstaller)"
+          env | sort
+          ls -l ${{ env.RUNNER_TOOL_CACHE }}/Python/*/x64/Scripts/
 
       - name: Upload kivy logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
           name: kivy-logs
-          path: ${{ env.home }}/.kivy/logs/*.txt
+          path: ${{ env.HOME }}/.kivy/logs/*.txt
 
       - name: Upload pyinstaller logs
         if: always()
