@@ -44,7 +44,10 @@ jobs:
         shell: bash
         run: |
           env | sort
-          ls -l ${RUNNER_TOOL_CACHE}\\Python\\*\\x64\\Scripts\\
+          ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Scripts\\
+          ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Lib\\site-packages\\
+          ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Lib\\site-packages\\OpenGL\\
+          ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Lib\\site-packages\\OpenGL\\DLLS\\
 
       - name: Upload kivy logs
         if: always()
