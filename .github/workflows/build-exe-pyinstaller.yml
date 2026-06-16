@@ -36,7 +36,7 @@ jobs:
           spec: ./pyinstaller.spec
           pyproject: ./pyproject.toml
           python_ver: "3.12"
-          spec_options: "--paths=${{ github.workspace }}\\mesa\\x64, --log-level=TRACE"
+          options: "--paths=${{ github.workspace }}\\mesa\\x64, --log-level=TRACE"
           upload_exe_with_name: "NetworkPuzzles"
           clean_checkout: false # don't remove existing files from workdir
 
