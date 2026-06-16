@@ -12,11 +12,6 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Identify runner OS
-        shell: bash
-        run: |
-          echo "RUNNER_OS: $RUNNER_OS"
-
       - name: Checkout code
         uses: actions/checkout@v6
 
@@ -43,8 +38,23 @@ jobs:
           upload_exe_with_name: "NetworkPuzzles"
           clean_checkout: false # don't remove existing files from workdir
 
-      - name: Upload build logs
+      - name: Check sys info
+        if: always()
+        shell: bash
+        run: |
+            echo "HOME=$HOME"
+            echo "pyinstaller=$(which pyinstaller)"
+
+      - name: Upload kivy logs
+        if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: logs
+          name: kivy-logs
+          path: ${{ env.home }}/.kivy/logs/*.txt
+
+      - name: Upload pyinstaller logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: pyinstaller-logs
           path: build/pyinstaller/*.txt
