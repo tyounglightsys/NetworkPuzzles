@@ -51,15 +51,17 @@ jobs:
           # Add DLLs folder to $PATH
           # $env:Path += ";${{ env.GITHUB_WORKSPACE }}/mesa/x64/"
 
-      - name: Run PyInstaller
+      - name: Set env variables to override kivy checks
         shell: bash
         run: |
-          # Override display-related variables.
           echo "KIVY_NO_CONSOLE=1" >> $GITHUB_ENV
           echo "KIVY_NO_KIVY_CONFIG=1" >> $GITHUB_ENV
           echo "USE_SDL2=1" >> $GITHUB_ENV
           echo "USE_GSTREAMER=1" >> $GITHUB_ENV
 
+      - name: Run PyInstaller
+        shell: bash
+        run: |
           echo "Confirm vars:"
           env | grep KIVY_NO
           env | grep USE
