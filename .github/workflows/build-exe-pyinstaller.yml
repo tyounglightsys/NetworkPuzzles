@@ -34,8 +34,12 @@ jobs:
         shell: bash
         run: |
           python -m pip install pyinstaller
-          echo "PYINSTALLER=$(which pyinstaller)" >> $GITHUB_ENV
-          echo "PYINSTALLER_DIR=$(dirname $PYINSTALLER)" >> $GITHUB_ENV
+          PYINSTALLER=$(which pyinstaller)
+          PYINSTALLER_DIR=$(dirname $PYINSTALLER)
+          echo "PYINSTALLER=$PYINSTALLER"
+          echo "PYINSTALLER_DIR=$PYINSTALLER_DIR"
+          echo "PYINSTALLER=$PYINSTALLER" >> $GITHUB_ENV
+          echo "PYINSTALLER_DIR=$PYINSTALLER_DIR" >> $GITHUB_ENV
 
       - name: Install build prereqs
         shell: powershell
@@ -47,9 +51,7 @@ jobs:
           & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
           # Copy DLLs to pyinstaller directory.
           Copy-Item "mesa/x64/*" -Destination "$env:PYINSTALLER_DIR"
-          # dir ./mesa/x64
-          # Copy DLLs to current directory.
-          #Copy-Item "mesa/x64/*" -Destination "."
+          dir "$env:PYINSTALLER_DIR"
           # Add DLLs folder to $PATH
           # $env:Path += ";${{ env.GITHUB_WORKSPACE }}/mesa/x64/"
 
@@ -58,6 +60,7 @@ jobs:
         run: |
           pyinstaller \
             --clean \
+            --log-level=DEBUG \
             --noconfirm \
             pyinstaller.spec
 
