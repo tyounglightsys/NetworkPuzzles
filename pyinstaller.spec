@@ -31,7 +31,8 @@ exe = EXE(  # noqa: F821
     a.scripts,
     a.binaries,
     a.datas,
-    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins + gstreamer.dep_bins)],  # noqa: F821
+    [],
+    # *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins + gstreamer.dep_bins)],  # noqa: F821
     name="NetworkPuzzles",
     debug=False,
     bootloader_ignore_signals=False,
