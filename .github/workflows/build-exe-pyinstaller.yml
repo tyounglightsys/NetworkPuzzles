@@ -38,10 +38,10 @@ jobs:
           PYINSTALLER_L_DIR=$(dirname $PYINSTALLER_L)
           echo "PYINSTALLER_L=$PYINSTALLER_L"
           echo "PYINSTALLER_L_DIR=$PYINSTALLER_L_DIR"
-          PYINSTALLER_W=$(wslpath -w $PYINSTALLER_L)
-          PYINSTALLER_W_DIR=$(wslpath -w $PYINSTALLER_L_DIR)
-          echo "PYINSTALLER=$PYINSTALLER_W" >> $GITHUB_ENV
-          echo "PYINSTALLER_DIR=$PYINSTALLER_W_DIR" >> $GITHUB_ENV
+          # PYINSTALLER_W=$(wslpath -w $PYINSTALLER_L)
+          # PYINSTALLER_W_DIR=$(wslpath -w $PYINSTALLER_L_DIR)
+          echo "PYINSTALLER=$PYINSTALLER_L" >> $GITHUB_ENV
+          echo "PYINSTALLER_DIR=$PYINSTALLER_L_DIR" >> $GITHUB_ENV
 
       - name: Install build prereqs
         shell: powershell
