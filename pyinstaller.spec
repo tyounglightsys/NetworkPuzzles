@@ -1,5 +1,10 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+from kivy.tools.packaging.pyinstaller_hooks import (
+    get_deps_minimal,
+    hookspath,
+    runtime_hooks,
+)
 
 a = Analysis(  # noqa: F821
     ["src/main.py"],
@@ -8,12 +13,13 @@ a = Analysis(  # noqa: F821
     binaries=[],
     datas=[],
     hiddenimports=[],
-    hookspath=[],
+    hookspath=hookspath(),
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=runtime_hooks(),
     excludes=[],
     noarchive=False,
     optimize=0,
+    **get_deps_minimal(video=None, audio=None),
 )
 pyz = PYZ(a.pure)  # noqa: F821
 

@@ -35,6 +35,7 @@ jobs:
         run: python -m pip install pyinstaller
 
       - name: Install build prereqs
+        if: false # skip step for now
         shell: powershell
         run: |
           # Install OpenGL support
@@ -58,6 +59,7 @@ jobs:
             --log-level=DEBUG \
             --noconfirm \
             pyinstaller.spec
+          echo "return code = $?"
 
       # - name: Build EXE with PyInstaller Action
       #   uses: n8marti/pyinstaller@main
@@ -77,6 +79,14 @@ jobs:
           env | sort
           ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Scripts\\
           ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Lib\\site-packages\\
+
+      - name: Upload Executable
+        id: artifact_upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: NetworkPuzzles
+          path: ./dist
+          compression-level: 0
 
       - name: Upload kivy logs
         if: always()
