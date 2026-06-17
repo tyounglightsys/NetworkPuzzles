@@ -1,7 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 # Ref: https://kivy.org/doc/stable/guide/packaging-windows.html
-from kivy_deps import glew, sdl2
+from kivy_deps import glew, gstreamer, sdl2
 
 a = Analysis(  # noqa: F821
     ["src/main.py"],
@@ -24,7 +24,7 @@ exe = EXE(  # noqa: F821
     a.scripts,
     a.binaries,
     a.datas,
-    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],  # noqa: F821
+    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins + gstreamer.dep_bins)],  # noqa: F821
     name="NetworkPuzzles",
     debug=False,
     bootloader_ignore_signals=False,
