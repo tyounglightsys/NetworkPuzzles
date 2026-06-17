@@ -52,6 +52,7 @@ jobs:
           # $env:Path += ";${{ env.GITHUB_WORKSPACE }}/mesa/x64/"
 
       - name: Set env variables to override kivy checks
+        if: false
         shell: bash
         run: |
           echo "KIVY_NO_CONSOLE=1" >> $GITHUB_ENV
@@ -61,13 +62,9 @@ jobs:
 
       - name: Run PyInstaller
         shell: bash
+        env:
+          KIVY_WINDOW: dummy
         run: |
-          echo "Confirm vars:"
-          env | grep KIVY_NO
-          env | grep USE
-          echo
-
-          # Run pyinstaller
           pyinstaller \
             --clean \
             --log-level=DEBUG \
