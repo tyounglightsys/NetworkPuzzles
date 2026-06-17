@@ -6,7 +6,7 @@
 #     hookspath,
 #     runtime_hooks,
 # )
-from kivy_deps import glew, sdl2
+# from kivy_deps import glew, sdl2
 
 a = Analysis(  # noqa: F821
     ["src/main.py"],
@@ -14,7 +14,7 @@ a = Analysis(  # noqa: F821
     # binaries=[("./mesa/x64/opengl32.dll", ".")],
     binaries=[],
     datas=[],
-    hiddenimports=[],
+    hiddenimports=["pkg_resources"],
     hookspath=[],
     # hookspath=hookspath(),
     hooksconfig={},
@@ -32,8 +32,8 @@ exe = EXE(  # noqa: F821
     a.scripts,
     a.binaries,
     a.datas,
-    # [],
-    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],  # noqa: F821
+    [],
+    # *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],  # noqa: F821
     name="NetworkPuzzles",
     debug=False,
     bootloader_ignore_signals=False,
