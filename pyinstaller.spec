@@ -1,10 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-from kivy.tools.packaging.pyinstaller_hooks import (
-    get_deps_minimal,
-    hookspath,
-    runtime_hooks,
-)
+# Ref: https://kivy.org/doc/stable/guide/packaging-windows.html
+from kivy_deps import glew, sdl2
 
 a = Analysis(  # noqa: F821
     ["src/main.py"],
@@ -13,13 +10,12 @@ a = Analysis(  # noqa: F821
     binaries=[],
     datas=[],
     hiddenimports=[],
-    hookspath=hookspath(),
+    hookspath=[],
     hooksconfig={},
-    runtime_hooks=runtime_hooks(),
+    runtime_hooks=[],
     excludes=[],
     noarchive=False,
     optimize=0,
-    **get_deps_minimal(video=None, audio=None),
 )
 pyz = PYZ(a.pure)  # noqa: F821
 
@@ -28,7 +24,7 @@ exe = EXE(  # noqa: F821
     a.scripts,
     a.binaries,
     a.datas,
-    [],
+    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],  # noqa: F821
     name="NetworkPuzzles",
     debug=False,
     bootloader_ignore_signals=False,
