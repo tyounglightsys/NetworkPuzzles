@@ -32,7 +32,10 @@ jobs:
 
       - name: Install PyInstaller
         shell: bash
-        run: python -m pip install pyinstaller
+        run: |
+          python -m pip install pyinstaller
+          # Install Kivy window/audio dependencies explicitly for Windows
+          python -m pip install kivy.deps.sdl2 kivy.deps.glew pypiwin32
 
       - name: Install build prereqs
         if: false # skip step for now
