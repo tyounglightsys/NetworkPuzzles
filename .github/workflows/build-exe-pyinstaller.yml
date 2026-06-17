@@ -32,16 +32,7 @@ jobs:
 
       - name: Install PyInstaller
         shell: bash
-        run: |
-          python -m pip install pyinstaller
-          PYINSTALLER_L=$(which pyinstaller)
-          PYINSTALLER_L_DIR=$(dirname $PYINSTALLER_L)
-          echo "PYINSTALLER_L=$PYINSTALLER_L"
-          echo "PYINSTALLER_L_DIR=$PYINSTALLER_L_DIR"
-          # PYINSTALLER_W=$(wslpath -w $PYINSTALLER_L)
-          # PYINSTALLER_W_DIR=$(wslpath -w $PYINSTALLER_L_DIR)
-          echo "PYINSTALLER=$PYINSTALLER_L" >> $GITHUB_ENV
-          echo "PYINSTALLER_DIR=$PYINSTALLER_L_DIR" >> $GITHUB_ENV
+        run: python -m pip install pyinstaller
 
       - name: Install build prereqs
         shell: powershell
@@ -52,8 +43,10 @@ jobs:
           Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
           & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
           # Copy DLLs to pyinstaller directory.
-          Copy-Item "mesa/x64/*" -Destination "$env:PYINSTALLER_DIR"
-          dir "$env:PYINSTALLER_DIR"
+          $PYINSTALLER_DIR = "${env:Python_ROOT_DIR}\Scripts"
+          Write-Host $PYTHON_DIR
+          Copy-Item "mesa/x64/*" -Destination "$PYINSTALLER_DIR"
+          dir "$PYINSTALLER_DIR"
           # Add DLLs folder to $PATH
           # $env:Path += ";${{ env.GITHUB_WORKSPACE }}/mesa/x64/"
 
