@@ -78,7 +78,6 @@ jobs:
           pyinstaller \
             --clean \
             --noconfirm \
-            --exclude-module="kivy.core.window.window_sdl2" \
             pyinstaller.spec
           echo "return code = $?"
 
