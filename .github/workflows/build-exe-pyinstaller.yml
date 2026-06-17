@@ -30,10 +30,6 @@ jobs:
         shell: bash
         run: python -m pip install .
 
-      - name: List kivy deps files
-        shell: bash
-        run: ls -l ${Python_ROOT_DIR}/lib/site-packages/kivy/deps
-
       - name: Install PyInstaller
         shell: bash
         run: python -m pip install pyinstaller
@@ -58,6 +54,13 @@ jobs:
       - name: Run PyInstaller
         shell: bash
         run: |
+          # Override display-related variables.
+          export KIVY_NO_CONSOLE=1
+          export KIVY_NO_KIVY_CONFIG=1
+          export USE_SDL2=1
+          export USE_GSTREAMER=1
+
+          # Run pyinstaller
           pyinstaller \
             --clean \
             --log-level=DEBUG \

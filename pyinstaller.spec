@@ -1,7 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-# Ref: https://kivy.org/doc/stable/guide/packaging-windows.html
-from kivy_deps import glew, gstreamer, sdl2
+from kivy.tools.packaging.pyinstaller_hooks import (
+    get_deps_all,
+    # get_deps_minimal,
+    hookspath,
+    runtime_hooks,
+)
 
 a = Analysis(  # noqa: F821
     ["src/main.py"],
@@ -10,12 +14,15 @@ a = Analysis(  # noqa: F821
     binaries=[],
     datas=[],
     hiddenimports=[],
-    hookspath=[],
+    # hookspath=[],
+    hookspath=hookspath(),
     hooksconfig={},
-    runtime_hooks=[],
+    # runtime_hooks=[],
+    runtime_hooks=runtime_hooks(),
     excludes=[],
     noarchive=False,
     optimize=0,
+    **get_deps_all(),  # added
 )
 pyz = PYZ(a.pure)  # noqa: F821
 
@@ -32,7 +39,7 @@ exe = EXE(  # noqa: F821
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
