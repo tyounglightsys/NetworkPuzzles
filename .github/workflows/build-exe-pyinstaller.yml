@@ -34,12 +34,14 @@ jobs:
         shell: bash
         run: |
           python -m pip install pyinstaller
-          PYINSTALLER=$(which pyinstaller)
-          PYINSTALLER_DIR=$(dirname $PYINSTALLER)
-          echo "PYINSTALLER=$PYINSTALLER"
-          echo "PYINSTALLER_DIR=$PYINSTALLER_DIR"
-          echo "PYINSTALLER=$PYINSTALLER" >> $GITHUB_ENV
-          echo "PYINSTALLER_DIR=$PYINSTALLER_DIR" >> $GITHUB_ENV
+          PYINSTALLER_L=$(which pyinstaller)
+          PYINSTALLER_L_DIR=$(dirname $PYINSTALLER_L)
+          echo "PYINSTALLER_L=$PYINSTALLER_L"
+          echo "PYINSTALLER_L_DIR=$PYINSTALLER_L_DIR"
+          PYINSTALLER_W=$(wslpath -w $PYINSTALLER_L)
+          PYINSTALLER_W_DIR=$(wslpath -w $PYINSTALLER_L_DIR)
+          echo "PYINSTALLER=$PYINSTALLER_W" >> $GITHUB_ENV
+          echo "PYINSTALLER_DIR=$PYINSTALLER_W_DIR" >> $GITHUB_ENV
 
       - name: Install build prereqs
         shell: powershell
