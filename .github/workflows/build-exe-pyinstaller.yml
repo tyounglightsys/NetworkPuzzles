@@ -66,12 +66,13 @@ jobs:
       - name: Run PyInstaller
         shell: bash
         env:
+          KIVY_NO_ARGS: 1
           KIVY_WINDOW: dummy
         run: |
           pyinstaller \
             --clean \
-            --log-level=DEBUG \
             --noconfirm \
+            --exclude-module="kivy.core.window.window_sdl2" \
             pyinstaller.spec
           echo "return code = $?"
 
