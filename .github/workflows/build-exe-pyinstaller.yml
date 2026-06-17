@@ -10,37 +10,38 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v6
 
-      - name: Package Application
-        uses: JackMcKew/pyinstaller-action-windows@main
-        with:
-          path: .
-          spec: ./pyinstaller.spec
-
-      # - name: Install Python
-      #   uses: actions/setup-python@v6
+      # This is too old (~6 years)
+      # - name: Package Application
+      #   uses: JackMcKew/pyinstaller-action-windows@main
       #   with:
-      #     python-version: 3.12
+      #     path: .
+      #     spec: ./pyinstaller.spec
 
-      # - name: Install Python dev tools
-      #   shell: bash
-      #   run: |
-      #     python -m pip install -U pip
-      #     python -m pip install wheel setuptools
+      - name: Install Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: 3.12
 
-      # - name: Install project
-      #   shell: bash
-      #   run: python -m pip install .
+      - name: Install Python dev tools
+        shell: bash
+        run: |
+          python -m pip install -U pip
+          python -m pip install wheel setuptools
 
-      # - name: Install PyInstaller
-      #   shell: bash
-      #   run: |
-      #     python -m pip install pyinstaller
-      #     # Install Kivy window/audio dependencies explicitly for Windows
-      #     python -m pip install kivy.deps.sdl2 kivy.deps.glew pypiwin32
+      - name: Install project
+        shell: bash
+        run: python -m pip install .
+
+      - name: Install PyInstaller
+        shell: bash
+        run: |
+          python -m pip install pyinstaller
+          # Install Kivy window/audio dependencies explicitly for Windows
+          # python -m pip install kivy.deps.sdl2 kivy.deps.glew pypiwin32
 
       # - name: Install build prereqs
       #   if: false # skip step for now
@@ -68,18 +69,18 @@ jobs:
       #     echo "USE_SDL2=1" >> $GITHUB_ENV
       #     echo "USE_GSTREAMER=1" >> $GITHUB_ENV
 
-      # - name: Run PyInstaller
-      #   shell: bash
-      #   env:
-      #     KIVY_NO_ARGS: 1
-      #     KIVY_WINDOW: dummy
-      #   run: |
-      #     pyinstaller \
-      #       --clean \
-      #       --noconfirm \
-      #       --exclude-module="kivy.core.window.window_sdl2" \
-      #       pyinstaller.spec
-      #     echo "return code = $?"
+      - name: Run PyInstaller
+        shell: bash
+        env:
+          # KIVY_NO_ARGS: 1
+          KIVY_WINDOW: dummy
+        run: |
+          pyinstaller \
+            --clean \
+            --noconfirm \
+            --exclude-module="kivy.core.window.window_sdl2" \
+            pyinstaller.spec
+          echo "return code = $?"
 
       # - name: Build EXE with PyInstaller Action
       #   uses: n8marti/pyinstaller@main
