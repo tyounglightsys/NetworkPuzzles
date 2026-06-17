@@ -55,10 +55,15 @@ jobs:
         shell: bash
         run: |
           # Override display-related variables.
-          export KIVY_NO_CONSOLE=1
-          export KIVY_NO_KIVY_CONFIG=1
-          export USE_SDL2=1
-          export USE_GSTREAMER=1
+          echo "KIVY_NO_CONSOLE=1" >> $GITHUB_ENV
+          echo "KIVY_NO_KIVY_CONFIG=1" >> $GITHUB_ENV
+          echo "USE_SDL2=1" >> $GITHUB_ENV
+          echo "USE_GSTREAMER=1" >> $GITHUB_ENV
+
+          echo "Confirm vars:"
+          env | grep KIVY_NO
+          env | grep USE
+          echo
 
           # Run pyinstaller
           pyinstaller \
@@ -80,7 +85,7 @@ jobs:
       #     clean_checkout: false # don't remove existing files from workdir
 
       - name: Check sys info
-        if: always()
+        if: false # skip for now
         shell: bash
         run: |
           env | sort
