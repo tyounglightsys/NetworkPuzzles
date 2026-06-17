@@ -6,7 +6,7 @@
 #     hookspath,
 #     runtime_hooks,
 # )
-from kivy_deps import glew, gstreamer, sdl2
+from kivy_deps import glew, sdl2
 
 a = Analysis(  # noqa: F821
     ["src/main.py"],
@@ -33,7 +33,7 @@ exe = EXE(  # noqa: F821
     a.binaries,
     a.datas,
     # [],
-    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins + gstreamer.dep_bins)],  # noqa: F821
+    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],  # noqa: F821
     name="NetworkPuzzles",
     debug=False,
     bootloader_ignore_signals=False,
