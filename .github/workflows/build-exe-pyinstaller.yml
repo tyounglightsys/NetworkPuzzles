@@ -102,8 +102,9 @@ jobs:
           echo "ENV:"
           env | sort
           echo
-          echo "./build/pyinstaller:"
-          ls -l build/pyinstaller
+          echo "./build:"
+          ls -l build/
+          ls -l build/pyinstaller/
 
       - name: Upload Executable
         id: artifact_upload
