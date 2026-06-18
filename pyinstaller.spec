@@ -9,7 +9,7 @@ from kivy_deps import glew, sdl2
 
 options = [("v", None, "OPTION")]
 kvs = [
-    (str(f), f"./network_puzzles/gui/{f.name}")
+    (str(f), str(Path(f"./network_puzzles/gui/{f.name}")))
     for f in Path("src/network_puzzles/gui").glob("*.kv")
 ]
 logging.debug(f"{kvs=}")
@@ -36,6 +36,7 @@ a = Analysis(  # noqa: F821
 )
 pyz = PYZ(a.pure)  # noqa: F821
 
+logging.debug(f"{a.datas=}")
 exe = EXE(  # noqa: F821
     pyz,
     a.scripts,
