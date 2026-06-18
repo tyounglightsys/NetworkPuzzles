@@ -75,12 +75,12 @@ jobs:
         env:
           KIVY_NO_CONSOLELOG: 1
           KIVY_NO_ENV_CONFIG: 1
-          KIVY_WINDOW: dummy
+          # KIVY_WINDOW: dummy
         run: |
           pyinstaller \
             --clean \
             --noconfirm \
-            pyinstaller.spec | tee pyinstaller.log
+            pyinstaller.spec 2>&1 | tee pyinstaller.log
           echo "return code = $?"
 
       # - name: Build EXE with PyInstaller Action
@@ -125,4 +125,5 @@ jobs:
           name: pyinstaller-logs
           path: |
             pyinstaller.log
-            ${{ github.workspace }}\\build\\pyinstaller\\*.txt
+            build/NetworkPuzzles/*.txt
+            build/pyinstaller/*.txt
