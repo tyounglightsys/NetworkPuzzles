@@ -3,10 +3,10 @@
 # import os
 import sys
 
-# Force Kivy to use the dummy renderer in headless environments (like CI/CD runners)
-# if "GITHUB_ACTIONS" in os.environ:
-#     os.environ["KIVY_WINDOW"] = "dummy"
-#     os.environ["KIVY_GL_BACKEND"] = "dummy"
+# from kivy.resources import resource_add_path
+# if __name__ == "__main__":
+#     if hasattr(sys, "_MEIPASS"):
+#         resource_add_path(os.path.join(sys._MEIPASS))
 from network_puzzles.gui import NetworkPuzzlesApp
 from network_puzzles.ui import GUI
 

@@ -1,15 +1,25 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import logging
+from pathlib import Path
+
 from kivy_deps import glew, sdl2
-from PyInstaller.utils.hooks import collect_data_files
+
+# from PyInstaller.utils.hooks import collect_data_files
 
 options = [("v", None, "OPTION")]
+kvs = [
+    (str(f), f"./network_puzzles/gui/{f}")
+    for f in Path("src/network_puzzles/gui").glob("*.kv")
+]
+logging.debug(f"{kvs=}")
 
 a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
     binaries=[("mesa/x64/opengl32.dll", ".")],  # default =[]
-    datas=collect_data_files("network_puzzles.gui"),  # default =[]
+    # datas=collect_data_files("network_puzzles.gui"),  # default =[]  # doesn't collect anything
+    datas=kvs,
     hiddenimports=[
         "kivy.core.window.window_sdl2",
         "kivy.core.audio.audio_sdl2",
