@@ -7,8 +7,8 @@ options = [("v", None, "OPTION")]
 a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
-    # binaries=[("mesa/x64/*", ".")],
-    binaries=[*[(f[1], f[0]) for f in Tree("mesa/x64")]],  # noqa: F821
+    binaries=[],
+    # binaries=[*[(f[1], f[0]) for f in Tree("mesa/x64")]],  # noqa: F821
     datas=[],
     hiddenimports=[
         "kivy.core.window.window_sdl2",

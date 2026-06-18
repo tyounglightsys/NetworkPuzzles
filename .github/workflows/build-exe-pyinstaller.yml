@@ -56,8 +56,7 @@ jobs:
       - name: Run PyInstaller
         shell: bash
         env:
-          KIVY_NO_CONSOLELOG: 1 # blocks colored console logging
-          # KIVY_NO_ENV_CONFIG: 1
+          # KIVY_NO_CONSOLELOG: 1 # blocks colored console logging
           KIVY_GL_BACKEND: dummy # prevents openGL error
           KIVY_WINDOW: dummy # prevents openGL error
           PYI_LOG_LEVEL: DEBUG
