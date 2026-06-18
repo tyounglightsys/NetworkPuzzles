@@ -1,4 +1,5 @@
 import logging
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Tuple
@@ -12,11 +13,17 @@ from kivy.uix.widget import Widget
 
 from .. import session
 
-# Size limits
-BUTTON_MAX_H = dp(32)
-BUTTON_FONT_SIZE = sp(24)
-DEVICE_BUTTON_MAX_H = BUTTON_MAX_H * 1.25
-PACKET_DIMS = (dp(15), dp(15))
+# Size limits; skip dp/sp conversions when run by pyinstaller.
+if "GITHUB_ACTIONS" in os.environ:
+    BUTTON_MAX_H = 32
+    BUTTON_FONT_SIZE = 24
+    DEVICE_BUTTON_MAX_H = BUTTON_MAX_H * 1.25
+    PACKET_DIMS = (15, 15)
+else:
+    BUTTON_MAX_H = dp(32)
+    BUTTON_FONT_SIZE = sp(24)
+    DEVICE_BUTTON_MAX_H = BUTTON_MAX_H * 1.25
+    PACKET_DIMS = (dp(15), dp(15))
 
 IMAGES_DIR = Path(__file__).parents[1] / "resources" / "images"
 # NOTE: Puzzle size is nominally 900x850. The PADDING is applied to all sides of
