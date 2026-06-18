@@ -139,6 +139,7 @@ class Parser:
             if command not in ["undo", "redo"]:
                 #something changed.  We want to stash an undo
                 session.store_undo(command, previous_state_json) 
+                session.redolist = list() #zero out the redo if we have done anything except an undo/redo
             
             #we only need to do this if something changed.
             # after we do anything, rebuild network wires if needed.
