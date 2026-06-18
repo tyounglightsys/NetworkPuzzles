@@ -51,7 +51,7 @@ class Parser:
             print("loading: ")
         return retval
 
-    def parse(self, command: str, fromuser=True, fromundo=False):
+    def parse(self, command: str, fromuser=True):
         retval = None
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         if command is not None:
@@ -61,13 +61,17 @@ class Parser:
                 logging.info("Ignoring non-command.")
                 return
         logging.debug(f"{command=}")
+        
+        previous_state_json = None
+        if session.puzzle is not None:
+            previous_state_json = copy.deepcopy(session.puzzle.json)
 
         if ";" in command:
             # Our command is multiple commands in one.  Run each of them individually
             commands = command.split(";")
             # parse each of them separately
             for onestring in commands:
-                self.parse(onestring, fromuser, fromundo)
+                self.parse(onestring, fromuser)
             # call it done.
             return
 
@@ -131,44 +135,39 @@ class Parser:
             case _:
                 session.print(f"unknown: {command}")
 
-        # after we do anything, rebuild network wires if needed.
-        if session is not None and session.puzzle is not None:
-            session.puzzle.AutoJoinAllWireless()
+        if previous_state_json is not None and not session.puzzle.json == previous_state_json:
+            if command not in ["undo", "redo"]:
+                #something changed.  We want to stash an undo
+                session.store_undo(command, previous_state_json) 
+                session.redolist = list() #zero out the redo if we have done anything except an undo/redo
+            
+            #we only need to do this if something changed.
+            # after we do anything, rebuild network wires if needed.
+            if session is not None and session.puzzle is not None:
+                session.puzzle.AutoJoinAllWireless()
         return retval
 
     def try_undo(self):
         if len(session.undolist) > 0:
+            current_json = copy.deepcopy(session.puzzle.json)
             lastcmd = session.undolist.pop()
-            if lastcmd.get("payload") is not None:
-                # We deleted something and it needs to be re-added
-                # determine what it is; a device or link
-                payload = lastcmd.get("payload")
-                session.print(f"restoring deleted {payload.get('hostname')}")
-                if "DstNic" in payload:
-                    # it is a link.
-                    if not isinstance(session.puzzle.json["link"], list):
-                        session.puzzle.json["link"] = [session.puzzle.json["link"]]
-                    session.puzzle.json["link"].append(payload)
-                    session.redolist.append(lastcmd)
-                    return True
-                else:
-                    # it is a device
-                    session.puzzle.json["device"].append(payload)
-                    session.redolist.append(lastcmd)
-                    return True
-            # If we get here, we had no payload.
-            # we need to run the backwards command
-            self.parse(
-                lastcmd.get("backwards"), False, True
-            )  # specify this is from undo.  It does not get added to undo
+            session.puzzle.json = lastcmd.get("puzzle_json")
+            session.print(f"Undoing: {lastcmd.get('line')}")
+            #so we go back to the other state
+            lastcmd["puzzle_json"] = current_json
             session.redolist.append(lastcmd)  # Put it onto the redo list
         else:
             session.print("Nothing to undo")
 
     def try_redo(self):
         if len(session.redolist) > 0:
+            current_json = copy.deepcopy(session.puzzle.json)
             lastcmd = session.redolist.pop()
-            self.parse(lastcmd.get("forwards"), False, False)
+            session.puzzle.json = lastcmd.get("puzzle_json")
+            session.print(f"Redoing: {lastcmd.get('line')}")
+            #so we go back to the other state
+            lastcmd["puzzle_json"] = current_json
+            session.undolist.append(lastcmd)
             # The command is automatically added to the undo; through the parse.  We are done
         else:
             session.print("Nothing to redo")
@@ -200,11 +199,6 @@ class Parser:
             item = session.puzzle.link_from_name(args[0])
             if item is not None:
                 # we have a link.  We can replace one of these
-                session.add_undo_entry(
-                    f"delete {item.get('hostname')}",
-                    f"restore {item.get('hostname')}",
-                    item,
-                )
                 session.puzzle.delete_item(item.get("hostname"))
                 linktype = item.get("linktype")
                 if linktype == "broken":
@@ -218,16 +212,10 @@ class Parser:
                     ],
                     linktype,
                 )
-                session.add_undo_entry(
-                    f"create link {item['SrcNic']['hostname']} {item['SrcNic']['nicname']} {item['DstNic']['hostname']} {item['DstNic']['nicname']}",
-                    f"delete {item.get('hostname')}",
-                )
                 return True
             item = session.puzzle.device_from_name(args[0])
             if item is not None:
                 # We have a device. We can replace one of these.
-                # Make deep clone of the device for our undo
-                tcopy = copy.deepcopy(item)
 
                 # go through and clear out all the IP addresses
                 for nic_json in device.Device(item).all_nics():
@@ -257,13 +245,6 @@ class Parser:
                     item.get("hostname"),
                     "DeviceBlowsUpWithPower",
                     f"Successfully replaced {item.get('hostname')}.",
-                )
-
-                # Store undo/redo
-                session.add_undo_entry(
-                    f"delete {item.get('hostname')}",
-                    f"restore {item.get('hostname')}",
-                    tcopy,
                 )
 
                 session.print(f"Successfully replaced {item['hostname']}")
@@ -580,11 +561,11 @@ class Parser:
                 return
             if args[0].lower() == "undo":
                 for oneline in session.undolist:
-                    session.print(oneline["forwards"])
+                    session.print(oneline.get("line"))
                 return
             if args[0].lower() == "redo":
                 for oneline in session.redolist:
-                    session.print(oneline["backwards"])
+                    session.print(oneline.get("line"))
                 return
             session.print(f"No such host {args[0]}")
         if len(args) == 2:
@@ -607,20 +588,10 @@ class Parser:
             session.print(f"{dev_obj.hostname} can not be a dhcp server")
             return False
         pastvalue = "false"
-        if dev_obj.is_dhcp:
-            pastvalue = "true"
         if value.lower() in ("true", "yes"):
             dev_obj.is_dhcp = True
-            session.add_undo_entry(
-                f"set {dev_obj.hostname} isdhcp true",
-                f"set {dev_obj.hostname} isdhcp {pastvalue}",
-            )
         else:
             dev_obj.is_dhcp = False
-            session.add_undo_entry(
-                f"set {dev_obj.hostname} isdhcp false",
-                f"set {dev_obj.hostname} isdhcp {pastvalue}",
-            )
         session.print(
             f"Defining {dev_obj.hostname} 'isdhcp' to {dev_obj.json.get('isdhcp')}"
         )
@@ -702,10 +673,6 @@ class Parser:
     def set_gateway_value(self, dev_obj, value):
         # we really need to do some type checking.  It should be a valid ipv4 or ipv6 address
         if packet.is_ipv4(value) or packet.is_ipv6(value):
-            session.add_undo_entry(
-                f"set {dev_obj.hostname} gateway {value}",
-                f"set {dev_obj.hostname} gateway {dev_obj.json['gateway']['ip']}",
-            )
             dev_obj.json["gateway"]["ip"] = value
             tmp_obj = session.puzzle.device_from_ip(value)
             if tmp_obj is not None and "hostname" in tmp_obj:
@@ -830,10 +797,6 @@ class Parser:
                         f"{dev_obj.hostname}:{nicname} is set for DHCP.  Cannot change it manually."
                     )
                     return
-                session.add_undo_entry(
-                    f"set {dev_obj.hostname} {nicname} {ip}/{mask}",
-                    f"set {dev_obj.hostname} {nicname} {ip_data.get('ip')}/{ip_data.get('mask')}",
-                )
                 session.print(f"Setting {dev_obj.hostname}:{nicname} to: {ip}/{mask}")
                 interface["myip"]["ip"] = ip
                 interface["myip"]["mask"] = mask
@@ -857,11 +820,6 @@ class Parser:
                     session.print(f"Item cannot be moved outside its boundaries. {dev_obj.hostname}")
             return False
         if x + 0 and y > 0:
-            pastvalue = dev_obj.json.get("location")
-            session.add_undo_entry(
-                f"set {dev_obj.hostname} location {x},{y}",
-                f"set {dev_obj.hostname} location {pastvalue}",
-            )
             session.print(f"Setting position of {dev_obj.hostname} to {x},{y}")
             dev_obj.json["location"] = f"{x},{y}"
             # TODO: We need a callback here to tell te gui to redraw. - we just moved a device
@@ -883,15 +841,8 @@ class Parser:
                     # TODO: We need a callback here to tell the gui to redraw.
 
     def set_power_value(self, dev_obj, value):
-        pastvalue = "on"
         # if dev_data.get("poweroff") == "True":
-        if not dev_obj.powered_on:
-            pastvalue = "off"
         if value.lower() == "off":
-            session.add_undo_entry(
-                f"set {dev_obj.hostname} power off",
-                f"set {dev_obj.hostname} power {pastvalue}",
-            )
             dev_obj.powered_on = True
             session.puzzle.mark_test_as_completed(
                 None, dev_obj.hostname, "DeviceIsFrozen", ""
@@ -907,10 +858,6 @@ class Parser:
                 logging.info(f"{dev_obj.hostname} exploded")
                 return
             else:
-                session.add_undo_entry(
-                    f"set {dev_obj.hostname} power on",
-                    f"set {dev_obj.hostname} power {pastvalue}",
-                )
                 dev_obj.powered_on = False
 
         session.print(

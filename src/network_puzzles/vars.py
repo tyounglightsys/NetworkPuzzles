@@ -3,6 +3,8 @@ import os
 import platform
 import sys
 from pathlib import Path
+from copy import deepcopy
+
 
 
 class Session:
@@ -65,13 +67,12 @@ class Session:
         print("<default print method>")
         print(message)
 
-    def add_undo_entry(self, forwards_cmd: str, backwards_cmd: str, payload=None):
-        """Add a record to the undo list.
-        The forwards command is used for redo,
-        the backwards command is used for undo.
-        the payload is used if we delete something and need to recover it."""
-        newrec = {}
-        newrec["forwards"] = forwards_cmd
-        newrec["backwards"] = backwards_cmd
-        newrec["payload"] = payload
-        self.undolist.append(newrec)
+    def store_undo(self, line:str, puzzle_json):
+        '''Store a deep copy of the puzzle state for use later'''
+        if self.puzzle is not None:
+            tostore = { 
+                "line": line,
+                "puzzle_json": deepcopy(puzzle_json)
+            }
+            self.undolist.append(tostore)
+        
