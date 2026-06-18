@@ -3,7 +3,6 @@ from copy import deepcopy
 
 from kivy.clock import Clock
 from kivy.graphics import Color, Ellipse
-from kivy.metrics import dp
 from kivy.uix.behaviors import DragBehavior
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
@@ -20,6 +19,7 @@ from .base import (
     pos_to_location,
 )
 from .buttons import CommandButton
+from .headless import handle_dp as dp
 from .layouts import ThemedBoxLayout
 from .popups import (
     DeviceCommandsPopup,
