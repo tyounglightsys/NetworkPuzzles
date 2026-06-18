@@ -11,7 +11,6 @@ from kivy_deps import glew, sdl2
 a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
-    # binaries=[("./mesa/x64/opengl32.dll", ".")],
     binaries=[],
     datas=[],
     hiddenimports=[
@@ -20,6 +19,7 @@ a = Analysis(  # noqa: F821
         "kivy.core.image.img_sdl2",
         "kivy.core.text.text_sdl2",
         "kivy.core.clipboard.clipboard_sdl2",
+        "kivy.metrics",
     ],
     hookspath=[],
     # hookspath=hookspath(),

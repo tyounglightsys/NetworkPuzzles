@@ -79,6 +79,7 @@ jobs:
         run: |
           pyinstaller \
             --clean \
+            --debug=imports \
             --noconfirm \
             pyinstaller.spec 2>&1 | tee pyinstaller.log
           echo "return code = $?"
@@ -101,8 +102,8 @@ jobs:
           echo "ENV:"
           env | sort
           echo
-          echo "./build:"
-          ls -l build/
+          echo "./build/pyinstaller:"
+          ls -l build/pyinstaller
 
       - name: Upload Executable
         id: artifact_upload
@@ -127,7 +128,6 @@ jobs:
           name: pyinstaller-logs
           path: |
             pyinstaller.log
-            build/NetworkPuzzles/*.dot
-            build/NetworkPuzzles/*.html
-            build/NetworkPuzzles/*.txt
+            build/pyinstaller/*.dot
+            build/pyinstaller/*.html
             build/pyinstaller/*.txt
