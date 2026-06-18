@@ -187,17 +187,18 @@ class NetworkPuzzlesApp(App):
 
     def on_start(self):
         # Make widget adjustments.
-        # Set initial app button states.
-        if hasattr(self.root.ids, "layout"):
+        if not hasattr(self.root.ids, "layout"):
+            logging.warning("App: layout widget not found.")
+        else:
+            # Set initial app button states.
             self.update_undo_redo_states()
             # NOTE: Has to be added once PuzzleLayout already exists.
             self.root.ids.layout.add_items_menu_button()
-        else:
-            logging.warning("App: layout widget not found.")
 
-        Clock.schedule_once(
-            self._set_left_panel_width
-        )  # buttons must update before panel
+            Clock.schedule_once(
+                self._set_left_panel_width
+            )  # buttons must update before panel
+
         # Open puzzle chooser if no puzzle is defined.
         if not self.ui.puzzle:
             Clock.schedule_once(self.on_puzzle_chooser)
