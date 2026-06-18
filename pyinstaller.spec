@@ -21,14 +21,15 @@ a = Analysis(  # noqa: F821
         "kivy.core.image.img_sdl2",
         "kivy.core.text.text_sdl2",
         "kivy.core.clipboard.clipboard_sdl2",
-        "network_puzzles.gui",
+        # "network_puzzles.gui",
     ],
     hookspath=[],
     # hookspath=hookspath(),
     hooksconfig={},
     runtime_hooks=[],
     # runtime_hooks=runtime_hooks(),
-    excludes=["network_puzzles.gui"],
+    exludes=[],
+    # excludes=["network_puzzles.gui"],  # this overides hiddenimports above
     noarchive=False,
     optimize=0,
     # **get_deps_all(),  # added
