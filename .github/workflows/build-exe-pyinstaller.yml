@@ -73,9 +73,9 @@ jobs:
       - name: Run PyInstaller
         shell: bash
         env:
-          KIVY_NO_CONSOLELOG: 1
+          KIVY_NO_CONSOLELOG: 1 # blocks colored console logging
           KIVY_NO_ENV_CONFIG: 1
-          # KIVY_WINDOW: dummy
+          KIVY_WINDOW: dummy # prevents openGL error
         run: |
           pyinstaller \
             --clean \
@@ -94,13 +94,16 @@ jobs:
       #     upload_exe_with_name: "NetworkPuzzles"
       #     clean_checkout: false # don't remove existing files from workdir
 
-      # - name: Check sys info
-      #   if: false # skip for now
-      #   shell: bash
-      #   run: |
-      #     env | sort
-      #     ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Scripts\\
-      #     ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Lib\\site-packages\\
+      - name: Check sys info
+        # if: false # skip for now
+        shell: bash
+        run: |
+          echo "ENV:"
+          env | sort
+          echo "./build:"
+          tree build/
+          # ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Scripts\\
+          # ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Lib\\site-packages\\
 
       - name: Upload Executable
         id: artifact_upload
@@ -125,5 +128,7 @@ jobs:
           name: pyinstaller-logs
           path: |
             pyinstaller.log
+            build/NetworkPuzzles/*.dot
+            build/NetworkPuzzles/*.html
             build/NetworkPuzzles/*.txt
             build/pyinstaller/*.txt
