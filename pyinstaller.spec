@@ -9,7 +9,7 @@ from kivy_deps import glew, sdl2
 
 options = [("v", None, "OPTION")]
 kvs = [
-    (str(f), str(Path(f"./network_puzzles/gui/{f.name}")))
+    (str(f), "./network_puzzles/gui/")
     for f in Path("src/network_puzzles/gui").glob("*.kv")
 ]
 logging.debug(f"{kvs=}")
