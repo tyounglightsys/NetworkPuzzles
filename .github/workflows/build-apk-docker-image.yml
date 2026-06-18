@@ -2,6 +2,9 @@ name: Build APK file w/ Docker
 on:
   workflow_dispatch:
   pull_request:
+    paths:
+      - .github/workflows/*apk*
+      - src/network_puzzles/**
     branches:
       - main
   # push:
