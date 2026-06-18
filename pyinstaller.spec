@@ -12,7 +12,7 @@ a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
     # binaries=[("./mesa/x64/opengl32.dll", ".")],
-    binaries=[*glew.dep_bins, *sdl2.dep_bins],
+    binaries=[],
     datas=[],
     hiddenimports=[
         "kivy.core.window.window_sdl2",
@@ -38,8 +38,8 @@ exe = EXE(  # noqa: F821
     a.scripts,
     a.binaries,
     a.datas,
-    [],
-    # *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],  # noqa: F821
+    # [],
+    *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],  # noqa: F821
     name="NetworkPuzzles",
     debug=True,
     bootloader_ignore_signals=False,
