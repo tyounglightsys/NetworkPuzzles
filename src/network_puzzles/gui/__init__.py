@@ -195,9 +195,9 @@ class NetworkPuzzlesApp(App):
             # NOTE: Has to be added once PuzzleLayout already exists.
             self.root.ids.layout.add_items_menu_button()
 
-            Clock.schedule_once(
-                self._set_left_panel_width
-            )  # buttons must update before panel
+        Clock.schedule_once(
+            self._set_left_panel_width
+        )  # buttons must update before panel
 
         # Open puzzle chooser if no puzzle is defined.
         if not self.ui.puzzle:
@@ -327,6 +327,11 @@ class NetworkPuzzlesApp(App):
         print_layout_info(self)
 
     def _set_left_panel_width(self, *args):
+        if not hasattr(self.root.ids, "menu") or not hasattr(
+            self.root.ids, "left_panel"
+        ):
+            logging.warning("Failed to find one of 'menu' or 'left_panel'")
+            return
         menu = self.root.ids.menu
         menu_buttons = menu.children
         self.root.ids.left_panel.width = sum(
