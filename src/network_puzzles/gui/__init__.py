@@ -14,13 +14,6 @@ from kivy.config import Config
 
 from .. import session
 
-# # Allow build on github runners.
-# if getenv("RUNNER_OS"):
-#     logging.warning(f"Running on {getenv('RUNNER_OS')}")
-#     logging.warning("Disabling strict anti-aliasing requirements.")
-#     Config.set("graphics", "multisamples", "0")
-#     # Config.write()
-
 if session.device_type == "desktop":
     # Disable right-click red dot.
     Config.set("input", "mouse", "mouse,disable_multitouch")
@@ -195,9 +188,12 @@ class NetworkPuzzlesApp(App):
     def on_start(self):
         # Make widget adjustments.
         # Set initial app button states.
-        self.update_undo_redo_states()
-        # NOTE: Has to be added once PuzzleLayout already exists.
-        self.root.ids.layout.add_items_menu_button()
+        if hasattr(self.root.ids, "layout"):
+            self.update_undo_redo_states()
+            # NOTE: Has to be added once PuzzleLayout already exists.
+            self.root.ids.layout.add_items_menu_button()
+        else:
+            logging.warning("App: layout widget not found.")
 
         Clock.schedule_once(
             self._set_left_panel_width
