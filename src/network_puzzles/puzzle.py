@@ -24,6 +24,7 @@ class Puzzle(ItemBase):
     def __init__(self, json_data):
         super().__init__(json_data)
         self.completion_notified = False
+        self.dirty = False
 
     @property
     def default_help_level(self):
@@ -642,9 +643,6 @@ class Puzzle(ItemBase):
             if onelink is not None:
                 self.delete_item(onelink.get("hostname"))
         session.print(f"Deleting: {hostname}")
-        session.add_undo_entry(
-            f"delete {hostname}", f"restore {hostname}", existing_device
-        )  # make entry using payload
         if isinstance(self.json.get("device"), dict):
             # Replace single-item dict with an empty list.
             self.json["device"] = []
@@ -659,9 +657,6 @@ class Puzzle(ItemBase):
             raise ValueError(f"Link does not exist: {hostname}")
 
         session.print(f"Deleting: {hostname}")
-        session.add_undo_entry(
-            f"delete {hostname}", f"restore {hostname}", existing_link
-        )  # make entry using payload
         if isinstance(self.json.get("link"), dict):
             # Replace single-item dict with an empty list.
             self.json["link"] = []
