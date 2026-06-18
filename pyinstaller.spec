@@ -20,7 +20,7 @@ a = Analysis(  # noqa: F821
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    exludes=["docutils", "unittest"],
+    excludes=["docutils", "unittest"],
     noarchive=False,
     optimize=0,
 )
