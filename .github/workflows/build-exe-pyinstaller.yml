@@ -44,37 +44,20 @@ jobs:
           # Install Kivy window/audio dependencies explicitly for Windows
           # python -m pip install kivy.deps.sdl2 kivy.deps.glew pypiwin32
 
-      # - name: Install build prereqs
-      #   if: false # skip step for now
-      #   shell: powershell
-      #   run: |
-      #     # Install OpenGL support
-      #     $version = "26.1.1"
-      #     $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-mingw.7z"
-      #     Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
-      #     & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
-      #     # Copy DLLs to pyinstaller directory.
-      #     $PYINSTALLER_DIR = "${env:Python_ROOT_DIR}\Scripts"
-      #     Write-Host $PYTHON_DIR
-      #     Copy-Item "mesa/x64/*" -Destination "$PYINSTALLER_DIR"
-      #     dir "$PYINSTALLER_DIR"
-      #     # Add DLLs folder to $PATH
-      #     # $env:Path += ";${{ env.GITHUB_WORKSPACE }}/mesa/x64/"
-
-      # - name: Set env variables to override kivy checks
-      #   if: false
-      #   shell: bash
-      #   run: |
-      #     echo "KIVY_NO_CONSOLE=1" >> $GITHUB_ENV
-      #     echo "KIVY_NO_KIVY_CONFIG=1" >> $GITHUB_ENV
-      #     echo "USE_SDL2=1" >> $GITHUB_ENV
-      #     echo "USE_GSTREAMER=1" >> $GITHUB_ENV
+      - name: Install OpenGL fallback
+        shell: powershell
+        run: |
+          # Install OpenGL support
+          $version = "26.1.1"
+          $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-mingw.7z"
+          Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
+          & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
 
       - name: Run PyInstaller
         shell: bash
         env:
           KIVY_NO_CONSOLELOG: 1 # blocks colored console logging
-          KIVY_NO_ENV_CONFIG: 1
+          # KIVY_NO_ENV_CONFIG: 1
           KIVY_GL_BACKEND: dummy # prevents openGL error
           KIVY_WINDOW: dummy # prevents openGL error
           PYI_LOG_LEVEL: DEBUG
@@ -95,17 +78,6 @@ jobs:
       #     options: "--paths=${{ github.workspace }}\\mesa\\x64, --log-level=TRACE"
       #     upload_exe_with_name: "NetworkPuzzles"
       #     clean_checkout: false # don't remove existing files from workdir
-
-      # - name: Check sys info
-      #   if: always()
-      #   shell: bash
-      #   run: |
-      #     echo "ENV:"
-      #     env | sort
-      #     echo
-      #     echo "./build:"
-      #     ls -l build/
-      #     ls -l build/pyinstaller/
 
       - name: Upload Executable
         id: artifact_upload

@@ -1,11 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-# from kivy.tools.packaging.pyinstaller_hooks import (
-#     get_deps_all,
-#     # get_deps_minimal,
-#     hookspath,
-#     runtime_hooks,
-# )
 from kivy_deps import glew, sdl2
 
 options = [("v", None, "OPTION")]
@@ -13,7 +7,8 @@ options = [("v", None, "OPTION")]
 a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
-    binaries=[],
+    # binaries=[("mesa/x64/*", ".")],
+    binaries=[*[(f[1], f[0]) for f in Tree("mesa/x64")]],  # noqa: F821
     datas=[],
     hiddenimports=[
         "kivy.core.window.window_sdl2",
@@ -21,18 +16,13 @@ a = Analysis(  # noqa: F821
         "kivy.core.image.img_sdl2",
         "kivy.core.text.text_sdl2",
         "kivy.core.clipboard.clipboard_sdl2",
-        # "network_puzzles.gui",
     ],
     hookspath=[],
-    # hookspath=hookspath(),
     hooksconfig={},
     runtime_hooks=[],
-    # runtime_hooks=runtime_hooks(),
     exludes=[],
-    # excludes=["network_puzzles.gui"],  # this overides hiddenimports above
     noarchive=False,
     optimize=0,
-    # **get_deps_all(),  # added
 )
 pyz = PYZ(a.pure)  # noqa: F821
 
