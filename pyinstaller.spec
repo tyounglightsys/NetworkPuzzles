@@ -9,7 +9,7 @@ a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
     binaries=[("mesa/x64/opengl32.dll", ".")],  # default =[]
-    datas=collect_data_files("network_puzzles"),  # default =[]
+    datas=collect_data_files("network_puzzles.gui"),  # default =[]
     hiddenimports=[
         "kivy.core.window.window_sdl2",
         "kivy.core.audio.audio_sdl2",
