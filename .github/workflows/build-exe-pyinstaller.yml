@@ -75,8 +75,9 @@ jobs:
         env:
           KIVY_NO_CONSOLELOG: 1 # blocks colored console logging
           KIVY_NO_ENV_CONFIG: 1
+          KIVY_GL_BACKEND: dummy # prevents openGL error
           KIVY_WINDOW: dummy # prevents openGL error
-          PYI_LOG_LEVEL: TRACE
+          PYI_LOG_LEVEL: DEBUG
         run: |
           pyinstaller \
             --clean \
