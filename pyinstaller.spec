@@ -26,7 +26,7 @@ a = Analysis(  # noqa: F821
     hooksconfig={},
     runtime_hooks=[],
     # runtime_hooks=runtime_hooks(),
-    excludes=[],
+    excludes=["kivy.core.camera"],
     noarchive=False,
     optimize=0,
     # **get_deps_all(),  # added
