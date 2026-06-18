@@ -1,20 +1,14 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-import logging
-
 from kivy_deps import glew, sdl2
 
-for f in Tree("mesa/x64"):  # noqa: F821
-    logging.debug(f"mesa/x64 TOC entry: {f}")
 options = [("v", None, "OPTION")]
 
 a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
-    # binaries=[],
-    # binaries=[*[(f[1], f[0]) for f in Tree("mesa/x64")]],  # noqa: F821
-    binaries=[("mesa/x64/opengl32.dll", ".")],
-    datas=[],
+    binaries=[("mesa/x64/opengl32.dll", ".")],  # default =[]
+    datas=collect_data_files("network_puzzles"),  # noqa: F821
     hiddenimports=[
         "kivy.core.window.window_sdl2",
         "kivy.core.audio.audio_sdl2",
@@ -25,7 +19,7 @@ a = Analysis(  # noqa: F821
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
-    exludes=[],
+    exludes=["docutils", "unittest"],
     noarchive=False,
     optimize=0,
 )
