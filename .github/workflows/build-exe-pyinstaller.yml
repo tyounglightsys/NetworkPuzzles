@@ -79,7 +79,6 @@ jobs:
         run: |
           pyinstaller \
             --clean \
-            --debug=imports \
             --noconfirm \
             pyinstaller.spec 2>&1 | tee pyinstaller.log
           echo "return code = $?"

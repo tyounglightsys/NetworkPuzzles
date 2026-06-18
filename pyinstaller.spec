@@ -8,6 +8,8 @@
 # )
 from kivy_deps import glew, sdl2
 
+options = [("v", None, "OPTION")]
+
 a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
@@ -26,7 +28,7 @@ a = Analysis(  # noqa: F821
     hooksconfig={},
     runtime_hooks=[],
     # runtime_hooks=runtime_hooks(),
-    excludes=["kivy.core.camera"],
+    excludes=["kivy.metrics"],
     noarchive=False,
     optimize=0,
     # **get_deps_all(),  # added
