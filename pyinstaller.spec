@@ -1,6 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 from kivy_deps import glew, sdl2
+from PyInstaller.utils.hooks import collect_data_files
 
 options = [("v", None, "OPTION")]
 
@@ -8,7 +9,7 @@ a = Analysis(  # noqa: F821
     ["src/main.py"],
     pathex=[],
     binaries=[("mesa/x64/opengl32.dll", ".")],  # default =[]
-    datas=collect_data_files("network_puzzles"),  # noqa: F821
+    datas=collect_data_files("network_puzzles"),  # default =[]
     hiddenimports=[
         "kivy.core.window.window_sdl2",
         "kivy.core.audio.audio_sdl2",
