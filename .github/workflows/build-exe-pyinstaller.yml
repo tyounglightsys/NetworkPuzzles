@@ -95,15 +95,13 @@ jobs:
       #     clean_checkout: false # don't remove existing files from workdir
 
       - name: Check sys info
-        # if: false # skip for now
+        if: always()
         shell: bash
         run: |
           echo "ENV:"
           env | sort
           echo "./build:"
           tree build/
-          # ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Scripts\\
-          # ls -l ${RUNNER_TOOL_CACHE}\\Python\\3.12.10\\x64\\Lib\\site-packages\\
 
       - name: Upload Executable
         id: artifact_upload
