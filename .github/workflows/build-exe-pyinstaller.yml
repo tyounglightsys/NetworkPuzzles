@@ -100,8 +100,9 @@ jobs:
         run: |
           echo "ENV:"
           env | sort
+          echo
           echo "./build:"
-          tree build/
+          ls -l build/
 
       - name: Upload Executable
         id: artifact_upload
