@@ -23,20 +23,21 @@ options = [("v", None, "OPTION")]
 a = Analysis(
     ["src\\main.py"],
     pathex=[],
-    binaries=[("mesa\\x64\\opengl32.dll", ".")],  # default =[]
+    # binaries=[("mesa\\x64\\opengl32.dll", ".")],  # default =[]
+    binaries=[],
     # datas=collect_data_files("network_puzzles.gui"),  # default =[]  # doesn't collect anything
     datas=[],
-    hiddenimports=[
-        "kivy.core.window.window_sdl2",
-        # "kivy.core.audio.audio_sdl2",
-        "kivy.core.image.img_sdl2",
-        "kivy.core.text.text_sdl2",
-        "kivy.core.clipboard.clipboard_sdl2",
-    ],
+    # hiddenimports=[
+    #     "kivy.core.window.window_sdl2",
+    #     "kivy.core.audio.audio_sdl2",
+    #     "kivy.core.image.img_sdl2",
+    #     "kivy.core.text.text_sdl2",
+    #     "kivy.core.clipboard.clipboard_sdl2",
+    # ],
     hookspath=hookspath(),  # default =[]
     hooksconfig={},
     runtime_hooks=runtime_hooks(),  # default =[]
-    excludes=["docutils", "unittest"],
+    # excludes=["docutils", "unittest"],
     noarchive=False,
     optimize=0,
     **get_deps_minimal(audio=None, video=None),
