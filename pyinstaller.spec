@@ -34,7 +34,12 @@ a = Analysis(
     ],
     excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
     # datas=collect_data_files("network_puzzles"),  # finds nothing
-    datas=[*Tree("src\\network_puzzles\\", excludes="*.py", prefix="network_puzzles")],
+    datas=[
+        (f[1], f[0])
+        for f in Tree(
+            "src\\network_puzzles\\", excludes="*.py", prefix="network_puzzles"
+        )
+    ],
     hookspath=hookspath(),  # default =[]
     hooksconfig={},
     runtime_hooks=runtime_hooks(),  # default =[]
