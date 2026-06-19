@@ -27,7 +27,9 @@ minimal_deps = get_deps_minimal(
 )
 
 network_puzzles_tree = Tree(
-    "src\\network_puzzles\\", excludes=["*.py"], prefix="network_puzzles"
+    "src\\network_puzzles",
+    excludes=["*.py"],
+    prefix="network_puzzles",
 )
 network_puzzles_datas = [(f[1], f[0]) for f in network_puzzles_tree]
 
@@ -55,6 +57,10 @@ a = Analysis(
     optimize=0,
 )
 pyz = PYZ(a.pure)
+
+logging.debug(f"{a.datas=}")
+if len(network_puzzles_datas) == 0:
+    sys.exit(1)
 
 exe = EXE(
     pyz,
