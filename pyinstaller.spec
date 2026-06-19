@@ -37,17 +37,14 @@ a = Analysis(
     pathex=[],
     # binaries=[("mesa\\x64\\opengl32.dll", ".")],  # default =[]
     binaries=[*minimal_deps.get("binaries", []), ("mesa\\x64\\opengl32.dll", ".")],
-    hiddenimports=[*minimal_deps.get("hiddenimports", [])],
+    hiddenimports=[
+        *minimal_deps.get("hiddenimports", []),
+        "kivy.core.window.window_sdl2",  # somehow gets missed
+        "kivy.core.clipboard.clipboard_sdl2",
+    ],
     excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
     # datas=collect_data_files("network_puzzles"),  # finds nothing
     datas=[],
-    # hiddenimports=[
-    #     "kivy.core.window.window_sdl2",
-    #     "kivy.core.audio.audio_sdl2",
-    #     "kivy.core.image.img_sdl2",
-    #     "kivy.core.text.text_sdl2",
-    #     "kivy.core.clipboard.clipboard_sdl2",
-    # ],
     hookspath=hookspath(),  # default =[]
     hooksconfig={},
     runtime_hooks=runtime_hooks(),  # default =[]
