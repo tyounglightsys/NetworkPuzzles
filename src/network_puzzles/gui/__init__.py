@@ -260,6 +260,7 @@ class NetworkPuzzlesApp(App):
                 disabled = True
             wid.disabled = disabled
 
+        logging.debug(f"{self.root.ids=}")
         set_state(self.root.ids.undo, session.undolist)
         set_state(self.root.ids.redo, session.redolist)
 
