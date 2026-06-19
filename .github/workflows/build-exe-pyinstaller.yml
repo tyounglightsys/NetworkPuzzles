@@ -54,8 +54,7 @@ jobs:
         shell: bash
         env:
           KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
-          KIVY_GL_BACKEND: dummy # prevents openGL error
-          # KIVY_WINDOW: dummy
+          KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
           PYI_LOG_LEVEL: DEBUG
         run: |
           pyinstaller \
@@ -79,7 +78,7 @@ jobs:
         id: artifact_upload
         uses: actions/upload-artifact@v7
         with:
-          name: NetworkPuzzles
+          name: pyinstaller-exe
           path: ./dist
           compression-level: 0
 
@@ -87,14 +86,14 @@ jobs:
         if: ${{ steps.pyinstaller.conclusion == 'success' }}
         uses: actions/upload-artifact@v7
         with:
-          name: build-files
+          name: pyinstaller-build-files
           path: ./build/pyinstaller
 
       - name: Upload kivy & pyinstaller logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: logs
+          name: pyinstaller-logs
           # include-hidden-files: true  # needed for .kivy dir
           path: |
             # ~\\.kivy\\logs\\*.txt  # different root; requires separate step
