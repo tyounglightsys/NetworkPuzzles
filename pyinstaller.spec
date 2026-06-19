@@ -19,14 +19,27 @@ options = [("v", None, "OPTION")]
 # ]
 # logging.debug(f"{kvs=}")
 
+# returns dict with keys 'binaries', 'hiddenimports', and 'excludes'
+# Ref: https://github.com/kivy/kivy/blob/master/kivy/tools/packaging/pyinstaller_hooks/__init__.py
+minimal_deps = get_deps_minimal(
+    audio=None,
+    camera=None,
+    clipboard=True,
+    image=True,
+    spelling=True,
+    text=True,
+    video=None,
+    window=True,
+)
+
 a = Analysis(
     ["src\\main.py"],
     pathex=[],
     # binaries=[("mesa\\x64\\opengl32.dll", ".")],  # default =[]
-    # binaries=[],
-    datas=collect_data_files(
-        "network_puzzles"
-    ),  # default =[]  # doesn't collect anything
+    binaries=[*minimal_deps.get("binaries", []), ("mesa\\x64\\opengl32.dll", ".")],
+    hiddenimports=[*minimal_deps.get("hiddenimports", [])],
+    excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
+    datas=collect_data_files("network_puzzles"),  # default =[]
     # hiddenimports=[
     #     "kivy.core.window.window_sdl2",
     #     "kivy.core.audio.audio_sdl2",
@@ -37,21 +50,8 @@ a = Analysis(
     hookspath=hookspath(),  # default =[]
     hooksconfig={},
     runtime_hooks=runtime_hooks(),  # default =[]
-    # excludes=["docutils", "unittest"],
     noarchive=False,
     optimize=0,
-    # returns 'binaries', 'hiddenimports', and 'excludes'
-    # Ref: https://github.com/kivy/kivy/blob/master/kivy/tools/packaging/pyinstaller_hooks/__init__.py
-    **get_deps_minimal(
-        audio=None,
-        camera=None,
-        clipboard=True,
-        image=True,
-        spelling=True,
-        text=True,
-        video=None,
-        window=True,
-    ),
 )
 pyz = PYZ(a.pure)
 

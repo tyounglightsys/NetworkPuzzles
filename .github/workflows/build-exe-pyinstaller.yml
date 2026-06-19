@@ -54,7 +54,7 @@ jobs:
         shell: bash
         env:
           KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
-          KIVY_GL_BACKEND: dummy # prevents openGL error
+          # KIVY_GL_BACKEND: dummy # prevents openGL error
           PYI_LOG_LEVEL: DEBUG
         run: |
           pyinstaller \
