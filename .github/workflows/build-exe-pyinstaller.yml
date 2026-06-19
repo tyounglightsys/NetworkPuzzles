@@ -94,9 +94,9 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: logs
-          include-hidden-files: true
+          # include-hidden-files: true  # needed for .kivy dir
           path: |
-            ~\\.kivy\\logs\\*.txt
+            # ~\\.kivy\\logs\\*.txt  # different root; requires separate step
             pyinstaller.log
             pyinstaller-files.txt
             build/pyinstaller/*.txt
