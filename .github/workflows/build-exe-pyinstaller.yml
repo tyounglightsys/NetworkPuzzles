@@ -2,11 +2,11 @@ name: Build EXE file w/ PyInstaller GH Action
 on:
   workflow_dispatch:
   pull_request:
-    paths:
-      - .github/workflows/*exe*
-      - src/network_puzzles/**
     branches:
       - main
+    paths:
+      - ".github/workflows/*exe*"
+      - "src/network_puzzles/**"
   # push:
   #   branches:
   #     - main
