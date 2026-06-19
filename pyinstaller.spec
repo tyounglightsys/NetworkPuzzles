@@ -2,6 +2,7 @@
 
 import logging
 import sys
+from pathlib import Path
 
 from kivy.tools.packaging.pyinstaller_hooks import (
     # get_deps_all,
@@ -10,8 +11,6 @@ from kivy.tools.packaging.pyinstaller_hooks import (
     runtime_hooks,
 )
 from kivy_deps import glew, sdl2
-
-# from PyInstaller.utils.hooks import collect_data_files
 
 # returns dict with keys 'binaries', 'hiddenimports', and 'excludes'
 # Ref: https://github.com/kivy/kivy/blob/master/kivy/tools/packaging/pyinstaller_hooks/__init__.py
@@ -31,9 +30,8 @@ network_puzzles_tree = Tree(
     excludes=["*.py"],
     prefix="network_puzzles",
 )
-network_puzzles_datas = [(f[1], f[0]) for f in network_puzzles_tree]
+network_puzzles_datas = [(f[1], str(Path(f[0]).parent)) for f in network_puzzles_tree]
 
-logging.debug(f"{network_puzzles_tree=}")
 logging.debug(f"{network_puzzles_datas=}")
 if len(network_puzzles_datas) == 0:
     sys.exit(1)
@@ -57,10 +55,6 @@ a = Analysis(
     optimize=0,
 )
 pyz = PYZ(a.pure)
-
-logging.debug(f"{a.datas=}")
-if len(network_puzzles_datas) == 0:
-    sys.exit(1)
 
 exe = EXE(
     pyz,
