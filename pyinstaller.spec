@@ -1,8 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-# import logging
-
-# from pathlib import Path
 from kivy.tools.packaging.pyinstaller_hooks import (
     # get_deps_all,
     get_deps_minimal,
@@ -10,14 +7,8 @@ from kivy.tools.packaging.pyinstaller_hooks import (
     runtime_hooks,
 )
 from kivy_deps import glew, sdl2
-from PyInstaller.utils.hooks import collect_data_files
 
-options = [("v", None, "OPTION")]
-# kvs = [
-#     (str(f), "./network_puzzles/gui/")
-#     for f in Path("src/network_puzzles/gui").glob("*.kv")
-# ]
-# logging.debug(f"{kvs=}")
+# from PyInstaller.utils.hooks import collect_data_files
 
 # returns dict with keys 'binaries', 'hiddenimports', and 'excludes'
 # Ref: https://github.com/kivy/kivy/blob/master/kivy/tools/packaging/pyinstaller_hooks/__init__.py
@@ -35,12 +26,11 @@ minimal_deps = get_deps_minimal(
 a = Analysis(
     ["src\\main.py"],
     pathex=[],
-    # binaries=[("mesa\\x64\\opengl32.dll", ".")],  # default =[]
     binaries=[*minimal_deps.get("binaries", []), ("mesa\\x64\\opengl32.dll", ".")],
     hiddenimports=[
         *minimal_deps.get("hiddenimports", []),
         "kivy.core.window.window_sdl2",  # somehow gets missed
-        "kivy.core.clipboard.clipboard_sdl2",
+        "kivy.core.clipboard.clipboard_sdl2",  # somehow gets missed
     ],
     excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
     # datas=collect_data_files("network_puzzles"),  # finds nothing
@@ -55,7 +45,9 @@ pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
-    Tree("src\\network_puzzles\\"),  # explicitly grab full src code
+    Tree(
+        "src\\network_puzzles\\", prefix="network_puzzles"
+    ),  # explicitly grab full src code
     a.scripts,
     a.binaries,
     a.datas,
