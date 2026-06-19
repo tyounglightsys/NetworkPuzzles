@@ -67,7 +67,6 @@ jobs:
             --clean \
             --noconfirm \
             pyinstaller.spec 2>&1 | tee pyinstaller.log
-          echo "return code = $?"
 
       # - name: Build EXE with PyInstaller Action
       #   uses: n8marti/pyinstaller@main
@@ -79,6 +78,11 @@ jobs:
       #     options: "--paths=${{ github.workspace }}\\mesa\\x64, --log-level=TRACE"
       #     upload_exe_with_name: "NetworkPuzzles"
       #     clean_checkout: false # don't remove existing files from workdir
+
+      - name: Log dist files
+        if: always()
+        shell: bash
+        run: ls -l dist/ > pyinstaller-dist-files.txt
 
       - name: Upload Executable
         id: artifact_upload
@@ -103,6 +107,7 @@ jobs:
           name: pyinstaller-logs
           path: |
             pyinstaller.log
+            pyinstaller-dist-files.txt
             build/pyinstaller/*.dot
             build/pyinstaller/*.html
             build/pyinstaller/*.txt
