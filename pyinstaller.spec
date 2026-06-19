@@ -39,7 +39,8 @@ a = Analysis(
     binaries=[*minimal_deps.get("binaries", []), ("mesa\\x64\\opengl32.dll", ".")],
     hiddenimports=[*minimal_deps.get("hiddenimports", [])],
     excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
-    datas=collect_data_files("network_puzzles"),  # default =[]
+    # datas=collect_data_files("network_puzzles"),  # finds nothing
+    datas=[],
     # hiddenimports=[
     #     "kivy.core.window.window_sdl2",
     #     "kivy.core.audio.audio_sdl2",
@@ -57,7 +58,7 @@ pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
-    # Tree("src\\network_puzzles\\gui\\"),
+    Tree("src\\network_puzzles\\"),  # explicitly grab full src code
     a.scripts,
     a.binaries,
     a.datas,
