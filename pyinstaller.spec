@@ -49,7 +49,7 @@ a = Analysis(
     ],
     excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
     # datas=collect_data_files("network_puzzles"),  # finds nothing
-    datas=[],
+    datas=[*network_puzzles_datas],
     hookspath=hookspath(),  # default =[]
     hooksconfig={},
     runtime_hooks=runtime_hooks(),  # default =[]
