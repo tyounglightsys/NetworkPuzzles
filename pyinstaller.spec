@@ -24,7 +24,7 @@ a = Analysis(
     ["src\\main.py"],
     pathex=[],
     # binaries=[("mesa\\x64\\opengl32.dll", ".")],  # default =[]
-    binaries=[],
+    # binaries=[],
     # datas=collect_data_files("network_puzzles.gui"),  # default =[]  # doesn't collect anything
     datas=[],
     # hiddenimports=[
