@@ -74,7 +74,7 @@ jobs:
           ls -l dist/ | tee -a pyinstaller-files.txt
 
       - name: Upload Executable
-        if: steps.pyinstaller.conclusion == "success"
+        if: steps.pyinstaller.status == "success"
         id: artifact_upload
         uses: actions/upload-artifact@v7
         with:
@@ -83,7 +83,7 @@ jobs:
           compression-level: 0
 
       - name: Upload build files
-        if: steps.pyinstaller.conclusion == "success"
+        if: steps.pyinstaller.status == "success"
         uses: actions/upload-artifact@v7
         with:
           name: build-files
