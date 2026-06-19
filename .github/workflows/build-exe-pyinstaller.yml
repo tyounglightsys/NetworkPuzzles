@@ -79,10 +79,16 @@ jobs:
       #     upload_exe_with_name: "NetworkPuzzles"
       #     clean_checkout: false # don't remove existing files from workdir
 
-      - name: Log dist files
+      - name: Log build/dist files
         if: always()
         shell: bash
-        run: ls -l dist/ > pyinstaller-dist-files.txt
+        run: |
+          echo "build:" | tee -a pyinstaller-files.txt
+          ls -l build/ | tee -a pyinstaller-files.txt
+          echo "build/pyinstaller:" | tee -a pyinstaller-files.txt
+          ls -l build/pyinstaller/ | tee -a pyinstaller-files.txt
+          echo "dist:" | tee -a pyinstaller-files.txt
+          ls -l dist/ | tee -a pyinstaller-files.txt
 
       - name: Upload Executable
         id: artifact_upload
@@ -107,7 +113,7 @@ jobs:
           name: pyinstaller-logs
           path: |
             pyinstaller.log
-            pyinstaller-dist-files.txt
+            pyinstaller-files.txt
             build/pyinstaller/*.dot
             build/pyinstaller/*.html
             build/pyinstaller/*.txt

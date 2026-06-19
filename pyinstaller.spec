@@ -1,6 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-import logging
+# import logging
 
 # from pathlib import Path
 from kivy.tools.packaging.pyinstaller_hooks import (
@@ -10,8 +10,7 @@ from kivy.tools.packaging.pyinstaller_hooks import (
     runtime_hooks,
 )
 from kivy_deps import glew, sdl2
-
-# from PyInstaller.utils.hooks import collect_data_files
+from PyInstaller.utils.hooks import collect_data_files
 
 options = [("v", None, "OPTION")]
 # kvs = [
@@ -25,8 +24,9 @@ a = Analysis(
     pathex=[],
     # binaries=[("mesa\\x64\\opengl32.dll", ".")],  # default =[]
     # binaries=[],
-    # datas=collect_data_files("network_puzzles.gui"),  # default =[]  # doesn't collect anything
-    datas=[],
+    datas=collect_data_files(
+        "network_puzzles"
+    ),  # default =[]  # doesn't collect anything
     # hiddenimports=[
     #     "kivy.core.window.window_sdl2",
     #     "kivy.core.audio.audio_sdl2",
@@ -40,13 +40,24 @@ a = Analysis(
     # excludes=["docutils", "unittest"],
     noarchive=False,
     optimize=0,
-    **get_deps_minimal(audio=None, video=None),
+    # returns 'binaries', 'hiddenimports', and 'excludes'
+    # Ref: https://github.com/kivy/kivy/blob/master/kivy/tools/packaging/pyinstaller_hooks/__init__.py
+    **get_deps_minimal(
+        audio=None,
+        camera=None,
+        clipboard=True,
+        image=True,
+        spelling=True,
+        text=True,
+        video=None,
+        window=True,
+    ),
 )
 pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
-    Tree("src\\network_puzzles\\gui\\"),
+    # Tree("src\\network_puzzles\\gui\\"),
     a.scripts,
     a.binaries,
     a.datas,
