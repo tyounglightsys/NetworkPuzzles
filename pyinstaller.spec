@@ -34,7 +34,7 @@ a = Analysis(
     ],
     excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
     # datas=collect_data_files("network_puzzles"),  # finds nothing
-    datas=[],
+    datas=[*Tree("src\\network_puzzles\\", excludes="*.py", prefix="network_puzzles")],
     hookspath=hookspath(),  # default =[]
     hooksconfig={},
     runtime_hooks=runtime_hooks(),  # default =[]
@@ -45,9 +45,9 @@ pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
-    Tree(
-        "src\\network_puzzles\\", prefix="network_puzzles"
-    ),  # explicitly grab full src code
+    # Tree(
+    #     "src\\network_puzzles\\", prefix="network_puzzles"
+    # ),  # explicitly grab full src code
     a.scripts,
     a.binaries,
     a.datas,
