@@ -34,13 +34,10 @@ a = Analysis(
     excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
     # datas=collect_data_files("network_puzzles"),  # finds nothing
     # datas=[*network_puzzles_datas],
-    # datas=[
-    #     ("src\\network_puzzles\\gui\\*.kv", "network_puzzles\\gui"),
-    #     ("src\\network_puzzles\\resources", "network_puzzles\\resources"),
-    # ],
     datas=[
+        # ("src\\network_puzzles\\gui\\*.kv", "network_puzzles\\gui"),
         ("src\\network_puzzles\\gui\\*.kv", "."),
-        ("src\\network_puzzles\\resources", "."),
+        ("src\\network_puzzles\\resources", "network_puzzles\\resources"),
     ],
     hookspath=hookspath(),  # default =[]
     hooksconfig={},
