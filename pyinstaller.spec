@@ -1,9 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-import logging
-import sys
-from pathlib import Path
-
 from kivy.tools.packaging.pyinstaller_hooks import (
     # get_deps_all,
     get_deps_minimal,
@@ -25,16 +21,6 @@ minimal_deps = get_deps_minimal(
     window=True,
 )
 
-# network_puzzles_tree = Tree(
-#     "src\\network_puzzles",
-#     excludes=["*.py"],
-#     prefix="network_puzzles",
-# )
-# network_puzzles_datas = [(f[1], str(Path(f[0]).parent)) for f in network_puzzles_tree]
-
-# logging.debug(f"{network_puzzles_datas=}")
-# if len(network_puzzles_datas) == 0:
-#     sys.exit(1)
 
 a = Analysis(
     ["src\\main.py"],
@@ -48,9 +34,13 @@ a = Analysis(
     excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
     # datas=collect_data_files("network_puzzles"),  # finds nothing
     # datas=[*network_puzzles_datas],
+    # datas=[
+    #     ("src\\network_puzzles\\gui\\*.kv", "network_puzzles\\gui"),
+    #     ("src\\network_puzzles\\resources", "network_puzzles\\resources"),
+    # ],
     datas=[
-        ("src\\network_puzzles\\gui\\*.kv", "network_puzzles\\gui"),
-        ("src\\network_puzzles\\resources", "network_puzzles\\resources"),
+        ("src\\network_puzzles\\gui\\*.kv", "."),
+        ("src\\network_puzzles\\resources", "."),
     ],
     hookspath=hookspath(),  # default =[]
     hooksconfig={},
