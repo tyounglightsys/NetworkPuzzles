@@ -37,7 +37,7 @@ jobs:
         shell: bash
         run: |
           file=src/network_puzzles/gui/networkpuzzles.kv
-          sed -i 's@network_puzzles/gui/@network_puzzles\\\\gui\\\\g' "$file"
+          sed -i 's@network_puzzles/gui/@network_puzzles\\\\gui\\\\@g' "$file"
           cat "$file" > networkpuzzles_mod.log
 
       - name: Install PyInstaller
