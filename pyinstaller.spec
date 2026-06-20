@@ -50,7 +50,7 @@ a = Analysis(
     # datas=[*network_puzzles_datas],
     datas=[
         ("src\\network_puzzles\\gui\\*.kv", "network_puzzles\\gui"),
-        ("src\\network_puzzles\\resources\\**.*", "network_puzzles\\resources"),
+        ("src\\network_puzzles\\resources", "network_puzzles"),
     ],
     hookspath=hookspath(),  # default =[]
     hooksconfig={},
