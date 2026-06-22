@@ -47,57 +47,17 @@ jobs:
           # Install Kivy window/audio dependencies explicitly for Windows
           # python -m pip install kivy.deps.sdl2 kivy.deps.glew pypiwin32
 
-      - name: Install OpenGL fallback
-        shell: powershell
-        run: |
-          # Install OpenGL support
-          $version = "26.1.1"
-          $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-mingw.7z"
-          Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
-          & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
-
-      # - name: Run PyInstaller
-      #   id: pyinstaller
-      #   shell: bash
-      #   env:
-      #     KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
-      #     KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
-      #     PYI_LOG_LEVEL: DEBUG
+      # - name: Install OpenGL fallback
+      #   shell: powershell
       #   run: |
-      #     pyinstaller \
-      #       --clean \
-      #       --noconfirm \
-      #       pyinstaller.spec 2>&1 | tee pyinstaller.log
+      #     # Install OpenGL support
+      #     $version = "26.1.1"
+      #     $url = "https://github.com/pal1000/mesa-dist-win/releases/download/$version/mesa3d-$version-release-mingw.7z"
+      #     Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
+      #     & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
 
-      # - name: Log build/dist files
-      #   if: always()
-      #   shell: bash
-      #   run: |
-      #     echo "build:" | tee -a pyinstaller-files.txt
-      #     ls -l build/ | tee -a pyinstaller-files.txt
-      #     echo "build/pyinstaller:" | tee -a pyinstaller-files.txt
-      #     ls -l build/pyinstaller/ | tee -a pyinstaller-files.txt
-      #     echo "dist:" | tee -a pyinstaller-files.txt
-      #     ls -l dist/ | tee -a pyinstaller-files.txt
-
-      # - name: Upload Executable
-      #   if: ${{ steps.pyinstaller.conclusion == 'success' }}
-      #   id: exe_upload
-      #   uses: actions/upload-artifact@v7
-      #   with:
-      #     name: pyinstaller-exe
-      #     path: ./dist
-      #     compression-level: 0
-
-      # - name: Upload EXE build files
-      #   if: ${{ steps.pyinstaller.conclusion == 'success' }}
-      #   uses: actions/upload-artifact@v7
-      #   with:
-      #     name: pyinstaller-build-files
-      #     path: ./build/pyinstaller
-
-      - name: Run PyInstaller
-        id: pyinstaller-dir
+      - name: Run EXE PyInstaller
+        id: pyinstaller
         shell: bash
         env:
           KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
@@ -107,34 +67,74 @@ jobs:
           pyinstaller \
             --clean \
             --noconfirm \
-            pyinstaller-dir.spec 2>&1 | tee pyinstaller-dir.log
+            pyinstaller.spec 2>&1 | tee pyinstaller.log
 
-      - name: Log build/dist files
+      - name: Log EXE build/dist files
         if: always()
         shell: bash
         run: |
-          echo "build:" | tee -a pyinstaller-dir-files.txt
-          ls -l build/ | tee -a pyinstaller-dir-files.txt
-          echo "build/pyinstaller-dir:" | tee -a pyinstaller-dir-files.txt
-          ls -l build/pyinstaller-dir/ | tee -a pyinstaller-dir-files.txt
-          echo "dist:" | tee -a pyinstaller-dir-files.txt
-          ls -l dist/ | tee -a pyinstaller-dir-files.txt
+          echo "build:" | tee -a pyinstaller-files.txt
+          ls -l build/ | tee -a pyinstaller-files.txt
+          echo "build/pyinstaller:" | tee -a pyinstaller-files.txt
+          ls -l build/pyinstaller/ | tee -a pyinstaller-files.txt
+          echo "dist:" | tee -a pyinstaller-files.txt
+          ls -l dist/ | tee -a pyinstaller-files.txt
 
-      - name: Upload Dir
-        if: ${{ steps.pyinstaller-dir.conclusion == 'success' }}
-        id: dir_upload
+      - name: Upload EXE package
+        if: ${{ steps.pyinstaller.conclusion == 'success' }}
+        id: exe_upload
         uses: actions/upload-artifact@v7
         with:
-          name: pyinstaller-dir
+          name: pyinstaller-exe
           path: ./dist
           compression-level: 0
 
-      - name: Upload DIR build files
-        if: ${{ steps.pyinstaller-dir.conclusion == 'success' }}
+      - name: Upload EXE build files
+        if: ${{ steps.pyinstaller.conclusion == 'success' }}
         uses: actions/upload-artifact@v7
         with:
-          name: pyinstaller-dir-build-files
-          path: ./build/pyinstaller-dir
+          name: pyinstaller-build-files
+          path: ./build/pyinstaller
+
+      # - name: Run DIR PyInstaller
+      #   id: pyinstaller-dir
+      #   shell: bash
+      #   env:
+      #     KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
+      #     KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
+      #     PYI_LOG_LEVEL: DEBUG
+      #   run: |
+      #     pyinstaller \
+      #       --clean \
+      #       --noconfirm \
+      #       pyinstaller-dir.spec 2>&1 | tee pyinstaller-dir.log
+
+      # - name: Log DIR build/dist files
+      #   if: always()
+      #   shell: bash
+      #   run: |
+      #     echo "build:" | tee -a pyinstaller-dir-files.txt
+      #     ls -l build/ | tee -a pyinstaller-dir-files.txt
+      #     echo "build/pyinstaller-dir:" | tee -a pyinstaller-dir-files.txt
+      #     ls -l build/pyinstaller-dir/ | tee -a pyinstaller-dir-files.txt
+      #     echo "dist:" | tee -a pyinstaller-dir-files.txt
+      #     ls -l dist/ | tee -a pyinstaller-dir-files.txt
+
+      # - name: Upload DIR package
+      #   if: ${{ steps.pyinstaller-dir.conclusion == 'success' }}
+      #   id: dir_upload
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: pyinstaller-dir
+      #     path: ./dist
+      #     compression-level: 0
+
+      # - name: Upload DIR build files
+      #   if: ${{ steps.pyinstaller-dir.conclusion == 'success' }}
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: pyinstaller-dir-build-files
+      #     path: ./build/pyinstaller-dir
 
       - name: Upload kivy & pyinstaller logs
         if: always()

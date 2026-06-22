@@ -25,7 +25,7 @@ minimal_deps = get_deps_minimal(
 a = Analysis(
     ["src\\main.py"],
     pathex=[],
-    binaries=[*minimal_deps.get("binaries", []), ("mesa\\x64\\opengl32.dll", ".")],
+    binaries=[*minimal_deps.get("binaries", [])],
     datas=[
         ("src\\network_puzzles\\gui\\*.kv", "network_puzzles\\gui"),
         ("src\\network_puzzles\\resources", "network_puzzles\\resources"),
@@ -46,9 +46,6 @@ pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
-    # Tree(
-    #     "src\\network_puzzles\\", prefix="network_puzzles"
-    # ),  # explicitly grab full src code
     a.scripts,
     a.binaries,
     a.datas,
