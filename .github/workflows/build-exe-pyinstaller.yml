@@ -82,7 +82,7 @@ jobs:
 
       - name: Upload Executable
         if: ${{ steps.pyinstaller.conclusion == 'success' }}
-        id: artifact_upload
+        id: exe_upload
         uses: actions/upload-artifact@v7
         with:
           name: pyinstaller-exe
@@ -113,9 +113,9 @@ jobs:
           echo "dist:" | tee -a pyinstaller-dir-files.txt
           ls -l dist/ | tee -a pyinstaller-dir-files.txt
 
-      - name: Upload Executable
+      - name: Upload Dir
         if: ${{ steps.pyinstaller-dir.conclusion == 'success' }}
-        id: artifact_upload
+        id: dir_upload
         uses: actions/upload-artifact@v7
         with:
           name: pyinstaller-exe
