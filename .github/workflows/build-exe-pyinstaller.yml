@@ -33,13 +33,6 @@ jobs:
         shell: bash
         run: python -m pip install .
 
-      # - name: Change slashes in src/network_puzzles/gui/networkpuzzles.kv.
-      #   shell: bash
-      #   run: |
-      #     file=src/network_puzzles/gui/networkpuzzles.kv
-      #     sed -i 's@network_puzzles/gui/@network_puzzles\\\\gui\\\\@g' "$file"
-      #     cat "$file" > networkpuzzles_mod.log
-
       - name: Install PyInstaller
         shell: bash
         run: |
