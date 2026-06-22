@@ -1,0 +1,4 @@
+load Level1_Practice4
+set net_switch3 power off
+set net_switch3 power on
+ping server0 server1

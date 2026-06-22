@@ -1,0 +1,4 @@
+load Level1_Practice7
+delete net_hub0_link_net_hub2
+dhcp pc4
+ping pc4 google.com

@@ -4652,7 +4652,7 @@
       "nettest": [
         {
           "shost": "net_switch3",
-          "dhost": "net_switch1",
+          "dhost": "net_switch3",
           "thetest": "DeviceIsFrozen"
         },
         {

@@ -1,0 +1,6 @@
+load Level1_NoGateway
+set pc0 gw 192.168.1.1
+set net_switch1 gw 192.168.1.1
+set net_switch0 gw 192.168.2.1
+set pc2 gw 192.168.2.1
+set pc1 gw 192.168.2.1

@@ -1,0 +1,6 @@
+load Level1_Practice2
+set server0 power on
+dhcp pc6
+set pc6 gateway 192.168.1.1
+ping pc6 server0
+ping pc2 server0

@@ -1,0 +1,7 @@
+load Level1_Practice5
+set server0 dhcp 192.168.1.2 192.168.1.20-192.168.1.40
+dhcp
+ping pc4 server0
+ping pc5 server0
+ping laptop0 server0
+ping laptop1 server0
