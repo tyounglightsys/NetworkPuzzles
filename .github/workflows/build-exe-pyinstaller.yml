@@ -13,7 +13,10 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, windows-latest]
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
@@ -69,7 +72,7 @@ jobs:
         id: exe_upload
         uses: actions/upload-artifact@v7
         with:
-          name: pyinstaller-exe
+          name: pyinstaller-${{ matrix.os }}
           path: ./dist
           compression-level: 0
 
@@ -77,7 +80,7 @@ jobs:
         if: ${{ steps.pyinstaller.conclusion == 'success' }}
         uses: actions/upload-artifact@v7
         with:
-          name: pyinstaller-build-files
+          name: pyinstaller-build-files-${{ matrix.os }}
           path: ./build/pyinstaller
 
       # - name: Run DIR PyInstaller
@@ -124,7 +127,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: pyinstaller-logs
+          name: pyinstaller-logs-${{ matrix.os }}
           # include-hidden-files: true  # needed for .kivy dir
           path: |
             # ~\\.kivy\\logs\\*.txt  # different root; requires separate step
