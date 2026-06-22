@@ -76,10 +76,12 @@ class NetworkPuzzlesApp(App):
             # Force orientation to landscape.
             Window.orientation = 0
             # Force loglevel to DEBUG.
-            logger = logging.getLogger()
-            logger.level = logging.DEBUG
             self.packet_tick_delay = 0.04  # packet pos refresh rate in seconds
             self.packet_progress_rate = 6  # % of link traveled each tick
+
+        # TODO: Forcing log level to DEBUG for now; consider removing later.
+        logger = logging.getLogger()
+        logger.level = logging.DEBUG
         logging.debug(f"App: {session.device_type=}")
 
         super().__init__(**kwargs)
