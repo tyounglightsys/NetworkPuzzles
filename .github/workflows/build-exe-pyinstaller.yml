@@ -134,7 +134,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: pyinstaller-dir-build-files
-          path: ./build/pyinstaller
+          path: ./build/pyinstaller-dir
 
       - name: Upload kivy & pyinstaller logs
         if: always()
