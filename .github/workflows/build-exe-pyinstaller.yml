@@ -62,7 +62,7 @@ jobs:
       - name: Install Ubuntu PyInstaller deps
         if: ${{ startsWith( matrix.os, 'ubuntu' ) }}
         run: |
-          python -m pip install kivy.deps.sdl2 kivy.deps.glew
+          python -m pip install kivy-deps.sdl2 kivy-deps.glew
 
       # - name: Run EXE PyInstaller (win)
       #   if: ${{ startsWith( matrix.os, 'windows' ) }}
