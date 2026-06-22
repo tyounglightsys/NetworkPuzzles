@@ -59,36 +59,37 @@ jobs:
           # Install Kivy window/audio dependencies explicitly for Windows
           # python -m pip install kivy.deps.sdl2 kivy.deps.glew pypiwin32
 
-      - name: Run EXE PyInstaller (win)
-        if: ${{ startsWith( matrix.os, 'windows' ) }}
-        id: pyinstaller-windows
+      # - name: Run EXE PyInstaller (win)
+      #   if: ${{ startsWith( matrix.os, 'windows' ) }}
+      #   id: pyinstaller-windows
+      #   shell: bash
+      #   env:
+      #     KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
+      #     KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
+      #     PYI_LOG_LEVEL: DEBUG
+      #   run: |
+      #     pyinstaller \
+      #       --clean \
+      #       --noconfirm \
+      #       pyinstaller.spec 2>&1 | tee pyinstaller.log
+
+      - name: Run EXE/BIN PyInstaller
+        id: pyinstaller
         shell: bash
         env:
           KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
           KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
           PYI_LOG_LEVEL: DEBUG
         run: |
-          pyinstaller \
-            --clean \
-            --noconfirm \
-            pyinstaller.spec 2>&1 | tee pyinstaller.log
+          # On ubnut run with xvfb to provide virtual X display
+          opts="--clean --noconfirm pyinstaller.spec"
+          if command -v xvfb-run; then
+            xvfb-run -a pyinstaller $opts 2>&1 | tee pyinstaller.log
+          else
+            pyinstaller $opts 2>&1 | tee pyinstaller.log
+          fi
 
-      - name: Run BIN PyInstaller (linux)
-        if: ${{ startsWith( matrix.os, 'ubuntu' ) }}
-        id: pyinstaller-linux
-        shell: bash
-        env:
-          KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
-          KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
-          PYI_LOG_LEVEL: DEBUG
-        # Run with xvfb to provide virtual X display
-        run: |
-          xvfb-run -a pyinstaller \
-            --clean \
-            --noconfirm \
-            pyinstaller.spec 2>&1 | tee pyinstaller.log
-
-      - name: Log EXE build/dist files
+      - name: Log EXE/BIN build/dist files
         if: always()
         shell: bash
         run: |
@@ -100,7 +101,7 @@ jobs:
           ls -l dist/ | tee -a pyinstaller-files.txt
 
       - name: Upload EXE/BIN package
-        if: ${{ steps.pyinstaller-*.conclusion == 'success' }}
+        if: ${{ steps.pyinstaller.conclusion == 'success' }}
         uses: actions/upload-artifact@v7
         with:
           name: pyinstaller-${{ matrix.os }}
@@ -108,7 +109,7 @@ jobs:
           compression-level: 0
 
       - name: Upload EXE/BIN build files
-        if: ${{ steps.pyinstaller-*.conclusion == 'success' }}
+        if: ${{ steps.pyinstaller.conclusion == 'success' }}
         uses: actions/upload-artifact@v7
         with:
           name: pyinstaller-build-files-${{ matrix.os }}
