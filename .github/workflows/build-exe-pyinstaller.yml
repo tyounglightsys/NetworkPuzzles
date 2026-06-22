@@ -28,7 +28,14 @@ jobs:
           sudo apt-get update
 
           # Install build tools, and dependencies to perform a full build (including SDL2 dependencies)
-          sudo apt-get -y install libgl1-mesa-glx libgles2-mesa libegl1-mesa libmtdev1
+          sudo apt-get -y install \
+            libgl1-mesa-glx \
+            libgles2-mesa \
+            libegl1-mesa \
+            libmtdev1 \
+            xclip \
+            xsel \
+            xvfb
 
       - name: Install Python
         uses: actions/setup-python@v6
@@ -52,7 +59,8 @@ jobs:
           # Install Kivy window/audio dependencies explicitly for Windows
           # python -m pip install kivy.deps.sdl2 kivy.deps.glew pypiwin32
 
-      - name: Run EXE PyInstaller
+      - name: Run EXE PyInstaller (win)
+        if: ${{ startsWith( matrix.os, 'windows' ) }}
         id: pyinstaller
         shell: bash
         env:
@@ -61,6 +69,21 @@ jobs:
           PYI_LOG_LEVEL: DEBUG
         run: |
           pyinstaller \
+            --clean \
+            --noconfirm \
+            pyinstaller.spec 2>&1 | tee pyinstaller.log
+
+      - name: Run BIN PyInstaller (linux)
+        if: ${{ startsWith( matrix.os, 'ubuntu' ) }}
+        id: pyinstaller
+        shell: bash
+        env:
+          KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
+          KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
+          PYI_LOG_LEVEL: DEBUG
+        # Run with xvfb to provide virtual X display
+        run: |
+          xvfb-run -a pyinstaller \
             --clean \
             --noconfirm \
             pyinstaller.spec 2>&1 | tee pyinstaller.log
