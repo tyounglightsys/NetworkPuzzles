@@ -115,8 +115,8 @@ jobs:
         run: |
           echo "build:" | tee -a pyinstaller-dir-files.txt
           ls -l build/ | tee -a pyinstaller-dir-files.txt
-          echo "build/pyinstaller:" | tee -a pyinstaller-dir-files.txt
-          ls -l build/pyinstaller/ | tee -a pyinstaller-dir-files.txt
+          echo "build/pyinstaller-dir:" | tee -a pyinstaller-dir-files.txt
+          ls -l build/pyinstaller-dir/ | tee -a pyinstaller-dir-files.txt
           echo "dist:" | tee -a pyinstaller-dir-files.txt
           ls -l dist/ | tee -a pyinstaller-dir-files.txt
 
