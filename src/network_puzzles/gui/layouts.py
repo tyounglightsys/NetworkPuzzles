@@ -1,7 +1,6 @@
 import logging
 
 from kivy.clock import Clock
-from kivy.metrics import dp, sp
 from kivy.properties import NumericProperty, StringProperty
 from kivy.uix.behaviors import FocusBehavior
 from kivy.uix.boxlayout import BoxLayout
@@ -12,6 +11,8 @@ from kivy.uix.relativelayout import RelativeLayout
 from .. import _, session
 from .base import NETWORK_ITEMS, DeviceIndicator, pos_to_location
 from .buttons import MenuButton
+from .headless import handle_dp as dp
+from .headless import handle_sp as sp
 
 
 class ThemedBoxLayout(BoxLayout):

@@ -1,4 +1,4 @@
-# buildozer docker dirs
+# buildozer & pyinstaller dirs
 .buildozer/
 bin/
 
@@ -38,8 +38,9 @@ MANIFEST
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
-# Include buildozer spec file for automation.
+# Include buildozer & pyinstaller spec files for automation.
 !buildozer.spec
+!pyinstaller*.spec
 
 # Installer logs
 pip-log.txt

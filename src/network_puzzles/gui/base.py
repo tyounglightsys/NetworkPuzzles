@@ -4,13 +4,14 @@ from pathlib import Path
 from typing import Tuple
 
 from kivy.graphics import Color, Ellipse
-from kivy.metrics import dp, sp
 from kivy.properties import StringProperty
 from kivy.uix.checkbox import CheckBox
 from kivy.uix.slider import Slider
 from kivy.uix.widget import Widget
 
 from .. import session
+from .headless import handle_dp as dp
+from .headless import handle_sp as sp
 
 # Size limits
 BUTTON_MAX_H = dp(32)

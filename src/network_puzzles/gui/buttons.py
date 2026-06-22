@@ -2,11 +2,11 @@ import logging
 
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.metrics import dp
 from kivy.properties import StringProperty
 from kivy.uix.button import Button
 
 from .. import session
+from .headless import handle_dp as dp
 from .labels import ToolTip
 
 
