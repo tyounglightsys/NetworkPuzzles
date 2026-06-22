@@ -1,15 +1,10 @@
 import logging
-
-# import os
-import sys
 import traceback
 
 # Remove root logger b/c kivy's logger will handle all logging.
 root_logger = logging.getLogger()
 for handler in root_logger.handlers:
     root_logger.removeHandler(handler)
-
-# from os import getenv
 
 from kivy.config import Config
 
@@ -102,9 +97,6 @@ class NetworkPuzzlesApp(App):
 
         self.packetmgr = PacketManager(self)
         Clock.schedule_interval(self._update_packets, self.packet_tick_delay)
-
-        # Log Python path info.
-        logging.debug(f"{sys.path=}")
 
         # Log config details.
         for sect, data in Config._sections.items():
@@ -260,7 +252,6 @@ class NetworkPuzzlesApp(App):
                 disabled = True
             wid.disabled = disabled
 
-        logging.debug(f"{self.root.ids=}")
         set_state(self.root.ids.undo, session.undolist)
         set_state(self.root.ids.redo, session.redolist)
 
