@@ -21,11 +21,10 @@ minimal_deps = get_deps_minimal(
     window=True,
 )
 
-
 a = Analysis(
-    ["src\\main.py"],
+    ["src/main.py"],
     pathex=[],
-    binaries=[*minimal_deps.get("binaries", []), ("mesa\\x64\\opengl32.dll", ".")],
+    binaries=[],
     datas=[
         ("src\\network_puzzles\\gui\\*.kv", "network_puzzles\\gui"),
         ("src\\network_puzzles\\resources", "network_puzzles\\resources"),
@@ -35,10 +34,10 @@ a = Analysis(
         "kivy.core.window.window_sdl2",  # somehow gets missed
         "kivy.core.clipboard.clipboard_sdl2",  # somehow gets missed
     ],
-    excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
     hookspath=hookspath(),  # default =[]
     hooksconfig={},
     runtime_hooks=runtime_hooks(),  # default =[]
+    excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
     noarchive=False,
     optimize=0,
 )
@@ -46,20 +45,28 @@ pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
-    # Tree(
-    #     "src\\network_puzzles\\", prefix="network_puzzles"
-    # ),  # explicitly grab full src code
     a.scripts,
+    [],
+    exclude_binaries=True,
+    name="NetworkPuzzlesd",
+    debug=True,
+    bootloader_ignore_signals=False,
+    strip=False,
+    upx=True,
+    console=True,
+    disable_windowed_traceback=False,
+    argv_emulation=False,
+    target_arch=None,
+    codesign_identity=None,
+    entitlements_file=None,
+)
+coll = COLLECT(
+    exe,
     a.binaries,
     a.datas,
-    # [],
     *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
-    name="NetworkPuzzles",
-    debug=True,
     strip=False,
     upx=True,
     upx_exclude=[],
-    console=True,
-    disable_windowed_traceback=False,
-    target_arch=None,
+    name="NetworkPuzzlesd",
 )

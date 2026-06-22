@@ -89,6 +89,39 @@ jobs:
           path: ./dist
           compression-level: 0
 
+      - name: Run PyInstaller
+        id: pyinstaller-dir
+        shell: bash
+        env:
+          KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
+          KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
+          PYI_LOG_LEVEL: DEBUG
+        run: |
+          pyinstaller \
+            --clean \
+            --noconfirm \
+            pyinstaller-dir.spec 2>&1 | tee pyinstaller-dir.log
+
+      - name: Log build/dist files
+        if: always()
+        shell: bash
+        run: |
+          echo "build:" | tee -a pyinstaller-dir-files.txt
+          ls -l build/ | tee -a pyinstaller-dir-files.txt
+          echo "build/pyinstaller:" | tee -a pyinstaller-dir-files.txt
+          ls -l build/pyinstaller/ | tee -a pyinstaller-dir-files.txt
+          echo "dist:" | tee -a pyinstaller-dir-files.txt
+          ls -l dist/ | tee -a pyinstaller-dir-files.txt
+
+      - name: Upload Executable
+        if: ${{ steps.pyinstaller-dir.conclusion == 'success' }}
+        id: artifact_upload
+        uses: actions/upload-artifact@v7
+        with:
+          name: pyinstaller-exe
+          path: ./dist
+          compression-level: 0
+
       - name: Upload build files
         if: ${{ steps.pyinstaller.conclusion == 'success' }}
         uses: actions/upload-artifact@v7

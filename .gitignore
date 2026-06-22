@@ -40,7 +40,7 @@ MANIFEST
 *.spec
 # Include buildozer & pyinstaller spec files for automation.
 !buildozer.spec
-!pyinstaller.spec
+!pyinstaller*.spec
 
 # Installer logs
 pip-log.txt
