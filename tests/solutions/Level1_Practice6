@@ -1,0 +1,6 @@
+load Level1_Practice6
+show net_switch0_link_net_switch5
+replace net_switch0_link_net_switch5
+dhcp pc4
+ping pc4 server0
+ping pc4 google.com

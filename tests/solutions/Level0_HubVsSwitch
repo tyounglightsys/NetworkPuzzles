@@ -1,0 +1,5 @@
+load Level0_HubVsSwitch
+ping server0 pc0
+ping pc0 server0
+ping pc1 server1
+ping server1 pc1

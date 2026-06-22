@@ -1,7 +1,7 @@
 {
   "EduNetworkBuilder": {
     "Network": {
-      "en_message": null,
+      "en_message": "",
       "en_title": "Practice4",
       "en_url": null,
       "height": "1024",
@@ -4448,7 +4448,7 @@
           "SrcNic": {
             "hostid": "190",
             "nicid": "192",
-            "hostname": "server0",
+            "hostname": "google.com",
             "nicname": "eth0"
           },
           "DstNic": {
@@ -4652,7 +4652,7 @@
       "nettest": [
         {
           "shost": "net_switch3",
-          "dhost": "net_switch1",
+          "dhost": "net_switch3",
           "thetest": "DeviceIsFrozen"
         },
         {

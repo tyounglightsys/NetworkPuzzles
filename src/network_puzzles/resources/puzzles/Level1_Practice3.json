@@ -1,7 +1,7 @@
 {
   "EduNetworkBuilder": {
     "Network": {
-      "en_message": null,
+      "en_message": "",
       "en_title": "Practice3",
       "en_url": null,
       "height": "1024",
@@ -4426,7 +4426,7 @@
           "SrcNic": {
             "hostid": "190",
             "nicid": "192",
-            "hostname": "server0",
+            "hostname": "google.com",
             "nicname": "eth0"
           },
           "DstNic": {
