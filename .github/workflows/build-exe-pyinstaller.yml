@@ -56,38 +56,45 @@ jobs:
           Invoke-WebRequest -Uri "$url" -OutFile "mesa.7z"
           & "${env:ProgramFiles}/7-Zip/7z.exe" x "mesa.7z" -o"mesa" -y
 
-      - name: Run PyInstaller
-        id: pyinstaller
-        shell: bash
-        env:
-          KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
-          KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
-          PYI_LOG_LEVEL: DEBUG
-        run: |
-          pyinstaller \
-            --clean \
-            --noconfirm \
-            pyinstaller.spec 2>&1 | tee pyinstaller.log
+      # - name: Run PyInstaller
+      #   id: pyinstaller
+      #   shell: bash
+      #   env:
+      #     KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
+      #     KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
+      #     PYI_LOG_LEVEL: DEBUG
+      #   run: |
+      #     pyinstaller \
+      #       --clean \
+      #       --noconfirm \
+      #       pyinstaller.spec 2>&1 | tee pyinstaller.log
 
-      - name: Log build/dist files
-        if: always()
-        shell: bash
-        run: |
-          echo "build:" | tee -a pyinstaller-files.txt
-          ls -l build/ | tee -a pyinstaller-files.txt
-          echo "build/pyinstaller:" | tee -a pyinstaller-files.txt
-          ls -l build/pyinstaller/ | tee -a pyinstaller-files.txt
-          echo "dist:" | tee -a pyinstaller-files.txt
-          ls -l dist/ | tee -a pyinstaller-files.txt
+      # - name: Log build/dist files
+      #   if: always()
+      #   shell: bash
+      #   run: |
+      #     echo "build:" | tee -a pyinstaller-files.txt
+      #     ls -l build/ | tee -a pyinstaller-files.txt
+      #     echo "build/pyinstaller:" | tee -a pyinstaller-files.txt
+      #     ls -l build/pyinstaller/ | tee -a pyinstaller-files.txt
+      #     echo "dist:" | tee -a pyinstaller-files.txt
+      #     ls -l dist/ | tee -a pyinstaller-files.txt
 
-      - name: Upload Executable
-        if: ${{ steps.pyinstaller.conclusion == 'success' }}
-        id: exe_upload
-        uses: actions/upload-artifact@v7
-        with:
-          name: pyinstaller-exe
-          path: ./dist
-          compression-level: 0
+      # - name: Upload Executable
+      #   if: ${{ steps.pyinstaller.conclusion == 'success' }}
+      #   id: exe_upload
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: pyinstaller-exe
+      #     path: ./dist
+      #     compression-level: 0
+
+      # - name: Upload EXE build files
+      #   if: ${{ steps.pyinstaller.conclusion == 'success' }}
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: pyinstaller-build-files
+      #     path: ./build/pyinstaller
 
       - name: Run PyInstaller
         id: pyinstaller-dir
@@ -122,11 +129,11 @@ jobs:
           path: ./dist
           compression-level: 0
 
-      - name: Upload build files
-        if: ${{ steps.pyinstaller.conclusion == 'success' }}
+      - name: Upload DIR build files
+        if: ${{ steps.pyinstaller-dir.conclusion == 'success' }}
         uses: actions/upload-artifact@v7
         with:
-          name: pyinstaller-build-files
+          name: pyinstaller-dir-build-files
           path: ./build/pyinstaller
 
       - name: Upload kivy & pyinstaller logs
@@ -138,5 +145,5 @@ jobs:
           path: |
             # ~\\.kivy\\logs\\*.txt  # different root; requires separate step
             *.log
-            pyinstaller-files.txt
+            pyinstaller*.txt
             build/pyinstaller/*.txt
