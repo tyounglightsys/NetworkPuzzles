@@ -12,7 +12,7 @@ from kivy.tools.packaging.pyinstaller_hooks import (
 if sys.platform == "win32":
     from kivy_deps import glew, sdl2
 
-    missed_imports = ["kivy.core.window.window_sdl2"]
+    missed_imports = []
 else:
     missed_imports = ["kivy.core.window.window_x11"]
 
@@ -41,6 +41,7 @@ a = Analysis(
     hiddenimports=[
         *minimal_deps.get("hiddenimports", []),
         *missed_imports,
+        "kivy.core.window.window_sdl2",
         "kivy.core.clipboard.clipboard_sdl2",  # somehow gets missed
     ],
     excludes=[*minimal_deps.get("excludes", []), "docutils", "unittest"],
