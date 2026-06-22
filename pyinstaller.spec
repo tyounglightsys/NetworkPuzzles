@@ -27,12 +27,12 @@ minimal_deps = get_deps_minimal(
 
 
 a = Analysis(
-    ["src\\main.py"],
+    ["src/main.py"],
     pathex=[],
     binaries=[*minimal_deps.get("binaries", [])],
     datas=[
-        ("src\\network_puzzles\\gui\\*.kv", "network_puzzles\\gui"),
-        ("src\\network_puzzles\\resources", "network_puzzles\\resources"),
+        ("src/network_puzzles/gui/*.kv", "network_puzzles/gui"),
+        ("src/network_puzzles/resources", "network_puzzles/resources"),
     ],
     hiddenimports=[
         *minimal_deps.get("hiddenimports", []),
