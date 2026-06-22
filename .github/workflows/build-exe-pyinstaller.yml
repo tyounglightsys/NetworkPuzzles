@@ -22,13 +22,13 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # - name: Install system deps
-      #   if: ${{ startsWith(matrix.os, "ubuntu") }}
-      #   run: |
-      #     sudo apt-get update
+      - name: Install system deps
+        if: ${{ startsWith(matrix.os, "ubuntu") }}
+        run: |
+          sudo apt-get update
 
-      #     # Install build tools, and dependencies to perform a full build (including SDL2 dependencies)
-      #     sudo apt-get -y install libgl1-mesa-glx libgles2-mesa libegl1-mesa libmtdev1
+          # Install build tools, and dependencies to perform a full build (including SDL2 dependencies)
+          sudo apt-get -y install libgl1-mesa-glx libgles2-mesa libegl1-mesa libmtdev1
 
       - name: Install Python
         uses: actions/setup-python@v6
