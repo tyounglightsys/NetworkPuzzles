@@ -9,12 +9,12 @@ from kivy.tools.packaging.pyinstaller_hooks import (
     runtime_hooks,
 )
 
-if sys.platform == "win32":
-    from kivy_deps import glew, sdl2
+# if sys.platform == "win32":
+from kivy_deps import glew, sdl2
 
-    missed_imports = []
-else:
-    missed_imports = ["kivy.core.window.window_x11"]
+#     missed_imports = []
+# else:
+#     missed_imports = ["kivy.core.window.window_x11"]
 
 # returns dict with keys 'binaries', 'hiddenimports', and 'excludes'
 # Ref: https://github.com/kivy/kivy/blob/master/kivy/tools/packaging/pyinstaller_hooks/__init__.py
@@ -40,7 +40,6 @@ a = Analysis(
     ],
     hiddenimports=[
         *minimal_deps.get("hiddenimports", []),
-        *missed_imports,
         "kivy.core.window.window_sdl2",
         "kivy.core.clipboard.clipboard_sdl2",  # somehow gets missed
     ],
@@ -82,7 +81,7 @@ else:  # linux OS
         a.scripts,
         a.binaries,
         a.datas,
-        [],
+        *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
         name=name,
         debug=debug,
         strip=strip,
