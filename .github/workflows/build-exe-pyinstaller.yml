@@ -61,7 +61,7 @@ jobs:
 
       - name: Run EXE PyInstaller (win)
         if: ${{ startsWith( matrix.os, 'windows' ) }}
-        id: pyinstaller
+        id: pyinstaller-${{ matrix.os }}
         shell: bash
         env:
           KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
@@ -75,7 +75,7 @@ jobs:
 
       - name: Run BIN PyInstaller (linux)
         if: ${{ startsWith( matrix.os, 'ubuntu' ) }}
-        id: pyinstaller
+        id: pyinstaller-${{ matrix.os }}
         shell: bash
         env:
           KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
@@ -100,7 +100,7 @@ jobs:
           ls -l dist/ | tee -a pyinstaller-files.txt
 
       - name: Upload EXE package
-        if: ${{ steps.pyinstaller.conclusion == 'success' }}
+        if: ${{ steps.pyinstaller-${{ matrix.os }}.conclusion == 'success' }}
         id: exe_upload
         uses: actions/upload-artifact@v7
         with:
@@ -109,7 +109,7 @@ jobs:
           compression-level: 0
 
       - name: Upload EXE build files
-        if: ${{ steps.pyinstaller.conclusion == 'success' }}
+        if: ${{ steps.pyinstaller-${{ matrix.os }}.conclusion == 'success' }}
         uses: actions/upload-artifact@v7
         with:
           name: pyinstaller-build-files-${{ matrix.os }}
