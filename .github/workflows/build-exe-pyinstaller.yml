@@ -54,16 +54,11 @@ jobs:
           KIVY_NO_CONSOLELOG: 1 # avoid duplicate console logging
           KIVY_GL_BACKEND: dummy # prevents openGL error in spite of ValueError
           PYI_LOG_LEVEL: DEBUG
-          GH_EVENT_NAME: ${{ github.event_name }}
         run: |
           pyinstaller \
             --clean \
             --noconfirm \
             pyinstaller.spec 2>&1 | tee pyinstaller.log
-          echo $GITHUB_EVENT_NAME
-          if [[ $GH_EVENT_NAME == 'workflow_call' ]]; then
-            gh release upload ${{ inputs.tag_name }} ./dist/NetworkPuzzles.exe
-          fi
 
       - name: Log EXE build/dist files
         if: always()
@@ -84,6 +79,11 @@ jobs:
           name: pyinstaller-exe
           path: ./dist
           compression-level: 0
+
+      - name: Upload EXE to draft release
+        shell: bash
+        if: ${{ github.event_name == 'push' }}
+        run: gh release upload ${{ inputs.tag_name }} ./dist/NetworkPuzzles.exe
 
       - name: Upload EXE build files
         if: ${{ steps.pyinstaller.conclusion == 'success' }}

@@ -58,6 +58,6 @@ jobs:
           name: package
           path: ${{ steps.buildozer.outputs.filename }}
 
-      - name: Upload to release draft
-        if: ${{ github.event_name == 'workflow_call' }}
+      - name: Upload APK to draft release
+        if: ${{ github.event_name == 'push' }}
         run: gh release upload ${{ inputs.tag_name }} ${{ steps.buildozer.outputs.filename }}
