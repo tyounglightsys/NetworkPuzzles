@@ -53,6 +53,9 @@ class Parser:
 
     def parse(self, command: str, fromuser=True):
         retval = None
+        if session.puzzle is not None and len(session.puzzle.packets) > 0 and fromuser:
+            session.print("Please wait until packets are finished before performing another action.")
+            return
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         if command is not None:
             if command.startswith("#") or len(command) == 0:
