@@ -2,13 +2,11 @@ import argparse
 import gettext
 import logging
 import sys
-from pathlib import Path
 
-from .vars import Session
-
+from .vars import DATA_DIR, Session
 
 session = Session()
-localedir = Path(__file__).parent / "resources" / "locale"
+localedir = DATA_DIR / "resources" / "locale"
 t = gettext.translation(
     "networkpuzzles",
     localedir=localedir,
@@ -34,7 +32,9 @@ argparser.add_argument(
 
 args, unknown_args = argparser.parse_known_args()
 log_level = logging.WARNING
-if sys.argv[0].endswith("test"):  # e.g. "python -m unittest"
+if "unittest" in sys.argv:
+    log_level = logging.CRITICAL
+elif "-m" in sys.argv:  # CLI invokation
     log_level = logging.CRITICAL
 if args.verbose:
     log_level = logging.INFO
@@ -48,3 +48,11 @@ logging.basicConfig(
     level=log_level,
     format="%(levelname)s:%(filename)s:%(lineno)s:%(message)s",
 )
+
+logging.debug(f"App: {sys.argv=}")
+logging.debug(f"App: {localedir=}:")
+for i in localedir.iterdir():
+    logging.debug(f"App: - {i}")
+logging.info(f"App: system locale: {session.locale}")
+logging.debug(f"App: {t.__class__.__name__=}")
+logging.info(f"App: user language: {t.info().get('language')}")
