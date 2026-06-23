@@ -50,5 +50,9 @@ logging.basicConfig(
 )
 
 logging.debug(f"App: {sys.argv=}")
+logging.debug(f"App: {localedir=}:")
+for i in localedir.iterdir():
+    logging.debug(f"App: - {i}")
 logging.info(f"App: system locale: {session.locale}")
+logging.debug(f"App: {t.__class__.__name__=}")
 logging.info(f"App: user language: {t.info().get('language')}")
