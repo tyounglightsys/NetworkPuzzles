@@ -9,9 +9,9 @@ from kivy.uix.slider import Slider
 from kivy.uix.widget import Widget
 
 from .. import session
+from ..vars import DATA_DIR
 from .headless import handle_dp as dp
 from .headless import handle_sp as sp
-from .vars import DATA_DIR
 
 # Size limits
 BUTTON_MAX_H = dp(32)
