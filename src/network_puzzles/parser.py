@@ -53,6 +53,9 @@ class Parser:
 
     def parse(self, command: str, fromuser=True):
         retval = None
+        if session.puzzle is not None and len(session.puzzle.packets) > 0 and fromuser:
+            session.print("Please wait until packets are finished before performing another action.")
+            return
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         if command is not None:
             if command.startswith("#") or len(command) == 0:
@@ -63,7 +66,7 @@ class Parser:
         logging.debug(f"{command=}")
         
         previous_state_json = None
-        if session.puzzle is not None:
+        if session.puzzle is not None and fromuser:
             previous_state_json = copy.deepcopy(session.puzzle.json)
 
         if ";" in command:
@@ -135,8 +138,8 @@ class Parser:
             case _:
                 session.print(f"unknown: {command}")
 
-        if previous_state_json is not None and not session.puzzle.json == previous_state_json:
-            if command not in ["undo", "redo"]:
+        if fromuser and previous_state_json is not None and not session.puzzle.json == previous_state_json:
+            if command not in ["undo", "redo", "show"]:
                 #something changed.  We want to stash an undo
                 session.store_undo(command, previous_state_json) 
                 session.redolist = list() #zero out the redo if we have done anything except an undo/redo

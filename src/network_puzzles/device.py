@@ -1083,7 +1083,7 @@ class Device(ItemBase):
                 )
                 # Set gateway.
                 session.ui.parser.parse(
-                    f"set {self.hostname} gateway {pkt.payload.get('gateway')}"
+                    f"set {self.hostname} gateway {pkt.payload.get('gateway')}", False
                 )
                 pkt.status = "done"
                 return True
