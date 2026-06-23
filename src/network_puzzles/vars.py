@@ -2,9 +2,12 @@ import locale
 import os
 import platform
 import sys
-from pathlib import Path
 from copy import deepcopy
+from pathlib import Path
 
+DATA_DIR = Path(__file__).parent
+if hasattr(sys, "_MEIPASS"):
+    DATA_DIR = Path(sys._MEIPASS)
 
 
 class Session:
@@ -27,9 +30,11 @@ class Session:
         self.ui = None
         self.startinglevel = ""
         self.package_dir = Path(__file__).parent
-        #WirelessReconnectDistance was 80, but that would not reach with Level5_WirelessRepeater.  90 was OK, but 100 made it 'easy'
+        # WirelessReconnectDistance was 80, but that would not reach with Level5_WirelessRepeater.  90 was OK, but 100 made it 'easy'
         self.WirelessReconnectDistance = 120  # The equivalent of a constant.  Stored here to be accessed multiple places. 80: defined in EduNet. NB.cs line 373.
-        self.WirelessFailureDistance = self.WirelessReconnectDistance - 15 #packets fail at this point
+        self.WirelessFailureDistance = (
+            self.WirelessReconnectDistance - 15
+        )  # packets fail at this point
 
     @property
     def device_type(self) -> str:
@@ -67,12 +72,8 @@ class Session:
         print("<default print method>")
         print(message)
 
-    def store_undo(self, line:str, puzzle_json):
-        '''Store a deep copy of the puzzle state for use later'''
+    def store_undo(self, line: str, puzzle_json):
+        """Store a deep copy of the puzzle state for use later"""
         if self.puzzle is not None:
-            tostore = { 
-                "line": line,
-                "puzzle_json": deepcopy(puzzle_json)
-            }
+            tostore = {"line": line, "puzzle_json": deepcopy(puzzle_json)}
             self.undolist.append(tostore)
-        

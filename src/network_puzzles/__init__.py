@@ -2,13 +2,11 @@ import argparse
 import gettext
 import logging
 import sys
-from pathlib import Path
 
-from .vars import Session
-
+from .vars import DATA_DIR, Session
 
 session = Session()
-localedir = Path(__file__).parent / "resources" / "locale"
+localedir = DATA_DIR / "resources" / "locale"
 t = gettext.translation(
     "networkpuzzles",
     localedir=localedir,
@@ -48,3 +46,5 @@ logging.basicConfig(
     level=log_level,
     format="%(levelname)s:%(filename)s:%(lineno)s:%(message)s",
 )
+
+logging.info(f"App: locale: {session.locale}")
