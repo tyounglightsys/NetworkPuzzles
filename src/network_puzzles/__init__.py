@@ -50,4 +50,5 @@ logging.basicConfig(
 )
 
 logging.debug(f"App: {sys.argv=}")
-logging.info(f"App: locale: {session.locale}")
+logging.info(f"App: system locale: {session.locale}")
+logging.info(f"App: user language: {t.info().get('language')}")
