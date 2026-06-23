@@ -1,5 +1,10 @@
 name: Build APK file w/ Docker
 on:
+  workflow_call:
+    inputs:
+      tag_name:
+        required: true
+        type: string
   workflow_dispatch:
   pull_request:
     branches:
@@ -52,3 +57,7 @@ jobs:
         with:
           name: package
           path: ${{ steps.buildozer.outputs.filename }}
+
+      - name: Upload to release draft
+        if: ${{ github.event_name == 'workflow_call' }}
+        run: gh release upload ${{ inputs.tag_name }} ${{ steps.buildozer.outputs.filename }}
