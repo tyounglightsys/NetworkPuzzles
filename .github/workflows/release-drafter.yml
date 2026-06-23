@@ -1,0 +1,35 @@
+name: Create draft release
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  update_prerelease_draft:
+    runs-on: ubuntu-latest
+    outputs:
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - name: prepare prerelease draft
+        id: release
+        uses: release-drafter/release-drafter@v7
+        with:
+          prerelease: true
+          prerelease-identifier: "rc"
+
+  build-apk:
+    needs: update_prerelease_draft
+    uses: ./.github/workflows/build-apk-docker-image.yml
+    with:
+      tag_name: ${{ needs.update_prerelease_draft.outputs.tag_name }}
+
+  build-exe:
+    needs: update_prerelease_draft
+    uses: ./.github/workflows/build-exe-pyinstaller.yml
+    with:
+      tag_name: ${{ needs.update_prerelease_draft.outputs.tag_name }}
