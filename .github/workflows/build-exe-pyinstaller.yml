@@ -83,6 +83,8 @@ jobs:
       - name: Upload EXE to draft release
         shell: bash
         if: ${{ github.event_name == 'push' }}
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
         run: gh release upload ${{ inputs.tag_name }} ./dist/NetworkPuzzles.exe
 
       - name: Upload EXE build files
