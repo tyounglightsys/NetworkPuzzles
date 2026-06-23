@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Tuple
 
 from kivy.graphics import Color, Ellipse
@@ -12,6 +11,7 @@ from kivy.uix.widget import Widget
 from .. import session
 from .headless import handle_dp as dp
 from .headless import handle_sp as sp
+from .vars import DATA_DIR
 
 # Size limits
 BUTTON_MAX_H = dp(32)
@@ -19,7 +19,7 @@ BUTTON_FONT_SIZE = sp(24)
 DEVICE_BUTTON_MAX_H = BUTTON_MAX_H * 1.25
 PACKET_DIMS = (dp(15), dp(15))
 
-IMAGES_DIR = Path(__file__).parents[1] / "resources" / "images"
+IMAGES_DIR = DATA_DIR / "resources" / "images"
 # NOTE: Puzzle size is nominally 900x850. The PADDING is applied to all sides of
 # the puzzle layout area, and it should be large enough to accommodate 1/2 the
 # height of a device widget, which includes button + label + spacing & padding.

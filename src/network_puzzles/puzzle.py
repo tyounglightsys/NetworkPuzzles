@@ -12,10 +12,11 @@ from packaging.version import Version
 # define the global network list
 from . import device, packet, session
 from .core import ItemBase
-from .shape import Shape
 
 # from .link import Link
 from .nic import Nic
+from .shape import Shape
+from .vars import DATA_DIR
 
 
 class Puzzle(ItemBase):
@@ -100,11 +101,11 @@ class Puzzle(ItemBase):
     def all_devices(self):
         """Return a list that contains all devices in the puzzle."""
         return self._get_items("device")
-    
+
     def all_shapes(self):
         """Return a list that contains all shapes in the puzzle."""
         if "shape" not in self.json:
-            #this puzzle has no shapes
+            # this puzzle has no shapes
             logging.debug("This puzzle has no shapes")
             return []
         shapes = []
@@ -382,29 +383,35 @@ class Puzzle(ItemBase):
         # logging.debug(f"item_is_locked: {shost=}; {whattocheck=}; {dhost=}")
         mydevice = device.Device(self.device_from_name(shost))
         if mydevice.mytype == "tree":
-            #we cannot move trees
+            # we cannot move trees
             logging.debug("Trees cannot be moved")
             return False
-        #logging.debug (f"Tests: {self.all_tests(shost)}")
-        newx=int(newx)
-        newy=int(newy)
+        # logging.debug (f"Tests: {self.all_tests(shost)}")
+        newx = int(newx)
+        newy = int(newy)
         for test in self.all_tests(shost):
             # logging.debug(f"item_is_locked: {test=}")
             thetest = test.get("thetest")
-            #LockAll does not include locking the location
-            #if thetest == "LockAll":
+            # LockAll does not include locking the location
+            # if thetest == "LockAll":
             #    logging.debug(f"item is locked with LockAll {shost} {thetest}")
             #    return False #The item cannot be moved at all
             if thetest == "LockLocation":
                 logging.debug(f"item is locked with LockLocation {test}")
-                if test.get("dhost") is None or test.get("dhost") == "" or test.get("dhost") == "--":
-                    #It is locked in location
-                    logging.debug(f"item is locked with LockAll with no destination location: {test.get("dhost")}")
+                if (
+                    test.get("dhost") is None
+                    or test.get("dhost") == ""
+                    or test.get("dhost") == "--"
+                ):
+                    # It is locked in location
+                    logging.debug(
+                        f"item is locked with LockAll with no destination location: {test.get('dhost')}"
+                    )
                     return False
                 for oneshape in self.all_shapes():
                     if oneshape.name == test.get("dhost"):
-                        #We are locked inside a shape
-                        #see if our coordinates are within the shape bounds.
+                        # We are locked inside a shape
+                        # see if our coordinates are within the shape bounds.
                         logging.debug(f"The lock location is a shape: {oneshape.name}")
                         sx, sy, dx, dy = oneshape.where
                         sx = int(sx)
@@ -412,28 +419,43 @@ class Puzzle(ItemBase):
                         dx = int(dx)
                         dy = int(dy)
                         if newx < min(sx, dx):
-                            #it is outside the shape
-                            logging.debug(f"The new location is outside of the shape: {oneshape.name}")
-                            logging.debug(f"x is smaller than min: {newx} {min(sx, dx)} ( {sx} {dx} )")
+                            # it is outside the shape
+                            logging.debug(
+                                f"The new location is outside of the shape: {oneshape.name}"
+                            )
+                            logging.debug(
+                                f"x is smaller than min: {newx} {min(sx, dx)} ( {sx} {dx} )"
+                            )
                             return False
-                        if newx + mydevice.size > max(sx,dx):
-                            #it is outside the shape
-                            logging.debug(f"The new location is outside of the shape: {oneshape.name}")
-                            logging.debug(f"x is larger than max:{newx} + {mydevice.size} = {newx + mydevice.size} {max(sx, dx)} ( {sx} {dx} )")
+                        if newx + mydevice.size > max(sx, dx):
+                            # it is outside the shape
+                            logging.debug(
+                                f"The new location is outside of the shape: {oneshape.name}"
+                            )
+                            logging.debug(
+                                f"x is larger than max:{newx} + {mydevice.size} = {newx + mydevice.size} {max(sx, dx)} ( {sx} {dx} )"
+                            )
                             return False
                         if newy < min(sy, dy):
-                            #it is outside the shape
-                            logging.debug(f"The new location is outside of the shape: {oneshape.name}")
-                            logging.debug(f"y is smaller than min: {newy} {min(sy, dy)} ( {sy} {dy} )")
+                            # it is outside the shape
+                            logging.debug(
+                                f"The new location is outside of the shape: {oneshape.name}"
+                            )
+                            logging.debug(
+                                f"y is smaller than min: {newy} {min(sy, dy)} ( {sy} {dy} )"
+                            )
                             return False
-                        if newy + mydevice.size > max(sy,dy):
-                            #it is outside the shape
-                            logging.debug(f"The new location is outside of the shape: {oneshape.name}")
-                            logging.debug(f"y is larger than the max: {newy} + {mydevice.size} = {newy + mydevice.size} {max(sy, dy)} ( {sy} {dy} )")
+                        if newy + mydevice.size > max(sy, dy):
+                            # it is outside the shape
+                            logging.debug(
+                                f"The new location is outside of the shape: {oneshape.name}"
+                            )
+                            logging.debug(
+                                f"y is larger than the max: {newy} + {mydevice.size} = {newy + mydevice.size} {max(sy, dy)} ( {sy} {dy} )"
+                            )
                             return False
 
         return True
-
 
     def item_blows_up(self, shost):
         print(f"Testing item blows up for {shost}")
@@ -1081,7 +1103,7 @@ def filter_items(items: list, pattern: str, json_files: bool = False) -> list:
 
 
 def listPuzzlesFromDisk(regex_pattern: str = None):
-    dir = session.package_dir / "resources" / "puzzles"
+    dir = DATA_DIR / "resources" / "puzzles"
     puzzle_names = [f.name for f in dir.iterdir() if f.is_file()]
     return filter_items(puzzle_names, regex_pattern, json_files=True)
 
@@ -1097,7 +1119,7 @@ def readPuzzle():
     """Read in the puzzles from the various .json files"""
     if len(session.puzzlelist) == 0:
         allfiles = listPuzzlesFromDisk("Level.*")
-        puzzles_dir = session.package_dir / "resources" / "puzzles"
+        puzzles_dir = DATA_DIR / "resources" / "puzzles"
         for one in allfiles:
             # We stripped off the ".json" from the name, so we need to add it back
             file_path = str(puzzles_dir / f"{one}.json")
