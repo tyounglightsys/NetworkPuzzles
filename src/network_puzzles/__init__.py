@@ -32,7 +32,9 @@ argparser.add_argument(
 
 args, unknown_args = argparser.parse_known_args()
 log_level = logging.WARNING
-if sys.argv[0].endswith("test"):  # e.g. "python -m unittest"
+if "unittest" in sys.argv:
+    log_level = logging.CRITICAL
+elif "-m" in sys.argv:  # CLI invokation
     log_level = logging.CRITICAL
 if args.verbose:
     log_level = logging.INFO
@@ -47,4 +49,5 @@ logging.basicConfig(
     format="%(levelname)s:%(filename)s:%(lineno)s:%(message)s",
 )
 
+logging.debug(f"App: {sys.argv=}")
 logging.info(f"App: locale: {session.locale}")

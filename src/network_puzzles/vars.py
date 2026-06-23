@@ -31,11 +31,11 @@ else:
 # Set DATA DIR.
 match INSTALL_TYPE:
     case "pyinstaller":
-        DATA_DIR = Path(sys._MEIPASS)
+        DATA_DIR = Path(sys._MEIPASS) / "network_puzzles"
     case _:  # "android", "python"
         DATA_DIR = Path(__file__).parent
 if "NETWORKPUZZLES_DATA_DIR" in os.environ:
-    DATA_DIR = Path(os.getenv("NP_DATA_DIR"))
+    DATA_DIR = Path(os.getenv("NETWORKPUZZLES_DATA_DIR"))
 
 
 class Session:
