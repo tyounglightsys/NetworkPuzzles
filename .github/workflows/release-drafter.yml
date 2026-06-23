@@ -24,12 +24,12 @@ jobs:
 
   build-apk:
     needs: update_prerelease_draft
-    uses: .github/workflow/build-apk-docker-image.yml
+    uses: ./.github/workflows/build-apk-docker-image.yml
     with:
       tag_name: ${{ needs.update_prerelease_draft.outputs.tag_name }}
 
   build-exe:
     needs: update_prerelease_draft
-    uses: .github/workflow/build-exe-pyinstaller.yml
+    uses: ./.github/workflows/build-exe-pyinstaller.yml
     with:
       tag_name: ${{ needs.update_prerelease_draft.outputs.tag_name }}
