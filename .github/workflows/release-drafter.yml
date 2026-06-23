@@ -29,10 +29,10 @@ jobs:
     needs: update_prerelease_draft
     uses: .github/workflow/build-apk-docker-image.yml
     with:
-      tag_name: ${{ jobs.update_prerelease_draft.outputs.tag_name }}
+      tag_name: ${{ needs.update_prerelease_draft.outputs.tag_name }}
 
   build-exe:
     needs: update_prerelease_draft
     uses: .github/workflow/build-exe-pyinstaller.yml
     with:
-      tag_name: ${{ jobs.update_prerelease_draft.outputs.tag_name }}
+      tag_name: ${{ needs.update_prerelease_draft.outputs.tag_name }}
