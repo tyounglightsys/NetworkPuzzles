@@ -1,11 +1,7 @@
 import logging
 import traceback
 
-# Remove root logger b/c kivy's logger will handle all logging.
-root_logger = logging.getLogger()
-for handler in root_logger.handlers:
-    root_logger.removeHandler(handler)
-
+# kivy_logger = logging.getLogger("kivy")
 from kivy.config import Config
 
 from .. import session
@@ -79,9 +75,6 @@ class NetworkPuzzlesApp(App):
             self.packet_tick_delay = 0.04  # packet pos refresh rate in seconds
             self.packet_progress_rate = 6  # % of link traveled each tick
 
-        # TODO: Forcing log level to DEBUG for now; consider removing later.
-        logger = logging.getLogger()
-        logger.level = logging.DEBUG
         logging.debug(f"App: {session.device_type=}")
 
         super().__init__(**kwargs)

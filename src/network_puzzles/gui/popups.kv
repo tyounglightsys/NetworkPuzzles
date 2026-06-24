@@ -15,7 +15,7 @@
                 id: ip_address_input
                 text: root.ip_address.address
                 on_focus: self.schedule_select_all() if self.focus else root.set_address(self)
-                on_text_validate: root.on_okay()
+                on_text_validate: root.validate_inputs(self)
         SingleRowLayout:
             CheckBoxLabel:
                 text: _("Netmask:")
@@ -23,7 +23,7 @@
                 id: netmask_input
                 text: root.ip_address.netmask
                 on_focus: self.schedule_select_all() if self.focus else root.set_netmask(self)
-                on_text_validate: root.on_okay()
+                on_text_validate: root.validate_inputs(self)
         SingleRowLayout:
             CheckBoxLabel:
                 text: _("Gateway:")
@@ -31,7 +31,7 @@
                 id: gateway_input
                 text: root.ip_address.gateway
                 on_focus: self.schedule_select_all() if self.focus else root.set_gateway(self)
-                on_text_validate: root.on_okay()
+                on_text_validate: root.validate_inputs(self)
         Widget:
         ActionPopupButtons:
             on_cancel: root.on_cancel()

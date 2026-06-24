@@ -57,7 +57,7 @@ class BaseIpPopup(ActionPopup):
 
     def __init__(self, ip_address=None, **kwargs):
         if ip_address is None:
-            ip_address = interface.IpAddress(deepcopy(interface.UNSET_IP4_CONFIG))
+            ip_address = interface.IpAddress()
         self.ip_address = ip_address
         super().__init__(**kwargs)
 
@@ -72,6 +72,12 @@ class BaseIpPopup(ActionPopup):
     def set_gateway(self, input_inst):
         if not input_inst.focus:
             self.ip_address.gateway = input_inst.text
+
+    def validate_inputs(self, input_inst):
+        # Unfocus the currently-focused input field, which causes the
+        # associated property to be updated.
+        input_inst.focus = False
+        self.on_okay()
 
 
 class DevicePopup(ActionPopup):
