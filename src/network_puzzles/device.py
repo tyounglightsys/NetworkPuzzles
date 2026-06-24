@@ -1295,16 +1295,17 @@ class Device(ItemBase):
                 pkt.status = "done"
                 return
             # If it is a wireless router, we might route the packet out the WAN too
-
+        logging.debug(f"Continued past send_out_hub_switch.  {pkt.status}")
         # if the packet is not done and we route, route
         if pkt.status != "done" and self.routes_packets:
             # print("routing")
-            if not packet.is_broadcast_mac(pkt.destination_mac):
+            if not packet.is_broadcast_mac(pkt.destination_mac) or self.mytype == "wrouter":
                 # we do not route broadcast packets
                 logging.debug(f"Sending packet out device. {self.hostname}")
                 self.send_packet(pkt, nic)
             else:
                 # if it is a broadcast, the packet stops here.
+                logging.debug(f"killing the packet.  Should not pass it onwards {self.hostname}")
                 pkt.status = "done"
             return
         # If we get here, we might have forwarded.  If so, we mark the old packet as done.
@@ -1590,14 +1591,15 @@ def getDeviceNicFromLinkNicRec(linkNicRec):
 
 def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     """return a routing record given a destination IP string.  The device record has the route, nic, interface, and gateway"""
-    # FIXME: This should be a Device class method.
-    # go through the device routes.
-    if packet.isEmpty(destinationIPString):
-        logging.debug("routeRec failed; empty destination IP address")
-        return None
-
     # routeRec must contain 'nic' and 'interface', and may contain 'gateway'.
     routeRec = {}
+    tDevice = Device(theDeviceRec)
+
+    # FIXME: This should be a Device class method.
+    # go through the device routes.
+    if packet.isEmpty(destinationIPString) and tDevice.mytype != "wrouter":
+        logging.debug("routeRec failed; empty destination IP address")
+        return None
 
     # Set gateway if dest IP is in device routes.
     if "route" not in theDeviceRec:
@@ -1628,9 +1630,31 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
         for oneNic in theDeviceRec["nic"]:
             nic = Nic(oneNic)
             skipzeroes = True
-            if destinationIPString == "255.255.255.255":
+            if destinationIPString == BROADCAST_IP4:
                 skipzeroes = False
             localInterface = nic.find_local_interface(destinationIPString, skipzeroes)
+            logging.debug(f"Looking at interface {localInterface}")
+            switch_to_management = False
+            if localInterface is not None:
+                if (localInterface.get("nicname").startswith("port") or localInterface.get("nicname").startswith("wport")):
+                    switch_to_management = True
+                tlocal_interface = Interface(localInterface)
+                tlocal_IP = packet.justIP(tlocal_interface.ipaddress)
+                logging.debug(f"checking device type {tDevice.mytype}")
+                if tDevice.mytype == "wrouter":
+                    logging.debug(f"We are in a wrouter. - local interface is {localInterface}  IP is {tlocal_IP}")
+                if packet.isEmpty(tlocal_IP) and tDevice.mytype == "wrouter":
+                    #This happens occasionally
+                    switch_to_management = True
+
+            if switch_to_management:
+                #we are set to go out a port.  Choose the management interface instead, if we can
+                nt_interface = tDevice.interface_from_name("management_interface0")
+                nt_nic = tDevice.nic_from_name("management_interface0")
+                logging.debug(f"Switching from local interface to management_interface0 {nt_interface}")
+                if nt_interface is not None and nt_nic is not None:
+                    localInterface = nt_interface
+                    nic = Nic(nt_nic)
             if localInterface is not None:
                 # We found it.  Use it.
                 routeRec["nic"] = nic.json
@@ -2131,6 +2155,10 @@ def makeDHCPResponse(pkt, thisDevice, nic):
     if not isinstance(pkt, packet.Packet):
         raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
+    if pkt.payload != "" and pkt.source_mac != pkt.payload:
+        pkt.source_mac = pkt.payload
+        logging.debug(f"resetting the source mac {pkt.payload} smac {pkt.source_mac}")
+
     tnic = nic
     if nic.type == "port" or nic.type == "wport":
         # We want to grab stuff from the management interface
@@ -2186,12 +2214,14 @@ def makeDHCPResponse(pkt, thisDevice, nic):
         nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
         nPacket.source_mac = tnic.mac
         nPacket.destination_ip = GENERIC_IP4
+        logging.debug(f"Building the DHCP response. payload {pkt.payload} smac {pkt.source_mac}")
         nPacket.destination_mac = pkt.source_mac
         nPacket.packettype = "DHCP-Response"
         nPacket.payload = {
             "ip": available_ip,
             "subnet": tnic.interfaces[0]["myip"]["mask"],
             "gateway": t_device.json["gateway"]["ip"],
+            "dst_mac": pkt.source_mac,
         }
         # if the dhcp server is a router/firewall, use the nic IP as the gateway
         if t_device.routes_packets:
@@ -2369,6 +2399,7 @@ def doDHCP(srcHostname):
             #   ref: https://www.computernetworkingnotes.com/ccna-study-guide/how-dhcp-works-explained-with-examples.html
             nPacket.source_ip = BROADCAST_IP4
             nPacket.source_mac = nic.get("Mac")
+            nPacket.payload = nic.get("Mac")
             nPacket.destination_ip = BROADCAST_IP4
             nPacket.destination_mac = BROADCAST_MAC
             nPacket.packettype = "DHCP-Request"

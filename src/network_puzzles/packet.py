@@ -192,6 +192,7 @@ class Packet(ItemBase):
         if (
             not isinstance(value, dict)
             and not isinstance(value, Packet)
+            and not isinstance(value, str)
             and value is not None
         ):
             raise ValueError(f"Invalid type for payload: {type(value)}")

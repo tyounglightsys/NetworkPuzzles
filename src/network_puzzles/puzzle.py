@@ -183,6 +183,8 @@ class Puzzle(ItemBase):
                     commands.append(
                         f"traceroute {test.get('shost')} {test.get('dhost')}"
                     )
+                case "DHCPServerEnabled":
+                    commands.append(f"set {test.get('shost')} isdhcp off")
                 case "DeviceNeedsUPS":
                     commands.append(f"addups {test.get('shost')}")
                 case "DeviceIsFrozen" | "DeviceBlowsUpWithPower" | "DeviceNeedsUPS":

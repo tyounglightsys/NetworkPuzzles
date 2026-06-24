@@ -590,11 +590,25 @@ class Parser:
         if not dev_obj.serves_dhcp:
             session.print(f"{dev_obj.hostname} can not be a dhcp server")
             return False
-        pastvalue = "false"
-        if value.lower() in ("true", "yes"):
+        if value.lower() in ("true", "yes", "on"):
             dev_obj.is_dhcp = True
+            #acknowledge possible test for DHCP turned on
+            session.puzzle.mark_test_as_completed(
+                dev_obj.hostname, 
+                "True",
+                "DHCPServerEnabled",
+                f"Enabled DHCP on {dev_obj.hostname}",
+            )
         else:
             dev_obj.is_dhcp = False
+            #acknowledge possible test for DHCP turned off
+            session.puzzle.mark_test_as_completed(
+                dev_obj.hostname, 
+                "False",
+                "DHCPServerEnabled",
+                f"Disabled DHCP on {dev_obj.hostname}",
+            )
+            logging.debug(f"Disabled DHCP on {dev_obj.hostname}")
         session.print(
             f"Defining {dev_obj.hostname} 'isdhcp' to {dev_obj.json.get('isdhcp')}"
         )

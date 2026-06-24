@@ -214,6 +214,11 @@ class Nic(ItemBase):
                     pkt.status = "done"
                     return False
         if pkt.destination_mac is None:
+            #This occasionally happens with broadcast DHCP return packets.  Luckily, we have saved the dest mac
+            if pkt.packettype == "dhcp-response":
+                if pkt.payload.get("dst_mac") is not None:
+                    pkt.destination_mac = pkt.payload.get("dst_mac")
+        if pkt.destination_mac is None:
             # The packet was improperly crafted or no such machine exists.  Drop
             logging.debug(
                 "This packet was killed.  There was a problem.  No such destination.  No MAC Address that matched"
@@ -355,7 +360,7 @@ class Nic(ItemBase):
         # logging.debug(f"We are routing.  Here is the packet: {pkt.json}")
         # logging.debug(f"We are routing.  Here is the nic: {nic.json}")
         pkt.justcreated = False
-        logging.debug(f"Beginning on nic: {self.name}; {self.mac=}")
+        logging.debug(f"Beginning on nic: {self.name}; {self.mac=} pkt dest mac: {pkt.destination_mac}")
         return self.begin_ingress(pkt, dev)
         # The NIC passes it onto the device if needed.  We are done with this.
 
