@@ -73,6 +73,12 @@ class BaseIpPopup(ActionPopup):
         if not input_inst.focus:
             self.ip_address.gateway = input_inst.text
 
+    def validate_inputs(self, input_inst):
+        # Unfocus the currently-focused input field, which causes the
+        # associated property to be updated.
+        input_inst.focus = False
+        self.on_okay()
+
 
 class DevicePopup(ActionPopup):
     def __init__(self, device=None, **kwargs):
