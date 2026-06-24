@@ -57,7 +57,7 @@ class BaseIpPopup(ActionPopup):
 
     def __init__(self, ip_address=None, **kwargs):
         if ip_address is None:
-            ip_address = interface.IpAddress(deepcopy(interface.UNSET_IP4_CONFIG))
+            ip_address = interface.IpAddress()
         self.ip_address = ip_address
         super().__init__(**kwargs)
 

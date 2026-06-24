@@ -1,4 +1,5 @@
 import ipaddress
+from copy import deepcopy
 
 from .core import ItemBase
 
@@ -62,6 +63,8 @@ class Interface(ItemBase):
 
 class IpAddress(ItemBase):
     def __init__(self, json_data=None):
+        if json_data is None:
+            json_data = deepcopy(UNSET_IP4_CONFIG)
         super().__init__(json_data)
 
     @property
