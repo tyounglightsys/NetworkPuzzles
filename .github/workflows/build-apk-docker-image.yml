@@ -62,4 +62,4 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ inputs.tag_name }} ${{ steps.buildozer.outputs.filename }}
+        run: gh release upload ${{ inputs.tag_name }} ${{ steps.buildozer.outputs.filename }} --clobber

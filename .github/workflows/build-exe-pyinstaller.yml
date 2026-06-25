@@ -85,7 +85,7 @@ jobs:
         if: ${{ github.event_name == 'push' }}
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ inputs.tag_name }} ./dist/NetworkPuzzles.exe
+        run: gh release upload ${{ inputs.tag_name }} ./dist/NetworkPuzzles.exe --clobber
 
       - name: Upload EXE build files
         if: ${{ steps.pyinstaller.conclusion == 'success' }}
