@@ -69,7 +69,13 @@ class PuzzlesRecView(AppRecView):
         self.update_data()
 
     def update_data(self):
-        self.data = [{"text": n} for n in self.app.filtered_puzzlelist]
+        filtered_puzzles = [n for n in self.app.filtered_puzzlelist]
+        # FIXME: Remove this limit after development is complete.
+        if hasattr(self.app, "max_gui_level"):
+            filtered_puzzles = [
+                n for n in filtered_puzzles[:] if int(n[5]) <= self.app.max_gui_level
+            ]
+        self.data = [{"text": n} for n in filtered_puzzles]
 
 
 class RoutesRecView(AppRecView):
