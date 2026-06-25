@@ -294,21 +294,23 @@
                         name: "Level3"
                     CheckBoxLabel:
                         text: _("Level 3")
-                SingleRowLayout:
-                    FiltersCheckBox:
-                        name: "Level4"
-                    CheckBoxLabel:
-                        text: _("Level 4")
-                SingleRowLayout:
-                    FiltersCheckBox:
-                        name: "Level5"
-                    CheckBoxLabel:
-                        text: _("Level 5")
-                SingleRowLayout:
-                    FiltersCheckBox:
-                        name: "Level6"
-                    CheckBoxLabel:
-                        text: _("Level 6")
+                # FIXME: Remove arbitrary limit after development;
+                # this list should correspond to App.max_gui_level
+                #SingleRowLayout:
+                #    FiltersCheckBox:
+                #        name: "Level4"
+                #    CheckBoxLabel:
+                #        text: _("Level 4")
+                #SingleRowLayout:
+                #    FiltersCheckBox:
+                #        name: "Level5"
+                #    CheckBoxLabel:
+                #        text: _("Level 5")
+                #SingleRowLayout:
+                #    FiltersCheckBox:
+                #        name: "Level6"
+                #    CheckBoxLabel:
+                #        text: _("Level 6")
                 Widget: # spacer to keep other widgets at the top
             VSeparator:
             PuzzlesRecView:
