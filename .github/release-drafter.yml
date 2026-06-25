@@ -1,4 +1,6 @@
+# Ref: https://github.com/marketplace/actions/release-drafter
+tag-template: "$RESOLVED_VERSION"
 template: |
-  ## What's Changed
+  ## What's Changed in v$RESOLVED_VERSION
 
   $CHANGES
