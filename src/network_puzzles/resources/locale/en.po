@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-26 07:30-0500\n"
+"POT-Creation-Date: 2026-06-26 07:55-0500\n"
 "PO-Revision-Date: 2026-06-26 07:06-0500\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -441,255 +441,413 @@ msgstr ""
 msgid "Practice7"
 msgstr ""
 
-#: messages.py:211 messages.py:216 messages.py:221 messages.py:226
-#: messages.py:231 messages.py:236 messages.py:241 messages.py:246
-#: messages.py:251 messages.py:256 messages.py:261 messages.py:266
-#: messages.py:271 messages.py:276 messages.py:281 messages.py:286
-#: messages.py:291 messages.py:296 messages.py:301 messages.py:306
-#: messages.py:311 messages.py:316 messages.py:321 messages.py:326
-#: messages.py:331 messages.py:336 messages.py:341 messages.py:346
-#: messages.py:351 messages.py:356 messages.py:361 messages.py:366
-#: messages.py:371
-msgid "has a problem"
+#: messages.py:205
+msgid "Firewall Test"
 msgstr ""
 
-#: messages.py:212
-msgid "hardware problem"
+#: messages.py:207
+msgid ""
+"This puzzle shows off how a firewall works. You can ping out of a firewall, "
+"but not ping the computers behind it. To \"solve\" this, ping the lone "
+"computer from both subnets, and try to ping both subnets from the lone PC."
+msgstr ""
+
+#: messages.py:211
+msgid "Firewall Test 2"
 msgstr ""
 
 #: messages.py:213
-msgid "bad power supply"
+msgid ""
+"Firewall devices can have an advanced firewall. You can control which "
+"interfaces can ping which interfaces. This allows you to protect one side of "
+"the LAN from the other. We will use this functionality a lot more later "
+"on. \n"
+"\n"
+"This technology is mainly used for VLAN security, or setting up a DMZ. To do "
+"this puzzle, remove the firewall rule that is keeping the one side from "
+"pinging the other side."
 msgstr ""
 
 #: messages.py:217
-msgid "device is frozen"
+msgid "VPN Demo"
 msgstr ""
 
-#: messages.py:218
-msgid "reboot the device"
-msgstr ""
-
-#: messages.py:222
-msgid "is plugged into bad power"
+#: messages.py:219
+msgid ""
+"Some devices allow you to create VPNs. A Virtual Private Network (VPN) "
+"allows you to connect up to things behind a firewall. For this example, you "
+"need to ping from pc0 to a number of different things just to see how the "
+"VPN works. Make sure you edit one or more of the firewalls to see how the "
+"VPN is configured, and see how the static route is defined to make the "
+"packets go through the VPN. You will need to know how that works to solve "
+"the rest of this level."
 msgstr ""
 
 #: messages.py:223
-msgid "needs a UPS"
+msgid "Bad Encryption"
 msgstr ""
 
-#: messages.py:227 messages.py:228
-msgid "network card sprays net when used"
+#: messages.py:225
+msgid ""
+"The VPNs need their encryption keys fixed. Ping from pc0 to pc1 to ensure it "
+"works."
 msgstr ""
 
-#: messages.py:232
-msgid "needs change to DHCP server:"
+#: messages.py:229
+msgid "Bad VPN IP"
 msgstr ""
 
-#: messages.py:233
-msgid "DHCP server enabled ="
+#: messages.py:231
+msgid ""
+"The VPN Network card has the wrong IP address. Fix the IP address on the "
+"firewall VPN, and then ping from pc0 to pc1 through the VPN."
+msgstr ""
+
+#: messages.py:235
+msgid "Bad Route"
 msgstr ""
 
 #: messages.py:237
-msgid "should fail to ping a specific host"
+msgid ""
+"One of the firewalls is missing a route to tell it to use the VPN. Configure "
+"the route and then ping from pc0 to pc1 to make sure it works."
 msgstr ""
 
-#: messages.py:238
-msgid "needs to try to ping (and fail):"
-msgstr ""
-
-#: messages.py:242
-msgid "get mouse-over help"
+#: messages.py:241
+msgid "Build a VPN"
 msgstr ""
 
 #: messages.py:243
-msgid "get mouse-over help of level:"
+msgid ""
+"Both firewalls need their VPNs configured. Do not forget to make the right "
+"routes!"
 msgstr ""
 
 #: messages.py:247
-msgid "is locked"
+msgid "Blast from the past"
 msgstr ""
 
-#: messages.py:248
-msgid "is locked:"
-msgstr ""
-
-#: messages.py:252
-msgid "has locked DHCP"
+#: messages.py:249
+msgid ""
+"There are a few problems with this puzzle. pc0 needs to ping pc1, and pc1 "
+"needs to ping pc0."
 msgstr ""
 
 #: messages.py:253
-msgid "has locked DHCP:"
+msgid "Connect the dots"
 msgstr ""
 
-#: messages.py:257
-msgid "has locked gateway"
+#: messages.py:255
+msgid ""
+"Connect the firewalls to the router, setting up working IPs. Do not forget "
+"the VPN!"
 msgstr ""
 
-#: messages.py:258
-msgid "has locked gateway:"
+#: messages.py:259
+msgid "Not Working"
 msgstr ""
 
-#: messages.py:262
-msgid "the VLAN on an interface is locked"
+#: messages.py:261
+msgid ""
+"Someone has been trying to set up a VPN between two sites. \"It is just not "
+"working!\" they tell you. I guess it is up to you to figure out what they "
+"did wrong. Get pc0 to ping pc1."
 msgstr ""
 
-#: messages.py:263
-msgid "the VLAN on an interface is locked:"
+#: messages.py:265
+msgid "Cannot connect"
 msgstr ""
 
 #: messages.py:267
-msgid "has locked IP"
+msgid ""
+"The director shut down the office when he went away for the weekend, and "
+"brought back this new laptop (laptop2) to connect up. It is not working, and "
+"you need to fix your network."
 msgstr ""
 
-#: messages.py:268
-msgid "has locked IP:"
-msgstr ""
-
-#: messages.py:272
-msgid "device cannot be moved"
+#: messages.py:271
+msgid "VPN Woes"
 msgstr ""
 
 #: messages.py:273
-msgid "device cannot be moved:"
+msgid ""
+"For routing to work, you need to have different IP addresses on the other "
+"side of the route. Here we have two networks that are using the same IP "
+"address scheme. To get them to work, you will need to change the IP "
+"Addresses of one of the networks. It is easiest to change the right network "
+"to be 192.168.2.x, as the left network has the right routes already set up "
+"for that network."
 msgstr ""
 
 #: messages.py:277
+msgid "VPNs and traceroute"
+msgstr ""
+
+#: messages.py:279
+msgid ""
+"Packets that go through a VPN are \"encapsulated.\"  This means that they "
+"are packed up and put inside a VPN packet. A traceroute packet has a "
+"\"TTL\" (Time to Live). Every router along the path is supposed to subtract "
+"one from theTTL, and when the TTL is zero, the device that has it will drop "
+"the traceroute packet and respond to the originating machine. \n"
+"\n"
+"As you do the traceroutes, notice that the router in the center never "
+"responds to the traceroute. That is because the traceroute packet is "
+"encapsulated. The \"outside\" packet has a normal TTL, and so the router in "
+"the middle never drops the packet. But, the firewall in the middle decrypts "
+"the packet, processes it, and sends it on. That firewill will respond to the "
+"traceroute."
+msgstr ""
+
+#: messages.py:293 messages.py:298 messages.py:303 messages.py:308
+#: messages.py:313 messages.py:318 messages.py:323 messages.py:328
+#: messages.py:333 messages.py:338 messages.py:343 messages.py:348
+#: messages.py:353 messages.py:358 messages.py:363 messages.py:368
+#: messages.py:373 messages.py:378 messages.py:383 messages.py:388
+#: messages.py:393 messages.py:398 messages.py:403 messages.py:408
+#: messages.py:413 messages.py:418 messages.py:423 messages.py:428
+#: messages.py:433 messages.py:438 messages.py:443 messages.py:448
+#: messages.py:453
+msgid "has a problem"
+msgstr ""
+
+#: messages.py:294
+msgid "hardware problem"
+msgstr ""
+
+#: messages.py:295
+msgid "bad power supply"
+msgstr ""
+
+#: messages.py:299
+msgid "device is frozen"
+msgstr ""
+
+#: messages.py:300
+msgid "reboot the device"
+msgstr ""
+
+#: messages.py:304
+msgid "is plugged into bad power"
+msgstr ""
+
+#: messages.py:305
+msgid "needs a UPS"
+msgstr ""
+
+#: messages.py:309 messages.py:310
+msgid "network card sprays net when used"
+msgstr ""
+
+#: messages.py:314
+msgid "needs change to DHCP server:"
+msgstr ""
+
+#: messages.py:315
+msgid "DHCP server enabled ="
+msgstr ""
+
+#: messages.py:319
+msgid "should fail to ping a specific host"
+msgstr ""
+
+#: messages.py:320
+msgid "needs to try to ping (and fail):"
+msgstr ""
+
+#: messages.py:324
+msgid "get mouse-over help"
+msgstr ""
+
+#: messages.py:325
+msgid "get mouse-over help of level:"
+msgstr ""
+
+#: messages.py:329
+msgid "is locked"
+msgstr ""
+
+#: messages.py:330
+msgid "is locked:"
+msgstr ""
+
+#: messages.py:334
+msgid "has locked DHCP"
+msgstr ""
+
+#: messages.py:335
+msgid "has locked DHCP:"
+msgstr ""
+
+#: messages.py:339
+msgid "has locked gateway"
+msgstr ""
+
+#: messages.py:340
+msgid "has locked gateway:"
+msgstr ""
+
+#: messages.py:344
+msgid "the VLAN on an interface is locked"
+msgstr ""
+
+#: messages.py:345
+msgid "the VLAN on an interface is locked:"
+msgstr ""
+
+#: messages.py:349
+msgid "has locked IP"
+msgstr ""
+
+#: messages.py:350
+msgid "has locked IP:"
+msgstr ""
+
+#: messages.py:354
+msgid "device cannot be moved"
+msgstr ""
+
+#: messages.py:355
+msgid "device cannot be moved:"
+msgstr ""
+
+#: messages.py:359
 msgid "has locked NIC"
 msgstr ""
 
-#: messages.py:278
+#: messages.py:360
 msgid "has locked NIC:"
 msgstr ""
 
-#: messages.py:282
+#: messages.py:364
 msgid "the VLAN on a NIC is locked"
 msgstr ""
 
-#: messages.py:283
+#: messages.py:365
 msgid "the VLAN on a NIC is locked:"
 msgstr ""
 
-#: messages.py:287
+#: messages.py:369
 msgid "has locked route"
 msgstr ""
 
-#: messages.py:288
+#: messages.py:370
 msgid "has locked route:"
 msgstr ""
 
-#: messages.py:292
+#: messages.py:374
 msgid "VLAN names and IDs are locked"
 msgstr ""
 
-#: messages.py:293
+#: messages.py:375
 msgid "VLAN names and IDs are locked:"
 msgstr ""
 
-#: messages.py:297
+#: messages.py:379
 msgid "a VLAN is locked"
 msgstr ""
 
-#: messages.py:298
+#: messages.py:380
 msgid "a VLAN is locked:"
 msgstr ""
 
-#: messages.py:302
+#: messages.py:384
 msgid "needs the gateway set"
 msgstr ""
 
-#: messages.py:303
+#: messages.py:385
 msgid "needs the gateway set to:"
 msgstr ""
 
-#: messages.py:307
+#: messages.py:389
 msgid "the interface needs a forbidden VLAN"
 msgstr ""
 
-#: messages.py:308
+#: messages.py:390
 msgid "the interface needs a forbidden VLAN:"
 msgstr ""
 
-#: messages.py:312
+#: messages.py:394
 msgid "needs to be connected to the network"
 msgstr ""
 
-#: messages.py:313
+#: messages.py:395
 msgid "needs a link to host:"
 msgstr ""
 
-#: messages.py:317
+#: messages.py:399
 msgid "needs a local IP"
 msgstr ""
 
-#: messages.py:318
+#: messages.py:400
 msgid "needs an IP local to host:"
 msgstr ""
 
-#: messages.py:322
+#: messages.py:404
 msgid "cannot ping"
 msgstr ""
 
-#: messages.py:323
+#: messages.py:405
 msgid "cannot ping host:"
 msgstr ""
 
-#: messages.py:327
+#: messages.py:409
 msgid "needs a route set"
 msgstr ""
 
-#: messages.py:328
+#: messages.py:410
 msgid "needs a route to network:"
 msgstr ""
 
-#: messages.py:332
+#: messages.py:414
 msgid "the interface needs a tagged VLAN"
 msgstr ""
 
-#: messages.py:333
+#: messages.py:415
 msgid "the interface needs a tagged VLAN:"
 msgstr ""
 
-#: messages.py:337
+#: messages.py:419
 msgid "the interface needs an untagged VLAN"
 msgstr ""
 
-#: messages.py:338
+#: messages.py:420
 msgid "the interface needs an untagged VLAN:"
 msgstr ""
 
-#: messages.py:342 messages.py:343
+#: messages.py:424 messages.py:425
 msgid "read context help for:"
 msgstr ""
 
-#: messages.py:347
+#: messages.py:429
 msgid "needs to find ARP from some device"
 msgstr ""
 
-#: messages.py:348
+#: messages.py:430
 msgid "needs to find ARP from:"
 msgstr ""
 
-#: messages.py:352
+#: messages.py:434
 msgid "needs a DHCP IP address"
 msgstr ""
 
-#: messages.py:353
+#: messages.py:435
 msgid "needs a DHCP IP address from server:"
 msgstr ""
 
-#: messages.py:357 messages.py:362 messages.py:367
+#: messages.py:439 messages.py:444 messages.py:449
 msgid "must ping a host"
 msgstr ""
 
-#: messages.py:358 messages.py:363 messages.py:368
+#: messages.py:440 messages.py:445 messages.py:450
 msgid "must ping:"
 msgstr ""
 
-#: messages.py:372
+#: messages.py:454
 msgid "needs to traceroute"
 msgstr ""
 
-#: messages.py:373
+#: messages.py:455
 msgid "needs to traceroute to:"
 msgstr ""
 

@@ -201,6 +201,88 @@ puzzles = {
         "title": _("Practice7"),
         "info": "",
     },
+    "2.0": {
+        "title": _("Firewall Test"),
+        "info": _(
+            'This puzzle shows off how a firewall works. You can ping out of a firewall, but not ping the computers behind it. To "solve" this, ping the lone computer from both subnets, and try to ping both subnets from the lone PC.'
+        ),
+    },
+    "2.0.1": {
+        "title": _("Firewall Test 2"),
+        "info": _(
+            "Firewall devices can have an advanced firewall. You can control which interfaces can ping which interfaces. This allows you to protect one side of the LAN from the other. We will use this functionality a lot more later on. \n\nThis technology is mainly used for VLAN security, or setting up a DMZ. To do this puzzle, remove the firewall rule that is keeping the one side from pinging the other side."
+        ),
+    },
+    "2.1": {
+        "title": _("VPN Demo"),
+        "info": _(
+            "Some devices allow you to create VPNs. A Virtual Private Network (VPN) allows you to connect up to things behind a firewall. For this example, you need to ping from pc0 to a number of different things just to see how the VPN works. Make sure you edit one or more of the firewalls to see how the VPN is configured, and see how the static route is defined to make the packets go through the VPN. You will need to know how that works to solve the rest of this level."
+        ),
+    },
+    "2.1.1": {
+        "title": _("Bad Encryption"),
+        "info": _(
+            "The VPNs need their encryption keys fixed. Ping from pc0 to pc1 to ensure it works."
+        ),
+    },
+    "2.1.2": {
+        "title": _("Bad VPN IP"),
+        "info": _(
+            "The VPN Network card has the wrong IP address. Fix the IP address on the firewall VPN, and then ping from pc0 to pc1 through the VPN."
+        ),
+    },
+    "2.1.3": {
+        "title": _("Bad Route"),
+        "info": _(
+            "One of the firewalls is missing a route to tell it to use the VPN. Configure the route and then ping from pc0 to pc1 to make sure it works."
+        ),
+    },
+    "2.5": {
+        "title": _("Build a VPN"),
+        "info": _(
+            "Both firewalls need their VPNs configured. Do not forget to make the right routes!"
+        ),
+    },
+    "2.5.1": {
+        "title": _("Blast from the past"),
+        "info": _(
+            "There are a few problems with this puzzle. pc0 needs to ping pc1, and pc1 needs to ping pc0."
+        ),
+    },
+    "2.6": {
+        "title": _("Connect the dots"),
+        "info": _(
+            "Connect the firewalls to the router, setting up working IPs. Do not forget the VPN!"
+        ),
+    },
+    "2.7": {
+        "title": _("Not Working"),
+        "info": _(
+            'Someone has been trying to set up a VPN between two sites. "It is just not working!" they tell you. I guess it is up to you to figure out what they did wrong. Get pc0 to ping pc1.'
+        ),
+    },
+    "2.7.5": {
+        "title": _("Cannot connect"),
+        "info": _(
+            "The director shut down the office when he went away for the weekend, and brought back this new laptop (laptop2) to connect up. It is not working, and you need to fix your network."
+        ),
+    },
+    "2.9": {
+        "title": _("VPN Woes"),
+        "info": _(
+            "For routing to work, you need to have different IP addresses on the other side of the route. Here we have two networks that are using the same IP address scheme. To get them to work, you will need to change the IP Addresses of one of the networks. It is easiest to change the right network to be 192.168.2.x, as the left network has the right routes already set up for that network."
+        ),
+    },
+    "2.1.5": {
+        "title": _("VPNs and traceroute"),
+        "info": _(
+            'Packets that go through a VPN are "encapsulated."  This means that they are packed up and put inside a VPN packet. A traceroute packet has a "TTL" (Time to Live). Every router along the path is supposed to subtract one from theTTL, and when the TTL is zero, the device that has it will drop the traceroute packet and respond to the originating machine. \n\nAs you do the traceroutes, notice that the router in the center never responds to the traceroute. That is because the traceroute packet is encapsulated. The "outside" packet has a normal TTL, and so the router in the middle never drops the packet. But, the firewall in the middle decrypts the packet, processes it, and sends it on. That firewill will respond to the traceroute.'
+        ),
+    },
+    # "3.9.9": {
+    #     "title": _(""),
+    #     "info": _(""),
+    # },
 }
 
 # ref:
