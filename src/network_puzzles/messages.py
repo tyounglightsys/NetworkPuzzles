@@ -10,37 +10,37 @@ puzzles = {
     "0.1": {
         "title": _("Ping Test"),
         "info": _(
-            "Select (tap or click) pc0 and ping laptop0 and laptop1. You can enter either the IP address or the hostname of the device you are trying to ping in the pop-up window."
+            "Tap or click pc0 and ping laptop0 and laptop1. You can enter either the IP address or the hostname of the device you are trying to ping in the pop-up window."
         ),
     },
     "0.1.1": {
         "title": _("Plug in network"),
         "info": _(
-            'Plug in the network to the computer that needs it. \n\nSelect the new-item icon (the "+") icon, then select the "link" icon (the line) from the drop-down menu. Select the link\'s first device and NIC, then its second device and NIC.'
+            'Plug in the network to the computer that needs it. \n\nTap or click the new-item icon (the "+") icon, then select the "link" icon (the line) from the drop-down menu. Select the link\'s first device and NIC, then its second device and NIC.'
         ),
     },
     "0.2": {
         "title": _("No Switch"),
         "info": _(
-            'There is no switch. Add one and link the devices to it. \n\nSelect the new-item icon (the "+"), then select the "infrastructure devices" icon from the drop-down menu, then select the switch to add one to the network (make sure you choose a switch and not a hub). Tap or click in an empty space to place the switch, then create links from the switch to each of the computers, choosing which ports to connect.'
+            'There is no switch. Add one and link the devices to it. \n\nTap or click the new-item icon (the "+"), then select the "infrastructure devices" icon from the drop-down menu, then select the switch to add one to the network (make sure you choose a switch and not a hub). Tap or click in an empty space to place the switch, then create links from the switch to each of the computers, choosing which ports to connect.'
         ),
     },
     "0.2.5": {
         "title": _("Power It On"),
         "info": _(
-            "The switch is powered off. \n\nSelect it and power it on. Then, ping the laptop from pc0 to make sure things work."
+            "The switch is powered off. \n\nTap or click it and power it on. Then, ping the laptop from pc0 to make sure things work."
         ),
     },
     "0.3": {
         "title": _("DHCP Request"),
         "info": _(
-            "The PC needs to do a DHCP request. \n\nSelect pc0 and tell it to do a DHCP request."
+            "The PC needs to do a DHCP request. \n\nTap or click pc0 and tell it to do a DHCP request."
         ),
     },
     "0.3.1": {
         "title": _("IP Puzzle"),
         "info": _(
-            'pc0 needs an IP that is local to the other two computers. \n\nSelect pc0 and choose "Edit" from the menu, then select the connected NIC eth0 and give it an appropriate IP Address.'
+            'pc0 needs an IP that is local to the other two computers. \n\nTap or click pc0 and choose "Edit" from the menu, then select the connected NIC eth0 and give it an appropriate IP Address.'
         ),
     },
     "0.3.4": {
@@ -58,7 +58,7 @@ puzzles = {
     "0.3.6": {
         "title": _("Frozen!"),
         "info": _(
-            "Every once in a while a piece of hardware will freeze up and needs to be rebooted. \n\nTry pinging laptop1 from pc0 and see how the packet fails. It does not get past the switch. Select the switch and power it off, then power it back on. Now try pinging laptop1."
+            "Every once in a while a piece of hardware will freeze up and needs to be rebooted. \n\nTry pinging laptop1 from pc0 and see how the packet fails. It does not get past the switch. Tap or click the switch and power it off, then power it back on. Now try pinging laptop1."
         ),
     },
     "0.4": {
@@ -100,7 +100,7 @@ puzzles = {
     "0.10.1": {
         "title": _("Bad Power Supply"),
         "info": _(
-            "Occasionally a piece of hardware will break. This often happens after long periods of use, though sometimes after just sitting around unused. This puzzle makes it look a little worse than it usually would look. \n\nGo ahead and turn on the switch. After that, select it and replace it. Things that have been replaced will need to have their settings put back. So make sure to give the new switch a good IP and netmask."
+            "Occasionally a piece of hardware will break. This often happens after long periods of use, though sometimes after just sitting around unused. This puzzle makes it look a little worse than it usually would look. \n\nTap or click on the switch and turn it on. After that, select it again and replace it. Things that have been replaced will need to have their settings put back. So make sure to give the new switch a good IP and netmask."
         ),
     },
     "0.10.2": {

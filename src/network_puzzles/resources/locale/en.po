@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-06-22 06:13+0100\n"
-"PO-Revision-Date: 2025-05-18 16:52+0100\n"
+"POT-Creation-Date: 2026-06-26 07:06-0500\n"
+"PO-Revision-Date: 2026-06-26 07:06-0500\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
 "Language: English\n"
@@ -21,766 +21,866 @@ msgstr ""
 msgid "Learn how help works"
 msgstr ""
 
-#: messages.py:6
+#: messages.py:7
 msgid ""
-"To learn how this program works, first we will acquaint you with the "
-"'Help.'  Most of the puzzles you do, you will want to do with as little help "
-"as possible.  But, there is help when you need it.  For this puzzle, click "
-"one of the four help-levels (round buttons) on the right.  Then mouse-over "
-"the PC and see the messages.  When you have moused-over for all the buttons "
-"(and pressed the ? box), this puzzle will be completed."
+"*To learn how this program works, first we will acquaint you with the "
+"'Help.' Most of the puzzles you do, you will want to do with as little help "
+"as possible. But, there is help when you need it. For this puzzle, choose "
+"one of the four help-levels using the slider on the left. Then long-press or "
+"mouse-over the PC and see the messages. When you have moused-over for all "
+"the buttons (and pressed the ? box), this puzzle will be completed."
 msgstr ""
 
-#: messages.py:9
+#: messages.py:11
 msgid "Ping Test"
 msgstr ""
 
-#: messages.py:10
-msgid ""
-"Right-click PC0 and ping laptop0 and laptop1.  You can put either the IP "
-"address or host-name of the device you are trying to ping in the box that "
-"pops up asking you for an IP."
-msgstr ""
-
 #: messages.py:13
-msgid "Plug in network"
-msgstr ""
-
-#: messages.py:14
 msgid ""
-"Plug in the network to the computer that needs it.  Click on the link icon "
-"(the line) and drag the pointer from the switch to the computer.  When you "
-"release the mouse button, the link window will pop up.  Choose the ports you "
-"want to connect, and you should be finished."
+"Tap or click pc0 and ping laptop0 and laptop1. You can enter either the IP "
+"address or the hostname of the device you are trying to ping in the pop-up "
+"window."
 msgstr ""
 
 #: messages.py:17
+msgid "Plug in network"
+msgstr ""
+
+#: messages.py:19
+msgid ""
+"Plug in the network to the computer that needs it. \n"
+"\n"
+"Tap or click the new-item icon (the \"+\") icon, then select the \"link\" "
+"icon (the line) from the drop-down menu. Select the link's first device and "
+"NIC, then its second device and NIC."
+msgstr ""
+
+#: messages.py:23
 msgid "No Switch"
 msgstr ""
 
-#: messages.py:18
-msgid ""
-"There is no switch.  Add one and link the devices to it.  Click on the "
-"switch and add it to the network (make sure you add a switch and not a "
-"hub).  Then, drag links from the switch to the computers, choosing the ports "
-"to connect."
-msgstr ""
-
-#: messages.py:21
-msgid "Power It On"
-msgstr ""
-
-#: messages.py:22
-msgid ""
-"The switch is powered off.  Right-click it and power it on.  Then, ping the "
-"laptop to make sure things work."
-msgstr ""
-
 #: messages.py:25
-msgid "DHCP Request"
-msgstr ""
-
-#: messages.py:26
 msgid ""
-"Tell the PC to do a DHCP request.  Right-click on the PC to see the menu, or "
-"do it from the 'All' menu."
+"There is no switch. Add one and link the devices to it. \n"
+"\n"
+"Tap or click the new-item icon (the \"+\"), then select the \"infrastructure "
+"devices\" icon from the drop-down menu, then select the switch to add one to "
+"the network (make sure you choose a switch and not a hub). Tap or click in "
+"an empty space to place the switch, then create links from the switch to "
+"each of the computers, choosing which ports to connect."
 msgstr ""
 
 #: messages.py:29
-msgid "IP Puzzle"
+msgid "Power It On"
 msgstr ""
 
-#: messages.py:30
+#: messages.py:31
 msgid ""
-"pc0 needs an IP that is local to the other two computers.  Double-click PC0, "
-"double-click the IP-Address (0.0.0.0) and put a good IP address there."
+"The switch is powered off. \n"
+"\n"
+"Tap or click it and power it on. Then, ping the laptop from pc0 to make sure "
+"things work."
 msgstr ""
 
-#: messages.py:33
-msgid "Network Loop"
-msgstr ""
-
-#: messages.py:34
-msgid ""
-"This puzzle shows you what happens when you create a network loop.  A loop "
-"is made when you have your switches connected to themselves or to another "
-"one that is connected back to the first one.  Ping from pc0 to pc1 to see "
-"what happens.  You do not need to fix the problem, but right-clicking one of "
-"the switches and removing one of the offending links would do it."
+#: messages.py:35
+msgid "DHCP Request"
 msgstr ""
 
 #: messages.py:37
-msgid "Network Loop 2"
-msgstr ""
-
-#: messages.py:38
 msgid ""
-"Managed Switches can use Spanning Tree, which intelligently figures out the "
-"least distance path to a point.  It is made so you can have network loops "
-"and survive.  Try pinging pc1 twice from pc0.  The first time, some packets "
-"are lost.  But the second time the packet goes where it should."
+"The PC needs to do a DHCP request. \n"
+"\n"
+"Tap or click pc0 and tell it to do a DHCP request."
 msgstr ""
 
 #: messages.py:41
-msgid "Frozen!"
+msgid "IP Puzzle"
 msgstr ""
 
-#: messages.py:42
+#: messages.py:43
 msgid ""
-"Every once in a while a piece of hardware will freeze up and needs to be "
-"rebooted.  \n"
+"pc0 needs an IP that is local to the other two computers. \n"
 "\n"
-"Try pinging laptop1 from PC0 and see how the packet fails.  It does not get "
-"past the switch.\n"
-"\n"
-"Right-click the switch and power it off, then power it back on.  Now try "
-"pinging laptop1."
+"Tap or click pc0 and choose \"Edit\" from the menu, then select the "
+"connected NIC eth0 and give it an appropriate IP Address."
 msgstr ""
 
-#: messages.py:45
-msgid "Switch vs Hub"
-msgstr ""
-
-#: messages.py:46
-msgid ""
-"This puzzle shows the difference between a hub and a switch.\n"
-"Have each of the servers ping the computers on the same lan as themselves, "
-"and have those computers ping the server.  \n"
-"The switch learns which device is attached to it and only sends the packet "
-"to that computer, while the hub sends the packet to every device on the "
-"subnet."
+#: messages.py:47
+msgid "Network Loop"
 msgstr ""
 
 #: messages.py:49
-msgid "Where did I put that?"
-msgstr ""
-
-#: messages.py:50
 msgid ""
-"Your boss bought a switch and plugged it into your network, but did not tell "
-"you where he put it.  Now he wants you to find it.\n"
-"What do you do when you know where something is, but not exactly?  You go to "
-"the device you know it is plugged into and follow the wire.\n"
-"To solve this, drag the switch around, and then find the other end of the "
-"wire and \"drag\" on the empty spot to \"find\" it.  Then, change the IP "
-"address of the missing switch."
+"This puzzle shows you what happens when there is a network loop. A loop is "
+"made when you have your switches connected to themselves or to another one "
+"that is connected back to the first one. \n"
+"\n"
+"Ping from pc0 to pc1 to see what happens. You do not need to fix the "
+"problem, but removing one of the offending links from one of the switches "
+"would do it."
 msgstr ""
 
 #: messages.py:53
-msgid "Broken Link"
+msgid "Network Loop 2"
 msgstr ""
 
-#: messages.py:54
+#: messages.py:55
 msgid ""
-"This shows what happens if there is a broken network wire in your network.  "
-"Ping laptop1 and see where the packet dies.  Open one of the devices "
-"connected to that link and you will see that, even though the device has a "
-"link connected to it, it does not have a \"connection light\" saying it is "
-"connected.  (The connection-light is the * at the end of the eth name).  You "
-"can also edit the network card to see if it thinks it is connected.  Remove "
-"the broken network wire by right-clicking one of the devices at either end "
-"and removing the link.  Then add the link again.  A successful ping tells "
-"you if you got it working."
+"Managed Switches can use Spanning Tree Protocol (STP), which intelligently "
+"figures out the least distance path to a point. STP lets you have network "
+"loops and survive. \n"
+"\n"
+"Try pinging pc1 twice from pc0. The first time, some packets are lost. But "
+"the second time the packet goes where it should."
 msgstr ""
 
-#: messages.py:57
-msgid "Packet Corruption"
-msgstr ""
-
-#: messages.py:58
-msgid ""
-"Network wires that run too close to electrical wires or fluorescent lights "
-"can cause packet corruption.  Move the light out of the way if the packet "
-"get corrupted."
+#: messages.py:59
+msgid "Frozen!"
 msgstr ""
 
 #: messages.py:61
-msgid "Packet Corruption2"
-msgstr ""
-
-#: messages.py:62
 msgid ""
-"Packets can be partially corrupted by lights.  Look at how the packet goes "
-"the first time.  Move the light out of the way just a little bit and it "
-"should work fine."
+"Every once in a while a piece of hardware will freeze up and needs to be "
+"rebooted. \n"
+"\n"
+"Try pinging laptop1 from pc0 and see how the packet fails. It does not get "
+"past the switch. Tap or click the switch and power it off, then power it "
+"back on. Now try pinging laptop1."
 msgstr ""
 
 #: messages.py:65
-msgid "Traceroute"
+msgid "Hub vs Switch"
 msgstr ""
 
-#: messages.py:66
+#: messages.py:67
 msgid ""
-"A traceroute tests the path from one computer to the other.  Every routing "
-"device along the path will respond (but switches do not).  \n"
-"This is done by adding a TTL (Time to Live) number on every packet.  Each "
-"device that routes packets will subtract one from the TTL.  When the TTL "
-"reaches zero, the devices will send a response back.  Traceroute catches "
-"these responses and uses it to determine what each step is along the path.\n"
-"Have server0 traceroute to server1"
+"This puzzle shows the difference between a hub and a switch. \n"
+"\n"
+"Have each of the servers ping the computers on the same LAN as themselves, "
+"and have those computers ping the server. The switch learns which device is "
+"attached to it and only sends the packet to that computer, while the hub "
+"sends the packet to every device on the subnet."
 msgstr ""
 
-#: messages.py:69
-msgid "Bad Power Supply"
-msgstr ""
-
-#: messages.py:70
-msgid ""
-"Occasionally a piece of hardware will break, This often happens after long "
-"periods of use, though sometimes after just sitting around unused.\n"
-"\n"
-"This puzzle makes it look a little worse than it usually would look.  Go "
-"ahead and turn on the switch.  After that, right-click and replace it.\n"
-"\n"
-"Things that have been replaced will need to have their settings put back.  "
-"So make sure to give the new switch a good IP and gateway."
+#: messages.py:71
+msgid "Where did I put that?"
 msgstr ""
 
 #: messages.py:73
-msgid "Bad Power - Needs UPS"
-msgstr ""
-
-#: messages.py:74
 msgid ""
-"Occasionally the electricity in a building, or in a city, has problems.  "
-"Usually, in these cases, a device will function for a while and then break "
-"on you.  To make the puzzle go faster, however, we have it break "
-"immediately.\n"
+"Your boss bought a switch and plugged it into your network, but did not tell "
+"you where he put it. Now he wants you to find it. What do you do when you "
+"know where something is, but not exactly? You go to the device you know it "
+"is plugged into and follow the wire. \n"
 "\n"
-"This puzzle makes it look a little worse than it usually would look.  Go "
-"ahead and turn on the switch.  After that, right-click and replace it.  If "
-"you turn it on again, it will continue to break until you add a UPS to it.  "
-"After that, it will be fine.  Luckily for you, you do not need to pay for "
-"the devices you keep replacing!\n"
-"\n"
-"Things that have been replaced will need to have their settings put back.  "
-"So make sure to give the new switch a good IP and gateway."
+"To solve this, drag the switch around, and then find the other end of the "
+"wire and \"drag\" on the empty spot to \"find\" it. Then, change the IP "
+"address of the missing switch."
 msgstr ""
 
 #: messages.py:77
+msgid "Broken Link"
+msgstr ""
+
+#: messages.py:79
+msgid ""
+"This shows what happens if there is a broken network wire in your network. \n"
+"\n"
+"Ping laptop1 and see where the packet dies. Open one of the devices "
+"connected to that link and you will see that, even though the device has a "
+"link connected to it, it does not have a \"connection light\" saying it is "
+"connected.  (The connection-light is the * at the end of the eth name). You "
+"can also edit the network card to see if it thinks it is connected. Remove "
+"the broken network wire by selecting it and deleting it. Then add the link "
+"again. A successful ping tells you if you got it working."
+msgstr ""
+
+#: messages.py:83
+msgid "Packet Corruption"
+msgstr ""
+
+#: messages.py:85
+msgid ""
+"Network wires that run too close to electrical wires or fluorescent lights "
+"can cause packet corruption. \n"
+"\n"
+"Move the light out of the way if the packet gets corrupted."
+msgstr ""
+
+#: messages.py:89
+msgid "Packet Corruption2"
+msgstr ""
+
+#: messages.py:91
+msgid ""
+"Packets can be partially corrupted by lights. \n"
+"\n"
+"Ping from pc0 to pc1 and look at how the packet goes the first time. Move "
+"the light out of the way just a little bit and it should work fine."
+msgstr ""
+
+#: messages.py:95
+msgid "Traceroute"
+msgstr ""
+
+#: messages.py:97
+msgid ""
+"A traceroute tests the path from one computer to the other. Every routing "
+"device along the path will respond (but switches do not). This is done by "
+"adding a TTL (Time to Live) number on every packet. Each device that routes "
+"packets will subtract one from the TTL. When the TTL reaches zero, the "
+"devices will send a response back. Traceroute catches these responses and "
+"uses it to determine what each step is along the path.\n"
+"\n"
+"Have server0 traceroute to server1."
+msgstr ""
+
+#: messages.py:101
+msgid "Bad Power Supply"
+msgstr ""
+
+#: messages.py:103
+msgid ""
+"Occasionally a piece of hardware will break. This often happens after long "
+"periods of use, though sometimes after just sitting around unused. This "
+"puzzle makes it look a little worse than it usually would look. \n"
+"\n"
+"Tap or click on the switch and turn it on. After that, select it again and "
+"replace it. Things that have been replaced will need to have their settings "
+"put back. So make sure to give the new switch a good IP and netmask."
+msgstr ""
+
+#: messages.py:107
+msgid "Bad Power - Needs UPS"
+msgstr ""
+
+#: messages.py:109
+msgid ""
+"Occasionally the electricity in a building, or in a city, has problems. "
+"Usually, in these cases, a device will function for a while and then break "
+"on you. To make the puzzle go faster, however, we have it break immediately. "
+"This puzzle makes it look a little worse than it usually would look. \n"
+"\n"
+"Go ahead and turn on the switch. After that replace it. If you turn it on "
+"again, it will continue to break until you add a UPS to it. After that, it "
+"will be fine. Luckily for you, you do not need to pay for the devices you "
+"keep replacing! Things that have been replaced will need to have their "
+"settings put back, so make sure to give the new switch a good IP and netmask."
+msgstr ""
+
+#: messages.py:113
 msgid "Bad IP"
 msgstr ""
 
-#: messages.py:78
+#: messages.py:115
 msgid ""
-"PC0 cannot ping one of the other computers.  Figure out which one, and "
+"*PC0 cannot ping one of the other computers. Figure out which one, and "
 "change the IP address of that computer so it works."
 msgstr ""
 
-#: messages.py:81
+#: messages.py:119
 msgid "Bad DHCP"
 msgstr ""
 
-#: messages.py:82
+#: messages.py:121
 msgid ""
-"The Server is giving out bad DHCP.  Edit the DHCP settings to tell it to "
+"*The Server is giving out bad DHCP. Edit the DHCP settings to tell it to "
 "give correct DHCP.  (You do this by selecting 'DHCP' from the device-editing "
 "screen) Then do a DHCP request on all the PCs."
 msgstr ""
 
-#: messages.py:85
+#: messages.py:125
 msgid "Gateway Puzzle"
 msgstr ""
 
-#: messages.py:86
+#: messages.py:127
 msgid ""
-"The items on one network cannot ping the items on the other network "
-"(separated by the router).  Figure why and fix it.  All computers and "
-"switches need fixing, but the router is OK."
+"*The items on one network cannot ping the items on the other network "
+"(separated by the router). Figure why and fix it. All computers and switches "
+"need fixing, but the router is OK."
 msgstr ""
 
-#: messages.py:89
+#: messages.py:131
 msgid "Duplicate IPs"
 msgstr ""
 
-#: messages.py:90
+#: messages.py:132
 msgid "Get the PCs so they are happy."
 msgstr ""
 
-#: messages.py:93
+#: messages.py:135
 msgid "Two Subnets, Shared Network"
 msgstr ""
 
-#: messages.py:94
+#: messages.py:137
 msgid ""
-"This network has two different subnets using the same switch.  Ping from the "
+"*This network has two different subnets using the same switch. Ping from the "
 "different PCs to machines on the other network.\n"
 "This is a two-part network; you will see this same network again in the next "
-"puzzle, but using one router instead of two.  We will use these concepts "
+"puzzle, but using one router instead of two. We will use these concepts "
 "later on, when we are dealing with security."
 msgstr ""
 
-#: messages.py:97
+#: messages.py:141
 msgid "Two Subnets, Shared Network2"
 msgstr ""
 
-#: messages.py:98
+#: messages.py:143
 msgid ""
-"This network has two different subnets using the same switch.  The router "
+"*This network has two different subnets using the same switch. The router "
 "has two interfaces (IP addresses, both on eth0). One network card functions "
-"like two.  Ping from the different PCs to machines on the other network.\n"
+"like two. Ping from the different PCs to machines on the other network.\n"
 "This is the same network as the previous one, except it uses one router "
-"instead of two.  We will be using this concept later on when we talk about "
-"security.  The reason we will use it, is that we may want to have different "
+"instead of two. We will be using this concept later on when we talk about "
+"security. The reason we will use it, is that we may want to have different "
 "groups of people on a network (maybe students, faculty, and guests), and we "
-"want to have different security levels for each group.  By having student "
+"want to have different security levels for each group. By having student "
 "traffic need to go through one router before it gets to the staff network, "
-"we can set up firewall rules to block students from accessing faculty data.  "
+"we can set up firewall rules to block students from accessing faculty data. "
 "But, that is for a later puzzle."
 msgstr ""
 
-#: messages.py:101
+#: messages.py:147
 msgid "Adding Devices"
 msgstr ""
 
-#: messages.py:102
+#: messages.py:149
 msgid ""
-"This puzzle has three tasks to it:\n"
+"*This puzzle has three tasks to it:\n"
 "1) Give the switch an IP address\n"
 "2) Add an IP-Phone to the network, linking it to the switch, and then do a "
 "DHCP request for it.\n"
 "3) Ping the switch from the IP-Phone"
 msgstr ""
 
-#: messages.py:105
+#: messages.py:153
 msgid "Add DHCP Server"
 msgstr ""
 
-#: messages.py:106
+#: messages.py:155
 msgid ""
-"These IP-Phones cannot have a static IP.  You must add a server on the "
-"192.168.1.0 network and configure the DHCP server.  Give an IP to the phone, "
+"*These IP-Phones cannot have a static IP. You must add a server on the "
+"192.168.1.0 network and configure the DHCP server. Give an IP to the phone, "
 "so the phone can ping the PCs on the other side of the network"
 msgstr ""
 
-#: messages.py:109
+#: messages.py:159
 msgid "Bad Gateway"
 msgstr ""
 
-#: messages.py:110
+#: messages.py:161
 msgid ""
-"Computers can only communicate with other computers that are local to them.  "
-"Gateways must have an IP address that is local to the client.  Ping pc0 from "
+"*Computers can only communicate with other computers that are local to them. "
+"Gateways must have an IP address that is local to the client. Ping pc0 from "
 "pc1 and see if you can spot the error."
 msgstr ""
 
-#: messages.py:113
+#: messages.py:165
 msgid "Duplicate MAC addresses"
 msgstr ""
 
-#: messages.py:114
+#: messages.py:167
 msgid ""
-"This puzzle shows you what happens when there are duplicate MAC addresses.  "
+"*This puzzle shows you what happens when there are duplicate MAC addresses. "
 "This rarely happens, but it used to happen more often than should be "
-"statistically probable.  Cheap network card vendors used to make batches of "
-"cards with the same MAC address, and occasionally someone would  buy two of "
-"them.  The best solution is to replace one of the NICs that has the "
-"duplicate MAC address.  Ping both pc0 and pc1 from pc2."
+"statistically probable. Cheap network card vendors used to make batches of "
+"cards with the same MAC address, and occasionally someone would buy two of "
+"them. The best solution is to replace one of the NICs that has the duplicate "
+"MAC address. Ping both pc0 and pc1 from pc2."
 msgstr ""
 
-#: messages.py:117
+#: messages.py:171
 msgid "Bad Netmask"
 msgstr ""
 
-#: messages.py:118
+#: messages.py:173
 msgid ""
-"One of the subnets has a poorly crafted subnet.  There are two ways to "
-"represent subnets.  The \"dot-decimal\" notation (255.255.255.0) and CIDR "
+"*One of the subnets has a poorly crafted subnet. There are two ways to "
+"represent subnets. The \"dot-decimal\" notation (255.255.255.0) and CIDR "
 "(/24). \n"
 "\n"
-"Here, we are using a subnet of 255.255.255.129.  The 129, in binary, is "
-"10000001.  That trailing 1 is the problem.  It basically puts the odd "
-"numbers in one subnet and the even numbers in the other subnet.  While it is "
-"possible to get networks to function with a terrible subnet mask like this, "
-"do not do it.  Use numbers that are properly represented by CIDR notation.  "
-"Basically, in binary, you want a bunch of 1s, followed by 0s.  (111000), not "
-"1s and 0s intermingled.  (10101).  CIDR (/25) represents the number of 1s, "
-"and the rest are 0.\n"
+"Here, we are using a subnet of 255.255.255.129. The 129, in binary, is "
+"10000001. That trailing 1 is the problem. It basically puts the odd numbers "
+"in one subnet and the even numbers in the other subnet. While it is possible "
+"to get networks to function with a terrible subnet mask like this, do not do "
+"it. Use numbers that are properly represented by CIDR notation. Basically, "
+"in binary, you want a bunch of 1s, followed by 0s.  (111000), not 1s and 0s "
+"intermingled.  (10101). CIDR (/25) represents the number of 1s, and the rest "
+"are 0.\n"
 "\n"
 "To solve this puzzle, find the IP Addresses that have the /? and change the "
-"subnet to something that works.  Then, try pinging."
-msgstr ""
-
-#: messages.py:121
-msgid "Practice1"
-msgstr ""
-
-#: messages.py:125
-msgid "Practice2"
-msgstr ""
-
-#: messages.py:129
-msgid "Practice3"
-msgstr ""
-
-#: messages.py:133
-msgid "Practice4"
-msgstr ""
-
-#: messages.py:137
-msgid "Practice5"
-msgstr ""
-
-#: messages.py:141
-msgid "Practice6"
-msgstr ""
-
-#: messages.py:145
-msgid "Practice7"
-msgstr ""
-
-#: messages.py:155 messages.py:160 messages.py:165 messages.py:170
-#: messages.py:175 messages.py:180 messages.py:185 messages.py:190
-#: messages.py:195 messages.py:200 messages.py:205 messages.py:210
-#: messages.py:215 messages.py:220 messages.py:225 messages.py:230
-#: messages.py:235 messages.py:240 messages.py:245 messages.py:250
-#: messages.py:255 messages.py:260 messages.py:265 messages.py:270
-#: messages.py:275 messages.py:280 messages.py:285 messages.py:290
-#: messages.py:295 messages.py:300 messages.py:305 messages.py:310
-#: messages.py:315
-msgid "has a problem"
-msgstr ""
-
-#: messages.py:156
-msgid "hardware problem"
-msgstr ""
-
-#: messages.py:157
-msgid "bad power supply"
-msgstr ""
-
-#: messages.py:161
-msgid "device is frozen"
-msgstr ""
-
-#: messages.py:162
-msgid "reboot the device"
-msgstr ""
-
-#: messages.py:166
-msgid "is plugged into bad power"
-msgstr ""
-
-#: messages.py:167
-msgid "needs a UPS"
-msgstr ""
-
-#: messages.py:171 messages.py:172
-msgid "network card sprays net when used"
-msgstr ""
-
-#: messages.py:176
-msgid "needs change to DHCP server:"
+"subnet to something that works. Then, try pinging."
 msgstr ""
 
 #: messages.py:177
-msgid "DHCP server enabled ="
+msgid "Practice1"
 msgstr ""
 
 #: messages.py:181
-msgid "should fail to ping a specific host"
+msgid "Practice2"
 msgstr ""
 
-#: messages.py:182
-msgid "needs to try to ping (and fail):"
+#: messages.py:185
+msgid "Practice3"
 msgstr ""
 
-#: messages.py:186
-msgid "get mouse-over help"
+#: messages.py:189
+msgid "Practice4"
 msgstr ""
 
-#: messages.py:187
-msgid "get mouse-over help of level:"
-msgstr ""
-
-#: messages.py:191
-msgid "is locked"
-msgstr ""
-
-#: messages.py:192
-msgid "is locked:"
-msgstr ""
-
-#: messages.py:196
-msgid "has locked DHCP"
+#: messages.py:193
+msgid "Practice5"
 msgstr ""
 
 #: messages.py:197
-msgid "has locked DHCP:"
+msgid "Practice6"
 msgstr ""
 
 #: messages.py:201
-msgid "has locked gateway"
+msgid "Practice7"
 msgstr ""
 
-#: messages.py:202
-msgid "has locked gateway:"
-msgstr ""
-
-#: messages.py:206
-msgid "the VLAN on an interface is locked"
-msgstr ""
-
-#: messages.py:207
-msgid "the VLAN on an interface is locked:"
-msgstr ""
-
-#: messages.py:211
-msgid "has locked IP"
+#: messages.py:211 messages.py:216 messages.py:221 messages.py:226
+#: messages.py:231 messages.py:236 messages.py:241 messages.py:246
+#: messages.py:251 messages.py:256 messages.py:261 messages.py:266
+#: messages.py:271 messages.py:276 messages.py:281 messages.py:286
+#: messages.py:291 messages.py:296 messages.py:301 messages.py:306
+#: messages.py:311 messages.py:316 messages.py:321 messages.py:326
+#: messages.py:331 messages.py:336 messages.py:341 messages.py:346
+#: messages.py:351 messages.py:356 messages.py:361 messages.py:366
+#: messages.py:371
+msgid "has a problem"
 msgstr ""
 
 #: messages.py:212
-msgid "has locked IP:"
+msgid "hardware problem"
 msgstr ""
 
-#: messages.py:216
-msgid "device cannot be moved"
+#: messages.py:213
+msgid "bad power supply"
 msgstr ""
 
 #: messages.py:217
-msgid "device cannot be moved:"
+msgid "device is frozen"
 msgstr ""
 
-#: messages.py:221
-msgid "has locked NIC"
+#: messages.py:218
+msgid "reboot the device"
 msgstr ""
 
 #: messages.py:222
-msgid "has locked NIC:"
+msgid "is plugged into bad power"
 msgstr ""
 
-#: messages.py:226
-msgid "the VLAN on a NIC is locked"
+#: messages.py:223
+msgid "needs a UPS"
 msgstr ""
 
-#: messages.py:227
-msgid "the VLAN on a NIC is locked:"
-msgstr ""
-
-#: messages.py:231
-msgid "has locked route"
+#: messages.py:227 messages.py:228
+msgid "network card sprays net when used"
 msgstr ""
 
 #: messages.py:232
-msgid "has locked route:"
+msgid "needs change to DHCP server:"
 msgstr ""
 
-#: messages.py:236
-msgid "VLAN names and IDs are locked"
+#: messages.py:233
+msgid "DHCP server enabled ="
 msgstr ""
 
 #: messages.py:237
-msgid "VLAN names and IDs are locked:"
+msgid "should fail to ping a specific host"
 msgstr ""
 
-#: messages.py:241
-msgid "a VLAN is locked"
+#: messages.py:238
+msgid "needs to try to ping (and fail):"
 msgstr ""
 
 #: messages.py:242
-msgid "a VLAN is locked:"
+msgid "get mouse-over help"
 msgstr ""
 
-#: messages.py:246
-msgid "needs the gateway set"
+#: messages.py:243
+msgid "get mouse-over help of level:"
 msgstr ""
 
 #: messages.py:247
-msgid "needs the gateway set to:"
+msgid "is locked"
 msgstr ""
 
-#: messages.py:251
-msgid "the interface needs a forbidden VLAN"
+#: messages.py:248
+msgid "is locked:"
 msgstr ""
 
 #: messages.py:252
-msgid "the interface needs a forbidden VLAN:"
+msgid "has locked DHCP"
 msgstr ""
 
-#: messages.py:256
-msgid "needs to be connected to the network"
+#: messages.py:253
+msgid "has locked DHCP:"
 msgstr ""
 
 #: messages.py:257
-msgid "needs a link to host:"
+msgid "has locked gateway"
 msgstr ""
 
-#: messages.py:261
-msgid "needs a local IP"
+#: messages.py:258
+msgid "has locked gateway:"
 msgstr ""
 
 #: messages.py:262
-msgid "needs an IP local to host:"
+msgid "the VLAN on an interface is locked"
 msgstr ""
 
-#: messages.py:266
-msgid "cannot ping"
+#: messages.py:263
+msgid "the VLAN on an interface is locked:"
 msgstr ""
 
 #: messages.py:267
-msgid "cannot ping host:"
+msgid "has locked IP"
 msgstr ""
 
-#: messages.py:271
-msgid "needs a route set"
+#: messages.py:268
+msgid "has locked IP:"
 msgstr ""
 
 #: messages.py:272
-msgid "needs a route to network:"
+msgid "device cannot be moved"
 msgstr ""
 
-#: messages.py:276
-msgid "the interface needs a tagged VLAN"
+#: messages.py:273
+msgid "device cannot be moved:"
 msgstr ""
 
 #: messages.py:277
-msgid "the interface needs a tagged VLAN:"
+msgid "has locked NIC"
 msgstr ""
 
-#: messages.py:281
-msgid "the interface needs an untagged VLAN"
+#: messages.py:278
+msgid "has locked NIC:"
 msgstr ""
 
 #: messages.py:282
-msgid "the interface needs an untagged VLAN:"
+msgid "the VLAN on a NIC is locked"
 msgstr ""
 
-#: messages.py:286 messages.py:287
-msgid "read context help for:"
+#: messages.py:283
+msgid "the VLAN on a NIC is locked:"
 msgstr ""
 
-#: messages.py:291
-msgid "needs to find ARP from some device"
+#: messages.py:287
+msgid "has locked route"
+msgstr ""
+
+#: messages.py:288
+msgid "has locked route:"
 msgstr ""
 
 #: messages.py:292
-msgid "needs to find ARP from:"
+msgid "VLAN names and IDs are locked"
 msgstr ""
 
-#: messages.py:296
-msgid "needs a DHCP IP address"
+#: messages.py:293
+msgid "VLAN names and IDs are locked:"
 msgstr ""
 
 #: messages.py:297
-msgid "needs a DHCP IP address from server:"
+msgid "a VLAN is locked"
 msgstr ""
 
-#: messages.py:301 messages.py:306 messages.py:311
-msgid "must ping a host"
+#: messages.py:298
+msgid "a VLAN is locked:"
 msgstr ""
 
-#: messages.py:302 messages.py:307 messages.py:312
-msgid "must ping:"
+#: messages.py:302
+msgid "needs the gateway set"
 msgstr ""
 
-#: messages.py:316
-msgid "needs to traceroute"
+#: messages.py:303
+msgid "needs the gateway set to:"
+msgstr ""
+
+#: messages.py:307
+msgid "the interface needs a forbidden VLAN"
+msgstr ""
+
+#: messages.py:308
+msgid "the interface needs a forbidden VLAN:"
+msgstr ""
+
+#: messages.py:312
+msgid "needs to be connected to the network"
+msgstr ""
+
+#: messages.py:313
+msgid "needs a link to host:"
 msgstr ""
 
 #: messages.py:317
+msgid "needs a local IP"
+msgstr ""
+
+#: messages.py:318
+msgid "needs an IP local to host:"
+msgstr ""
+
+#: messages.py:322
+msgid "cannot ping"
+msgstr ""
+
+#: messages.py:323
+msgid "cannot ping host:"
+msgstr ""
+
+#: messages.py:327
+msgid "needs a route set"
+msgstr ""
+
+#: messages.py:328
+msgid "needs a route to network:"
+msgstr ""
+
+#: messages.py:332
+msgid "the interface needs a tagged VLAN"
+msgstr ""
+
+#: messages.py:333
+msgid "the interface needs a tagged VLAN:"
+msgstr ""
+
+#: messages.py:337
+msgid "the interface needs an untagged VLAN"
+msgstr ""
+
+#: messages.py:338
+msgid "the interface needs an untagged VLAN:"
+msgstr ""
+
+#: messages.py:342 messages.py:343
+msgid "read context help for:"
+msgstr ""
+
+#: messages.py:347
+msgid "needs to find ARP from some device"
+msgstr ""
+
+#: messages.py:348
+msgid "needs to find ARP from:"
+msgstr ""
+
+#: messages.py:352
+msgid "needs a DHCP IP address"
+msgstr ""
+
+#: messages.py:353
+msgid "needs a DHCP IP address from server:"
+msgstr ""
+
+#: messages.py:357 messages.py:362 messages.py:367
+msgid "must ping a host"
+msgstr ""
+
+#: messages.py:358 messages.py:363 messages.py:368
+msgid "must ping:"
+msgstr ""
+
+#: messages.py:372
+msgid "needs to traceroute"
+msgstr ""
+
+#: messages.py:373
 msgid "needs to traceroute to:"
 msgstr ""
 
-#: base.py:112 base.py:169
-msgid "Ping [host]"
-msgstr ""
-
-#: networkpuzzles.kv:28
+#: networkpuzzles.kv:36
 msgid "choose puzzle"
 msgstr ""
 
-#: networkpuzzles.kv:33
-msgid "save puzzle"
-msgstr ""
-
-#: networkpuzzles.kv:38
+#: networkpuzzles.kv:46
 msgid "restart puzzle"
 msgstr ""
 
-#: networkpuzzles.kv:43
+#: networkpuzzles.kv:52
 msgid "undo"
 msgstr ""
 
-#: networkpuzzles.kv:48
+#: networkpuzzles.kv:58
 msgid "redo"
 msgstr ""
 
-#: networkpuzzles.kv:54
-msgid "choose language"
-msgstr ""
-
-#: networkpuzzles.kv:59
+#: networkpuzzles.kv:69
 msgid "help"
 msgstr ""
 
-#: networkpuzzles.kv:69
+#: networkpuzzles.kv:78
 msgid "Help level:"
 msgstr ""
 
-#: popups.kv:7
-msgid "Load Puzzle"
+#: popups.kv:13
+msgid "IP Address:"
 msgstr ""
 
-#: popups.kv:25
-msgid "Filter the puzzles by level:"
+#: popups.kv:21
+msgid "Netmask:"
 msgstr ""
 
-#: popups.kv:31
-msgid "Level 0"
+#: popups.kv:29
+msgid "Gateway:"
 msgstr ""
 
-#: popups.kv:37
-msgid "Level 1"
+#: popups.kv:54
+msgid "Input command:"
 msgstr ""
 
-#: popups.kv:43
-msgid "Level 2"
+#: popups.kv:70
+msgid "Edit DHCP configuration"
 msgstr ""
 
-#: popups.kv:49
-msgid "Level 3"
+#: popups.kv:77
+msgid "IP Address"
 msgstr ""
 
-#: popups.kv:55
-msgid "Level 4"
-msgstr ""
-
-#: popups.kv:61
-msgid "Level 5"
-msgstr ""
-
-#: popups.kv:67
-msgid "Level 6"
-msgstr ""
-
-#: popups.kv:78 popups.kv:140
-msgid "Cancel"
+#: popups.kv:79
+msgid "Range Start"
 msgstr ""
 
 #: popups.kv:81
-msgid "Load"
+msgid "Range End"
 msgstr ""
 
-#: popups.kv:86
-msgid "Error"
+#: popups.kv:94
+msgid "Edit Firewall configuration"
 msgstr ""
 
-#: popups.kv:110
-msgid "Quit"
-msgstr ""
-
-#: popups.kv:123
-msgid "Delete"
-msgstr ""
-
-#: popups.kv:126
+#: popups.kv:111 popups.kv:211 devices.py:225 devices.py:232 links.kv:41
+#: devices.kv:104 devices.kv:131
 msgid "Edit"
 msgstr ""
 
+#: popups.kv:129
+msgid "NIC type"
+msgstr ""
+
 #: popups.kv:136
+msgid "MAC address"
+msgstr ""
+
+#: popups.kv:148
+msgid "Can use DHCP"
+msgstr ""
+
+#: popups.kv:158
+msgid "Uses DHCP"
+msgstr ""
+
+#: popups.kv:161
+msgid "VPN Endpoint"
+msgstr ""
+
+#: popups.kv:167
+msgid "Encryption key"
+msgstr ""
+
+#: popups.kv:185
+msgid "Routes from NICs (read-only)"
+msgstr ""
+
+#: popups.kv:190
+msgid "Static routes (editable)"
+msgstr ""
+
+#: popups.kv:221
+msgid "Error"
+msgstr ""
+
+#: popups.kv:239
+msgid "Okay"
+msgstr ""
+
+#: popups.kv:248
 msgid "hostname or IP"
 msgstr ""
 
-#: popups.kv:143
-msgid "Okay"
+#: popups.kv:258
+msgid "Load Puzzle"
+msgstr ""
+
+#: popups.kv:276
+msgid "Filter the puzzles by level:"
+msgstr ""
+
+#: popups.kv:281
+msgid "Level 0"
+msgstr ""
+
+#: popups.kv:286
+msgid "Level 1"
+msgstr ""
+
+#: popups.kv:291
+msgid "Level 2"
+msgstr ""
+
+#: popups.kv:296
+msgid "Level 3"
+msgstr ""
+
+#: popups.kv:320
+msgid "Load"
+msgstr ""
+
+#: popups.kv:326
+msgid "Puzzle complete!"
+msgstr ""
+
+#: popups.kv:331
+msgid "Congratulations, you have completed the puzzle!"
+msgstr ""
+
+#: devices.py:222 devices.py:230
+msgid "Ping [host]"
+msgstr ""
+
+#: links.kv:2
+msgid "Link"
+msgstr ""
+
+#: links.kv:38
+msgid "Delete"
+msgstr ""
+
+#: devices.kv:34
+msgid "Hostname"
+msgstr ""
+
+#: devices.kv:40
+msgid "Gateway"
+msgstr ""
+
+#: devices.kv:46
+msgid "Routes"
+msgstr ""
+
+#: devices.kv:57
+msgid "DHCP server"
+msgstr ""
+
+#: devices.kv:60
+msgid "DHCP"
+msgstr ""
+
+#: devices.kv:70 devices.kv:73
+msgid "Firewall"
+msgstr ""
+
+#: devices.kv:77
+msgid "VLANs"
+msgstr ""
+
+#: devices.kv:89
+msgid "NICs"
+msgstr ""
+
+#: devices.kv:115
+msgid "IPs"
 msgstr ""
