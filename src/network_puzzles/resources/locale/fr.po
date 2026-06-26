@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-26 07:06-0500\n"
+"POT-Creation-Date: 2026-06-26 07:30-0500\n"
 "PO-Revision-Date: 2025-05-18 16:52+0100\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -274,8 +274,8 @@ msgstr "Mauvaise adresse IP"
 
 #: messages.py:115
 msgid ""
-"*PC0 cannot ping one of the other computers. Figure out which one, and "
-"change the IP address of that computer so it works."
+"pc0 cannot ping one of the other computers. Figure out which one, and change "
+"the IP address of that computer so it works."
 msgstr ""
 
 #: messages.py:119
@@ -284,8 +284,8 @@ msgstr "Serveur DHCP mal configuré"
 
 #: messages.py:121
 msgid ""
-"*The Server is giving out bad DHCP. Edit the DHCP settings to tell it to "
-"give correct DHCP.  (You do this by selecting 'DHCP' from the device-editing "
+"The server is giving out bad DHCP. Edit the DHCP settings to tell it to give "
+"correct DHCP. (You do this by selecting \"DHCP\" from the device-editing "
 "screen) Then do a DHCP request on all the PCs."
 msgstr ""
 
@@ -295,9 +295,9 @@ msgstr "Puzzle de passerelle"
 
 #: messages.py:127
 msgid ""
-"*The items on one network cannot ping the items on the other network "
-"(separated by the router). Figure why and fix it. All computers and switches "
-"need fixing, but the router is OK."
+"The items on one network cannot ping the items on the other network "
+"(separated by the router). Figure out why and fix it. All computers and "
+"switches need fixing, but the router is OK."
 msgstr ""
 
 #: messages.py:131
@@ -314,7 +314,7 @@ msgstr "Deux sous-réseaux, réseau partagé"
 
 #: messages.py:137
 msgid ""
-"*This network has two different subnets using the same switch. Ping from the "
+"This network has two different subnets using the same switch. Ping from the "
 "different PCs to machines on the other network.\n"
 "This is a two-part network; you will see this same network again in the next "
 "puzzle, but using one router instead of two. We will use these concepts "
@@ -327,9 +327,10 @@ msgstr "Deux sous-réseaux, réseau partagé 2"
 
 #: messages.py:143
 msgid ""
-"*This network has two different subnets using the same switch. The router "
-"has two interfaces (IP addresses, both on eth0). One network card functions "
-"like two. Ping from the different PCs to machines on the other network.\n"
+"This network has two different subnets using the same switch. The router has "
+"two interfaces (IP addresses, both on eth0). One network card functions like "
+"two. Ping from the different PCs to machines on the other network.\n"
+"\n"
 "This is the same network as the previous one, except it uses one router "
 "instead of two. We will be using this concept later on when we talk about "
 "security. The reason we will use it, is that we may want to have different "
@@ -346,11 +347,11 @@ msgstr "Ajout d'appareils"
 
 #: messages.py:149
 msgid ""
-"*This puzzle has three tasks to it:\n"
+"This puzzle has three tasks to it:\n"
 "1) Give the switch an IP address\n"
 "2) Add an IP-Phone to the network, linking it to the switch, and then do a "
 "DHCP request for it.\n"
-"3) Ping the switch from the IP-Phone"
+"3) Ping the switch from the IP-Phone."
 msgstr ""
 
 #: messages.py:153
@@ -359,9 +360,9 @@ msgstr "Ajout de serveur DHCP"
 
 #: messages.py:155
 msgid ""
-"*These IP-Phones cannot have a static IP. You must add a server on the "
+"These IP-Phones cannot have a static IP. You must add a server on the "
 "192.168.1.0 network and configure the DHCP server. Give an IP to the phone, "
-"so the phone can ping the PCs on the other side of the network"
+"so the phone can ping the PCs on the other side of the network."
 msgstr ""
 
 #: messages.py:159
@@ -370,7 +371,7 @@ msgstr "Mauvaise passerelle"
 
 #: messages.py:161
 msgid ""
-"*Computers can only communicate with other computers that are local to them. "
+"Computers can only communicate with other computers that are local to them. "
 "Gateways must have an IP address that is local to the client. Ping pc0 from "
 "pc1 and see if you can spot the error."
 msgstr ""
@@ -381,7 +382,7 @@ msgstr "Adresses MAC en double"
 
 #: messages.py:167
 msgid ""
-"*This puzzle shows you what happens when there are duplicate MAC addresses. "
+"This puzzle shows you what happens when there are duplicate MAC addresses. "
 "This rarely happens, but it used to happen more often than should be "
 "statistically probable. Cheap network card vendors used to make batches of "
 "cards with the same MAC address, and occasionally someone would buy two of "
@@ -395,7 +396,7 @@ msgstr "Mauvais masque de réseau"
 
 #: messages.py:173
 msgid ""
-"*One of the subnets has a poorly crafted subnet. There are two ways to "
+"One of the subnets has a poorly crafted subnet. There are two ways to "
 "represent subnets. The \"dot-decimal\" notation (255.255.255.0) and CIDR "
 "(/24). \n"
 "\n"
