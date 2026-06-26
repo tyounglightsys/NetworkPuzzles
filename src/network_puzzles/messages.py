@@ -279,10 +279,66 @@ puzzles = {
             'Packets that go through a VPN are "encapsulated."  This means that they are packed up and put inside a VPN packet. A traceroute packet has a "TTL" (Time to Live). Every router along the path is supposed to subtract one from theTTL, and when the TTL is zero, the device that has it will drop the traceroute packet and respond to the originating machine. \n\nAs you do the traceroutes, notice that the router in the center never responds to the traceroute. That is because the traceroute packet is encapsulated. The "outside" packet has a normal TTL, and so the router in the middle never drops the packet. But, the firewall in the middle decrypts the packet, processes it, and sends it on. That firewill will respond to the traceroute.'
         ),
     },
-    # "3.9.9": {
-    #     "title": _(""),
-    #     "info": _(""),
-    # },
+    "3.1": {
+        "title": _("Busted"),
+        "info": _("Something does not work. Get laptop0 to ping laptop1."),
+    },
+    "3.2": {
+        "title": _("Nowhere to Go"),
+        "info": _("Get pc2 to ping pc1, and pc1 to ping pc2."),
+    },
+    "3.2.5": {
+        "title": _("Phoney Network"),
+        "info": _("Get phone0 to ping phone2, and also get phone2 to ping phone0."),
+    },
+    "3.3": {
+        "title": _("VPNify"),
+        "info": _(
+            "Both networks work, but they need to be connected via VPN. You have success when pc2 can ping pc1, and pc3 can ping pc0."
+        ),
+    },
+    "3.4": {
+        "title": _("Black Hole"),
+        "info": _(
+            "There is a black-hole that is eating all the packets. Determine why and fix it."
+        ),
+    },
+    "3.5": {
+        "title": _("Middle Man Out"),
+        "info": _(
+            "The techie setting this one up forgot something. Figure out what he forgot and find some way to fix it."
+        ),
+    },
+    "3.6": {
+        "title": _("Two DHCP servers"),
+        "info": _(
+            "There is a problem with the DHCP on the network. Have all of the devices do a DHCP request. Then have laptop3 ping the various hosts (tap or click laptop3 and see what to ping). See if you can determine what the problem is."
+        ),
+    },
+    "3.6.1": {
+        "title": _("It is dead, Jim!"),
+        "info": _(
+            "This network has a number of small glitches with it. Luckily, they know your phone number. It is nice having a techie around when things go wrong!"
+        ),
+    },
+    "3.7": {
+        "title": _("Grand Central Station"),
+        "info": _(
+            "The router in the middle was replaced. While you are at it, they want you to create a VPN to connect all three networks. Hope they are paying you well!"
+        ),
+    },
+    "3.8": {
+        "title": _("Encryption Troubles"),
+        "info": _(
+            "Your friends have another problem. There was an issue with the encryption on their VPN. They tried to fix it, but it is still failing."
+        ),
+    },
+    "3.12": {
+        "title": _("What you cannot see can hurt you"),
+        "info": _(
+            "They say they did not do anything, but suddenly everything stopped working. Now that you are back from your trip, can you fix it?"
+        ),
+    },
 }
 
 # ref:
