@@ -1130,7 +1130,11 @@ class Device(ItemBase):
             pkt.status = "done"
             logging.info(f"Packet '{pkt}' arrived at destination")
 
+            if self.mytype == "wrouter" and pkt.packettype == "dhcp-request":
+                #If we responded to the request, we returned out earlier.  Here, we are passing it on
+                pkt.status = "good"
             # ping, send ping packet back
+            
             if pkt.packettype == "ping":
                 # logging.debug(f"Test: Returning packet: {pkt.json}")
                 # logging.debug(f"Returning packet: {pkt.source_ip} - {packet.justIP(str(pkt.source_ip))}")
