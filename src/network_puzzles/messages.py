@@ -118,7 +118,7 @@ puzzles = {
     "1.2": {
         "title": _("Bad DHCP"),
         "info": _(
-            'The server is giving out bad DHCP. Edit the DHCP settings to tell it to give correct DHCP. (You do this by selecting "DHCP" from the device-editing screen) Then do a DHCP request on all the PCs.'
+            'The server is giving out bad DHCP. Edit the DHCP settings to tell it to give correct DHCP. (You do this by selecting "DHCP" from the device-editing screen.) Then do a DHCP request on all the PCs.'
         ),
     },
     "1.3": {
@@ -134,7 +134,7 @@ puzzles = {
     "1.4.1": {
         "title": _("Two Subnets, Shared Network"),
         "info": _(
-            "This network has two different subnets using the same switch. Ping from the different PCs to machines on the other network.\nThis is a two-part network; you will see this same network again in the next puzzle, but using one router instead of two. We will use these concepts later on, when we are dealing with security."
+            "This network has two different subnets using the same switch. Ping from the different PCs to machines on the other network.\n\nThis is a two-part network; you will see this same network again in the next puzzle, but using one router instead of two. We will use these concepts later on, when we are dealing with security."
         ),
     },
     "1.4.2": {
@@ -146,7 +146,7 @@ puzzles = {
     "1.4.3": {
         "title": _("Adding Devices"),
         "info": _(
-            "This puzzle has three tasks to it:\n1) Give the switch an IP address\n2) Add an IP-Phone to the network, linking it to the switch, and then do a DHCP request for it.\n3) Ping the switch from the IP-Phone."
+            "This puzzle has three tasks to it:\n1) Give the switch an IP address.\n2) Add an IP-Phone to the network, linking it to the switch, and then do a DHCP request for it.\n3) Ping the switch from the IP-Phone."
         ),
     },
     "1.5": {
