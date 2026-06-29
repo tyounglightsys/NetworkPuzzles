@@ -276,7 +276,7 @@ puzzles = {
     "2.1.5": {
         "title": _("VPNs and traceroute"),
         "info": _(
-            'Packets that go through a VPN are "encapsulated."  This means that they are packed up and put inside a VPN packet. A traceroute packet has a "TTL" (Time to Live). Every router along the path is supposed to subtract one from theTTL, and when the TTL is zero, the device that has it will drop the traceroute packet and respond to the originating machine. \n\nAs you do the traceroutes, notice that the router in the center never responds to the traceroute. That is because the traceroute packet is encapsulated. The "outside" packet has a normal TTL, and so the router in the middle never drops the packet. But, the firewall in the middle decrypts the packet, processes it, and sends it on. That firewill will respond to the traceroute.'
+            'Packets that go through a VPN are "encapsulated."  This means that they are packed up and put inside a VPN packet. A traceroute packet has a "TTL" (Time to Live). Every router along the path is supposed to subtract one from the TTL, and when the TTL is zero, the device that has it will drop the traceroute packet and respond to the originating machine. \n\nAs you do the traceroutes, notice that the router in the center never responds to the traceroute. That is because the traceroute packet is encapsulated. The "outside" packet has a normal TTL, and so the router in the middle never drops the packet. But, the firewall in the middle decrypts the packet, processes it, and sends it on. That firewill will respond to the traceroute.'
         ),
     },
     "3.1": {
