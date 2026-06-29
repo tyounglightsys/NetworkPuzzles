@@ -5,17 +5,27 @@ import sys
 
 from .vars import DATA_DIR, Session
 
+__version__ = "0.1"
+
 session = Session()
 localedir = DATA_DIR / "resources" / "locale"
-t = gettext.translation(
+t_en = gettext.translation(
     "networkpuzzles",
     localedir=localedir,
     fallback=True,
-    languages=[str(session.locale), "en"],
+    languages=["en"],
 )
-_ = t.gettext
-
-__version__ = "0.1"
+t_fr = gettext.translation(
+    "networkpuzzles",
+    localedir=localedir,
+    fallback=True,
+    languages=["fr", "en"],
+)
+match str(session.locale)[:2]:
+    case "fr":
+        t_fr.install()  # puts "_" func into global namespace
+    case _:
+        t_en.install()
 
 
 argparser = argparse.ArgumentParser(prog="NetworkPuzzles")
@@ -54,5 +64,3 @@ logging.debug(f"App: {localedir=}:")
 for i in localedir.iterdir():
     logging.debug(f"App: - {i}")
 logging.info(f"App: system locale: {session.locale}")
-logging.debug(f"App: {t.__class__.__name__=}")
-logging.info(f"App: user language: {t.info().get('language')}")

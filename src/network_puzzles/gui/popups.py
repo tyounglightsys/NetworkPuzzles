@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from kivy.uix.popup import Popup
 
-from .. import _, interface, nic, session
+from .. import interface, nic, session
 from .inputs import ValueInput
 from .labels import CheckBoxLabel
 from .layouts import SingleRowLayout

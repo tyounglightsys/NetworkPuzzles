@@ -8,7 +8,7 @@ from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.uix.relativelayout import RelativeLayout
 
-from .. import _, session
+from .. import session
 from .base import NETWORK_ITEMS, DeviceIndicator, pos_to_location
 from .buttons import MenuButton
 from .headless import handle_dp as dp

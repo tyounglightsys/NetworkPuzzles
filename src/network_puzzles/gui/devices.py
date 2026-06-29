@@ -7,7 +7,7 @@ from kivy.uix.behaviors import DragBehavior
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 
-from .. import _, interface, nic, session
+from .. import interface, nic, session
 from ..device import Device
 from .base import (
     HelpHighlight,
