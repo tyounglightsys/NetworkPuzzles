@@ -827,7 +827,7 @@ msgstr "Rompu"
 
 #: messages.py:284
 msgid "Something does not work. Get laptop0 to ping laptop1."
-msgstr ""
+msgstr "Quelque chose ne marche pas. Arrive à faire ping de laptop0 à laptop1."
 
 #: messages.py:287
 msgid "Nowhere to Go"
@@ -835,7 +835,7 @@ msgstr "Pas de voie"
 
 #: messages.py:288
 msgid "Get pc2 to ping pc1, and pc1 to ping pc2."
-msgstr ""
+msgstr "Arrive à faire ping de pc2 à pc1, et de pc1 à pc2."
 
 #: messages.py:291
 msgid "Phoney Network"
@@ -843,7 +843,7 @@ msgstr "Réseau téléphonique"
 
 #: messages.py:292
 msgid "Get phone0 to ping phone2, and also get phone2 to ping phone0."
-msgstr ""
+msgstr "Arrive à faire ping de phone0 à phone2, et également de phone2 à phone0."
 
 #: messages.py:295
 msgid "VPNify"
@@ -854,6 +854,8 @@ msgid ""
 "Both networks work, but they need to be connected via VPN. You have success "
 "when pc2 can ping pc1, and pc3 can ping pc0."
 msgstr ""
+"Les deux réseaux marchent, mail il faut qu'ils soient connectés par un VPN. "
+"Vérifier la configuration en faisant ping de pc2 à pc1, et de pc3 à pc0."
 
 #: messages.py:301
 msgid "Black Hole"
@@ -864,6 +866,8 @@ msgid ""
 "There is a black-hole that is eating all the packets. Determine why and fix "
 "it."
 msgstr ""
+"Il y a un trou nour qui consomme tous les paquets. Découvre pourquoi et "
+"règle-le."
 
 #: messages.py:307
 msgid "Middle Man Out"
@@ -874,6 +878,8 @@ msgid ""
 "The techie setting this one up forgot something. Figure out what he forgot "
 "and find some way to fix it."
 msgstr ""
+"Le technicien qui a configuré ce réseau a oublié quelque chose. Découvre ce "
+"qu'il a oublié et trouve un moyen de le régler."
 
 #: messages.py:313
 msgid "Two DHCP servers"
@@ -885,6 +891,9 @@ msgid ""
 "a DHCP request. Then have laptop3 ping the various hosts (tap or click "
 "laptop3 and see what to ping). See if you can determine what the problem is."
 msgstr ""
+"Il y a un problème du DHCP de ce réseau. Fais une demande de DHCP par tous les "
+"appareils. Puis, fais ping à plusieurs hôtes depuis laptop3 (taper ou cliquer "
+"sur laptop3 pour voir les destinataires). Essaie de comprendre le problème."
 
 #: messages.py:319
 msgid "It is dead, Jim!"
@@ -895,6 +904,8 @@ msgid ""
 "This network has a number of small glitches with it. Luckily, they know your "
 "phone number. It is nice having a techie around when things go wrong!"
 msgstr ""
+"Ce réseau a un nombre de petits problèmes. Heureusement, on connaît ton numéro "
+"de téléphone. C'est bon d'avoir un vrai technicien en cas de problèmes !"
 
 #: messages.py:325
 msgid "Grand Central Station"
@@ -905,6 +916,8 @@ msgid ""
 "The router in the middle was replaced. While you are at it, they want you to "
 "create a VPN to connect all three networks. Hope they are paying you well!"
 msgstr ""
+"Le routeur au centre a été remplacé. Entre temps, on veut que tu crée un VPN "
+"pour relier tous les trois réseaux. J'espère que tu reçois un bon salaire !"
 
 #: messages.py:331
 msgid "Encryption Troubles"
@@ -915,6 +928,8 @@ msgid ""
 "Your friends have another problem. There was an issue with the encryption on "
 "their VPN. They tried to fix it, but it is still failing."
 msgstr ""
+"Tes amis ont un autre problème. Il y avait un difficulté du chiffrage sur le "
+"VPN. Ils ont essayé de le régler, mais il échoue toujours."
 
 #: messages.py:337
 msgid "What you cannot see can hurt you"
@@ -925,6 +940,8 @@ msgid ""
 "They say they did not do anything, but suddenly everything stopped working. "
 "Now that you are back from your trip, can you fix it?"
 msgstr ""
+"Ils disent qu'ils n'ont rien fait, mais du coup tout s'est arrêté. Comme tu "
+"es de retour de ton déplacement, peux-tu le dépanner ?"
 
 #: messages.py:349 messages.py:354 messages.py:359 messages.py:364
 #: messages.py:369 messages.py:374 messages.py:379 messages.py:384
