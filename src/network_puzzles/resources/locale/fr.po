@@ -981,7 +981,7 @@ msgstr "besoin d'un UPS"
 
 #: messages.py:365 messages.py:366
 msgid "network card sprays net when used"
-msgstr ""
+msgstr "carte réseau indonde le réseau quand elle est en marche"
 
 #: messages.py:370
 msgid "needs change to DHCP server:"
@@ -1001,11 +1001,11 @@ msgstr "besoin d'essayer (et d'échouer) de faire un ping :"
 
 #: messages.py:380
 msgid "get mouse-over help"
-msgstr ""
+msgstr "ouvrir l'aide de bulle de context"
 
 #: messages.py:381
 msgid "get mouse-over help of level:"
-msgstr ""
+msgstr "ouvrir l'aide de bulle de context du niveau :"
 
 #: messages.py:385
 msgid "is locked"
@@ -1081,11 +1081,11 @@ msgstr "route verrouillée :"
 
 #: messages.py:430
 msgid "VLAN names and IDs are locked"
-msgstr ""
+msgstr "noms et identifiants de VLAN sont verrouillés"
 
 #: messages.py:431
 msgid "VLAN names and IDs are locked:"
-msgstr ""
+msgstr "noms et identifiants de VLAN sont verrouillés :"
 
 #: messages.py:435
 msgid "a VLAN is locked"
@@ -1105,11 +1105,11 @@ msgstr "passerelle doit être définié comme :"
 
 #: messages.py:445
 msgid "the interface needs a forbidden VLAN"
-msgstr ""
+msgstr "l'interface a besoin d'un VLAN interdit"
 
 #: messages.py:446
 msgid "the interface needs a forbidden VLAN:"
-msgstr ""
+msgstr "l'interface a besoin d'un VLAN interdit :"
 
 #: messages.py:450
 msgid "needs to be connected to the network"
@@ -1145,31 +1145,31 @@ msgstr "manque de définition de route au réseau :"
 
 #: messages.py:470
 msgid "the interface needs a tagged VLAN"
-msgstr ""
+msgstr "l'interface a besoin d'un VLAN marqué"
 
 #: messages.py:471
 msgid "the interface needs a tagged VLAN:"
-msgstr ""
+msgstr "l'interface a besoin d'un VLAN marqué :"
 
 #: messages.py:475
 msgid "the interface needs an untagged VLAN"
-msgstr ""
+msgstr "l'interface a besoin d'un VLAN non marqué"
 
 #: messages.py:476
 msgid "the interface needs an untagged VLAN:"
-msgstr ""
+msgstr "l'interface a besoin d'un VLAN non marqué :"
 
 #: messages.py:480 messages.py:481
 msgid "read context help for:"
-msgstr ""
+msgstr "lire l'aide de context pour :"
 
 #: messages.py:485
 msgid "needs to find ARP from some device"
-msgstr ""
+msgstr "a besoin de trouver l'ARP de quelque appareil"
 
 #: messages.py:486
 msgid "needs to find ARP from:"
-msgstr ""
+msgstr "a besoin de trouver l'ARP de :"
 
 #: messages.py:490
 msgid "needs a DHCP IP address"
@@ -1221,39 +1221,39 @@ msgstr "Niveau d'aide :"
 
 #: popups.kv:13
 msgid "IP Address:"
-msgstr ""
+msgstr "Adresse IP :"
 
 #: popups.kv:21
 msgid "Netmask:"
-msgstr ""
+msgstr "Masque de réseau :"
 
 #: popups.kv:29
 msgid "Gateway:"
-msgstr ""
+msgstr "Passerelle :"
 
 #: popups.kv:54
 msgid "Input command:"
-msgstr ""
+msgstr "Saisir la commande :"
 
 #: popups.kv:70
 msgid "Edit DHCP configuration"
-msgstr ""
+msgstr "Modifier la configuration de DHCP"
 
 #: popups.kv:77
 msgid "IP Address"
-msgstr ""
+msgstr "Adresse IP"
 
 #: popups.kv:79
 msgid "Range Start"
-msgstr ""
+msgstr "Début de plage"
 
 #: popups.kv:81
 msgid "Range End"
-msgstr ""
+msgstr "Fin de plage"
 
 #: popups.kv:94
 msgid "Edit Firewall configuration"
-msgstr ""
+msgstr "Modifier configuration de pare-feu"
 
 #: popups.kv:111 popups.kv:211 devices.py:225 devices.py:232 links.kv:41
 #: devices.kv:104 devices.kv:131
@@ -1262,35 +1262,35 @@ msgstr "Modifier"
 
 #: popups.kv:129
 msgid "NIC type"
-msgstr ""
+msgstr "type de NIC"
 
 #: popups.kv:136
 msgid "MAC address"
-msgstr ""
+msgstr "adresse MAC"
 
 #: popups.kv:148
 msgid "Can use DHCP"
-msgstr ""
+msgstr "Peut utiliser DHCP"
 
 #: popups.kv:158
 msgid "Uses DHCP"
-msgstr ""
+msgstr "Utilise DHCP"
 
 #: popups.kv:161
 msgid "VPN Endpoint"
-msgstr ""
+msgstr "Point de terminaison VPN"
 
 #: popups.kv:167
 msgid "Encryption key"
-msgstr ""
+msgstr "Clé de chiffrage"
 
 #: popups.kv:185
 msgid "Routes from NICs (read-only)"
-msgstr ""
+msgstr "Routes de la NIC (lecture-seule)"
 
 #: popups.kv:190
 msgid "Static routes (editable)"
-msgstr ""
+msgstr "Routes statiques (modifiables)"
 
 #: popups.kv:221
 msgid "Error"
@@ -1334,19 +1334,19 @@ msgstr "Charger"
 
 #: popups.kv:326
 msgid "Puzzle complete!"
-msgstr ""
+msgstr "Puzzle achevé !"
 
 #: popups.kv:331
 msgid "Congratulations, you have completed the puzzle!"
-msgstr ""
+msgstr "Félicitations, tu as complété le puzzle !"
 
 #: devices.py:222 devices.py:230
 msgid "Ping [host]"
-msgstr "Ping [hôte]"
+msgstr "Faire ping à [hôte]"
 
 #: links.kv:2
 msgid "Link"
-msgstr ""
+msgstr "Lien"
 
 #: links.kv:38
 msgid "Delete"
@@ -1354,39 +1354,39 @@ msgstr "Supprimer"
 
 #: devices.kv:34
 msgid "Hostname"
-msgstr ""
+msgstr "Nom d'hôte"
 
 #: devices.kv:40
 msgid "Gateway"
-msgstr ""
+msgstr "Passerelle"
 
 #: devices.kv:46
 msgid "Routes"
-msgstr ""
+msgstr "Routes"
 
 #: devices.kv:57
 msgid "DHCP server"
-msgstr ""
+msgstr "serveur DHCP"
 
 #: devices.kv:60
 msgid "DHCP"
-msgstr ""
+msgstr "DHCP"
 
 #: devices.kv:70 devices.kv:73
 msgid "Firewall"
-msgstr ""
+msgstr "Pare-feu"
 
 #: devices.kv:77
 msgid "VLANs"
-msgstr ""
+msgstr "VLANs"
 
 #: devices.kv:89
 msgid "NICs"
-msgstr ""
+msgstr "NICs"
 
 #: devices.kv:115
 msgid "IPs"
-msgstr ""
+msgstr "Adresses IP"
 
 #~ msgid ""
 #~ "This puzzle shows you what happens when you create a network loop.  A "
