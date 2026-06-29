@@ -123,7 +123,7 @@ class PuzzleLayout(RelativeLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.items_menu_button = MenuButton(
-            props={"text": "+", "cb": self.on_new_item, "info": "add new item"},
+            props={"text": "+", "cb": self.on_new_item, "info": _("add new item")},
             pos_hint={"x": 0.005, "top": 0.99},
         )
 
