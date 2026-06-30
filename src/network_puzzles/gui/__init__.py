@@ -22,7 +22,7 @@ from kivy.uix.textinput import TextInput
 
 from .. import messages, nettests
 from ..puzzle import PuzzleTest
-from ..vars import USER_DATA_DIR
+from ..vars import INSTALL_TYPE, USER_DATA_DIR
 from .base import (
     BUTTON_FONT_SIZE,
     BUTTON_MAX_H,
@@ -216,8 +216,23 @@ class NetworkPuzzlesApp(App):
 
     def restart_app(self):
         """Perform a system-level, hard restart."""
-        ex = sys.executable
-        os.execl(ex, ex, *sys.argv)
+        logging.debug(f"App: {INSTALL_TYPE=}")
+        logging.debug(f"App: {sys.executable=}")
+        logging.debug(f"App: {sys.argv=}")
+        match INSTALL_TYPE:
+            case "apk":
+                logging.warning(f"Unhandled restart for {INSTALL_TYPE}")
+                self.stop()
+            case "snap":
+                logging.warning(f"Unhandled restart for {INSTALL_TYPE}")
+                self.stop()
+            case "pyinstaller":
+                os.execv(sys.executable, sys.argv)
+            case "python":
+                os.execv(sys.executable, [sys.executable, *sys.argv])
+            case _:
+                logging.warning(f"Unhandled restart for {INSTALL_TYPE}")
+                self.stop()
 
     def setup_puzzle(self, *args):
         self.reset_vars()
