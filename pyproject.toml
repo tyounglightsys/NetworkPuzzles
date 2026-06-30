@@ -29,6 +29,9 @@ build = [
 readme = {file = ["README.md"], content-type = "text/plain"}
 version = {attr = "network_puzzles.__version__"}
 
+[tool.ruff]
+builtins = ["_"]
+
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "pyinstaller*.spec" = ["F821"]

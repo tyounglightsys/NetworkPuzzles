@@ -1,9 +1,14 @@
 import locale
 import os
-import platform
 import sys
 from copy import deepcopy
 from pathlib import Path
+
+from kivy.utils import platform
+
+APP_TITLE = "NetworkPuzzles"
+APP_MODULE = "network_puzzles"
+os.environ["KIVY_DESKTOP_PATH_ID"] = APP_TITLE
 
 # Set INSTALL type.
 if hasattr(sys, "_MEIPASS"):
@@ -16,26 +21,41 @@ elif "SNAP" in os.environ:
 else:
     INSTALL_TYPE = "python"
 
-# Set OS type.
-if "DYLD_LIBRARY_PATH" in os.environ:
-    OS = "mac"
-elif "DISPLAY" in os.environ:
-    OS = "linux"
-elif "COMPUTERNAME" in os.environ:
-    OS = "windows"
-elif "ANDROID_ROOT" in os.environ:
-    OS = "android"
-else:
-    OS = "unknown"
+# Ref: https://kivy.org/doc/stable/api-kivy.utils.html#kivy.utils.platform
+# 'win', 'linux', 'android', 'macosx', 'ios' or 'unknown'
+OS = platform
 
 # Set DATA DIR.
 match INSTALL_TYPE:
     case "pyinstaller":
-        DATA_DIR = Path(sys._MEIPASS) / "network_puzzles"
+        DATA_DIR = Path(sys._MEIPASS) / APP_MODULE
     case _:  # "android", "python"
         DATA_DIR = Path(__file__).parent
 if "NETWORKPUZZLES_DATA_DIR" in os.environ:
     DATA_DIR = Path(os.getenv("NETWORKPUZZLES_DATA_DIR"))
+
+# Set USER DATA DIR.
+# Try to match Kivy's own implementation; but the var is needed before App is
+# initialized, so we determine it here explicitly.
+# Ref: https://kivy.org/doc/stable/api-kivy.app.html#kivy.app.App.user_data_dir
+match OS:
+    case "win":
+        USER_DATA_DIR = Path(os.getenv("APPDATA")) / APP_TITLE
+    case "android":
+        from android.storage import app_storage_path
+
+        USER_DATA_DIR = Path(app_storage_path())
+    case "linux":
+        base_str = os.getenv("XDG_CONFIG_HOME")
+        if base_str is None:
+            base_dir = Path.home() / ".local" / "share"
+        else:
+            base_dir = Path(base_str)
+        USER_DATA_DIR = base_dir / APP_TITLE
+    case _:  # fallback
+        USER_DATA_DIR = Path.home() / APP_TITLE
+if not USER_DATA_DIR.is_dir():
+    USER_DATA_DIR.mkdir()
 
 
 class Session:
@@ -46,8 +66,8 @@ class Session:
     def __init__(self):
         self.app = None
         self._device_type = None
+        self._lang = None
         self.locale = str(locale.getlocale()[0])
-        self.lang: str = self.locale[:2]
         self.maclist: list = list()
         self.puzzlelist: list = list()
         self.puzzle = None
@@ -81,17 +101,26 @@ class Session:
                     self._device_type = value
                 else:
                     self._device_type = default
-            elif OS == "android":
+            elif OS in ("android", "ios"):
                 self._device_type = "mobile"
-            elif OS in ("linux", "mac", "windows"):
+            elif OS in ("linux", "macosx", "win"):
                 self._device_type = "desktop"
-            elif platform.system() in ("iOS", "iPadOS"):
-                # iPhone or IPad
-                self._device_type = "mobile"
             else:
                 # Fallback
                 self._device_type = default
         return self._device_type
+
+    @property
+    def lang(self):
+        if self._lang is None:
+            # Fallback to locale if saved data is bad.
+            self._lang = self.locale[:2].upper()
+            saved_lang_file = USER_DATA_DIR / "lang.txt"
+            if saved_lang_file.is_file():
+                lang = saved_lang_file.read_text()
+                if len(lang) == 2:
+                    self._lang = lang
+        return self._lang
 
     def print(self, message):
         print("<default print method>")

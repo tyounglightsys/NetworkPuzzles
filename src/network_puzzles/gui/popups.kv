@@ -332,3 +332,15 @@
         ActionPopupButtons:  # cancel/okay
             on_cancel: root.on_cancel()
             on_okay: root.on_okay()
+
+
+<AppRestartPopup>
+    title: _("Restart app?")
+    size_hint: (0.25, 0.25)
+    ThemedBoxLayout:
+        orientation: "vertical"
+        ThemedLabel:
+            text: _("Restart the app?")
+        ActionPopupButtons:  # cancel/okay
+            on_cancel: root.dismiss()
+            on_okay: root.on_okay()

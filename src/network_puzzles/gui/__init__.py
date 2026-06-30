@@ -1,7 +1,9 @@
 import logging
+import os
+import subprocess
+import sys
 import traceback
 
-# kivy_logger = logging.getLogger("kivy")
 from kivy.config import Config
 
 from .. import session
@@ -21,6 +23,7 @@ from kivy.uix.textinput import TextInput
 
 from .. import messages, nettests
 from ..puzzle import PuzzleTest
+from ..vars import INSTALL_TYPE, USER_DATA_DIR
 from .base import (
     BUTTON_FONT_SIZE,
     BUTTON_MAX_H,
@@ -33,6 +36,7 @@ from .base import (
     show_grid,
 )
 from .devices import GuiDevice
+from .dropdowns import LangDropDown
 from .packets import PacketManager
 from .popups import (
     CommandPopup,
@@ -78,6 +82,10 @@ class NetworkPuzzlesApp(App):
             self.packet_progress_rate = 6  # % of link traveled each tick
 
         logging.debug(f"App: {session.device_type=}")
+        # NOTE: This value is available too late for localization.
+        # Ref: https://kivy.org/doc/stable/api-kivy.app.html#kivy.app.App.user_data_dir
+        # self.user_data_dirpath = Path(self.user_data_dir)
+        logging.debug(f"App: {USER_DATA_DIR=}")
 
         super().__init__(**kwargs)
         ExceptionManager.add_handler(AppExceptionHandler())
@@ -119,9 +127,6 @@ class NetworkPuzzlesApp(App):
 
     def draw_puzzle(self, *args):
         """Clear puzzle layout area; draw all elements related to current puzzle."""
-        # logging.debug(
-        #     f"App: {self.root.ids.layout.__class__.__name__}: pos={self.root.ids.layout.pos}; size={self.root.ids.layout.size}"
-        # )
         if not self.ui.puzzle:
             logging.warning("GUI: No puzzle is loaded.")
             return
@@ -157,17 +162,13 @@ class NetworkPuzzlesApp(App):
             self.filters.append(inst.name)
         elif inst.state == "normal":
             self.filters.remove(inst.name)
-        # TODO: Refresh the puzzle list using the updated self.filters.
-        # I have the checkbox instance, but it doesn't seem to contain any
-        # reference to the parent popup window, whose PuzzlesRecView I need to
-        # update.
         self.update_puzzle_list(inst.get_popup())
 
     def on_help(self):
         raise NotImplementedError
 
     def on_language(self):
-        raise NotImplementedError
+        LangDropDown().open(self.root.ids.lang)
 
     def on_puzzle_chooser(self, *args):
         PuzzleChooserPopup().open()
@@ -213,6 +214,33 @@ class NetworkPuzzlesApp(App):
         if self.root:
             # Delete temporary variables.
             self.root.ids.layout.reset_vars()
+
+    def restart_app(self):
+        """Perform a system-level, hard restart."""
+        logging.debug(f"App: {INSTALL_TYPE=}")
+        logging.debug(f"App: {sys.executable=}")
+        logging.debug(f"App: {sys.argv=}")
+        match INSTALL_TYPE:
+            case "apk":
+                # Ref: https://stackoverflow.com/questions/26937325/restarting-an-app-in-kivy#26938131
+                logging.warning(f"Unhandled restart for {INSTALL_TYPE}")
+                self.stop()
+            case "snap":
+                logging.warning(f"Unhandled restart for {INSTALL_TYPE}")
+                self.stop()
+            case "pyinstaller":
+                # Need to reset the PYI env during restart.
+                subprocess.Popen(
+                    [sys.executable, *sys.argv],
+                    env={**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1"},
+                )
+                self.stop()
+            case "python":
+                subprocess.Popen([sys.executable, *sys.argv])
+                self.stop()
+            case _:
+                logging.warning(f"Unhandled restart for {INSTALL_TYPE}")
+                self.stop()
 
     def setup_puzzle(self, *args):
         self.reset_vars()

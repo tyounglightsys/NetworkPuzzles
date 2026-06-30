@@ -3,7 +3,7 @@ from copy import deepcopy
 
 from kivy.uix.popup import Popup
 
-from .. import _, interface, nic, session
+from .. import interface, nic, session
 from .inputs import ValueInput
 from .labels import CheckBoxLabel
 from .layouts import SingleRowLayout
@@ -14,6 +14,12 @@ class ThemedPopup(Popup):
     @property
     def app(self):
         return session.app
+
+
+class AppRestartPopup(ThemedPopup):
+    def on_okay(self):
+        # FIXME: Need to restart app, not just close it.
+        self.app.restart_app()
 
 
 class ActionPopup(ThemedPopup):

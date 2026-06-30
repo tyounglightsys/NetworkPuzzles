@@ -1,4 +1,4 @@
-from . import _
+# from . import _
 
 puzzles = {
     "0.0": {
