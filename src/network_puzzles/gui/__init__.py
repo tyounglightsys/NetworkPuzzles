@@ -1,5 +1,6 @@
 import logging
 import os
+import subprocess
 import sys
 import traceback
 
@@ -221,15 +222,22 @@ class NetworkPuzzlesApp(App):
         logging.debug(f"App: {sys.argv=}")
         match INSTALL_TYPE:
             case "apk":
+                # Ref: https://stackoverflow.com/questions/26937325/restarting-an-app-in-kivy#26938131
                 logging.warning(f"Unhandled restart for {INSTALL_TYPE}")
                 self.stop()
             case "snap":
                 logging.warning(f"Unhandled restart for {INSTALL_TYPE}")
                 self.stop()
             case "pyinstaller":
-                os.execv(sys.executable, sys.argv)
+                # Need to reset the PYI env during restart.
+                subprocess.Popen(
+                    [sys.executable, *sys.argv],
+                    env={**os.environ, "PYINSTALLER_RESET_ENVIRONMENT": "1"},
+                )
+                self.stop()
             case "python":
-                os.execv(sys.executable, [sys.executable, *sys.argv])
+                subprocess.Popen([sys.executable, *sys.argv])
+                self.stop()
             case _:
                 logging.warning(f"Unhandled restart for {INSTALL_TYPE}")
                 self.stop()
