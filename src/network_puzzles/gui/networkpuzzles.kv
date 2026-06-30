@@ -8,6 +8,7 @@
 #:include network_puzzles/gui/labels.kv
 #:include network_puzzles/gui/packets.kv
 # Add dependent modules.
+#:include network_puzzles/gui/dropdowns.kv
 #:include network_puzzles/gui/layouts.kv
 #:include network_puzzles/gui/links.kv
 #:include network_puzzles/gui/views.kv
@@ -61,7 +62,8 @@ ThemedBoxLayout:
             AppButton:  # lang
                 id: lang
                 info: _("choose language")
-                text: session.lang.upper()
+                text: session.lang
+                font_size: app.BUTTON_FONT_SIZE * 0.8
                 pos: self.get_pos()
                 on_release: app.on_language()
             AppButton:  # help

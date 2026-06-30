@@ -35,6 +35,7 @@ from .base import (
     show_grid,
 )
 from .devices import GuiDevice
+from .dropdowns import LangDropDown
 from .packets import PacketManager
 from .popups import (
     CommandPopup,
@@ -166,7 +167,7 @@ class NetworkPuzzlesApp(App):
         raise NotImplementedError
 
     def on_language(self):
-        raise NotImplementedError
+        LangDropDown().open(self.root.ids.lang)
 
     def on_puzzle_chooser(self, *args):
         PuzzleChooserPopup().open()

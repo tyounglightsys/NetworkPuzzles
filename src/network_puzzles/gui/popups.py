@@ -16,6 +16,12 @@ class ThemedPopup(Popup):
         return session.app
 
 
+class AppRestartPopup(ThemedPopup):
+    def on_okay(self):
+        # FIXME: Need to restart app, not just close it.
+        self.app.restart_app()
+
+
 class ActionPopup(ThemedPopup):
     def cancel_changes(self):
         if self.initial_state:
