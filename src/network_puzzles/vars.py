@@ -46,8 +46,8 @@ class Session:
     def __init__(self):
         self.app = None
         self._device_type = None
+        self._lang = None
         self.locale = str(locale.getlocale()[0])
-        self.lang: str = self.locale[:2]
         self.maclist: list = list()
         self.puzzlelist: list = list()
         self.puzzle = None
@@ -92,6 +92,18 @@ class Session:
                 # Fallback
                 self._device_type = default
         return self._device_type
+
+    @property
+    def lang(self):
+        if self._lang is None:
+            # Fallback to locale if saved data is bad.
+            self._lang = self.locale[:2].upper()
+            saved_lang_file = USER_DATA_DIR / "lang.txt"
+            if saved_lang_file.is_file():
+                lang = saved_lang_file.read_text()
+                if len(lang) == 2:
+                    self._lang = lang
+        return self._lang
 
     def print(self, message):
         print("<default print method>")

@@ -3,32 +3,33 @@ import gettext
 import logging
 import sys
 
-from .vars import DATA_DIR, Session
+from .vars import APP_TITLE, DATA_DIR, Session
 
 __version__ = "0.1"
 
-session = Session()
 localedir = DATA_DIR / "resources" / "locale"
 t_en = gettext.translation(
-    "networkpuzzles",
+    APP_TITLE.lower(),
     localedir=localedir,
     fallback=True,
     languages=["en"],
 )
 t_fr = gettext.translation(
-    "networkpuzzles",
+    APP_TITLE.lower(),
     localedir=localedir,
     fallback=True,
     languages=["fr", "en"],
 )
-match str(session.locale)[:2]:
-    case "fr":
+
+session = Session()
+match session.lang:
+    case "FR":
         t_fr.install()  # puts "_" func into global namespace
     case _:
         t_en.install()
 
 
-argparser = argparse.ArgumentParser(prog="NetworkPuzzles")
+argparser = argparse.ArgumentParser(prog=APP_TITLE)
 argparser.add_argument("-d", "--debug", action="store_true", help="show debug output")
 argparser.add_argument(
     "-f",
@@ -60,7 +61,5 @@ logging.basicConfig(
 )
 
 logging.debug(f"App: {sys.argv=}")
-logging.debug(f"App: {localedir=}:")
-for i in localedir.iterdir():
-    logging.debug(f"App: - {i}")
 logging.info(f"App: system locale: {session.locale}")
+logging.info(f"App: UI language: {session.lang}")
