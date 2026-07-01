@@ -32,6 +32,10 @@ version = {attr = "network_puzzles.__version__"}
 [tool.ruff]
 builtins = ["_"]
 
+[tool.ruff.format]
+# Preserve quote style in code b/c xgettext doesn't recognize `_('text')` strings.
+quote-style = "preserve"
+
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["E402"]
 "pyinstaller*.spec" = ["F821"]

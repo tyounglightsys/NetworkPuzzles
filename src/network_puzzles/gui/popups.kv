@@ -39,7 +39,7 @@
 
 <ChooseNicPopup>:
     size_hint_x: 0.5
-    title: f"{self.device.hostname} | {_('Choose NIC')}"
+    title: f'{self.device.hostname} | {_("Choose NIC")}'
     ThemedBoxLayout:
         orientation: "vertical"
         NICsRecView:
@@ -174,10 +174,10 @@
             on_okay: root.on_okay()
 
 <EditRoutePopup>:
-    title: f"{_('Edit route')} ({self.routes_popup.device.hostname})"
+    title: f'{_("Edit route")} ({self.routes_popup.device.hostname})'
 
 <EditRoutesPopup>:
-    title: f"{_('Routes')} ({self.device.hostname})"
+    title: f'{_("Routes")} ({self.device.hostname})'
     size_hint: (0.5, 0.75)
     ThemedBoxLayout:
         orientation: "vertical"
