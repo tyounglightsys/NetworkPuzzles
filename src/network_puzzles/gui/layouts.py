@@ -24,8 +24,8 @@ class SingleRowLayout(ThemedBoxLayout):
 
 
 class ActionPopupButtons(SingleRowLayout):
-    cancel_text = StringProperty(f"{_('Cancel')}")
-    okay_text = StringProperty(f"{_('Okay')}")
+    cancel_text = StringProperty(f'{_("Cancel")}')
+    okay_text = StringProperty(f'{_("Okay")}')
 
     # Register custom events to be passed onto root popup, etc.
     # ref: https://stackoverflow.com/questions/65551226/kivy-reusing-a-toggle-button-layout-but-assigning-different-functions-to-the-b/66181173#66181173

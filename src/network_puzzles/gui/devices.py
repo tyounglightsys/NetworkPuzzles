@@ -267,11 +267,11 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         # previous state in "history". Each popup will then need to save the current
         # state at the moment the window was opened, so that "Cancel" will return
         # the puzzle to that pre-modified state.
-        EditDevicePopup(title=f"{_('Edit')} {self.hostname}", device=self).open()
+        EditDevicePopup(title=f'{_("Edit")} {self.hostname}', device=self).open()
 
     def _ping_host(self, *args):
         PingHostPopup(
-            device=self, title=f"{_('Ping [host] from')} {self.hostname}"
+            device=self, title=f'{_("Ping [host] from")} {self.hostname}'
         ).open()
 
     def _set_image(self):

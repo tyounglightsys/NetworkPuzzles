@@ -251,9 +251,9 @@ class EditNicPopup(DevicePopup):
         self.device_popup = device_popup
         # Set title.
         if self.nic.name:
-            self.title = f"{_('Edit')} {self.device.hostname}:{self.nic.name}"
+            self.title = f'{_("Edit")} {self.device.hostname}:{self.nic.name}'
         else:
-            self.title = f"{_('Add NIC to')} {self.device.hostname}"
+            self.title = f'{_("Add NIC to")} {self.device.hostname}'
         self.encryption_key_orig = self.nic.encryption_key
         self.endpoint_orig = self.nic.endpoint
 
