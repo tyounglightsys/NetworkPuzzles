@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-01 10:11-0400\n"
+"POT-Creation-Date: 2026-07-01 10:21-0400\n"
 "PO-Revision-Date: 2025-05-18 16:52+0100\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -1307,7 +1307,7 @@ msgstr "Routes statiques (modifiables)"
 msgid "Error"
 msgstr "Erreur"
 
-#: popups.kv:239
+#: popups.kv:239 layouts.py:28
 msgid "Okay"
 msgstr "Okay"
 
@@ -1362,6 +1362,10 @@ msgstr "Redémarrer l'appli ?"
 #: devices.py:222 devices.py:230
 msgid "Ping [host]"
 msgstr "Faire ping à [hôte]"
+
+#: layouts.py:27
+msgid "Cancel"
+msgstr "Annuler"
 
 #: layouts.py:126
 msgid "add new item"
@@ -1453,9 +1457,6 @@ msgstr "Adresses IP"
 
 #~ msgid "Level 6"
 #~ msgstr "Niveau 6"
-
-#~ msgid "Cancel"
-#~ msgstr "Annuler"
 
 #~ msgid "Quit"
 #~ msgstr "Quitter"

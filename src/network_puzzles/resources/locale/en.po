@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-01 10:11-0400\n"
+"POT-Creation-Date: 2026-07-01 10:21-0400\n"
 "PO-Revision-Date: 2026-06-26 07:06-0500\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -1062,7 +1062,7 @@ msgstr ""
 msgid "Error"
 msgstr ""
 
-#: popups.kv:239
+#: popups.kv:239 layouts.py:28
 msgid "Okay"
 msgstr ""
 
@@ -1116,6 +1116,10 @@ msgstr ""
 
 #: devices.py:222 devices.py:230
 msgid "Ping [host]"
+msgstr ""
+
+#: layouts.py:27
+msgid "Cancel"
 msgstr ""
 
 #: layouts.py:126
