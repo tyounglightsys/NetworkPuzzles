@@ -2060,7 +2060,7 @@ def ip_is_broadcast_for_nic(nic, ipstr: str):
     return False
 
 
-def send_out_hubswitch(thisDevice, pkt, nic=None):
+def send_out_hubswitch(thisDevice, pkt, inbound_nic=None):
     # FIXME: This should be a Device class method.
     t_device = Device(thisDevice)
 
@@ -2068,57 +2068,60 @@ def send_out_hubswitch(thisDevice, pkt, nic=None):
     if not isinstance(pkt, packet.Packet):
         raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
-    # We loop through all nics. (minus the one we came in from)
+    # Log the anticipated action.
+    msg = f"Sending packet out {t_device.mytype}; {t_device.hostname}"
+    if inbound_nic is not None:
+        msg = f"{msg} coming in from {inbound_nic.name}"
+    logging.debug(msg)
+
+    # We loop through all nics. (minus the one we came in from), unless
+    # destination MAC is already known.
     onlyport = ""
     if t_device.mytype == "net_switch":
         if pkt.destination_mac in t_device.json.get("port_arps", {}):
             # we just send this out the one port.
             onlyport = t_device.json.get("port_arps").get(pkt.destination_mac)
 
-    if nic is not None:
-        logging.debug(
-            f"Sending packet out switch {t_device.hostname} coming in from {nic.name}"
-        )
-    else:
-        logging.debug(f"Sending packet out switch {t_device.hostname}")
-
     # print("We are forwarding.")
     for onenic in t_device.all_nics():
-        n = Nic(onenic)
+        device_nic = Nic(onenic)
+        if inbound_nic and inbound_nic.uniqueidentifier == device_nic.uniqueidentifier:
+            logging.debug(f"skipping port we came in on: {inbound_nic.name}")
+            continue
         # we duplicate the packet and send it out each port-type
         # find the link connected to the port
         # logging.debug(f"#### device type is {t_device.mytype} nic {n.type}")
-        if (
-            n.type != "port"
-            and n.type != "wport"
-            and t_device.mytype not in {"wap", "wbridge", "wrepeater"}
+        if device_nic.type not in ("port", "wport") and t_device.mytype not in (
+            "wap",
+            "wbridge",
+            "wrepeater",
         ):
             # we do not send packets out eth, vpn, etc.  We do send it out wap and wbridge eth ports
             # logging.debug ("  No.  Not sent out port"
             # logging.debug("   skipped")
             continue
-        tlink = n.get_connected_link()
-        if tlink is not None and (
-            nic is None or nic.uniqueidentifier != n.uniqueidentifier
+        connected_link = device_nic.get_connected_link()
+        if connected_link is not None and (
+            inbound_nic is None
+            or inbound_nic.uniqueidentifier != device_nic.uniqueidentifier
         ):
-            logging.debug(f"Sending packet out port: {n.name} {n.type}")
+            logging.debug(
+                f"Sending packet out port: {device_nic.name} {device_nic.type}"
+            )
             # We have a network wire connected to the NIC.  Send the packet out
             # if it is a switch-port, then we check first if we know where the packet goes - undone
-            if onlyport == "" or onlyport == n.name:
+            if onlyport == "" or onlyport == device_nic.name:
                 tpacket = packet.Packet(deepcopy(pkt.json))
                 # Update location to outgoing link.
-                tpacket.packet_location = tlink.get("hostname")
+                tpacket.packet_location = connected_link.get("hostname")
                 # Reset distance to the beginning of outgoing link.
                 tpacket.distance = 0
                 # Set direction.
-                if tlink["SrcNic"]["hostname"] == t_device.hostname:
+                if connected_link["SrcNic"]["hostname"] == t_device.hostname:
                     tpacket.direction = 1  # Src to Dest
                 else:
                     tpacket.direction = 2  # Dest to Source
                 tpacket.add_to_packet_list()
-        else:
-            if nic is not None and nic.uniqueidentifier == n.uniqueidentifier:
-                logging.debug(f"skipping port we came in on: {nic.name}")
 
     # The packet that came in gets killed since it was replicated everywhere else.
     # but only if we are a not a router.
