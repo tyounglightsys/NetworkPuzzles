@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-06-26 08:05-0500\n"
+"POT-Creation-Date: 2026-07-01 10:11-0400\n"
 "PO-Revision-Date: 2026-06-26 07:06-0500\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -973,11 +973,15 @@ msgstr ""
 msgid "redo"
 msgstr ""
 
-#: networkpuzzles.kv:69
+#: networkpuzzles.kv:64
+msgid "choose language"
+msgstr ""
+
+#: networkpuzzles.kv:70
 msgid "help"
 msgstr ""
 
-#: networkpuzzles.kv:78
+#: networkpuzzles.kv:79
 msgid "Help level:"
 msgstr ""
 
@@ -1102,8 +1106,20 @@ msgstr ""
 msgid "Congratulations, you have completed the puzzle!"
 msgstr ""
 
+#: popups.kv:338
+msgid "Restart app?"
+msgstr ""
+
+#: popups.kv:343
+msgid "Restart the app?"
+msgstr ""
+
 #: devices.py:222 devices.py:230
 msgid "Ping [host]"
+msgstr ""
+
+#: layouts.py:126
+msgid "add new item"
 msgstr ""
 
 #: links.kv:2
