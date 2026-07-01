@@ -697,14 +697,14 @@ class Device(ItemBase):
                 closest_nic = None
                 closest_distance = None
 
-                current_distance=500
+                current_distance = 500
 
                 if dev_nic_link is not None:
                     dst_dev = Device(session.puzzle.device_from_name(dst_hostname))
                     sx, sy = self.location
                     dx, dy = dst_dev.location
                     current_distance = get_puzzle_distance(sx, sy, dx, dy)
-    
+
                 for onedevice in session.puzzle.all_devices():
                     t_onedevice = Device(onedevice)
                     if (
@@ -750,11 +750,13 @@ class Device(ItemBase):
                     closest_distance
                     and closest_distance <= session.WirelessReconnectDistance
                 ):
-                    if (closest_dev is not None and 
-                        dev_nic_link is not None and 
-                        closest_dev.hostname != dst_dev.hostname and 
-                        (closest_distance + 20 < current_distance)):
-                        #we need to drop the current link.  The new one is much better
+                    if (
+                        closest_dev is not None
+                        and dev_nic_link is not None
+                        and closest_dev.hostname != dst_dev.hostname
+                        and (closest_distance + 20 < current_distance)
+                    ):
+                        # we need to drop the current link.  The new one is much better
                         dev_nic_link.remove()
                         create_link = True
                         dev_nic_link = None  # mark it as gone, just in case
