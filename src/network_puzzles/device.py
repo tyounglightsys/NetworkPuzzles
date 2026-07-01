@@ -1052,7 +1052,7 @@ class Device(ItemBase):
                     )
         return False
 
-    def receive_packet(self, pkt, nic):
+    def receive_packet(self, pkt, inbound_nic):
         """When a packet enters a device, coming from an interface and network card.  Here we respond to stuff, route, or switch..."""
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
@@ -1063,24 +1063,26 @@ class Device(ItemBase):
             # nothing more to be done
             return False
         # We would check if it was frozen.  That is a test, not a status.  We do not have that check yet.
-        logging.debug(f"Receiving packet in {self.hostname}: {pkt}")
+        logging.debug(
+            f"Receiving packet: {str(pkt)} in {self.hostname}:{inbound_nic.name} "
+        )
         # Deal with DHCP.
         # If it is a request and this is a DHCP server, serve an IP back.
         if pkt.packettype == "dhcp-request":
             if self.serves_dhcp:
                 if self.is_dhcp and self.dhcp_range:
                     session.print(f"Arrived at DHCP server: {self.hostname}")
-                    makeDHCPResponse(pkt, self.json, nic)
+                    makeDHCPResponse(pkt, self.json, inbound_nic)
                     pkt.status = "done"
                     return True
         # If it is a DHCP answer, update the device IP address.
         elif pkt.packettype == "dhcp-response":
-            if pkt.destination_mac == nic.mac and nic.uses_dhcp is True:
+            if pkt.destination_mac == inbound_nic.mac and inbound_nic.uses_dhcp is True:
                 logging.info("Handling DHCP response.")
                 logging.debug(f"packet matches this nic; {pkt.payload=}")
                 # Set IP and netmask.
                 session.ui.parser.parse(
-                    f"set {self.hostname} {nic.name} {pkt.payload.get('ip')}/{pkt.payload.get('subnet')}",
+                    f"set {self.hostname} {inbound_nic.name} {pkt.payload.get('ip')}/{pkt.payload.get('subnet')}",
                     False,
                 )
                 # Set gateway.
@@ -1110,7 +1112,7 @@ class Device(ItemBase):
                     # we need to generate a traceroute response
                     nPacket = self.create_packet(dest, "traceroute-response")
                     nPacket.payload = pkt.payload
-                    self.send_packet(nPacket, nic)
+                    self.send_packet(nPacket, inbound_nic)
                     nPacket.payload["tempDest"] = nPacket.source_ip
                     nPacket.add_to_packet_list()
                     pkt.status = "done"
@@ -1285,7 +1287,7 @@ class Device(ItemBase):
                 return True
 
         logging.debug(
-            f"We made it through.  Now seeing if we need to keep going. {pkt.status}"
+            f"We made it through.  Now seeing if we need to keep going; {pkt.status=}"
         )
         # If the packet is not done and we forward, forward. Basically, a switch/hub
         if (
@@ -1293,8 +1295,9 @@ class Device(ItemBase):
         ) and forwardsPackets(self.json):
             # with a wrouter, we handle this during "SendPacketOutDevice"
             if self.mytype != "wrouter":
+                logging.debug(f"Forwarding packet: {str(pkt)} from {self.hostname}")
                 pkt.status = "good"
-                send_out_hubswitch(self.json, pkt, nic)
+                send_out_hubswitch(self.json, pkt, inbound_nic)
                 pkt.status = "done"
                 return
             # If it is a wireless router, we might route the packet out the WAN too
@@ -1304,8 +1307,8 @@ class Device(ItemBase):
             # print("routing")
             if not packet.is_broadcast_mac(pkt.destination_mac):
                 # we do not route broadcast packets
-                logging.debug(f"Sending packet out device. {self.hostname}")
-                self.send_packet(pkt, nic)
+                logging.debug(f"Routing packet: {str(pkt)} from {self.hostname}")
+                self.send_packet(pkt, inbound_nic=inbound_nic)
             else:
                 # if it is a broadcast, the packet stops here.
                 pkt.status = "done"
@@ -1375,7 +1378,7 @@ class Device(ItemBase):
         logging.debug(f"Packet created: {nPacket.json}")
         return nPacket
 
-    def send_packet(self, pkt, nic_in=None, nic_out=None):
+    def send_packet(self, pkt, inbound_nic=None, nic_out=None):
         """Send the packet out of the device."""
 
         # Ensure Packet object.
@@ -1418,7 +1421,7 @@ class Device(ItemBase):
 
             if routeRec["nic"]["nicname"] == "management_interface0":
                 # If we are exiting a switch / hub; we go out the ports
-                send_out_hubswitch(self.json, pkt, nic_in)
+                send_out_hubswitch(self.json, pkt, inbound_nic)
                 pkt.status = "done"
                 return
             else:
