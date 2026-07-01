@@ -1157,15 +1157,16 @@ class Device(ItemBase):
                 # logging.debug("new packet sent out of device")
                 nPacket.add_to_packet_list()
                 # if we are a hub/switch, do not end broadcast pings here; pass them on
-                if not forwardsPackets(self.json) and not packet.is_broadcast_mac(
+                if forwardsPackets(self.json) and packet.is_broadcast_mac(
                     pkt.destination_mac
                 ):
+                    # we continue.  This packet is not stopping here.
+                    logging.info(f"Forwarding broadcast packet; {pkt.destination_mac=}")
+                    pkt.status = "good"
+                else:
                     logging.debug("decided packet is finished.  Marking it done")
                     pkt.status = "done"
                     return True
-                else:
-                    # we continue.  This packet is not stopping here.
-                    pkt.status = "good"
 
             # ping response, mark it as done
             elif pkt.packettype == "ping-response":
