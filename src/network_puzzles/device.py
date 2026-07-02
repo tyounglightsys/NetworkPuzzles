@@ -1328,6 +1328,13 @@ class Device(ItemBase):
             # print("routing")
             if not packet.is_broadcast_mac(pkt.destination_mac):
                 # we do not route broadcast packets
+                # Do not route packets on router back to same LAN.
+                if self.mytype == "router" and packet.isLocal(
+                    pkt.source_ip, pkt.destination_ip
+                ):
+                    pkt.status = "done"
+                    return
+
                 logging.debug(f"Routing packet: {str(pkt)} from {self.hostname}")
                 self.send_packet(pkt, inbound_nic=inbound_nic)
             else:
@@ -1522,21 +1529,6 @@ class Device(ItemBase):
             pkt.status = "done"
             return
         logging.debug(f"Found a route rec: {routeRec}")
-
-        # Determine if router should pass packet on or not.
-        if self.mytype == "router":
-            if (
-                inbound_nic is not None
-                and pkt.packettype == "ping"
-                and routeRec.get("nic").get("nicname") == inbound_nic.name
-                and packet.isLocal(pkt.source_ip, pkt.destination_ip)
-            ):
-                # Drop packet.
-                logging.info(
-                    f"Dropping packet on {self.hostname} entering and exiting on same NIC to/from same network"
-                )
-                pkt.status = "done"
-                return
 
         # Determine outbound link.
         destlink = None
