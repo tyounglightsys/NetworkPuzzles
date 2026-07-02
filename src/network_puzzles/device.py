@@ -246,14 +246,6 @@ class Device(ItemBase):
         return self.json.get("port_arps")
 
     @property
-    def routes_packets(self):
-        """Return `True` if the device routes packets, `False` if it does not."""
-        match self.mytype:
-            case "router" | "wrouter" | "firewall":
-                return True
-        return False
-
-    @property
     def routes(self):
         """Returns a list of static routes."""
         if self.json.get("route") is None:
@@ -265,12 +257,14 @@ class Device(ItemBase):
         return self.json.get("route")
 
     @property
+    def routes_packets(self):
+        """Return `True` if the device routes packets, `False` if it does not."""
+        return self.mytype in ("router", "wrouter", "firewall")
+
+    @property
     def serves_dhcp(self):
-        """return true if the device can serve dhcp, false if it can not"""
-        match self.mytype:
-            case "firewall" | "wrouter" | "server":
-                return True
-        return False
+        """Return `True` if the device can serve DHCP, `False` if it can not"""
+        return self.mytype in ("firewall", "wrouter", "server")
 
     @property
     def size(self):
@@ -1662,14 +1656,6 @@ def devicename_from_mac(mac: str):
                 return tdevice.get("hostname")
     logging.debug(f"could not find host for mac: {mac}")
     return ""
-
-
-def routesPackets(deviceRec):
-    """return true if the device routes packets, false if it does not"""
-    match deviceRec["mytype"]:
-        case "router" | "wrouter" | "firewall":
-            return True
-    return False
 
 
 def getDeviceNicFromLinkNicRec(linkNicRec):
