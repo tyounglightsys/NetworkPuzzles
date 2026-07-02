@@ -45,6 +45,11 @@ jobs:
       #     path: .buildozer_global
       #     key: buildozer-global-${{ hashFiles('buildozer.spec') }} # Replace with your path
 
+      - name: Run tests
+        run: |
+          ./scripts/test-puzzles.sh 2>/dev/null  # CLI tests
+          # ./scripts/run-tests.sh  # GUI tests; DISPLAY needed
+
       # Build APK
       - name: Build with Buildozer Action
         # uses: ArtemSBulgakov/buildozer-action@v1
