@@ -63,6 +63,13 @@ class Device(ItemBase):
             self.powered_on = True  # when it blows up, the power gets turned off
 
     @property
+    def can_use_dhcp(self):
+        for nic in self.nics:
+            if nic.can_use_dhcp:
+                return True
+        return False
+
+    @property
     def dhcp_list(self):
         """Returns a dict of DHCP entries."""
         if self.json.get("dhcplist") is None:
@@ -223,6 +230,14 @@ class Device(ItemBase):
     @property
     def mytype(self) -> str:
         return self.json.get("mytype", "")
+
+    @property
+    def nics(self):
+        """Returns NIC objects."""
+        nics = []
+        for nic in self.all_nics():
+            nics.append(Nic(nic))
+        return nics
 
     @property
     def powered_on(self) -> bool:
@@ -1384,6 +1399,28 @@ class Device(ItemBase):
         logging.debug(f"Packet created: {nPacket.json}")
         return nPacket
 
+    def make_dhcp_request(self):
+        """Generate a DHCP request packet from the specified hostname, if that host has any
+        network cards that request DHCP
+        """
+        # see if we can do a dhcp request from the specified hostname
+        if not self.can_use_dhcp:
+            return
+        for nic in self.nics:
+            if nic.uses_dhcp:
+                # This NIC can do DHCP.  Send out a request.
+                nPacket = packet.Packet()
+                # We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
+                # FIXME: Use "0.0.0.0" for source_ip instead of "255.255.255.255"?
+                #   ref: https://www.computernetworkingnotes.com/ccna-study-guide/how-dhcp-works-explained-with-examples.html
+                nPacket.source_ip = BROADCAST_IP4
+                nPacket.source_mac = nic.mac
+                nPacket.destination_ip = BROADCAST_IP4
+                nPacket.destination_mac = BROADCAST_MAC
+                nPacket.packettype = "DHCP-Request"
+                self.send_packet(nPacket, None, nic.json)
+                nPacket.add_to_packet_list()
+
     def _make_dhcp_response(self, pkt, nic):
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
@@ -1843,13 +1880,6 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     else:
         # logging.debug(f" Using routerec: {routeRec}")
         return routeRec
-
-
-def canUseDHCP(srcDevice):
-    for nic in Device(srcDevice).all_nics():
-        if nic.get("usesdhcp").lower() == "true":
-            return True
-    return False
 
 
 def deviceFromIP(what):
@@ -2362,35 +2392,6 @@ def VPN(src, dest, key, opacket):
 
     Device(src).send_packet(nPacket)
     nPacket.add_to_packet_list()
-
-
-def doDHCP(srcHostname):
-    """Generate a DHCP request packet from the specified hostname, if that host has any
-    network cards that request DHCP
-    Args:
-        srcHostname:str the hostname to do a DHCP request on"""
-    # FIXME: This should be a Device class method.
-    # see if we can do a dhcp request from the specified hostname
-    srcDevice = session.puzzle.device_from_name(srcHostname)
-    if srcDevice is None:
-        session.print(f"No such host: {srcHostname}")
-        return
-    if not canUseDHCP(srcHostname):
-        return
-    for nic in Device(srcDevice).all_nics():
-        if nic.get("usesdhcp").lower() == "true":
-            # This NIC can do DHCP.  Send out a request.
-            nPacket = packet.Packet()
-            # We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
-            # FIXME: Use "0.0.0.0" for source_ip instead of "255.255.255.255"?
-            #   ref: https://www.computernetworkingnotes.com/ccna-study-guide/how-dhcp-works-explained-with-examples.html
-            nPacket.source_ip = BROADCAST_IP4
-            nPacket.source_mac = nic.get("Mac")
-            nPacket.destination_ip = BROADCAST_IP4
-            nPacket.destination_mac = BROADCAST_MAC
-            nPacket.packettype = "DHCP-Request"
-            Device(srcDevice).send_packet(nPacket, None, nic)
-            nPacket.add_to_packet_list()
 
 
 ##############
