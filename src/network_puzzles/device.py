@@ -1078,7 +1078,7 @@ class Device(ItemBase):
             if self.serves_dhcp:
                 if self.is_dhcp and self.dhcp_range:
                     session.print(f"Arrived at DHCP server: {self.hostname}")
-                    makeDHCPResponse(pkt, self.json, inbound_nic)
+                    self._make_dhcp_response(pkt, inbound_nic)
                     pkt.status = "done"
                     return True
         # If it is a DHCP answer, update the device IP address.
@@ -1383,6 +1383,91 @@ class Device(ItemBase):
             return None
         logging.debug(f"Packet created: {nPacket.json}")
         return nPacket
+
+    def _make_dhcp_response(self, pkt, nic):
+        # Ensure Packet object.
+        if not isinstance(pkt, packet.Packet):
+            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+
+        tnic = nic
+        if nic.type == "port" or nic.type == "wport":
+            # We want to grab stuff from the management interface
+            tnic = Nic(self.nic_from_name("management_interface0"))
+            logging.debug(f"The nic is now {nic.name}")
+
+        inboundip = tnic.interfaces[0]["myip"]["ip"]
+        logging.debug(
+            f"making a dhcp response on nic {tnic.name}; {tnic.interfaces[0]['myip']['ip']}"
+        )
+        iprange = None
+        available_ip = ""  # start with it empty.  Fill it if we can
+        for onerange in self.dhcp_range:
+            if onerange["ip"] == inboundip:
+                iprange = onerange
+
+        if iprange is not None:
+            rangestart = int(
+                iprange["mask"].split(".")[3]
+            )  # they were stored a bit oddly in the original json
+            rangeend = int(
+                iprange["gateway"].split(".")[3]
+            )  # they were stored a bit oddly in the original json
+            # use the starting portion of the range, to allow for broken ranges.
+            iparr = iprange["mask"].split(".")
+            ipprepend = f"{iparr[0]}.{iparr[1]}.{iparr[2]}."
+            for i in range(rangestart, rangeend):
+                newip = ipprepend + str(i)
+                found = False
+                for dhcpentry in self.dhcp_list.values():
+                    if dhcpentry == newip:
+                        found = True
+                        break
+                if not found:
+                    available_ip = newip
+                    logging.debug(f"New ip address would be {newip}")
+                    break
+        else:
+            logging.debug(f"Unable to find a DHCP range in {self.hostname}")
+        # Now, check to see if we have an entry already.
+        if pkt.source_mac in self.dhcp_list:
+            # FIXME: How to remove bad DHCP entry from list and add new one?
+            # we already have an entry. Use it
+            available_ip = self.dhcp_list.get(pkt.source_mac)
+        else:
+            logging.debug(
+                f"DHCP: Making an IP reservation {available_ip} {pkt.source_mac}"
+            )
+
+        if available_ip != "":
+            # stash it.  if it already exists, we use the same value.
+            self.dhcp_list[pkt.source_mac] = available_ip
+            # Now, make a new DHCP response packet
+            nPacket = packet.Packet()
+            nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
+            nPacket.source_mac = tnic.mac
+            nPacket.destination_ip = GENERIC_IP4
+            nPacket.destination_mac = pkt.source_mac
+            nPacket.packettype = "DHCP-Response"
+            nPacket.payload = {
+                "ip": available_ip,
+                "subnet": tnic.interfaces[0]["myip"]["mask"],
+                "gateway": self.json["gateway"]["ip"],
+            }
+            # if the dhcp server is a router/firewall, use the nic IP as the gateway
+            if self.routes_packets:
+                nPacket.payload["gateway"] = inboundip
+            destlink = nic.get_connected_link()
+            nPacket.packet_location = destlink["hostname"]
+            logging.debug(f"  The DHCP packet is: {nPacket.json}")
+            logging.debug(f"  And it is being sent out the link: {destlink}")
+            if destlink["SrcNic"]["hostname"] == self.hostname:
+                nPacket.direction = 1  # Src to Dest
+            else:
+                nPacket.direction = 2  # Dest to Source
+            nPacket.add_to_packet_list()
+            logging.info(
+                f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {pkt.source_mac}"
+            )
 
     def send_packet(self, pkt, inbound_nic=None, nic_out=None):
         """Send the packet out of the device."""
@@ -2140,92 +2225,6 @@ def ip_is_broadcast_for_nic(nic, ipstr: str):
         if packet.isBroadcast(ipstr, str(Interface(oneIF).ipaddress)):
             return True
     return False
-
-
-def makeDHCPResponse(pkt, thisDevice, nic):
-    # FIXME: This should be a Device class method.
-    t_device = Device(thisDevice)
-    # Ensure Packet object.
-    if not isinstance(pkt, packet.Packet):
-        raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
-
-    tnic = nic
-    if nic.type == "port" or nic.type == "wport":
-        # We want to grab stuff from the management interface
-        tnic = Nic(t_device.nic_from_name("management_interface0"))
-        logging.debug(f"The nic is now {nic.name}")
-
-    inboundip = tnic.interfaces[0]["myip"]["ip"]
-    logging.debug(
-        f"making a dhcp response on nic {tnic.name}; {tnic.interfaces[0]['myip']['ip']}"
-    )
-    iprange = None
-    available_ip = ""  # start with it empty.  Fill it if we can
-    for onerange in t_device.dhcp_range:
-        if onerange["ip"] == inboundip:
-            iprange = onerange
-
-    if iprange is not None:
-        rangestart = int(
-            iprange["mask"].split(".")[3]
-        )  # they were stored a bit oddly in the original json
-        rangeend = int(
-            iprange["gateway"].split(".")[3]
-        )  # they were stored a bit oddly in the original json
-        # use the starting portion of the range, to allow for broken ranges.
-        iparr = iprange["mask"].split(".")
-        ipprepend = f"{iparr[0]}.{iparr[1]}.{iparr[2]}."
-        for i in range(rangestart, rangeend):
-            newip = ipprepend + str(i)
-            found = False
-            for dhcpentry in t_device.dhcp_list.values():
-                if dhcpentry == newip:
-                    found = True
-                    break
-            if not found:
-                available_ip = newip
-                logging.debug(f"New ip address would be {newip}")
-                break
-    else:
-        logging.debug(f"Unable to find a DHCP range in {t_device.hostname}")
-    # Now, check to see if we have an entry already.
-    if pkt.source_mac in t_device.dhcp_list:
-        # FIXME: How to remove bad DHCP entry from list and add new one?
-        # we already have an entry. Use it
-        available_ip = t_device.dhcp_list.get(pkt.source_mac)
-    else:
-        logging.debug(f"DHCP: Making an IP reservation {available_ip} {pkt.source_mac}")
-
-    if available_ip != "":
-        # stash it.  if it already exists, we use the same value.
-        t_device.dhcp_list[pkt.source_mac] = available_ip
-        # Now, make a new DHCP response packet
-        nPacket = packet.Packet()
-        nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
-        nPacket.source_mac = tnic.mac
-        nPacket.destination_ip = GENERIC_IP4
-        nPacket.destination_mac = pkt.source_mac
-        nPacket.packettype = "DHCP-Response"
-        nPacket.payload = {
-            "ip": available_ip,
-            "subnet": tnic.interfaces[0]["myip"]["mask"],
-            "gateway": t_device.json["gateway"]["ip"],
-        }
-        # if the dhcp server is a router/firewall, use the nic IP as the gateway
-        if t_device.routes_packets:
-            nPacket.payload["gateway"] = inboundip
-        destlink = nic.get_connected_link()
-        nPacket.packet_location = destlink["hostname"]
-        logging.debug(f"  The DHCP packet is: {nPacket.json}")
-        logging.debug(f"  And it is being sent out the link: {destlink}")
-        if destlink["SrcNic"]["hostname"] == t_device.hostname:
-            nPacket.direction = 1  # Src to Dest
-        else:
-            nPacket.direction = 2  # Dest to Source
-        nPacket.add_to_packet_list()
-        logging.info(
-            f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {pkt.source_mac}"
-        )
 
 
 def untunnel_packet(pkt, thedevice):
