@@ -1393,15 +1393,31 @@ class Device(ItemBase):
             session.print(msg)
             pkt.status = "done"
             return
+        logging.debug(f"Found a route rec: {routeRec}")
 
+        # Determine if router should pass packet on or not.
+        if self.mytype == "router":
+            if (
+                inbound_nic is not None
+                and pkt.packettype == "ping"
+                and routeRec.get("nic").get("nicname") == inbound_nic.name
+                and packet.isLocal(pkt.source_ip, pkt.destination_ip)
+            ):
+                # Drop packet.
+                logging.info(
+                    f"Dropping packet on {self.hostname} entering and exiting on same NIC to/from same network"
+                )
+                pkt.status = "done"
+                return
+
+        # Determine outbound link.
         destlink = None
         if nic_out is not None:
             # We have a specific NIC we are sending this out.
             destlink = Nic(nic_out).get_connected_link()
 
         # set the source MAC address on the packet as from the nic
-        if routeRec is not None and destlink is None:
-            logging.debug(f"Found a route rec. {routeRec}")
+        if destlink is None:
             routeRec["nic"] = Nic(routeRec["nic"]).ensure_mac()
             pkt.source_mac = routeRec["nic"]["Mac"]
             pkt.json["tdestIP"] = routeRec.get("gateway")  # track when we use a gateway
@@ -1409,7 +1425,7 @@ class Device(ItemBase):
             # this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
             if (
                 pkt.destination_mac != BROADCAST_MAC
-                and pkt.packettype != "DHCP-Response"
+                and pkt.packettype != "dhcp-response"
             ):
                 if routeRec.get("gateway") is not None:
                     # We are going out the gateway.  Find the ARP for that
@@ -1417,17 +1433,21 @@ class Device(ItemBase):
                 else:
                     # We are on a local link.  Set the destmac to be the mac of our destination computer
                     pkt.destination_mac = globalArpLookup(pkt.destination_ip)
-                logging.debug(f"Using dest mac {pkt.destination_mac}")
+                logging.debug(
+                    f"Using dest mac {pkt.destination_mac} for {str(pkt)} at {self.hostname}"
+                )
+                for d in session.puzzle.devices:
+                    logging.debug(f"{d.get('hostname')=}; {Device(d).mac_list()}")
 
             if routeRec["nic"]["nicname"] == "management_interface0":
                 # If we are exiting a switch / hub; we go out the ports
                 send_out_hubswitch(self.json, pkt, inbound_nic)
                 pkt.status = "done"
                 return
-            else:
-                # set the packet location being the link associated with the nic
-                #   Fail if there is no link on the port
-                destlink = Nic(routeRec.get("nic")).get_connected_link()
+
+            # set the packet location being the link associated with the nic
+            #   Fail if there is no link on the port
+            destlink = Nic(routeRec.get("nic")).get_connected_link()
 
             # Handle VPNs.
             logging.debug(f"Checking if we need VPN: {routeRec}")
