@@ -54,7 +54,9 @@ class Parser:
     def parse(self, command: str, fromuser=True):
         retval = None
         if session.puzzle is not None and len(session.puzzle.packets) > 0 and fromuser:
-            session.print("Please wait until packets are finished before performing another action.")
+            session.print(
+                "Please wait until packets are finished before performing another action."
+            )
             return
         # We will make this a lot more interesting later.  For now, just do a very simple thing
         if command is not None:
@@ -64,7 +66,7 @@ class Parser:
                 logging.info("Ignoring non-command.")
                 return
         logging.debug(f"{command=}")
-        
+
         previous_state_json = None
         if session.puzzle is not None and fromuser:
             previous_state_json = copy.deepcopy(session.puzzle.json)
@@ -138,13 +140,18 @@ class Parser:
             case _:
                 session.print(f"unknown: {command}")
 
-        if fromuser and previous_state_json is not None and not session.puzzle.json == previous_state_json:
+        if (
+            fromuser
+            and previous_state_json is not None
+            and not session.puzzle.json == previous_state_json
+        ):
             if command not in ["undo", "redo", "show"]:
-                #something changed.  We want to stash an undo
-                session.store_undo(command, previous_state_json) 
-                session.redolist = list() #zero out the redo if we have done anything except an undo/redo
-            
-            #we only need to do this if something changed.
+                # something changed.  We want to stash an undo
+                session.store_undo(command, previous_state_json)
+                # zero out the redo if we have done anything except an undo/redo
+                session.redolist = list()
+
+            # we only need to do this if something changed.
             # after we do anything, rebuild network wires if needed.
             if session is not None and session.puzzle is not None:
                 session.puzzle.AutoJoinAllWireless()
@@ -156,7 +163,7 @@ class Parser:
             lastcmd = session.undolist.pop()
             session.puzzle.json = lastcmd.get("puzzle_json")
             session.print(f"Undoing: {lastcmd.get('line')}")
-            #so we go back to the other state
+            # so we go back to the other state
             lastcmd["puzzle_json"] = current_json
             session.redolist.append(lastcmd)  # Put it onto the redo list
         else:
@@ -168,7 +175,7 @@ class Parser:
             lastcmd = session.redolist.pop()
             session.puzzle.json = lastcmd.get("puzzle_json")
             session.print(f"Redoing: {lastcmd.get('line')}")
-            #so we go back to the other state
+            # so we go back to the other state
             lastcmd["puzzle_json"] = current_json
             session.undolist.append(lastcmd)
             # The command is automatically added to the undo; through the parse.  We are done
@@ -407,9 +414,9 @@ class Parser:
         if args[0] == "all":
             for one in session.puzzle.all_devices():
                 if "hostname" in one:
-                    device.doDHCP(one.get("hostname"))
+                    device.Device(one).make_dhcp_request()
         else:
-            device.doDHCP(args[0])
+            device.Device(args[0]).make_dhcp_request()
 
     def delete_item(self, args):
         if len(args) == 0:
@@ -817,10 +824,12 @@ class Parser:
         y = int(y_in.replace(",", "")) + 0
         if not session.puzzle.item_can_be_moved_here(dev_obj.hostname, x, y):
             if session.puzzle.item_is_locked(dev_obj.hostname, "LockLocation"):
-               session.print(f"Device cannot be moved: {dev_obj.hostname}")
+                session.print(f"Device cannot be moved: {dev_obj.hostname}")
             else:
                 if dev_obj.mytype != "tree":
-                    session.print(f"Item cannot be moved outside its boundaries. {dev_obj.hostname}")
+                    session.print(
+                        f"Item cannot be moved outside its boundaries. {dev_obj.hostname}"
+                    )
             return False
         if x + 0 and y > 0:
             session.print(f"Setting position of {dev_obj.hostname} to {x},{y}")

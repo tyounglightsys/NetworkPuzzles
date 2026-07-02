@@ -142,8 +142,15 @@ class Puzzle(ItemBase):
 
     def commands_from_tests(self, hostname=None):
         commands = list()
-        tdevice = self.device_from_name(hostname)
-        for test in self.all_tests(hostname):
+        dev_json = self.device_from_name(hostname)
+        if dev_json:
+            dev = device.Device(dev_json)
+            all_tests = dev.all_tests()
+        else:
+            dev = None
+            all_tests = self.all_tests(None)
+        # for test in self.all_tests(hostname):
+        for test in all_tests:
             # print(f"checking test: {onetest.get('shost')} {onetest.get('dhost')} {onetest.get('thetest')} - {onetest.get('completed',False)}")
             if test.get("completed", False):
                 continue
@@ -186,7 +193,7 @@ class Puzzle(ItemBase):
                 case "DeviceNeedsUPS":
                     commands.append(f"addups {test.get('shost')}")
                 case "DeviceIsFrozen" | "DeviceBlowsUpWithPower" | "DeviceNeedsUPS":
-                    if not device.Device(tdevice).powered_on:
+                    if dev and not dev.powered_on:
                         commands.append(f"set {test.get('shost')} power on")
                     else:
                         commands.append(f"set {test.get('shost')} power off")
@@ -195,10 +202,11 @@ class Puzzle(ItemBase):
                     ):
                         # FIXME: Need correct command for adding UPS.
                         commands.append(f"replaceups {test.get('shost')}")
-        if tdevice is not None and device.canUseDHCP(hostname):
-            commands.append(f"dhcp {hostname}")
-        if device.Device(tdevice).blown_up:
-            commands.append(f"replace {hostname}")
+
+        if dev and dev.can_use_dhcp:
+            commands.append(f"dhcp {dev.hostname}")
+        if dev and dev.blown_up:
+            commands.append(f"replace {dev.hostname}")
         return commands
 
     def arp_lookup(self, ipaddr):

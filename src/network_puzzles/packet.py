@@ -6,7 +6,7 @@ from copy import deepcopy
 
 from . import device, session
 from .core import ItemBase, get_puzzle_distance
-from .interface import BROADCAST_MAC, GENERIC_IP4
+from .interface import BROADCAST_MAC, GENERIC_IP4, IpAddress
 from .link import Link
 from .nic import Nic
 
@@ -461,7 +461,7 @@ def get_ip_range(start_ip, end_ip):
     return ip_list
 
 
-def isLocal(packetIP: str, interfaceIP: str):
+def isLocal(packetIP: IpAddress | str, interfaceIP: IpAddress | str):
     """Determine if the packet IP is considered local by the subnet/netmask on the interface IP
     Args:
         packetIP:str - a string IP (ipv6/ipv4); just an IP - no subnet

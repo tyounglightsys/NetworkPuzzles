@@ -63,6 +63,13 @@ class Device(ItemBase):
             self.powered_on = True  # when it blows up, the power gets turned off
 
     @property
+    def can_use_dhcp(self):
+        for nic in self.nics:
+            if nic.can_use_dhcp:
+                return True
+        return False
+
+    @property
     def dhcp_list(self):
         """Returns a dict of DHCP entries."""
         if self.json.get("dhcplist") is None:
@@ -103,6 +110,18 @@ class Device(ItemBase):
         elif not isinstance(current_rules, list):
             self.json["firewallrule"] = [current_rules]
         return self.json.get("firewallrule")
+
+    @property
+    def forwards_packets(self):
+        """return true if the device does packet forwarding (switch/hub/etc), false if it does not"""
+        return self.mytype in (
+            "net_switch",
+            "net_hub",
+            "wap",
+            "wbridge",
+            "wrepeater",
+            "wrouter",
+        )
 
     @property
     def frozen(self):
@@ -213,6 +232,14 @@ class Device(ItemBase):
         return self.json.get("mytype", "")
 
     @property
+    def nics(self):
+        """Returns NIC objects."""
+        nics = []
+        for nic in self.all_nics():
+            nics.append(Nic(nic))
+        return nics
+
+    @property
     def powered_on(self) -> bool:
         if self.json.get("poweroff", "").lower() in ("true", "yes"):
             value = False
@@ -234,14 +261,6 @@ class Device(ItemBase):
         return self.json.get("port_arps")
 
     @property
-    def routes_packets(self):
-        """Return `True` if the device routes packets, `False` if it does not."""
-        match self.mytype:
-            case "router" | "wrouter" | "firewall":
-                return True
-        return False
-
-    @property
     def routes(self):
         """Returns a list of static routes."""
         if self.json.get("route") is None:
@@ -253,12 +272,14 @@ class Device(ItemBase):
         return self.json.get("route")
 
     @property
+    def routes_packets(self):
+        """Return `True` if the device routes packets, `False` if it does not."""
+        return self.mytype in ("router", "wrouter", "firewall")
+
+    @property
     def serves_dhcp(self):
-        """return true if the device can serve dhcp, false if it can not"""
-        match self.mytype:
-            case "firewall" | "wrouter" | "server":
-                return True
-        return False
+        """Return `True` if the device can serve DHCP, `False` if it can not"""
+        return self.mytype in ("firewall", "wrouter", "server")
 
     @property
     def size(self):
@@ -697,14 +718,14 @@ class Device(ItemBase):
                 closest_nic = None
                 closest_distance = None
 
-                current_distance=500
+                current_distance = 500
 
                 if dev_nic_link is not None:
                     dst_dev = Device(session.puzzle.device_from_name(dst_hostname))
                     sx, sy = self.location
                     dx, dy = dst_dev.location
                     current_distance = get_puzzle_distance(sx, sy, dx, dy)
-    
+
                 for onedevice in session.puzzle.all_devices():
                     t_onedevice = Device(onedevice)
                     if (
@@ -750,11 +771,13 @@ class Device(ItemBase):
                     closest_distance
                     and closest_distance <= session.WirelessReconnectDistance
                 ):
-                    if (closest_dev is not None and 
-                        dev_nic_link is not None and 
-                        closest_dev.hostname != dst_dev.hostname and 
-                        (closest_distance + 20 < current_distance)):
-                        #we need to drop the current link.  The new one is much better
+                    if (
+                        closest_dev is not None
+                        and dev_nic_link is not None
+                        and closest_dev.hostname != dst_dev.hostname
+                        and (closest_distance + 20 < current_distance)
+                    ):
+                        # we need to drop the current link.  The new one is much better
                         dev_nic_link.remove()
                         create_link = True
                         dev_nic_link = None  # mark it as gone, just in case
@@ -1050,7 +1073,7 @@ class Device(ItemBase):
                     )
         return False
 
-    def receive_packet(self, pkt, nic):
+    def receive_packet(self, pkt, inbound_nic):
         """When a packet enters a device, coming from an interface and network card.  Here we respond to stuff, route, or switch..."""
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
@@ -1061,24 +1084,26 @@ class Device(ItemBase):
             # nothing more to be done
             return False
         # We would check if it was frozen.  That is a test, not a status.  We do not have that check yet.
-        logging.debug(f"Receiving packet in {self.hostname}: {pkt}")
+        logging.debug(
+            f"Receiving packet: {str(pkt)} in {self.hostname}:{inbound_nic.name} "
+        )
         # Deal with DHCP.
         # If it is a request and this is a DHCP server, serve an IP back.
         if pkt.packettype == "dhcp-request":
             if self.serves_dhcp:
                 if self.is_dhcp and self.dhcp_range:
                     session.print(f"Arrived at DHCP server: {self.hostname}")
-                    makeDHCPResponse(pkt, self.json, nic)
+                    self._make_dhcp_response(pkt, inbound_nic)
                     pkt.status = "done"
                     return True
         # If it is a DHCP answer, update the device IP address.
         elif pkt.packettype == "dhcp-response":
-            if pkt.destination_mac == nic.mac and nic.uses_dhcp is True:
+            if pkt.destination_mac == inbound_nic.mac and inbound_nic.uses_dhcp is True:
                 logging.info("Handling DHCP response.")
                 logging.debug(f"packet matches this nic; {pkt.payload=}")
                 # Set IP and netmask.
                 session.ui.parser.parse(
-                    f"set {self.hostname} {nic.name} {pkt.payload.get('ip')}/{pkt.payload.get('subnet')}",
+                    f"set {self.hostname} {inbound_nic.name} {pkt.payload.get('ip')}/{pkt.payload.get('subnet')}",
                     False,
                 )
                 # Set gateway.
@@ -1108,7 +1133,7 @@ class Device(ItemBase):
                     # we need to generate a traceroute response
                     nPacket = self.create_packet(dest, "traceroute-response")
                     nPacket.payload = pkt.payload
-                    self.send_packet(nPacket, nic)
+                    self.send_packet(nPacket, inbound_nic)
                     nPacket.payload["tempDest"] = nPacket.source_ip
                     nPacket.add_to_packet_list()
                     pkt.status = "done"
@@ -1155,15 +1180,16 @@ class Device(ItemBase):
                 # logging.debug("new packet sent out of device")
                 nPacket.add_to_packet_list()
                 # if we are a hub/switch, do not end broadcast pings here; pass them on
-                if not forwardsPackets(self.json) and not packet.is_broadcast_mac(
+                if self.forwards_packets and packet.is_broadcast_mac(
                     pkt.destination_mac
                 ):
+                    # we continue.  This packet is not stopping here.
+                    logging.info(f"Forwarding broadcast packet; {pkt.destination_mac=}")
+                    pkt.status = "good"
+                else:
                     logging.debug("decided packet is finished.  Marking it done")
                     pkt.status = "done"
                     return True
-                else:
-                    # we continue.  This packet is not stopping here.
-                    pkt.status = "good"
 
             # ping response, mark it as done
             elif pkt.packettype == "ping-response":
@@ -1282,16 +1308,17 @@ class Device(ItemBase):
                 return True
 
         logging.debug(
-            f"We made it through.  Now seeing if we need to keep going. {pkt.status}"
+            f"We made it through.  Now seeing if we need to keep going; {pkt.status=}"
         )
         # If the packet is not done and we forward, forward. Basically, a switch/hub
         if (
             pkt.status != "done" or packet.is_broadcast_mac(pkt.destination_mac)
-        ) and forwardsPackets(self.json):
+        ) and self.forwards_packets:
             # with a wrouter, we handle this during "SendPacketOutDevice"
             if self.mytype != "wrouter":
+                logging.debug(f"Forwarding packet: {str(pkt)} from {self.hostname}")
                 pkt.status = "good"
-                send_out_hubswitch(self.json, pkt, nic)
+                self._send_out_hubswitch(pkt, inbound_nic)
                 pkt.status = "done"
                 return
             # If it is a wireless router, we might route the packet out the WAN too
@@ -1301,8 +1328,8 @@ class Device(ItemBase):
             # print("routing")
             if not packet.is_broadcast_mac(pkt.destination_mac):
                 # we do not route broadcast packets
-                logging.debug(f"Sending packet out device. {self.hostname}")
-                self.send_packet(pkt, nic)
+                logging.debug(f"Routing packet: {str(pkt)} from {self.hostname}")
+                self.send_packet(pkt, inbound_nic=inbound_nic)
             else:
                 # if it is a broadcast, the packet stops here.
                 pkt.status = "done"
@@ -1372,7 +1399,114 @@ class Device(ItemBase):
         logging.debug(f"Packet created: {nPacket.json}")
         return nPacket
 
-    def send_packet(self, pkt, nic_in=None, nic_out=None):
+    def make_dhcp_request(self):
+        """Generate a DHCP request packet from the specified hostname, if that host has any
+        network cards that request DHCP
+        """
+        # see if we can do a dhcp request from the specified hostname
+        if not self.can_use_dhcp:
+            return
+        for nic in self.nics:
+            if nic.uses_dhcp:
+                # This NIC can do DHCP.  Send out a request.
+                nPacket = packet.Packet()
+                # We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
+                # FIXME: Use "0.0.0.0" for source_ip instead of "255.255.255.255"?
+                #   ref: https://www.computernetworkingnotes.com/ccna-study-guide/how-dhcp-works-explained-with-examples.html
+                nPacket.source_ip = BROADCAST_IP4
+                nPacket.source_mac = nic.mac
+                nPacket.destination_ip = BROADCAST_IP4
+                nPacket.destination_mac = BROADCAST_MAC
+                nPacket.packettype = "DHCP-Request"
+                self.send_packet(nPacket, None, nic.json)
+                nPacket.add_to_packet_list()
+
+    def _make_dhcp_response(self, pkt, nic):
+        # Ensure Packet object.
+        if not isinstance(pkt, packet.Packet):
+            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+
+        tnic = nic
+        if nic.type == "port" or nic.type == "wport":
+            # We want to grab stuff from the management interface
+            tnic = Nic(self.nic_from_name("management_interface0"))
+            logging.debug(f"The nic is now {nic.name}")
+
+        inboundip = tnic.interfaces[0]["myip"]["ip"]
+        logging.debug(
+            f"making a dhcp response on nic {tnic.name}; {tnic.interfaces[0]['myip']['ip']}"
+        )
+        iprange = None
+        available_ip = ""  # start with it empty.  Fill it if we can
+        for onerange in self.dhcp_range:
+            if onerange["ip"] == inboundip:
+                iprange = onerange
+
+        if iprange is not None:
+            rangestart = int(
+                iprange["mask"].split(".")[3]
+            )  # they were stored a bit oddly in the original json
+            rangeend = int(
+                iprange["gateway"].split(".")[3]
+            )  # they were stored a bit oddly in the original json
+            # use the starting portion of the range, to allow for broken ranges.
+            iparr = iprange["mask"].split(".")
+            ipprepend = f"{iparr[0]}.{iparr[1]}.{iparr[2]}."
+            for i in range(rangestart, rangeend):
+                newip = ipprepend + str(i)
+                found = False
+                for dhcpentry in self.dhcp_list.values():
+                    if dhcpentry == newip:
+                        found = True
+                        break
+                if not found:
+                    available_ip = newip
+                    logging.debug(f"New ip address would be {newip}")
+                    break
+        else:
+            logging.debug(f"Unable to find a DHCP range in {self.hostname}")
+        # Now, check to see if we have an entry already.
+        if pkt.source_mac in self.dhcp_list:
+            # FIXME: How to remove bad DHCP entry from list and add new one?
+            # we already have an entry. Use it
+            available_ip = self.dhcp_list.get(pkt.source_mac)
+        else:
+            logging.debug(
+                f"DHCP: Making an IP reservation {available_ip} {pkt.source_mac}"
+            )
+
+        if available_ip != "":
+            # stash it.  if it already exists, we use the same value.
+            self.dhcp_list[pkt.source_mac] = available_ip
+            # Now, make a new DHCP response packet
+            nPacket = packet.Packet()
+            nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
+            nPacket.source_mac = tnic.mac
+            nPacket.destination_ip = GENERIC_IP4
+            nPacket.destination_mac = pkt.source_mac
+            nPacket.packettype = "DHCP-Response"
+            nPacket.payload = {
+                "ip": available_ip,
+                "subnet": tnic.interfaces[0]["myip"]["mask"],
+                "gateway": self.json["gateway"]["ip"],
+            }
+            # if the dhcp server is a router/firewall, use the nic IP as the gateway
+            if self.routes_packets:
+                nPacket.payload["gateway"] = inboundip
+            destlink = nic.get_connected_link()
+            nPacket.packet_location = destlink["hostname"]
+            logging.debug(f"  The DHCP packet is: {nPacket.json}")
+            logging.debug(f"  And it is being sent out the link: {destlink}")
+            if destlink["SrcNic"]["hostname"] == self.hostname:
+                nPacket.direction = 1  # Src to Dest
+            else:
+                nPacket.direction = 2  # Dest to Source
+            nPacket.add_to_packet_list()
+            logging.info(
+                f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {pkt.source_mac}"
+            )
+
+    def send_packet(self, pkt, inbound_nic=None, nic_out=None):
         """Send the packet out of the device."""
 
         # Ensure Packet object.
@@ -1387,15 +1521,31 @@ class Device(ItemBase):
             session.print(msg)
             pkt.status = "done"
             return
+        logging.debug(f"Found a route rec: {routeRec}")
 
+        # Determine if router should pass packet on or not.
+        if self.mytype == "router":
+            if (
+                inbound_nic is not None
+                and pkt.packettype == "ping"
+                and routeRec.get("nic").get("nicname") == inbound_nic.name
+                and packet.isLocal(pkt.source_ip, pkt.destination_ip)
+            ):
+                # Drop packet.
+                logging.info(
+                    f"Dropping packet on {self.hostname} entering and exiting on same NIC to/from same network"
+                )
+                pkt.status = "done"
+                return
+
+        # Determine outbound link.
         destlink = None
         if nic_out is not None:
             # We have a specific NIC we are sending this out.
             destlink = Nic(nic_out).get_connected_link()
 
         # set the source MAC address on the packet as from the nic
-        if routeRec is not None and destlink is None:
-            logging.debug(f"Found a route rec. {routeRec}")
+        if destlink is None:
             routeRec["nic"] = Nic(routeRec["nic"]).ensure_mac()
             pkt.source_mac = routeRec["nic"]["Mac"]
             pkt.json["tdestIP"] = routeRec.get("gateway")  # track when we use a gateway
@@ -1403,7 +1553,7 @@ class Device(ItemBase):
             # this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
             if (
                 pkt.destination_mac != BROADCAST_MAC
-                and pkt.packettype != "DHCP-Response"
+                and pkt.packettype != "dhcp-response"
             ):
                 if routeRec.get("gateway") is not None:
                     # We are going out the gateway.  Find the ARP for that
@@ -1411,17 +1561,21 @@ class Device(ItemBase):
                 else:
                     # We are on a local link.  Set the destmac to be the mac of our destination computer
                     pkt.destination_mac = globalArpLookup(pkt.destination_ip)
-                logging.debug(f"Using dest mac {pkt.destination_mac}")
+                logging.debug(
+                    f"Using dest mac {pkt.destination_mac} for {str(pkt)} at {self.hostname}"
+                )
+                for d in session.puzzle.devices:
+                    logging.debug(f"{d.get('hostname')=}; {Device(d).mac_list()}")
 
             if routeRec["nic"]["nicname"] == "management_interface0":
                 # If we are exiting a switch / hub; we go out the ports
-                send_out_hubswitch(self.json, pkt, nic_in)
+                self._send_out_hubswitch(pkt, inbound_nic)
                 pkt.status = "done"
                 return
-            else:
-                # set the packet location being the link associated with the nic
-                #   Fail if there is no link on the port
-                destlink = Nic(routeRec.get("nic")).get_connected_link()
+
+            # set the packet location being the link associated with the nic
+            #   Fail if there is no link on the port
+            destlink = Nic(routeRec.get("nic")).get_connected_link()
 
             # Handle VPNs.
             logging.debug(f"Checking if we need VPN: {routeRec}")
@@ -1494,6 +1648,75 @@ class Device(ItemBase):
         )
         session.print("No route to host")
 
+    def _send_out_hubswitch(self, pkt, inbound_nic=None):
+        # Ensure Packet object.
+        if not isinstance(pkt, packet.Packet):
+            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+
+        # Log the anticipated action.
+        msg = f"Sending packet out {self.mytype}; {self.hostname}"
+        if inbound_nic is not None:
+            msg = f"{msg} coming in from {inbound_nic.name}"
+        logging.debug(msg)
+
+        # We loop through all nics. (minus the one we came in from), unless
+        # destination MAC is already known.
+        onlyport = ""
+        if self.mytype == "net_switch":
+            if pkt.destination_mac in self.json.get("port_arps", {}):
+                # we just send this out the one port.
+                onlyport = self.json.get("port_arps").get(pkt.destination_mac)
+
+        # print("We are forwarding.")
+        for onenic in self.all_nics():
+            device_nic = Nic(onenic)
+            if (
+                inbound_nic
+                and inbound_nic.uniqueidentifier == device_nic.uniqueidentifier
+            ):
+                logging.debug(f"skipping port we came in on: {inbound_nic.name}")
+                continue
+            # we duplicate the packet and send it out each port-type
+            # find the link connected to the port
+            # logging.debug(f"#### device type is {self.mytype} nic {n.type}")
+            if device_nic.type not in ("port", "wport") and self.mytype not in (
+                "wap",
+                "wbridge",
+                "wrepeater",
+            ):
+                # we do not send packets out eth, vpn, etc.  We do send it out wap and wbridge eth ports
+                # logging.debug ("  No.  Not sent out port"
+                # logging.debug("   skipped")
+                continue
+            connected_link = device_nic.get_connected_link()
+            if connected_link is not None and (
+                inbound_nic is None
+                or inbound_nic.uniqueidentifier != device_nic.uniqueidentifier
+            ):
+                logging.debug(
+                    f"Sending packet out port: {device_nic.name} {device_nic.type}"
+                )
+                # We have a network wire connected to the NIC.  Send the packet out
+                # if it is a switch-port, then we check first if we know where the packet goes - undone
+                if onlyport == "" or onlyport == device_nic.name:
+                    tpacket = packet.Packet(deepcopy(pkt.json))
+                    # Update location to outgoing link.
+                    tpacket.packet_location = connected_link.get("hostname")
+                    # Reset distance to the beginning of outgoing link.
+                    tpacket.distance = 0
+                    # Set direction.
+                    if connected_link["SrcNic"]["hostname"] == self.hostname:
+                        tpacket.direction = 1  # Src to Dest
+                    else:
+                        tpacket.direction = 2  # Dest to Source
+                    tpacket.add_to_packet_list()
+
+        # The packet that came in gets killed since it was replicated everywhere else.
+        # but only if we are a not a router.
+        if not self.routes_packets:
+            pkt.status = "done"
+            return True
+
     # Generic functions
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict | None:
         # Returns first match; i.e. assumes only one item in list matches given
@@ -1555,22 +1778,6 @@ def devicename_from_mac(mac: str):
                 return tdevice.get("hostname")
     logging.debug(f"could not find host for mac: {mac}")
     return ""
-
-
-def forwardsPackets(deviceRec):
-    """return true if the device does packet forwarding (switch/hub/etc), false if it does not"""
-    match deviceRec["mytype"]:
-        case "net_switch" | "net_hub" | "wap" | "wbridge" | "wrepeater" | "wrouter":
-            return True
-    return False
-
-
-def routesPackets(deviceRec):
-    """return true if the device routes packets, false if it does not"""
-    match deviceRec["mytype"]:
-        case "router" | "wrouter" | "firewall":
-            return True
-    return False
 
 
 def getDeviceNicFromLinkNicRec(linkNicRec):
@@ -1673,13 +1880,6 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
     else:
         # logging.debug(f" Using routerec: {routeRec}")
         return routeRec
-
-
-def canUseDHCP(srcDevice):
-    for nic in Device(srcDevice).all_nics():
-        if nic.get("usesdhcp").lower() == "true":
-            return True
-    return False
 
 
 def deviceFromIP(what):
@@ -2057,159 +2257,6 @@ def ip_is_broadcast_for_nic(nic, ipstr: str):
     return False
 
 
-def send_out_hubswitch(thisDevice, pkt, nic=None):
-    # FIXME: This should be a Device class method.
-    t_device = Device(thisDevice)
-
-    # Ensure Packet object.
-    if not isinstance(pkt, packet.Packet):
-        raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
-
-    # We loop through all nics. (minus the one we came in from)
-    onlyport = ""
-    if t_device.mytype == "net_switch":
-        if pkt.destination_mac in t_device.json.get("port_arps", {}):
-            # we just send this out the one port.
-            onlyport = t_device.json.get("port_arps").get(pkt.destination_mac)
-
-    if nic is not None:
-        logging.debug(
-            f"Sending packet out switch {t_device.hostname} coming in from {nic.name}"
-        )
-    else:
-        logging.debug(f"Sending packet out switch {t_device.hostname}")
-
-    # print("We are forwarding.")
-    for onenic in t_device.all_nics():
-        n = Nic(onenic)
-        # we duplicate the packet and send it out each port-type
-        # find the link connected to the port
-        # logging.debug(f"#### device type is {t_device.mytype} nic {n.type}")
-        if (
-            n.type != "port"
-            and n.type != "wport"
-            and t_device.mytype not in {"wap", "wbridge", "wrepeater"}
-        ):
-            # we do not send packets out eth, vpn, etc.  We do send it out wap and wbridge eth ports
-            # logging.debug ("  No.  Not sent out port"
-            # logging.debug("   skipped")
-            continue
-        tlink = n.get_connected_link()
-        if tlink is not None and (
-            nic is None or nic.uniqueidentifier != n.uniqueidentifier
-        ):
-            logging.debug(f"Sending packet out port: {n.name} {n.type}")
-            # We have a network wire connected to the NIC.  Send the packet out
-            # if it is a switch-port, then we check first if we know where the packet goes - undone
-            if onlyport == "" or onlyport == n.name:
-                tpacket = packet.Packet(deepcopy(pkt.json))
-                # Update location to outgoing link.
-                tpacket.packet_location = tlink.get("hostname")
-                # Reset distance to the beginning of outgoing link.
-                tpacket.distance = 0
-                # Set direction.
-                if tlink["SrcNic"]["hostname"] == t_device.hostname:
-                    tpacket.direction = 1  # Src to Dest
-                else:
-                    tpacket.direction = 2  # Dest to Source
-                tpacket.add_to_packet_list()
-        else:
-            if nic is not None and nic.uniqueidentifier == n.uniqueidentifier:
-                logging.debug(f"skipping port we came in on: {nic.name}")
-
-    # The packet that came in gets killed since it was replicated everywhere else.
-    # but only if we are a not a router.
-    if not t_device.routes_packets:
-        pkt.status = "done"
-        return True
-
-
-def makeDHCPResponse(pkt, thisDevice, nic):
-    # FIXME: This should be a Device class method.
-    t_device = Device(thisDevice)
-    # Ensure Packet object.
-    if not isinstance(pkt, packet.Packet):
-        raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
-
-    tnic = nic
-    if nic.type == "port" or nic.type == "wport":
-        # We want to grab stuff from the management interface
-        tnic = Nic(t_device.nic_from_name("management_interface0"))
-        logging.debug(f"The nic is now {nic.name}")
-
-    inboundip = tnic.interfaces[0]["myip"]["ip"]
-    logging.debug(
-        f"making a dhcp response on nic {tnic.name}; {tnic.interfaces[0]['myip']['ip']}"
-    )
-    iprange = None
-    available_ip = ""  # start with it empty.  Fill it if we can
-    for onerange in t_device.dhcp_range:
-        if onerange["ip"] == inboundip:
-            iprange = onerange
-
-    if iprange is not None:
-        rangestart = int(
-            iprange["mask"].split(".")[3]
-        )  # they were stored a bit oddly in the original json
-        rangeend = int(
-            iprange["gateway"].split(".")[3]
-        )  # they were stored a bit oddly in the original json
-        # use the starting portion of the range, to allow for broken ranges.
-        iparr = iprange["mask"].split(".")
-        ipprepend = f"{iparr[0]}.{iparr[1]}.{iparr[2]}."
-        for i in range(rangestart, rangeend):
-            newip = ipprepend + str(i)
-            found = False
-            for dhcpentry in t_device.dhcp_list.values():
-                if dhcpentry == newip:
-                    found = True
-                    break
-            if not found:
-                available_ip = newip
-                logging.debug(f"New ip address would be {newip}")
-                break
-    else:
-        logging.debug(f"Unable to find a DHCP range in {t_device.hostname}")
-    # Now, check to see if we have an entry already.
-    if pkt.source_mac in t_device.dhcp_list:
-        # FIXME: How to remove bad DHCP entry from list and add new one?
-        # we already have an entry. Use it
-        available_ip = t_device.dhcp_list.get(pkt.source_mac)
-    else:
-        logging.debug(f"DHCP: Making an IP reservation {available_ip} {pkt.source_mac}")
-
-    if available_ip != "":
-        # stash it.  if it already exists, we use the same value.
-        t_device.dhcp_list[pkt.source_mac] = available_ip
-        # Now, make a new DHCP response packet
-        nPacket = packet.Packet()
-        nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
-        nPacket.source_mac = tnic.mac
-        nPacket.destination_ip = GENERIC_IP4
-        nPacket.destination_mac = pkt.source_mac
-        nPacket.packettype = "DHCP-Response"
-        nPacket.payload = {
-            "ip": available_ip,
-            "subnet": tnic.interfaces[0]["myip"]["mask"],
-            "gateway": t_device.json["gateway"]["ip"],
-        }
-        # if the dhcp server is a router/firewall, use the nic IP as the gateway
-        if t_device.routes_packets:
-            nPacket.payload["gateway"] = inboundip
-        destlink = nic.get_connected_link()
-        nPacket.packet_location = destlink["hostname"]
-        logging.debug(f"  The DHCP packet is: {nPacket.json}")
-        logging.debug(f"  And it is being sent out the link: {destlink}")
-        if destlink["SrcNic"]["hostname"] == t_device.hostname:
-            nPacket.direction = 1  # Src to Dest
-        else:
-            nPacket.direction = 2  # Dest to Source
-        nPacket.add_to_packet_list()
-        logging.info(
-            f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {pkt.source_mac}"
-        )
-
-
 def untunnel_packet(pkt, thedevice):
     # The packet is a tunneled packet.
     # We need to unpack the payload and find the VPN nic it should enter
@@ -2345,35 +2392,6 @@ def VPN(src, dest, key, opacket):
 
     Device(src).send_packet(nPacket)
     nPacket.add_to_packet_list()
-
-
-def doDHCP(srcHostname):
-    """Generate a DHCP request packet from the specified hostname, if that host has any
-    network cards that request DHCP
-    Args:
-        srcHostname:str the hostname to do a DHCP request on"""
-    # FIXME: This should be a Device class method.
-    # see if we can do a dhcp request from the specified hostname
-    srcDevice = session.puzzle.device_from_name(srcHostname)
-    if srcDevice is None:
-        session.print(f"No such host: {srcHostname}")
-        return
-    if not canUseDHCP(srcHostname):
-        return
-    for nic in Device(srcDevice).all_nics():
-        if nic.get("usesdhcp").lower() == "true":
-            # This NIC can do DHCP.  Send out a request.
-            nPacket = packet.Packet()
-            # We do not know our IP, so we have no mask to determine.  Broadcast is done using the MAC
-            # FIXME: Use "0.0.0.0" for source_ip instead of "255.255.255.255"?
-            #   ref: https://www.computernetworkingnotes.com/ccna-study-guide/how-dhcp-works-explained-with-examples.html
-            nPacket.source_ip = BROADCAST_IP4
-            nPacket.source_mac = nic.get("Mac")
-            nPacket.destination_ip = BROADCAST_IP4
-            nPacket.destination_mac = BROADCAST_MAC
-            nPacket.packettype = "DHCP-Request"
-            Device(srcDevice).send_packet(nPacket, None, nic)
-            nPacket.add_to_packet_list()
 
 
 ##############
