@@ -105,6 +105,18 @@ class Device(ItemBase):
         return self.json.get("firewallrule")
 
     @property
+    def forwards_packets(self):
+        """return true if the device does packet forwarding (switch/hub/etc), false if it does not"""
+        return self.mytype in (
+            "net_switch",
+            "net_hub",
+            "wap",
+            "wbridge",
+            "wrepeater",
+            "wrouter",
+        )
+
+    @property
     def frozen(self):
         return session.puzzle.device_is_frozen(self.json)
 
@@ -1159,7 +1171,7 @@ class Device(ItemBase):
                 # logging.debug("new packet sent out of device")
                 nPacket.add_to_packet_list()
                 # if we are a hub/switch, do not end broadcast pings here; pass them on
-                if forwardsPackets(self.json) and packet.is_broadcast_mac(
+                if self.forwards_packets and packet.is_broadcast_mac(
                     pkt.destination_mac
                 ):
                     # we continue.  This packet is not stopping here.
@@ -1292,7 +1304,7 @@ class Device(ItemBase):
         # If the packet is not done and we forward, forward. Basically, a switch/hub
         if (
             pkt.status != "done" or packet.is_broadcast_mac(pkt.destination_mac)
-        ) and forwardsPackets(self.json):
+        ) and self.forwards_packets:
             # with a wrouter, we handle this during "SendPacketOutDevice"
             if self.mytype != "wrouter":
                 logging.debug(f"Forwarding packet: {str(pkt)} from {self.hostname}")
@@ -1650,14 +1662,6 @@ def devicename_from_mac(mac: str):
                 return tdevice.get("hostname")
     logging.debug(f"could not find host for mac: {mac}")
     return ""
-
-
-def forwardsPackets(deviceRec):
-    """return true if the device does packet forwarding (switch/hub/etc), false if it does not"""
-    match deviceRec["mytype"]:
-        case "net_switch" | "net_hub" | "wap" | "wbridge" | "wrepeater" | "wrouter":
-            return True
-    return False
 
 
 def routesPackets(deviceRec):
