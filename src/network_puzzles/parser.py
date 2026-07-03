@@ -682,25 +682,38 @@ class Parser:
 
     def set_gateway_value(self, dev_obj, value):
         # we really need to do some type checking.  It should be a valid ipv4 or ipv6 address
-        if packet.is_ipv4(value) or packet.is_ipv6(value):
-            dev_obj.json["gateway"]["ip"] = value
-            tmp_obj = session.puzzle.device_from_ip(value)
-            if tmp_obj is not None and "hostname" in tmp_obj:
-                logging.debug(
-                    f"setting {dev_obj.hostname} NeedsDefaultGW to {tmp_obj['hostname']} as solved"
-                )
-                session.puzzle.mark_test_as_completed(
-                    dev_obj.hostname,
-                    tmp_obj["hostname"],
-                    "NeedsDefaultGW",
-                    f"{dev_obj.hostname} has default gateway set",
-                )
-            session.print(
-                f"Setting {dev_obj.hostname} gateway: {dev_obj.json['gateway']['ip']}"
-            )
-        else:
+        if not packet.is_ipv4(value) and not packet.is_ipv6(value):
             session.print(f"invalid address: {value}")
             return False
+
+        # Set the gateway. (all values accepted; i.e. no validation is done here)
+        dev_obj.gateway = value
+        session.print(f"Setting {dev_obj.hostname} gateway: {dev_obj.gateway}")
+
+        # See if there are any tests to mark complete.
+        # Check if gateway address is local to current device.
+        local_nics = dev_obj.get_nics_local_to(value)
+        if len(local_nics) == 0:
+            session.print(
+                f"gateway '{value}' is not the same network as {dev_obj.hostname}"
+            )
+            return False
+        # Check for valid gateway device.
+        gw_json = session.puzzle.device_from_ip(value)
+        if gw_json is None:
+            session.print(f"no device with address: {value}")
+            return False
+        # Mark test as completed.
+        gw_obj = device.Device(gw_json)
+        logging.debug(
+            f"setting {dev_obj.hostname} NeedsDefaultGW to {gw_obj.hostname} as solved"
+        )
+        session.puzzle.mark_test_as_completed(
+            dev_obj.hostname,
+            gw_obj.hostname,
+            "NeedsDefaultGW",
+            f"{dev_obj.hostname} has default gateway set",
+        )
 
     def set_encryption(self, dev_obj: device.Device, nicname, newkey):
         # set encryption, used on VPNs and wireless links
