@@ -60,6 +60,7 @@ logging.basicConfig(
     format="%(levelname)s:%(filename)s:%(lineno)s:%(message)s",
 )
 
+logging.debug(f"App: {log_level=}")
 logging.debug(f"App: {sys.argv=}")
 logging.info(f"App: system locale: {session.locale}")
 logging.info(f"App: UI language: {session.lang}")

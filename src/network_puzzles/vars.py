@@ -4,11 +4,19 @@ import sys
 from copy import deepcopy
 from pathlib import Path
 
-from kivy.utils import platform
-
 APP_TITLE = "NetworkPuzzles"
 APP_MODULE = "network_puzzles"
 os.environ["KIVY_DESKTOP_PATH_ID"] = APP_TITLE
+
+# Ref: https://kivy.org/doc/stable/api-kivy.utils.html#kivy.utils.platform
+# 'win', 'linux', 'android', 'macosx', 'ios' or 'unknown'
+if "-m" in sys.argv:  # CLI invocation
+    # This avoids importing kivy, which automatically forces debug logging.
+    OS = None
+else:
+    from kivy.utils import platform
+
+    OS = platform
 
 # Set INSTALL type.
 if hasattr(sys, "_MEIPASS"):
@@ -20,10 +28,6 @@ elif "SNAP" in os.environ:
     INSTALL_TYPE = "snap"
 else:
     INSTALL_TYPE = "python"
-
-# Ref: https://kivy.org/doc/stable/api-kivy.utils.html#kivy.utils.platform
-# 'win', 'linux', 'android', 'macosx', 'ios' or 'unknown'
-OS = platform
 
 # Set DATA DIR.
 match INSTALL_TYPE:
