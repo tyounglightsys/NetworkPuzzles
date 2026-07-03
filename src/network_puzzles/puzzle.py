@@ -566,11 +566,16 @@ class Puzzle(ItemBase):
             session.packetstorm = True
         return len(self.packets) > 0
 
-    def process_packets(self, killSeconds: int = 20, tick_pct: float = 10):
+    def process_packets(self, killSeconds: int = 8, tick_pct: float = 10):
         """
         Loop through all packets, moving them along through the system
         Args: killseconds - the number of seconds to go before killing the packets.
         """
+        # NOTE: If killSeconds is too high (~20), then Level0_NetworkLoop seems
+        # to run forever (~40 sec) before the packets time out. However, if it's
+        # set too low (~5), then Level0_Traceroute fails because the packet
+        # traveling the farthest on the network (6 segments) times out before
+        # arriving at its destination. Therefore, 8 has been chosen for now.
         killMilliseconds = killSeconds * 1000
         # here we loop through all packets and process them
         curtime = int(time.time() * 1000)
@@ -578,7 +583,7 @@ class Puzzle(ItemBase):
         # logging.debug("Packet: Starting packetlist loop.")
         for pkt in self.packets:
             logging.debug(
-                f"Packet: {pkt.packet_location}; {pkt.direction}; {pkt.distance}; {pkt.source_ip} -> {pkt.destination_ip}"
+                f"Packet: {pkt.packettype} on {pkt.packet_location} @{pkt.distance}; {pkt.source_ip} -> {pkt.destination_ip}"
             )
             counter = counter + 1
             if pkt.status == "tunneled":
