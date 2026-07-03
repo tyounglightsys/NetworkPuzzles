@@ -409,7 +409,7 @@ msgid ""
 "switches need fixing, but the router is OK."
 msgstr ""
 "Les appareils d'un réseau n'arrivent pas à faire ping aux appareils de "
-"l'autre réseau (séparés par le routeur). Dépanne le réseau et le corrige. "
+"l'autre réseau (séparés par le routeur). Dépanne le réseau et corrige-le. "
 "Tous les ordinateurs et commutateurs sont mal configurés, mais le routeur "
 "est bon."
 
