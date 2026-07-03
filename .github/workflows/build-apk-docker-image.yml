@@ -50,6 +50,9 @@ jobs:
           ./scripts/test-puzzles.sh 2>/dev/null  # CLI tests
           # ./scripts/run-tests.sh  # GUI tests; DISPLAY needed
 
+      - name: Ensure localization binaries
+        run: ./scripts/update-locales.sh mo
+
       # Build APK
       - name: Build with Buildozer Action
         # uses: ArtemSBulgakov/buildozer-action@v1
