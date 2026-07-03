@@ -40,11 +40,15 @@ jobs:
         shell: bash
         run: python -m pip install .
 
-      - name: Run tests
-        shell: bash
-        run: |
-          ./scripts/test-puzzles.sh 2>/dev/null  # CLI tests
-          # ./scripts/run-tests.sh  # GUI tests; DISPLAY needed
+      # - name: Run tests
+      #   shell: bash
+      #   run: |
+      #     ./scripts/test-puzzles.sh 2>/dev/null  # CLI tests
+      #     # ./scripts/run-tests.sh  # GUI tests; DISPLAY needed
+
+      # - name: Ensure localization binaries  # needs gettext binaries
+      #   shell: bash
+      #   run: ./scripts/update-locales.sh mo
 
       - name: Install PyInstaller
         shell: bash

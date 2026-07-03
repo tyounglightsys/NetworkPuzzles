@@ -22,14 +22,17 @@ jobs:
           prerelease: true
           prerelease-identifier: "rc"
 
+  run-tests:
+    uses: ./.github/workflows/run-tests.yml
+
   build-apk:
-    needs: update_prerelease_draft
+    needs: [run-tests, update_prerelease_draft]
     uses: ./.github/workflows/build-apk-docker-image.yml
     with:
       tag_name: ${{ needs.update_prerelease_draft.outputs.tag_name }}
 
   build-exe:
-    needs: update_prerelease_draft
+    needs: [run-tests, update_prerelease_draft]
     uses: ./.github/workflows/build-exe-pyinstaller.yml
     with:
       tag_name: ${{ needs.update_prerelease_draft.outputs.tag_name }}

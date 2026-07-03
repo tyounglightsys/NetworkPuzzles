@@ -1,17 +1,17 @@
 name: Build APK file w/ Docker
 on:
-  workflow_call:
+  workflow_call: # runs in release-drafter.yml
     inputs:
       tag_name:
         required: true
         type: string
   workflow_dispatch:
-  pull_request:
-    branches:
-      - main
-    paths:
-      - ".github/workflows/*apk*"
-      - "src/network_puzzles/**"
+  # pull_request:
+  #   branches:
+  #     - main
+  #   paths:
+  #     - ".github/workflows/*apk*"
+  #     - "src/network_puzzles/**"
   # push:
   #   branches:
   #     - main
@@ -45,10 +45,13 @@ jobs:
       #     path: .buildozer_global
       #     key: buildozer-global-${{ hashFiles('buildozer.spec') }} # Replace with your path
 
-      - name: Run tests
-        run: |
-          ./scripts/test-puzzles.sh 2>/dev/null  # CLI tests
-          # ./scripts/run-tests.sh  # GUI tests; DISPLAY needed
+      # - name: Run tests
+      #   run: |
+      #     ./scripts/test-puzzles.sh 2>/dev/null  # CLI tests
+      #     # ./scripts/run-tests.sh  # GUI tests; DISPLAY needed
+
+      # - name: Ensure localization binaries
+      #   run: ./scripts/update-locales.sh mo
 
       # Build APK
       - name: Build with Buildozer Action
