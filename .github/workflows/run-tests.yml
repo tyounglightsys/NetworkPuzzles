@@ -2,6 +2,11 @@ name: Run pre-build tests
 on:
   workflow_call:
   workflow_dispatch:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "src/network_puzzles/**"
 
 jobs:
   run-tests:
