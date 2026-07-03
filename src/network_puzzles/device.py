@@ -306,6 +306,17 @@ class Device(ItemBase):
                 tests.append(t)
         return tests
 
+    def get_nics_local_to(self, ip_address):
+        logging.debug(f"Dev: {ip_address=}")
+        nics = []
+        for nic in self.nics:
+            for ip_data in nic.ip_addresses:
+                if packet.isLocal(
+                    ip_address, f"{ip_data.get('ip')}/{ip_data.get('mask')}"
+                ):
+                    nics.append(nic)
+        return nics
+
     def get_nontest_commands(self):
         # Add item-related commands for items not mentioned in tests.
         commands = list()
