@@ -32,12 +32,12 @@ jobs:
       - name: upload EXE
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ steps.release.tag_name }} ${{ needs.jobs.build-exe.filename }} --clobber
+        run: gh release upload ${{ steps.release.tag_name }} ${{ needs.build-exe.filename }} --clobber
 
       - name: upload APK
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ steps.release.tag_name }} ${{ needs.jobs.build-apk.filename }} --clobber
+        run: gh release upload ${{ steps.release.tag_name }} ${{ needs.build-apk.filename }} --clobber
 
   update-prerelease-draft:
     needs: [build-apk, build-exe]
@@ -53,9 +53,9 @@ jobs:
       - name: upload EXE
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ steps.prerelease.tag_name }} ${{ needs.jobs.build-exe.filename }} --clobber
+        run: gh release upload ${{ steps.prerelease.tag_name }} ${{ needs.build-exe.filename }} --clobber
 
       - name: upload APK
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ steps.prerelease.tag_name }} ${{ needs.jobs.build-apk.filename }} --clobber
+        run: gh release upload ${{ steps.prerelease.tag_name }} ${{ needs.build-apk.filename }} --clobber
