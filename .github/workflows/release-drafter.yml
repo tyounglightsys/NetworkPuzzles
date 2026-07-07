@@ -46,15 +46,19 @@ jobs:
     needs: [build-exe, update-prerelease-draft, update-release-draft]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: NetworkPuzzles.exe
+          
       - name: upload prerelease EXE
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ needs.update-prerelease-draft.outputs.tag_name }} ${{ needs.build-exe.outputs.filename }} --clobber
+        run: gh release upload ${{ needs.update-prerelease-draft.outputs.tag_name }} NetworkPuzzles.exe --clobber
 
       - name: upload release EXE
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ needs.update-release-draft.outputs.tag_name }} ${{ needs.build-exe.outputs.filename }} --clobber
+        run: gh release upload ${{ needs.update-release-draft.outputs.tag_name }} NetworkPuzzles.exe --clobber
 
   upload-apks:
     needs: [build-apk, update-prerelease-draft, update-release-draft]
