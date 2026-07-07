@@ -3,7 +3,7 @@ on:
   workflow_call:
     outputs:
       filename:
-        value: ${{ jobs.build.filename }}
+        value: ${{ jobs.build.outputs.filename }}
   workflow_dispatch:
   pull_request:
     branches:
