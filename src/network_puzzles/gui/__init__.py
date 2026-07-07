@@ -5,6 +5,7 @@ import sys
 import traceback
 
 from kivy.config import Config
+from kivy.resources import resource_add_path
 
 from .. import session
 
@@ -13,6 +14,9 @@ if session.device_type == "desktop":
     Config.set("input", "mouse", "mouse,disable_multitouch")
 elif session.device_type == "mobile":
     Config.set("kivy", "desktop", "0")
+
+if hasattr(sys, "_MEIPASS"):
+    resource_add_path(os.path.join(sys._MEIPASS))
 
 # Continue with remaining imports.
 from kivy.app import App
@@ -59,8 +63,9 @@ class NetworkPuzzlesApp(App):
     def __init__(self, ui, **kwargs):
         # Set session `app` variable.
         session.app = self
-        # FIXME: Set artificial max puzzle level for GUI during development.
-        self.max_gui_level = 3
+        # FIXME: This allows a semi-arbitrary list of puzzles to be hidden until
+        # they're well tested.
+        self.gui_level_exclusions = r"^Level(?=[4-9]+|[0-9]+_Help).*$"
 
         # Set device-related config.
         if session.device_type == "desktop":

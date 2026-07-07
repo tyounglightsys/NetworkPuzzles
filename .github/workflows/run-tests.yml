@@ -23,6 +23,8 @@ jobs:
       - name: Install app python package
         run: pip install .
 
-      - run: |
-          ./scripts/test-puzzles.sh 2>/dev/null  # CLI tests
-          # ./scripts/run-tests.sh  # GUI tests; DISPLAY needed
+      - name: CLI tests
+        run: ./scripts/test-puzzles.sh 2>/dev/null
+
+      - name: GUI tests
+        run: ./scripts/run-tests.sh
