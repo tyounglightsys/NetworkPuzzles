@@ -12,7 +12,7 @@ permissions:
 jobs:
   update-release-draft:
     outputs:
-      tag_name: steps.release.tag_name
+      tag_name: ${{ steps.release.outputs.tag_name }}
     runs-on: ubuntu-latest
     steps:
       - name: prepare release draft
@@ -21,7 +21,7 @@ jobs:
 
   update-prerelease-draft:
     outputs:
-      tag_name: steps.prerelease.tag_name
+      tag_name: ${{ steps.prerelease.outputs.tag_name }}
     runs-on: ubuntu-latest
     steps:
       - name: prepare prerelease draft
