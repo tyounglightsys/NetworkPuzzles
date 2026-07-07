@@ -63,8 +63,9 @@ class NetworkPuzzlesApp(App):
     def __init__(self, ui, **kwargs):
         # Set session `app` variable.
         session.app = self
-        # FIXME: Set artificial max puzzle level for GUI during development.
-        self.max_gui_level = 3
+        # FIXME: This allows a semi-arbitrary list of puzzles to be hidden until
+        # they're well tested.
+        self.gui_level_exclusions = r"^Level(?=[4-9]+|[0-9]+_Help).*$"
 
         # Set device-related config.
         if session.device_type == "desktop":

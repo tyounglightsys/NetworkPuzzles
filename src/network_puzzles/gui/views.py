@@ -5,6 +5,7 @@ from copy import deepcopy
 from kivy.uix.recycleview import RecycleView
 
 from .. import session
+from ..util import exclude_from_list
 
 
 class AppRecView(RecycleView):
@@ -71,10 +72,10 @@ class PuzzlesRecView(AppRecView):
     def update_data(self):
         filtered_puzzles = [n for n in self.app.filtered_puzzlelist]
         # FIXME: Remove this limit after development is complete.
-        if hasattr(self.app, "max_gui_level"):
-            filtered_puzzles = [
-                n for n in filtered_puzzles[:] if int(n[5]) <= self.app.max_gui_level
-            ]
+        if hasattr(self.app, "gui_level_exclusions"):
+            filtered_puzzles = exclude_from_list(
+                filtered_puzzles, self.app.gui_level_exclusions
+            )
         self.data = [{"text": n} for n in filtered_puzzles]
 
 
