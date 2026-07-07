@@ -1,6 +1,9 @@
 name: Build APK file w/ Docker
 on:
   workflow_call: # runs in release-drafter.yml
+    outputs:
+      artifact:
+        value: ${{ jobs.build.outputs.artifact }}
   workflow_dispatch:
   # pull_request:
   #   branches:
@@ -14,6 +17,8 @@ on:
 
 jobs:
   build:
+    outputs:
+      artifact: ${{ steps.buildozer.outputs.filename }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
