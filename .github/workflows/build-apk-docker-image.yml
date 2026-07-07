@@ -3,7 +3,7 @@ on:
   workflow_call: # runs in release-drafter.yml
     outputs:
       filename:
-        value: ${{ jobs.build.filename }}
+        value: ${{ jobs.build.outputs.filename }}
   workflow_dispatch:
   # pull_request:
   #   branches:
