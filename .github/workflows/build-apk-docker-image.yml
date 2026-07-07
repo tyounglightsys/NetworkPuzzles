@@ -18,7 +18,7 @@ on:
 jobs:
   build:
     outputs:
-      artifact: ${{ steps.buildozer.outputs.filename }}
+      artifact: ${{ steps.artifact-name.outputs.artifact }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -54,6 +54,9 @@ jobs:
         # uses: ArtemSBulgakov/buildozer-action@v1
         uses: n8marti/buildozer-action@fix-ubuntu-2604
         id: buildozer
+
+      - id: artifact-name
+        run: echo "artifact=$(basename ${{ steps.buildozer.outputs.filename }})" >> $GITHUB_OUTPUT
 
       # Upload artifacts
       - name: Upload APK artifact
