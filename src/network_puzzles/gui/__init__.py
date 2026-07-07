@@ -5,6 +5,7 @@ import sys
 import traceback
 
 from kivy.config import Config
+from kivy.resources import resource_add_path
 
 from .. import session
 
@@ -13,6 +14,9 @@ if session.device_type == "desktop":
     Config.set("input", "mouse", "mouse,disable_multitouch")
 elif session.device_type == "mobile":
     Config.set("kivy", "desktop", "0")
+
+if hasattr(sys, "_MEIPASS"):
+    resource_add_path(os.path.join(sys._MEIPASS))
 
 # Continue with remaining imports.
 from kivy.app import App
