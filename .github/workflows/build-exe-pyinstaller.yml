@@ -3,7 +3,7 @@ on:
   workflow_call:
     outputs:
       filename:
-        value: ${{ jobs.build.outputs.filename }}
+        value: ${{ jobs.build.outputs.binary }}
   workflow_dispatch:
   pull_request:
     branches:
@@ -20,9 +20,9 @@ jobs:
     runs-on: windows-latest
     timeout-minutes: 60
     outputs:
-      filename: ${{ steps.pyinstaller.outputs.filename }}
+      binary: ${{ steps.pyinstaller.outputs.binary }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install Python
         uses: actions/setup-python@v6
@@ -68,6 +68,7 @@ jobs:
             --clean \
             --noconfirm \
             pyinstaller.spec 2>&1 | tee pyinstaller.log
+          echo "binary=./dist/NetworkPuzzles.exe" >> $GITHUB_OUTPUT
 
       - name: Log EXE build/dist files
         if: always()
