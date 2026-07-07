@@ -10,29 +10,52 @@ permissions:
   pull-requests: read
 
 jobs:
-  update_prerelease_draft:
+  run-tests:
+    uses: ./.github/workflows/run-tests.yml
+
+  build-exe:
+    needs: run-tests
+    uses: ./.github/workflows/build-exe-pyinstaller.yml
+
+  build-apk:
+    needs: run-tests
+    uses: ./.github/workflows/build-apk-docker-image.yml
+
+  update-release-draft:
+    needs: [build-apk, build-exe]
     runs-on: ubuntu-latest
-    outputs:
-      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - name: prepare release draft
+        id: release
+        uses: release-drafter/release-drafter@v7
+
+      - name: upload EXE
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: gh release upload ${{ steps.release.tag_name }} ${{ needs.jobs.build-exe.filename }} --clobber
+
+      - name: upload APK
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: gh release upload ${{ steps.release.tag_name }} ${{ needs.jobs.build-apk.filename }} --clobber
+
+  update-prerelease-draft:
+    needs: [build-apk, build-exe]
+    runs-on: ubuntu-latest
     steps:
       - name: prepare prerelease draft
-        id: release
+        id: prerelease
         uses: release-drafter/release-drafter@v7
         with:
           prerelease: true
           prerelease-identifier: "rc"
 
-  run-tests:
-    uses: ./.github/workflows/run-tests.yml
+      - name: upload EXE
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: gh release upload ${{ steps.prerelease.tag_name }} ${{ needs.jobs.build-exe.filename }} --clobber
 
-  build-apk:
-    needs: [run-tests, update_prerelease_draft]
-    uses: ./.github/workflows/build-apk-docker-image.yml
-    with:
-      tag_name: ${{ needs.update_prerelease_draft.outputs.tag_name }}
-
-  build-exe:
-    needs: [run-tests, update_prerelease_draft]
-    uses: ./.github/workflows/build-exe-pyinstaller.yml
-    with:
-      tag_name: ${{ needs.update_prerelease_draft.outputs.tag_name }}
+      - name: upload APK
+        env:
+          GITHUB_TOKEN: ${{ github.TOKEN }}
+        run: gh release upload ${{ steps.prerelease.tag_name }} ${{ needs.jobs.build-apk.filename }} --clobber
