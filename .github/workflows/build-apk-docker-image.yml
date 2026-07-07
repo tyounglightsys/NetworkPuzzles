@@ -1,10 +1,9 @@
 name: Build APK file w/ Docker
 on:
   workflow_call: # runs in release-drafter.yml
-    inputs:
-      tag_name:
-        required: true
-        type: string
+    outputs:
+      filename:
+        value: ${{ jobs.build.filename }}
   workflow_dispatch:
   # pull_request:
   #   branches:
@@ -19,6 +18,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      filename: steps.buildozer.outputs.filename
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -66,8 +67,8 @@ jobs:
           name: package
           path: ${{ steps.buildozer.outputs.filename }}
 
-      - name: Upload APK to draft release
-        if: ${{ github.event_name == 'push' }}
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ inputs.tag_name }} ${{ steps.buildozer.outputs.filename }} --clobber
+      # - name: Upload APK to draft release
+      #   if: ${{ github.event_name == 'push' }}
+      #   env:
+      #     GITHUB_TOKEN: ${{ github.TOKEN }}
+      #   run: gh release upload ${{ inputs.tag_name }} ${{ steps.buildozer.outputs.filename }} --clobber
