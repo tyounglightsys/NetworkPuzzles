@@ -66,12 +66,18 @@ jobs:
     needs: [build-apk, update-prerelease-draft, update-release-draft]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build-apk.outputs.artifact }}
+
       - name: upload prerelease APK
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ needs.update-prerelease-draft.outputs.tag_name }} ${{ needs.build-apk.outputs.filename }} --clobber
+        run: gh release upload ${{ needs.update-prerelease-draft.outputs.tag_name }} ${{ needs.build-apk.outputs.artifact }} --clobber
 
       - name: upload release APK
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ needs.update-release-draft.outputs.tag_name }} ${{ needs.build-apk.outputs.filename }} --clobber
+        run: gh release upload ${{ needs.update-release-draft.outputs.tag_name }} ${{ needs.build-apk.outputs.artifact }} --clobber
