@@ -25,4 +25,4 @@ jobs:
 
       - run: |
           ./scripts/test-puzzles.sh 2>/dev/null  # CLI tests
-          # ./scripts/run-tests.sh  # GUI tests; DISPLAY needed
+          ./scripts/run-tests.sh  # GUI tests; DISPLAY needed
