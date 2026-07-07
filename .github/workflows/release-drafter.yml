@@ -10,6 +10,27 @@ permissions:
   pull-requests: read
 
 jobs:
+  update-release-draft:
+    outputs:
+      tag_name: steps.release.tag_name
+    runs-on: ubuntu-latest
+    steps:
+      - name: prepare release draft
+        id: release
+        uses: release-drafter/release-drafter@v7
+
+  update-prerelease-draft:
+    outputs:
+      tag_name: steps.prerelease.tag_name
+    runs-on: ubuntu-latest
+    steps:
+      - name: prepare prerelease draft
+        id: prerelease
+        uses: release-drafter/release-drafter@v7
+        with:
+          prerelease: true
+          prerelease-identifier: "rc"
+
   run-tests:
     uses: ./.github/workflows/run-tests.yml
 
@@ -21,41 +42,30 @@ jobs:
     needs: run-tests
     uses: ./.github/workflows/build-apk-docker-image.yml
 
-  update-release-draft:
-    needs: [build-apk, build-exe]
+  upload-exes:
+    needs: [build-exe, update-prerelease-draft, update-release-draft]
     runs-on: ubuntu-latest
     steps:
-      - name: prepare release draft
-        id: release
-        uses: release-drafter/release-drafter@v7
-
-      - name: upload EXE
+      - name: upload prerelease EXE
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ steps.release.outputs.tag_name }} ${{ needs.build-exe.outputs.filename }} --clobber
+        run: gh release upload ${{ needs.update-prerelease-draft.outputs.tag_name }} ${{ needs.build-exe.outputs.filename }} --clobber
 
-      - name: upload APK
+      - name: upload release EXE
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ steps.release.outputs.tag_name }} ${{ needs.build-apk.outputs.filename }} --clobber
+        run: gh release upload ${{ needs.update-release-draft.outputs.tag_name }} ${{ needs.build-exe.outputs.filename }} --clobber
 
-  update-prerelease-draft:
-    needs: [build-apk, build-exe]
+  upload-apks:
+    needs: [build-apk, update-prerelease-draft, update-release-draft]
     runs-on: ubuntu-latest
     steps:
-      - name: prepare prerelease draft
-        id: prerelease
-        uses: release-drafter/release-drafter@v7
-        with:
-          prerelease: true
-          prerelease-identifier: "rc"
-
-      - name: upload EXE
+      - name: upload prerelease APK
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ steps.prerelease.outputs.tag_name }} ${{ needs.build-exe.outputs.filename }} --clobber
+        run: gh release upload ${{ needs.update-prerelease-draft.outputs.tag_name }} ${{ needs.build-apk.outputs.filename }} --clobber
 
-      - name: upload APK
+      - name: upload release APK
         env:
           GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ steps.prerelease.outputs.tag_name }} ${{ needs.build-apk.outputs.filename }} --clobber
+        run: gh release upload ${{ needs.update-release-draft.outputs.tag_name }} ${{ needs.build-apk.outputs.filename }} --clobber
