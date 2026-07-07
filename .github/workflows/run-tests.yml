@@ -26,5 +26,5 @@ jobs:
       - run: |
           echo "CLI tests"
           ./scripts/test-puzzles.sh 2>/dev/null  # CLI tests
-          echo -e "\nGUI tests"
+          echo -e "\n\nGUI tests"
           ./scripts/run-tests.sh  # GUI tests
