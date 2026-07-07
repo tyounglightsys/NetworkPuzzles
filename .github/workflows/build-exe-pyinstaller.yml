@@ -1,9 +1,6 @@
 name: Build EXE file w/ PyInstaller GH Action
 on:
   workflow_call:
-    outputs:
-      filename:
-        value: ${{ jobs.build.outputs.binary }}
   workflow_dispatch:
   pull_request:
     branches:
@@ -19,8 +16,6 @@ jobs:
   build:
     runs-on: windows-latest
     timeout-minutes: 60
-    outputs:
-      binary: ${{ steps.pyinstaller.outputs.binary }}
     steps:
       - uses: actions/checkout@v7
 
@@ -38,12 +33,6 @@ jobs:
       - name: Install project
         shell: bash
         run: python -m pip install .
-
-      # - name: Run tests
-      #   shell: bash
-      #   run: |
-      #     ./scripts/test-puzzles.sh 2>/dev/null  # CLI tests
-      #     # ./scripts/run-tests.sh  # GUI tests; DISPLAY needed
 
       # - name: Ensure localization binaries  # needs gettext binaries
       #   shell: bash
@@ -68,7 +57,6 @@ jobs:
             --clean \
             --noconfirm \
             pyinstaller.spec 2>&1 | tee pyinstaller.log
-          echo "binary=./dist/NetworkPuzzles.exe" >> $GITHUB_OUTPUT
 
       - name: Log EXE build/dist files
         if: always()
@@ -88,13 +76,6 @@ jobs:
         with:
           path: ./dist/NetworkPuzzles.exe
           archive: false
-
-      # - name: Upload EXE to draft release
-      #   shell: bash
-      #   if: ${{ github.event_name == 'push' }}
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.TOKEN }}
-      #   run: gh release upload ${{ inputs.tag_name }} ./dist/NetworkPuzzles.exe --clobber
 
       - name: Upload EXE build files
         if: ${{ steps.pyinstaller.conclusion == 'success' }}
