@@ -47,9 +47,9 @@ jobs:
         id: prerelease
         uses: release-drafter/release-drafter@v7
         with:
-          version: ${{ needs.get-version.outputs.version }}
           prerelease: true
           prerelease-identifier: "rc"
+          version-template: ${{ needs.get-version.outputs.version }}
 
   run-tests:
     uses: ./.github/workflows/run-tests.yml
