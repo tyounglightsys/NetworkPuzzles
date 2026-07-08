@@ -50,6 +50,7 @@ splash = Splash(
     text_pos=(10, 50),
     text_size=12,
     text_color='black',
+    always_on_top=False,
 )
 
 pyz = PYZ(a.pure)
