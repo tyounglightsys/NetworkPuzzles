@@ -15,8 +15,16 @@ if session.device_type == "desktop":
 elif session.device_type == "mobile":
     Config.set("kivy", "desktop", "0")
 
+# Do pyinstaller-specific setup.
 if hasattr(sys, "_MEIPASS"):
     resource_add_path(os.path.join(sys._MEIPASS))
+# Close pyinstaller splash.
+try:
+    import pyi_splash
+
+    pyi_splash.close()
+except ModuleNotFoundError:
+    pass
 
 # Continue with remaining imports.
 from kivy.app import App
