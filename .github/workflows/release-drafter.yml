@@ -19,8 +19,8 @@ jobs:
 
       - id: version
         run: |
-          version_file = src/network_puzzles/__init__.py
-          regexp = '(?<=__version__ = ")[0-9a-z.~+-]+(?=")'
+          version_file=src/network_puzzles/__init__.py
+          regexp='(?<=__version__ = ")[0-9a-z.~+-]+(?=")'
           version=$(grep -oP "$regexp" "$version_file")
           echo "$regexp; $version_file -> $version"
           echo "version=$version" >> $GITHUB_OUTPUT
