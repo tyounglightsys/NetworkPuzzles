@@ -42,16 +42,29 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+
+splash = Splash(
+    "src/network_puzzles/resources/images/NBIcoLG.png",
+    binaries=a.binaries,
+    datas=a.datas,
+    text_pos=(10, 50),
+    text_size=12,
+    text_color='black',
+)
+
 pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
+    splash,
+    splash.binaries,
+    # a.binaries,
+    # a.datas,
     # [],
     *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
     name="NetworkPuzzles",
+    icon="src/network_puzzles/resources/images/NBIco.ico",
     debug=True,
     strip=False,
     upx=True,
