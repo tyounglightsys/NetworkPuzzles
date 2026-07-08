@@ -8,6 +8,7 @@ on:
     paths:
       - ".github/workflows/*exe*"
       - "src/network_puzzles/**"
+      - "pyinstaller*.spec"
   # push:
   #   branches:
   #     - main
