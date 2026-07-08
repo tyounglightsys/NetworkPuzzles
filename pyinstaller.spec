@@ -59,6 +59,7 @@ exe = EXE(
     a.scripts,
     splash,
     splash.binaries,
+    splash.datas,
     # a.binaries,
     # a.datas,
     # [],
