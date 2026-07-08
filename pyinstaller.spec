@@ -47,9 +47,6 @@ splash = Splash(
     "src/network_puzzles/resources/images/NBIcoLG.png",
     binaries=a.binaries,
     datas=a.datas,
-    text_pos=(10, 50),
-    text_size=12,
-    text_color='black',
     always_on_top=False,
 )
 
