@@ -1,4 +1,4 @@
-name: Create draft release
+name: Create/update draft releases
 on:
   workflow_dispatch:
   push:
@@ -10,24 +10,44 @@ permissions:
   pull-requests: read
 
 jobs:
+  get-version:
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: version
+        run: |
+          version_file = src/network_puzzles/__init__.py
+          regexp = '(?<=__version__ = ")[0-9a-z.~+-]+(?=")'
+          version=$(grep -oP "$regexp" "$version_file")
+          echo "$regexp; $version_file -> $version"
+          echo "version=$version" >> $GITHUB_OUTPUT
+
   update-release-draft:
     outputs:
       tag_name: ${{ steps.release.outputs.tag_name }}
+    needs: get-version
     runs-on: ubuntu-latest
     steps:
       - name: prepare release draft
         id: release
         uses: release-drafter/release-drafter@v7
+        with:
+          version: ${{ needs.get-version.outputs.version }}
 
   update-prerelease-draft:
     outputs:
       tag_name: ${{ steps.prerelease.outputs.tag_name }}
+    needs: get-version
     runs-on: ubuntu-latest
     steps:
       - name: prepare prerelease draft
         id: prerelease
         uses: release-drafter/release-drafter@v7
         with:
+          version: ${{ needs.get-version.outputs.version }}
           prerelease: true
           prerelease-identifier: "rc"
 
