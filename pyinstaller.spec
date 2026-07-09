@@ -42,16 +42,27 @@ a = Analysis(
     noarchive=False,
     optimize=0,
 )
+
+splash = Splash(
+    "src/network_puzzles/resources/images/NetworkPuzzles.png",
+    binaries=a.binaries,
+    datas=a.datas,
+    always_on_top=False,
+)
+
 pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
+    splash,
+    splash.binaries,
     a.binaries,
     a.datas,
     # [],
     *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
     name="NetworkPuzzles",
+    icon="src/network_puzzles/resources/images/NPIcon.ico",
     debug=True,
     strip=False,
     upx=True,

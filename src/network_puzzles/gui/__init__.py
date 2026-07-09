@@ -5,18 +5,30 @@ import sys
 import traceback
 
 from kivy.config import Config
-from kivy.resources import resource_add_path
 
 from .. import session
+from ..vars import DATA_DIR
 
+# Set kivy config before any other kivy activity.
 if session.device_type == "desktop":
     # Disable right-click red dot.
     Config.set("input", "mouse", "mouse,disable_multitouch")
 elif session.device_type == "mobile":
     Config.set("kivy", "desktop", "0")
+Config.set("kivy", "window_icon", str(DATA_DIR / "resources" / "images" / "NBIcon.png"))
+
+# Do pyinstaller-specific setup.
+from kivy.resources import resource_add_path
 
 if hasattr(sys, "_MEIPASS"):
     resource_add_path(os.path.join(sys._MEIPASS))
+# Close pyinstaller splash.
+try:
+    import pyi_splash
+
+    pyi_splash.close()
+except ModuleNotFoundError:
+    pass
 
 # Continue with remaining imports.
 from kivy.app import App
@@ -113,15 +125,15 @@ class NetworkPuzzlesApp(App):
             for k, v in data.items():
                 logging.debug(f"Config:  {k} = {v}")
 
-    def check_puzzle(self, *args):
-        """Checked at regular interval during kivy app loop."""
-        if self.ui.update_puzzle_completion_status():
-            PuzzleCompletePopup().open()
-
     def add_terminal_line(self, line):
         if not line.endswith("\n"):
             line += "\n"
         self.root.ids.terminal.text += f"{self.ui.PS1} {line}"
+
+    def check_puzzle(self, *args):
+        """Checked at regular interval during kivy app loop."""
+        if self.ui.update_puzzle_completion_status():
+            PuzzleCompletePopup().open()
 
     def draw_links(self, *args):
         self.root.ids.layout.draw_links(
