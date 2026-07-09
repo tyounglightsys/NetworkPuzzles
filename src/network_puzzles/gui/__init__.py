@@ -127,7 +127,7 @@ class NetworkPuzzlesApp(App):
         self.root.ids.terminal.text += f"{self.ui.PS1} {line}"
 
     def build(self):
-        self.icon = str(self.IMAGES / "NBIcon.png")
+        self.icon = str(self.IMAGES / "NBIcon.ico")
 
     def check_puzzle(self, *args):
         """Checked at regular interval during kivy app loop."""
