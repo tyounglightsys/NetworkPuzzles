@@ -62,7 +62,7 @@ exe = EXE(
     # [],
     *[Tree(p) for p in (sdl2.dep_bins + glew.dep_bins)],
     name="NetworkPuzzles",
-    icon="src/network_puzzles/resources/images/NetworkPuzzles.ico",
+    icon="src/network_puzzles/resources/images/NPIcon.ico",
     debug=True,
     strip=False,
     upx=True,
