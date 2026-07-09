@@ -71,7 +71,6 @@ class NetworkPuzzlesApp(App):
     def __init__(self, ui, **kwargs):
         # Set session `app` variable.
         session.app = self
-        self.icon = str(self.IMAGES / "NBIcon.png")
         # FIXME: This allows a semi-arbitrary list of puzzles to be hidden until
         # they're well tested.
         self.gui_level_exclusions = r"^Level(?=[4-9]+|[0-9]+_Help).*$"
@@ -122,15 +121,18 @@ class NetworkPuzzlesApp(App):
             for k, v in data.items():
                 logging.debug(f"Config:  {k} = {v}")
 
-    def check_puzzle(self, *args):
-        """Checked at regular interval during kivy app loop."""
-        if self.ui.update_puzzle_completion_status():
-            PuzzleCompletePopup().open()
-
     def add_terminal_line(self, line):
         if not line.endswith("\n"):
             line += "\n"
         self.root.ids.terminal.text += f"{self.ui.PS1} {line}"
+
+    def build(self):
+        self.icon = str(self.IMAGES / "NBIcon.png")
+
+    def check_puzzle(self, *args):
+        """Checked at regular interval during kivy app loop."""
+        if self.ui.update_puzzle_completion_status():
+            PuzzleCompletePopup().open()
 
     def draw_links(self, *args):
         self.root.ids.layout.draw_links(
