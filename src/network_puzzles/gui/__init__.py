@@ -16,7 +16,7 @@ if session.device_type == "desktop":
     Config.set("input", "mouse", "mouse,disable_multitouch")
 elif session.device_type == "mobile":
     Config.set("kivy", "desktop", "0")
-Config.set("kivy", "window_icon", str(DATA_DIR / "resources" / "images" / "NBIcon.ico"))
+Config.set("kivy", "window_icon", str(DATA_DIR / "resources" / "images" / "NBIcon.png"))
 
 # Do pyinstaller-specific setup.
 if hasattr(sys, "_MEIPASS"):
