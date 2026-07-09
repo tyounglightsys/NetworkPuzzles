@@ -5,12 +5,11 @@ import sys
 import traceback
 
 from kivy.config import Config
-from kivy.resources import resource_add_path
 
 from .. import session
 from ..vars import DATA_DIR
 
-# Set kivy config before any kivy activity.
+# Set kivy config before any other kivy activity.
 if session.device_type == "desktop":
     # Disable right-click red dot.
     Config.set("input", "mouse", "mouse,disable_multitouch")
@@ -19,6 +18,8 @@ elif session.device_type == "mobile":
 Config.set("kivy", "window_icon", str(DATA_DIR / "resources" / "images" / "NBIcon.png"))
 
 # Do pyinstaller-specific setup.
+from kivy.resources import resource_add_path
+
 if hasattr(sys, "_MEIPASS"):
     resource_add_path(os.path.join(sys._MEIPASS))
 # Close pyinstaller splash.
@@ -128,9 +129,6 @@ class NetworkPuzzlesApp(App):
         if not line.endswith("\n"):
             line += "\n"
         self.root.ids.terminal.text += f"{self.ui.PS1} {line}"
-
-    # def build(self):
-    #     self.icon = str(self.IMAGES / "NBIcon.ico")
 
     def check_puzzle(self, *args):
         """Checked at regular interval during kivy app loop."""
