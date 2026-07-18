@@ -76,14 +76,6 @@ class Route(ItemBase):
             return None
 
     @property
-    def nic(self):
-        return self.json.get("nic")
-
-    @nic.setter
-    def nic(self, value):
-        self.json["nic"] = value
-
-    @property
     def type(self):
         return self.json.get("type")
 

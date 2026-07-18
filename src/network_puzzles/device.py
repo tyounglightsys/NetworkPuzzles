@@ -1522,7 +1522,12 @@ class Device(ItemBase):
             session.print(msg)
             pkt.status = "done"
             return
-        logging.debug(f"Found a route rec: {routeRec}")
+
+        route = Route(routeRec)
+        route_interface = Interface(route.interface)
+        route_nic_data = self.nic_from_name(route_interface.nicname)
+        route_nic = Nic(route_nic_data)
+        logging.debug(f"Found a route rec: {route}")
 
         # Determine outbound link.
         destlink = None
@@ -1532,18 +1537,17 @@ class Device(ItemBase):
 
         # set the source MAC address on the packet as from the nic
         if destlink is None:
-            routeRec["nic"] = Nic(routeRec["nic"]).ensure_mac()
-            pkt.source_mac = routeRec["nic"]["Mac"]
-            pkt.json["tdestIP"] = routeRec.get("gateway")  # track when we use a gateway
+            pkt.source_mac = route_nic.mac
+            pkt.json["tdestIP"] = route.gateway  # track when we use a gateway
             # set the destination MAC to be the GW MAC if the destination is not local
             # this needs an ARP lookup.  That currently is in puzzle, which would make a circular include.
             if (
                 pkt.destination_mac != BROADCAST_MAC
                 and pkt.packettype != "dhcp-response"
             ):
-                if routeRec.get("gateway") is not None:
+                if route.gateway is not None:
                     # We are going out the gateway.  Find the ARP for that
-                    pkt.destination_mac = globalArpLookup(routeRec.get("gateway"))
+                    pkt.destination_mac = globalArpLookup(route.gateway)
                 else:
                     # We are on a local link.  Set the destmac to be the mac of our destination computer
                     pkt.destination_mac = globalArpLookup(pkt.destination_ip)
@@ -1553,7 +1557,7 @@ class Device(ItemBase):
                 for d in session.puzzle.devices:
                     logging.debug(f"{d.get('hostname')=}; {Device(d).mac_list()}")
 
-            if routeRec["nic"]["nicname"] == "management_interface0":
+            if route_nic.name == "management_interface0":
                 # If we are exiting a switch / hub; we go out the ports
                 self._send_out_hubswitch(pkt, inbound_nic)
                 pkt.status = "done"
@@ -1561,17 +1565,18 @@ class Device(ItemBase):
 
             # set the packet location being the link associated with the nic
             #   Fail if there is no link on the port
-            destlink = Nic(routeRec.get("nic")).get_connected_link()
+            destlink = route_nic.get_connected_link()
 
             # Handle VPNs.
-            logging.debug(f"Checking if we need VPN: {routeRec}")
-            if Nic(routeRec["nic"]).type == "vpn":
+            logging.debug(f"Checking if we need VPN: {route}")
+            logging.debug(f"{route_nic.type=}")
+            if route_nic.type == "vpn":
                 logging.debug("  Using VPN")
                 # We are going out a VPN. Generate a new packet, with the current packet being the payload.
                 VPN(
                     self.json,
-                    routeRec["nic"]["tunnelendpoint"]["ip"],
-                    routeRec["nic"]["encryptionkey"],
+                    route_nic.json["tunnelendpoint"]["ip"],
+                    route_nic.json["encryptionkey"],
                     pkt,
                 )
                 return False  # At this point in time, the packet is "tunneled" and we have a new packet to worry about.  All done for now.
@@ -1589,19 +1594,17 @@ class Device(ItemBase):
             # if we are going out the WAN and did not originate here, masq the packet
             # In all other cases, accept
             # valid responses are: masq, accept, drop, reject, none
-            if Nic(routeRec["nic"]).type == "wan" and not pkt.justcreated:
+            if route_nic.type == "wan" and not pkt.justcreated:
                 connectionrec = self.AddIPConnectionEntry(
                     pkt.destination_ip, pkt.source_ip, pkt.packettype, "masq"
                 )
                 # here we masquerade the packet
                 logging.debug("We are masquerading the packet")
-                connectionrec["src"] = Interface(routeRec["interface"]).ip_data["ip"]
-                pkt.source_ip = Interface(routeRec["interface"]).ip_data["ip"]
+                connectionrec["src"] = route_interface.ip
+                pkt.source_ip = route_interface.ip
 
             else:
-                logging.debug(
-                    f"We are tracking outbound packet on {Nic(routeRec['nic']).type}"
-                )
+                logging.debug(f"We are tracking outbound packet on {route_nic.type}")
                 self.AddIPConnectionEntry(
                     pkt.destination_ip, pkt.source_ip, pkt.packettype, "accept"
                 )
@@ -1614,13 +1617,11 @@ class Device(ItemBase):
                 return True
 
             # This works for originating packets
-            if self.AdvFirewallAllows(
-                pkt.in_interface, routeRec.get("interface").get("nicname")
-            ):
+            if self.AdvFirewallAllows(pkt.in_interface, route_interface.nicname):
                 return True
             else:
                 logging.debug(
-                    f"Packet dropped by firewall: {pkt.in_host} {pkt.in_interface}-{routeRec.get('interface').get('nicname')}"
+                    f"Packet dropped by firewall: {pkt.in_host} {pkt.in_interface}-{route_interface.nicname}"
                 )
                 session.print("Packet dropped by firewall")
                 pkt.status = "done"
@@ -1823,24 +1824,22 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
                 logging.debug(
                     f" Adding nic and interface to routeRec: {localInterface}"
                 )
-                new_route.nic = nic.json
                 new_route.interface = localInterface
                 break
 
     # if not a device nic, use the default gateway
-    if not new_route.nic and not new_route.gateway:
+    if not new_route.interface and not new_route.gateway:
         # use the device default gateway
         logging.debug(f"Still no idea. Using default gateway: {dev.gateway}")
         new_route.gateway = dev.gateway
 
     # if we have a gateway but do not know the nic and interface, find the right one
-    if new_route.gateway and not new_route.nic:
+    if new_route.gateway and not new_route.interface:
         logging.debug(f"Finding nic to use for routerec: {new_route}")
         for nic in dev.nics:
             localInterface = nic.find_local_interface(new_route.gateway, True)
             if localInterface is not None:
                 # We found it.  Use it.
-                new_route.nic = nic.json
                 new_route.interface = localInterface
                 break
 
@@ -1850,13 +1849,10 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
             )
 
     # We should now have a good routeRec.  gateway might be blank, if it is local
-    # But we should have a nic and interface set
-    if not new_route.nic:
-        session.print(f"No valid NIC found for device: {dev.hostname}")
-        return None
+    # But we should have an interface set.
     if not new_route.interface:
         # We could not figure out the route.  return None.
-        session.print(f"No interface found for NIC: {new_route.nic}")
+        session.print(f"No interface found for device: {dev.hostname}")
         return None
     else:
         # logging.debug(f" Using routerec: {new_route}")
