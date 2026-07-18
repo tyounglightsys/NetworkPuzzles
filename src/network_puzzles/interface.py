@@ -18,6 +18,12 @@ UNSET_IP4_CONFIG = {
 class Interface(ItemBase):
     def __init__(self, json_data=None):
         super().__init__(json_data)
+        self._ipaddress = None
+        self._ip_obj = None
+
+    @property
+    def ip(self) -> str:
+        return self.ip_obj.address
 
     @property
     def ip_data(self) -> dict:
@@ -28,12 +34,21 @@ class Interface(ItemBase):
         self.json["myip"] = data
 
     @property
+    def ip_obj(self):
+        if self._ip_obj is None:
+            self._ip_obj = IpAddress(self.ip_data)
+        return self._ip_obj
+
+    @property
     def ipaddress(self) -> dict:
-        tAddr = IpAddress(self.ip_data)
-        try:
-            return ipaddress.ip_interface(tAddr.address + "/" + tAddr.netmask)
-        except ValueError:
-            return None
+        if self._ipaddress is None:
+            try:
+                self._ipaddress = ipaddress.ip_interface(
+                    f"{self.ip_obj.address}/{self.ip_obj.netmask}"
+                )
+            except ValueError:
+                pass
+        return self._ipaddress
 
     @property
     def nicname(self) -> str:

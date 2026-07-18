@@ -1,8 +1,8 @@
 """Run the CLI App"""
 
 import sys
-from .ui import CLI
 
+from .ui import CLI
 
 if __name__ == '__main__':
     try:
