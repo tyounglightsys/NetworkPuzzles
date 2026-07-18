@@ -448,10 +448,8 @@ class Device(ItemBase):
         for nic in self.nics:
             for interface_data in nic.interfaces:
                 iface = Interface(interface_data)
-                logging.debug(
-                    f"checking interface: {iface.nicname}; {iface.ipaddress} "
-                )
-                if iface.ipaddress == ip:
+                logging.debug(f"checking interface: {iface.nicname}; {iface.ip}")
+                if iface.ip == ip:
                     return iface.json
         return None
 
