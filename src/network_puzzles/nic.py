@@ -62,6 +62,7 @@ class Nic(ItemBase):
 
     @property
     def mac(self):
+        self.ensure_mac()
         return self.json.get("Mac")
 
     @property
