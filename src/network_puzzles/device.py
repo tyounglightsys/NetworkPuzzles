@@ -444,19 +444,14 @@ class Device(ItemBase):
         Returns:
             the network interface record from the device or None
         """
-        if "nic" not in self.json:
-            return None
-        if not isinstance(self.json["nic"], list):
-            self.json["nic"] = [self.json["nic"]]
-        for onenic in self.json["nic"]:
-            if not isinstance(onenic["interface"], list):
-                onenic["interface"] = [onenic["interface"]]
-            for oneinterface in onenic["interface"]:
+        for nic in self.nics:
+            for interface_data in nic.interfaces:
+                iface = Interface(interface_data)
                 logging.debug(
-                    f"checking interface: {oneinterface.get('nicname')} {oneinterface.get('myip').get('ip')} "
+                    f"checking interface: {iface.nicname}; {iface.ipaddress} "
                 )
-                if oneinterface.get("myip").get("ip") == ip:
-                    return oneinterface
+                if iface.ipaddress == ip:
+                    return iface.json
         return None
 
     # route add/del pieces
