@@ -7,6 +7,7 @@ from .core import ItemBase, get_puzzle_distance
 from .interface import BROADCAST_IP4, BROADCAST_MAC, GENERIC_IP4, Interface
 from .link import Link
 from .nic import Nic
+from .route import Route
 
 
 class Device(ItemBase):
@@ -465,35 +466,32 @@ class Device(ItemBase):
             session.print(f"Invalid target: {target} Must be a valid IP")
             return False
         # Check if route exists.
-        for oneroute in self.routes:
+        for rte in self.routes:
+            route = Route(rte)
             if (
-                oneroute is not None
-                and oneroute.get("ip") == str(target_IP.ip)
-                and oneroute.get("mask") == str(target_IP.netmask)
-                and oneroute.get("gateway") == gateway
+                route.ip == str(target_IP.ip)
+                and route.netmask == str(target_IP.netmask)
+                and route.gateway == gateway
             ):
                 logging.debug("  We already have this route.  Nothing to do.")
                 return False
         # If we get here, nothing yet matched.  Add a new record
-        newroute = {
-            "ip": str(target_IP.ip),
-            "mask": str(target_IP.netmask),
-            "gateway": gateway,
-            "type": "route",
-        }
+        route = Route(
+            ip=str(target_IP.ip), netmask=str(target_IP.netmask), gateway=gateway
+        )
         # do it just using the ip
         mark_test_as_completed(
             self.hostname,
-            str(target_IP.ip),
+            route.ip,
             "NeedsRouteToNet",
-            f"{self.hostname} successfully created route to {target_IP.ip}",
+            f"{self.hostname} successfully created route to {route.ip}",
         )
         # do it in 192.168.1.0/255.255.255.0 format
         mark_test_as_completed(
             self.hostname,
-            str(target_IP.ip) + "/" + str(target_IP.netmask),
+            route.network,
             "NeedsRouteToNet",
-            f"{self.hostname} successfully created route to {target_IP.ip}/{target_IP.netmask}",
+            f"{self.hostname} successfully created route to {route.network}",
         )
         # do it in 192.168.1.0/24 format
         mark_test_as_completed(
@@ -503,32 +501,28 @@ class Device(ItemBase):
             f"{self.hostname} successfully created route to {str(target_IP)}",
         )
 
-        self.routes.append(newroute)
+        self.routes.append(route.json)
         return True
 
     def route_del(self, target, gateway):
         logging.debug(f"Deleting route {target} {gateway}")
-        # if we have a route with the same src/dest/targer, we drop it
+        # if we have a route with the same src/dest/target, we drop it
         # if not, we return "false"
         try:
             target_IP = ipaddress.ip_interface(target)
         except ValueError:
             session.print(f"Invalid target: {target} Must be a valid IP")
             return False
-        if self.json.get("route") is None:
-            self.json["route"] = []
-        if not isinstance(self.json.get("route"), list):
-            self.json["route"] = [
-                self.json.get("route")
-            ]  # turn it into a list so we can iterate through it
-        for oneroute in self.json.get("route"):
+
+        for rte in self.routes:
+            route = Route(rte)
             if (
-                oneroute.get("ip") == str(target_IP.ip)
-                and oneroute.get("mask") == str(target_IP.netmask)
-                and oneroute.get("gateway") == gateway
+                route.ip == str(target_IP.ip)
+                and route.netmask == str(target_IP.netmask)
+                and route.gateway == gateway
             ):
                 logging.debug("  Deleting the route.")
-                self.json["route"].remove(oneroute)
+                self.routes.remove(route.json)
                 return
         # If we get here, nothing yet matched.  Could not find it.  Nothing to drop
         session.print("No such route")
@@ -556,12 +550,8 @@ class Device(ItemBase):
                 )
 
         # logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
-        if len(self.routes) > 0:
-            for oneroute in self.routes:
-                # logging.debug(f"Printing route: {oneroute}")
-                session.print(
-                    f"route: {oneroute['ip']}/{oneroute['mask']} GW:{oneroute['gateway']}"
-                )
+        for route in self.routes:
+            session.print(f"route: {Route(route)}")
 
         if len(self.firewall_rules) > 0:
             session.print("Firewall Rules:")
@@ -1801,83 +1791,78 @@ def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
         logging.debug("routeRec failed; empty destination IP address")
         return None
 
-    # routeRec must contain 'nic' and 'interface', and may contain 'gateway'.
-    routeRec = {}
+    # A route must contain 'nic' and 'interface', and may contain 'gateway'.
+    new_route = Route()
 
     # Set gateway if dest IP is in device routes.
-    if "route" not in theDeviceRec:
-        theDeviceRec["route"] = []
-    if not isinstance(theDeviceRec["route"], list):
-        theDeviceRec["route"] = [theDeviceRec["route"]]  # turn it into a list
+    dev = Device(theDeviceRec)
+
     # logging.debug(f"Checking for static route: {theDeviceRec["route"]}")
     destinationIP = ipaddress.ip_address(packet.justIP(destinationIPString))
-    for oneroute in theDeviceRec["route"]:
-        staticroute = ipaddress.ip_network(
-            oneroute["ip"] + "/" + oneroute["mask"], strict=False
-        )
+    for route_data in dev.routes:
+        route = Route(route_data)
+        staticroute = ipaddress.ip_network(route.network, strict=False)
         logging.debug(
-            f"Checking if destinationIp {destinationIPString} is in staticroute {staticroute} from {oneroute['ip']}/{oneroute['mask']}"
+            f"Checking if destinationIp {destinationIPString} is in staticroute {staticroute} from {route.network}"
         )
         if destinationIP in staticroute:
             # We found a gateway that we should use.
-            routeRec["gateway"] = oneroute["gateway"]  # just the gateway
-            logging.debug(
-                f"Found a static route.  Adding gateway: {routeRec['gateway']}"
-            )
+            logging.debug(f"Found a static route.  Adding gateway: {route.gateway}")
+            new_route.gateway = route.gateway
             break
 
     # if not a device route, look through device nics
-    if "gateway" not in routeRec:
+    if not new_route.gateway:
         # We did not find it in the static routes.  Loop through all nics and see if one is local
         logging.debug("No gateway set in routerec.  Looking through nics")
-        for oneNic in theDeviceRec["nic"]:
-            nic = Nic(oneNic)
+        for nic in dev.nics:
             skipzeroes = True
             if destinationIPString == "255.255.255.255":
                 skipzeroes = False
             localInterface = nic.find_local_interface(destinationIPString, skipzeroes)
             if localInterface is not None:
                 # We found it.  Use it.
-                routeRec["nic"] = nic.json
-                routeRec["interface"] = localInterface
-                logging.debug(" Adding nic and interface to routeRec")
+                logging.debug(
+                    f" Adding nic and interface to routeRec: {localInterface}"
+                )
+                new_route.nic = nic.json
+                new_route.interface = localInterface
                 break
 
     # if not a device nic, use the default gateway
-    if "nic" not in routeRec and "gateway" not in routeRec:
+    if not new_route.nic and not new_route.gateway:
         # use the device default gateway
-        gw = theDeviceRec["gateway"]["ip"]
-        logging.debug(f"Still no idea. Using default gateway: {gw}")
-        routeRec["gateway"] = gw
+        logging.debug(f"Still no idea. Using default gateway: {dev.gateway}")
+        new_route.gateway = dev.gateway
 
     # if we have a gateway but do not know the nic and interface, find the right one
-    if "gateway" in routeRec and "nic" not in routeRec:
-        logging.debug(f"Finding nic to use for routerec: {routeRec}")
-        for oneNic in theDeviceRec["nic"]:
-            nic = Nic(oneNic)
-            localInterface = nic.find_local_interface(routeRec["gateway"], True)
+    if new_route.gateway and not new_route.nic:
+        logging.debug(f"Finding nic to use for routerec: {new_route}")
+        for nic in dev.nics:
+            localInterface = nic.find_local_interface(new_route.gateway, True)
             if localInterface is not None:
                 # We found it.  Use it.
-                routeRec["nic"] = nic.json
-                routeRec["interface"] = localInterface
+                new_route.nic = nic.json
+                new_route.interface = localInterface
                 break
-        if "interface" not in routeRec:
+
+        if not new_route.interface:
             logging.warning(
-                f"Device: interface not found for gateway: {routeRec.get('gateway')}"
+                f"Device: interface not found for gateway: {new_route.gateway}"
             )
 
     # We should now have a good routeRec.  gateway might be blank, if it is local
     # But we should have a nic and interface set
-    if "nic" not in routeRec:
-        session.print(f"No valid NIC found for device: {theDeviceRec.get('hostname')}")
+    if not new_route.nic:
+        session.print(f"No valid NIC found for device: {dev.hostname}")
         return None
-    elif "interface" not in routeRec:
+    if not new_route.interface:
         # We could not figure out the route.  return None.
-        session.print(f"No interface found for NIC: {routeRec.get('nic')}")
+        session.print(f"No interface found for NIC: {new_route.nic}")
         return None
     else:
-        # logging.debug(f" Using routerec: {routeRec}")
-        return routeRec
+        # logging.debug(f" Using routerec: {new_route}")
+        return new_route.json
 
 
 def deviceFromIP(what):
