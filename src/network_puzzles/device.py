@@ -388,6 +388,79 @@ class Device(ItemBase):
                         continue
         return maclist
 
+    def get_route_for_dest_ip(self, dest_ip: str):
+        """return a routing record given a destination IP string.  The device record has the route, nic, interface, and gateway"""
+        # FIXME: This should be a Device class method.
+        # go through the device routes.
+        if packet.isEmpty(dest_ip):
+            logging.debug("routeRec failed; empty destination IP address")
+            return None
+
+        # A route must contain 'nic' and 'interface', and may contain 'gateway'.
+        new_route = Route()
+
+        # Set gateway if dest IP is in device routes.
+        # logging.debug(f"Checking for static route: {theDeviceRec["route"]}")
+        destinationIP = ipaddress.ip_address(packet.justIP(dest_ip))
+        for route_data in self.routes:
+            route = Route(route_data)
+            staticroute = ipaddress.ip_network(route.network, strict=False)
+            logging.debug(
+                f"Checking if destinationIp {dest_ip} is in staticroute {staticroute} from {route.network}"
+            )
+            if destinationIP in staticroute:
+                # We found a gateway that we should use.
+                logging.debug(f"Found a static route.  Adding gateway: {route.gateway}")
+                new_route.gateway = route.gateway
+                break
+
+        # if not a device route, look through device nics
+        if not new_route.gateway:
+            # We did not find it in the static routes.  Loop through all nics and see if one is local
+            logging.debug("No gateway set in routerec.  Looking through nics")
+            for nic in self.nics:
+                skipzeroes = True
+                if dest_ip == "255.255.255.255":
+                    skipzeroes = False
+                localInterface = nic.find_local_interface(dest_ip, skipzeroes)
+                if localInterface is not None:
+                    # We found it.  Use it.
+                    logging.debug(
+                        f" Adding nic and interface to routeRec: {localInterface}"
+                    )
+                    new_route.interface = localInterface
+                    break
+
+        # if not a device nic, use the default gateway
+        if not new_route.interface and not new_route.gateway:
+            # use the device default gateway
+            logging.debug(f"Still no idea. Using default gateway: {self.gateway}")
+            new_route.gateway = self.gateway
+
+        # if we have a gateway but do not know the nic and interface, find the right one
+        if new_route.gateway and not new_route.interface:
+            logging.debug(f"Finding nic to use for routerec: {new_route}")
+            for nic in self.nics:
+                localInterface = nic.find_local_interface(new_route.gateway, True)
+                if localInterface is not None:
+                    # We found it.  Use it.
+                    new_route.interface = localInterface
+                    break
+
+            if not new_route.interface:
+                logging.warning(
+                    f"Device: interface not found for gateway: {new_route.gateway}"
+                )
+
+        # We should now have a good routeRec.  gateway might be blank, if it is local
+        # But we should have an interface set.
+        if new_route.interface:
+            return new_route
+
+        # We could not figure out the route.  return None.
+        session.print(f"No interface found for device: {self.hostname}")
+        return None
+
     def nic_from_name(self, nicname):
         """return the network card from the name
         Args:
@@ -1513,21 +1586,20 @@ class Device(ItemBase):
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
             raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+        pkt.distance = 0  # always reset this
 
         # determine which interface/nic we are exiting out of - routing
-        pkt.distance = 0  # always reset this
-        routeRec = routeRecFromDestIP(self.json, pkt.destination_ip)
-        if routeRec is None:
+        route = self.get_route_for_dest_ip(pkt.destination_ip)
+        if route is None:
             msg = f"Unable to determine route from {self.hostname} to IP {pkt.destination_ip}"
             session.print(msg)
             pkt.status = "done"
             return
-
-        route = Route(routeRec)
-        route_interface = Interface(route.interface)
-        route_nic_data = self.nic_from_name(route_interface.nicname)
-        route_nic = Nic(route_nic_data)
         logging.debug(f"Found a route rec: {route}")
+
+        # Define route-dependent objects.
+        route_interface = Interface(route.interface)
+        route_nic = Nic(self.nic_from_name(route_interface.nicname))
 
         # Determine outbound link.
         destlink = None
@@ -1780,83 +1852,6 @@ def getDeviceNicFromLinkNicRec(linkNicRec):
         return None
     # If we get here, we have the nic record.
     return tNic
-
-
-def routeRecFromDestIP(theDeviceRec, destinationIPString: str):
-    """return a routing record given a destination IP string.  The device record has the route, nic, interface, and gateway"""
-    # FIXME: This should be a Device class method.
-    # go through the device routes.
-    if packet.isEmpty(destinationIPString):
-        logging.debug("routeRec failed; empty destination IP address")
-        return None
-
-    # A route must contain 'nic' and 'interface', and may contain 'gateway'.
-    new_route = Route()
-
-    # Set gateway if dest IP is in device routes.
-    dev = Device(theDeviceRec)
-
-    # logging.debug(f"Checking for static route: {theDeviceRec["route"]}")
-    destinationIP = ipaddress.ip_address(packet.justIP(destinationIPString))
-    for route_data in dev.routes:
-        route = Route(route_data)
-        staticroute = ipaddress.ip_network(route.network, strict=False)
-        logging.debug(
-            f"Checking if destinationIp {destinationIPString} is in staticroute {staticroute} from {route.network}"
-        )
-        if destinationIP in staticroute:
-            # We found a gateway that we should use.
-            logging.debug(f"Found a static route.  Adding gateway: {route.gateway}")
-            new_route.gateway = route.gateway
-            break
-
-    # if not a device route, look through device nics
-    if not new_route.gateway:
-        # We did not find it in the static routes.  Loop through all nics and see if one is local
-        logging.debug("No gateway set in routerec.  Looking through nics")
-        for nic in dev.nics:
-            skipzeroes = True
-            if destinationIPString == "255.255.255.255":
-                skipzeroes = False
-            localInterface = nic.find_local_interface(destinationIPString, skipzeroes)
-            if localInterface is not None:
-                # We found it.  Use it.
-                logging.debug(
-                    f" Adding nic and interface to routeRec: {localInterface}"
-                )
-                new_route.interface = localInterface
-                break
-
-    # if not a device nic, use the default gateway
-    if not new_route.interface and not new_route.gateway:
-        # use the device default gateway
-        logging.debug(f"Still no idea. Using default gateway: {dev.gateway}")
-        new_route.gateway = dev.gateway
-
-    # if we have a gateway but do not know the nic and interface, find the right one
-    if new_route.gateway and not new_route.interface:
-        logging.debug(f"Finding nic to use for routerec: {new_route}")
-        for nic in dev.nics:
-            localInterface = nic.find_local_interface(new_route.gateway, True)
-            if localInterface is not None:
-                # We found it.  Use it.
-                new_route.interface = localInterface
-                break
-
-        if not new_route.interface:
-            logging.warning(
-                f"Device: interface not found for gateway: {new_route.gateway}"
-            )
-
-    # We should now have a good routeRec.  gateway might be blank, if it is local
-    # But we should have an interface set.
-    if not new_route.interface:
-        # We could not figure out the route.  return None.
-        session.print(f"No interface found for device: {dev.hostname}")
-        return None
-    else:
-        # logging.debug(f" Using routerec: {new_route}")
-        return new_route.json
 
 
 def deviceFromIP(what):
