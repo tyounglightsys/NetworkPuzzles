@@ -487,29 +487,21 @@ class Device(ItemBase):
             return None
         ip = packet.justIP(ip)
         logging.debug(f"Looking up interface from IP: {ip}")
-        tInterface = self.interface_from_ip(ip)
-        if tInterface is not None:
-            logging.debug(f"We found: {tInterface} ")
-            tNicname = tInterface.get("nicname")
-            tNic = self.nic_from_name(tNicname)
-            return tNic
+        interface = self.interface_from_ip(ip)
+        if interface is not None:
+            logging.debug(f"We found: {interface} ")
+            return self.nic_from_name(interface.get("nicname"))
 
-    def interface_from_name(self, interfacename):
+    def interface_from_name(self, name):
         """return the network interface from the name
         Args:
         Returns:
             the network interface record from the device or None
         """
-        if "nic" not in self.json:
-            return None
-        if not isinstance(self.json["nic"], list):
-            self.json["nic"] = [self.json["nic"]]
-        for onenic in self.json["nic"]:
-            if not isinstance(onenic["interface"], list):
-                onenic["interface"] = [onenic["interface"]]
-            for oneinterface in onenic["interface"]:
-                if oneinterface.get("nicname") == interfacename:
-                    return oneinterface
+        for nic in self.nics:
+            for interface in nic.interfaces:
+                if interface.get("nicname") == name:
+                    return interface
         return None
 
     def interface_from_ip(self, ip):
