@@ -63,7 +63,7 @@ class Interface(ItemBase):
         self.json["nicname"] = value
 
     @property
-    def vlans(self):
+    def vlans_data(self):
         if "VLAN" not in self.json:
             self.json["VLAN"] = []
         elif not isinstance(self.json.get("VLAN"), list):
