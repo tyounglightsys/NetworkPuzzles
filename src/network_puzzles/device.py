@@ -235,10 +235,13 @@ class Device(ItemBase):
     @property
     def nics(self):
         """Returns NIC objects."""
-        nics = []
-        for nic in self.all_nics():
-            nics.append(Nic(nic))
-        return nics
+        return [Nic(d) for d in self.nics_data]
+
+    @property
+    def nics_data(self) -> list:
+        if not isinstance(self.json.get("nic"), list):
+            self.json["nic"] = [self.json["nic"]]
+        return self.json.get("nic")
 
     @property
     def powered_on(self) -> bool:
@@ -290,13 +293,8 @@ class Device(ItemBase):
     def uniqueidentifier(self) -> str:
         return self.json.get("uniqueidentifier", "")
 
-    def all_nics(self) -> list:
-        if not isinstance(self.json.get("nic"), list):
-            self.json["nic"] = [self.json["nic"]]
-        return self.json.get("nic")
-
     def disable_nic_dhcp(self):
-        for onenic in self.all_nics():
+        for onenic in self.nics_data:
             # these come in json format.  Convert to a nic and define it
             Nic(onenic).uses_dhcp = False
 
@@ -327,7 +325,7 @@ class Device(ItemBase):
 
     def get_routes_from_nics(self):
         nic_routes = []
-        for nic in self.all_nics():
+        for nic in self.nics_data:
             n = Nic(nic)
             for interface in n.interfaces:
                 # Use current IP config for gateway.
@@ -338,7 +336,7 @@ class Device(ItemBase):
 
     def _get_wireless_nics_and_links(self):
         nics_and_links = list()
-        for nic_data in self.all_nics():
+        for nic_data in self.nics_data:
             nic = Nic(nic_data)
             if nic.type != "wlan":
                 continue  # We only autoconnect wport ports
@@ -603,7 +601,7 @@ class Device(ItemBase):
         session.print(f"gateway: {self.json['gateway']['ip']}")
         for onestring in allIPStrings(self.json, True, True):
             session.print(onestring)
-        for onenic in self.all_nics():
+        for onenic in self.nics_data:
             t_nic = Nic(onenic)
             if t_nic.type in ("wport", "wlan"):
                 session.print(
@@ -791,7 +789,7 @@ class Device(ItemBase):
                     ):
                         # logging.debug(f"Can we connect it to: {t_onedevice.hostname}")
                         # Check to see if ssid and key match.  And if so, does it have an empty port to connect to?
-                        for dstnic in t_onedevice.all_nics():
+                        for dstnic in t_onedevice.nics_data:
                             t_dstnic = Nic(dstnic)
                             # logging.debug(f"Checking out {t_dstnic.type} {t_dstnic.encryption_key} {t_dstnic.ssid}" )
                             if (
@@ -1110,7 +1108,7 @@ class Device(ItemBase):
             # session.puzzle.packets.append(packetpayload)
             vpninterface = None
 
-            for onenic in self.all_nics():
+            for onenic in self.nics_data:
                 nic_obj = Nic(onenic)
                 vpninterface = nic_obj.find_local_interface(
                     packetpayload.json["tdestIP"], True
@@ -1719,7 +1717,7 @@ class Device(ItemBase):
                 onlyport = self.json.get("port_arps").get(pkt.destination_mac)
 
         # print("We are forwarding.")
-        for onenic in self.all_nics():
+        for onenic in self.nics_data:
             device_nic = Nic(onenic)
             if (
                 inbound_nic
@@ -1925,7 +1923,7 @@ def destIP(srcDevice, dstDevice):
             return oneDip
     # If the device has a gateway, choose the IP address that is local to the gateway
     tDevice = Device(dstDevice)
-    for onenic in tDevice.all_nics():
+    for onenic in tDevice.nics_data:
         nic_obj = Nic(onenic)
         one_interface = nic_obj.find_local_interface(
             srcDevice.get("gateway")["ip"], True

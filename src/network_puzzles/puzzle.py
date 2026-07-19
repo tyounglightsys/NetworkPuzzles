@@ -672,7 +672,7 @@ class Puzzle(ItemBase):
             session.print(f"Cannot delete {hostname}; the puzzle has it locked.")
             return False
             # We need to find any links connected to this device and delete them
-        for onenic in device.Device(existing_device).all_nics():
+        for onenic in device.Device(existing_device).nics_data:
             nic = Nic(onenic)
             onelink = nic.get_connected_link()
             if onelink is not None:

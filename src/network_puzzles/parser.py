@@ -228,7 +228,7 @@ class Parser:
                 # We have a device. We can replace one of these.
 
                 # go through and clear out all the IP addresses
-                for nic_json in device.Device(item).all_nics():
+                for nic_json in device.Device(item).nics_data:
                     onenic = nic.Nic(nic_json)
                     for iface in onenic.interfaces:
                         if iface.nicname != "lo0":
@@ -263,7 +263,7 @@ class Parser:
             # We are hopefully finding something like replace pc0 eth0
             item = session.puzzle.device_from_name(args[0])
             if item is not None:
-                for nic_json in device.Device(item).all_nics():
+                for nic_json in device.Device(item).nics_data:
                     onenic = nic.Nic(nic_json)
                     if (
                         onenic.my_id.nicname == args[1]
@@ -734,7 +734,7 @@ class Parser:
         else:
             # We are setting the encryption on a WAP, hopefully
             didsomething = False
-            for onenic in dev_obj.all_nics():
+            for onenic in dev_obj.nics_data:
                 tnic = nic.Nic(onenic)
                 if tnic.type == "wport" or tnic.type == "wlan":
                     tnic.encryption_key = newkey
@@ -762,7 +762,7 @@ class Parser:
         else:
             # We are setting the encryption on a WAP, hopefully
             didsomething = False
-            for onenic in dev_obj.all_nics():
+            for onenic in dev_obj.nics_data:
                 tnic = nic.Nic(onenic)
                 if tnic.type == "wport" or tnic.type == "wlan":
                     tnic.ssid = newssid
@@ -848,7 +848,7 @@ class Parser:
                 # TODO: We need a callback here to tell the gui to redraw.
             logging.debug(f"{dev_obj.is_invisible=}")
             # if any of the links connected to the switch were hidden/invisible, draw them
-            for onenic in dev_obj.all_nics():
+            for onenic in dev_obj.nics_data:
                 n = nic.Nic(onenic)
                 onelink = n.get_connected_link()
                 if (
@@ -904,7 +904,7 @@ class Parser:
         # Ensure device is visible.
         if dev_obj.is_invisible:
             can_continue = False
-            for onenic in dev_obj.all_nics():
+            for onenic in dev_obj.nics_data:
                 n = nic.Nic(onenic)
                 onelink = n.get_connected_link()
                 if onelink is not None and (

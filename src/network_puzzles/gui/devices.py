@@ -7,7 +7,7 @@ from kivy.uix.behaviors import DragBehavior
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 
-from .. import interface, nic, session
+from .. import interface, session
 from ..device import Device
 from .base import (
     HelpHighlight,
@@ -75,10 +75,6 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         if not isinstance(value, bool):
             raise ValueError("Value must be a boolean.")
         self._location_locked = value
-
-    @property
-    def nics(self):
-        return [nic.Nic(n) for n in self.all_nics()]
 
     def callback(self, cmd_string):
         self.app.ui.parse(cmd_string)
