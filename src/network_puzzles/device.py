@@ -330,11 +330,10 @@ class Device(ItemBase):
         for nic in self.all_nics():
             n = Nic(nic)
             for interface in n.interfaces:
-                iface = Interface(interface)
                 # Use current IP config for gateway.
-                if iface.ip_data.get("gateway") == GENERIC_IP4:
-                    iface.ip_data["gateway"] = self.gateway
-                nic_routes.append(iface.ip_data)
+                if interface.ip_data.get("gateway") == GENERIC_IP4:
+                    interface.ip_data["gateway"] = self.gateway
+                nic_routes.append(interface.ip_data)
         return nic_routes
 
     def _get_wireless_nics_and_links(self):
@@ -500,8 +499,8 @@ class Device(ItemBase):
         """
         for nic in self.nics:
             for interface in nic.interfaces:
-                if interface.get("nicname") == name:
-                    return interface
+                if interface.nicname == name:
+                    return interface.json
         return None
 
     def interface_from_ip(self, ip):
@@ -511,8 +510,7 @@ class Device(ItemBase):
             the network interface record from the device or None
         """
         for nic in self.nics:
-            for interface_data in nic.interfaces:
-                iface = Interface(interface_data)
+            for iface in nic.interfaces:
                 logging.debug(f"checking interface: {iface.nicname}; {iface.ip}")
                 if iface.ip == ip:
                     return iface.json
@@ -1498,10 +1496,10 @@ class Device(ItemBase):
             tnic = Nic(self.nic_from_name("management_interface0"))
             logging.debug(f"The nic is now {nic.name}")
 
-        inboundip = tnic.interfaces[0]["myip"]["ip"]
-        logging.debug(
-            f"making a dhcp response on nic {tnic.name}; {tnic.interfaces[0]['myip']['ip']}"
-        )
+        inbound_interface = tnic.interfaces[0]
+        # inboundip = tnic.interfaces[0]["myip"]["ip"]
+        inboundip = inbound_interface.ip_obj.address
+        logging.debug(f"making a dhcp response on nic {tnic.name}; {inboundip}")
         iprange = None
         available_ip = ""  # start with it empty.  Fill it if we can
         for onerange in self.dhcp_range:
@@ -1546,14 +1544,16 @@ class Device(ItemBase):
             self.dhcp_list[pkt.source_mac] = available_ip
             # Now, make a new DHCP response packet
             nPacket = packet.Packet()
-            nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
+            # nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
+            nPacket.source_ip = inboundip
             nPacket.source_mac = tnic.mac
             nPacket.destination_ip = GENERIC_IP4
             nPacket.destination_mac = pkt.source_mac
             nPacket.packettype = "DHCP-Response"
             nPacket.payload = {
                 "ip": available_ip,
-                "subnet": tnic.interfaces[0]["myip"]["mask"],
+                # "subnet": tnic.interfaces[0]["myip"]["mask"],
+                "subnet": inbound_interface.ip_obj.netmask,
                 "gateway": self.json["gateway"]["ip"],
             }
             # if the dhcp server is a router/firewall, use the nic IP as the gateway
@@ -1946,11 +1946,13 @@ def destIP(srcDevice, dstDevice):
         logging.debug(f"Checking out nic: {onename}")
         theonenic = tDevice.nic_from_name(onename)
         if theonenic is not None:
-            addresslist = Nic(theonenic).interfaces
-            if len(addresslist) > 0:
+            nic = Nic(theonenic)
+            if len(nic.interfaces) > 0:
                 # grab the first interface IP for the interface
+                interface = nic.interfaces[0]
+                # TODO: Check if interface.ipaddress is equivalent to oneDip.
                 oneDip = ipaddress.IPv4Interface(
-                    f"{addresslist[0]['myip']['ip']}/{addresslist[0]['myip']['mask']}"
+                    f"{interface.ip_obj.address}/{interface.ip_obj.netmask}"
                 )
                 logging.debug(f"Had to guess at the IP.  Guessed {oneDip}")
                 return oneDip
@@ -2214,9 +2216,9 @@ def ip_is_broadcast_for_nic(nic, ipstr: str):
     if nic.type == "port":
         return False  # Ports have no IP address
     # loop through all the interfaces and return any that might be local.
-    for oneIF in nic.interfaces:
+    for iface in nic.interfaces:
         # logging.debug(f"    Checking {ipstr} with {str(interfaceIP(oneIF))}")
-        if packet.isBroadcast(ipstr, str(Interface(oneIF).ipaddress)):
+        if packet.isBroadcast(ipstr, str(iface.ipaddress)):
             return True
     return False
 

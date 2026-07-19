@@ -43,16 +43,19 @@ class Nic(ItemBase):
     #         self._device = session.puzzle.device_from_uid(value)
 
     @property
-    def interfaces(self):
+    def interfaces_data(self):
         if not isinstance(self.json.get("interface"), list):
             self.json["interface"] = [self.json.get("interface")]
         return self.json.get("interface")
 
     @property
+    def interfaces(self):
+        return [interface.Interface(d) for d in self.interfaces_data]
+
+    @property
     def ip_addresses(self):
         ips = list()
-        for iface_data in self.interfaces:
-            iface = interface.Interface(iface_data)
+        for iface in self.interfaces:
             if iface.nicname == self.name:
                 ip_addr = interface.IpAddress(iface.ip_data)
                 if not ip_addr.address.startswith("0"):
@@ -271,13 +274,13 @@ class Nic(ItemBase):
             return None  # Ports have no IP address
 
         # loop through all the interfaces and return any that might be local.
-        for oneIF in self.interfaces:
-            iface_address = str(interface.Interface(oneIF).ipaddress)
+        for iface in self.interfaces:
+            iface_address = str(iface.ipaddress)
             if skip_zeros and iface_address == "0.0.0.0/0":
                 logging.debug("Found 0.0.0.0.  skipping")
                 continue
             if packet.isLocal(targetIPstring, iface_address):
-                return oneIF
+                return iface.json
         return None
 
     def find_primary_interface(self):

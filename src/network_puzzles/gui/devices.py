@@ -256,7 +256,7 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         # Add IP addresses and netmasks.
         for n in self.nics:
             for iface in n.interfaces:
-                ip = iface.get("myip", {})
+                ip = iface.ip_data
                 ipaddr = ip.get("ip", "0.0.0.0")
                 if ipaddr != "0.0.0.0":
                     text += f"\n{ipaddr}/{ip.get('mask')}"
@@ -404,8 +404,8 @@ class EditDevicePopup(DevicePopup):
         Value to search can be NIC name or IP config data.
         """
         ip_config = None
-        for iface_data in nic_obj.interfaces:
-            iface = interface.Interface(iface_data)
+        for iface in nic_obj.interfaces:
+            # TODO: Check if iface.ipaddress is equivalent to iface_ip_config.
             iface_ip_config = interface.IpAddress(iface.ip_data)
             if self._is_ip_and_gateway(value):
                 if value.split("/") == [

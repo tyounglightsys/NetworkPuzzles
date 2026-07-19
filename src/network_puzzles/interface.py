@@ -51,6 +51,10 @@ class Interface(ItemBase):
         return self._ipaddress
 
     @property
+    def netmask(self) -> str:
+        return self.ip_obj.netmask
+
+    @property
     def nicname(self) -> str:
         return self.json.get("nicname")
 

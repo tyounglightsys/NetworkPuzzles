@@ -230,14 +230,11 @@ class Parser:
                 # go through and clear out all the IP addresses
                 for nic_json in device.Device(item).all_nics():
                     onenic = nic.Nic(nic_json)
-                    for oneint in onenic.interfaces:
-                        if oneint["nicname"] != "lo0":
-                            oneint["myip"]["ip"] = (
-                                "0.0.0.0"  # reset them all to nothing - the default
-                            )
-                            oneint["myip"]["mask"] = (
-                                "0.0.0.0"  # reset them all to nothing - the default
-                            )
+                    for iface in onenic.interfaces:
+                        if iface.nicname != "lo0":
+                            # reset them all to nothing - the default
+                            iface.ip_obj.address = "0.0.0.0"
+                            iface.ip_obj.netmask = "0.0.0.0"
 
                 # clear out the gateway
                 item["gateway"]["ip"] = "0.0.0.0"
@@ -275,13 +272,10 @@ class Parser:
                         # We found the nic to replace.
                         nic_json.pop("Mac", None)
                         onenic.ensure_mac()
-                        for oneint in onenic.interfaces:
-                            oneint["myip"]["ip"] = (
-                                "0.0.0.0"  # reset them all to nothing - the default
-                            )
-                            oneint["myip"]["mask"] = (
-                                "0.0.0.0"  # reset them all to nothing - the default
-                            )
+                        for iface in onenic.interfaces:
+                            # reset them all to nothing - the default
+                            iface.ip_obj.address = "0.0.0.0"
+                            iface.ip_obj.netmask = "0.0.0.0"
 
             else:  # it is something that does not exist
                 raise ValueError(f"Not a valid item: {args[0]}")

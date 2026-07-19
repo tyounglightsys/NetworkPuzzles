@@ -26,7 +26,7 @@ class TestNicProperties(unittest.TestCase):
         self.assertTrue(isinstance(json_ifaces, dict))
         self.assertEqual(
             [json_ifaces],
-            nic.Nic(self.app.puzzle.nic_from_uid(nic_uid)).interfaces,
+            nic.Nic(self.app.puzzle.nic_from_uid(nic_uid)).interfaces_data,
         )
 
     def test_nic_json(self):
