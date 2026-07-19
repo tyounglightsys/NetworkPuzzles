@@ -96,6 +96,9 @@ class Packet(ItemBase):
     @property
     def hash_id(self):
         """Get unique identifier by hashing specific properties of packet data."""
+        # NOTE: When a packet is passed through and back out a device the new
+        # one is made from a copy of the old one. This requires that the hash_id
+        # get calculated on the fly rather than stored.
         return hash(
             (
                 self.source_ip,
