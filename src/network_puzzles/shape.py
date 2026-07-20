@@ -1,7 +1,7 @@
-
 from copy import deepcopy
+
+from . import session
 from .core import ItemBase
-from . import device, session
 
 
 class Shape(ItemBase):
@@ -9,8 +9,8 @@ class Shape(ItemBase):
         "name": "ShapeName",
         "what": "rectangle",  # Could be rectangle or circle, but puzzles only use rectangle.
         "where": "100,100,200,200",  # Two x,y coordinates.
-        "fillcolor": "Gray", # A color: Blue, Gray, Green, LightGreen, SaddleBrown
-        "linecolor": "Gray", # A color: Blue, Gray, Green, LightGreen, SaddleBrown
+        "fillcolor": "Gray",  # A color: Blue, Gray, Green, LightGreen, SaddleBrown
+        "linecolor": "Gray",  # A color: Blue, Gray, Green, LightGreen, SaddleBrown
     }
 
     def __init__(self, json_data=None):
@@ -55,7 +55,7 @@ class Shape(ItemBase):
 
     @property
     def where(self):
-        #This should return x1, y1, x2, y2
+        # This should return x1, y1, x2, y2
         return self.json.get("where").split(",")
 
     @where.setter
@@ -64,4 +64,4 @@ class Shape(ItemBase):
             self.json["where"] = ",".join(value)
         else:
             if isinstance(value, str):
-                self.json["where"] = value                
+                self.json["where"] = value
