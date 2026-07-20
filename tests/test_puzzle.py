@@ -266,7 +266,7 @@ class TestProperties(unittest.TestCase):
         for dev_data in self.app.puzzle.devices:
             dev = device.Device(dev_data)
             if dev.hostname == "router0":
-                for nic_data in dev.all_nics():
+                for nic_data in dev.nics_data:
                     n = nic.Nic(nic_data)
                     if n.name == "eth0":
                         self.assertTrue(n.is_connected())

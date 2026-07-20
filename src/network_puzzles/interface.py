@@ -1,7 +1,7 @@
 import ipaddress
 from copy import deepcopy
 
-from .core import ItemBase
+from .core import ItemBase, conform_json_values
 
 BROADCAST_MAC = "FFFFFFFFFFFF"
 GENERIC_IP4 = "0.0.0.0"
@@ -51,6 +51,10 @@ class Interface(ItemBase):
         return self._ipaddress
 
     @property
+    def netmask(self) -> str:
+        return self.ip_obj.netmask
+
+    @property
     def nicname(self) -> str:
         return self.json.get("nicname")
 
@@ -59,11 +63,8 @@ class Interface(ItemBase):
         self.json["nicname"] = value
 
     @property
-    def vlans(self):
-        if "VLAN" not in self.json:
-            self.json["VLAN"] = []
-        elif not isinstance(self.json.get("VLAN"), list):
-            self.json["VLAN"] = [self.json.get("VLAN")]
+    def vlans_data(self):
+        conform_json_values(self.json, "VLANS")
         return self.json.get("VLANS")
 
     def begin_ingress(self, pkt):

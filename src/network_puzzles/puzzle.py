@@ -11,7 +11,7 @@ from packaging.version import Version
 
 # define the global network list
 from . import device, packet, session
-from .core import ItemBase
+from .core import ItemBase, conform_json_values
 
 # from .link import Link
 from .nic import Nic
@@ -66,8 +66,7 @@ class Puzzle(ItemBase):
 
     @property
     def packets(self):
-        if "packet" not in self.json:
-            self.json["packet"] = []
+        conform_json_values(self.json, "packet")
         return self.json.get("packet")
 
     @property
@@ -94,8 +93,7 @@ class Puzzle(ItemBase):
         else:
             raise ValueError(f"Invalid packet data type: {type(pkt)}")
         # Ensure packet entry exists.
-        if not self.json.get("packet"):
-            self.json["packet"] = []
+        conform_json_values(self.json, "packet")
         self.json["packet"].append(data)
 
     def all_devices(self):
@@ -226,8 +224,7 @@ class Puzzle(ItemBase):
         for d in self.devices:
             if d:
                 for n in d.get("nic"):
-                    if not isinstance(n["interface"], list):
-                        n["interface"] = [n.get("interface")]
+                    conform_json_values(n, "interface")
                     for iface in n.get("interface"):
                         if iface.get("myip").get("ip") == ipaddr:
                             return d
@@ -658,8 +655,7 @@ class Puzzle(ItemBase):
     def set_all_device_nic_macs(self):
         for oneDevice in self.devices:
             if oneDevice:
-                if not isinstance(oneDevice["nic"], list):
-                    oneDevice["nic"] = [oneDevice["nic"]]
+                conform_json_values(oneDevice, "nic")
                 for oneNic in oneDevice["nic"]:
                     oneNic = Nic(oneNic).ensure_mac()
 
@@ -672,7 +668,7 @@ class Puzzle(ItemBase):
             session.print(f"Cannot delete {hostname}; the puzzle has it locked.")
             return False
             # We need to find any links connected to this device and delete them
-        for onenic in device.Device(existing_device).all_nics():
+        for onenic in device.Device(existing_device).nics_data:
             nic = Nic(onenic)
             onelink = nic.get_connected_link()
             if onelink is not None:
@@ -958,8 +954,7 @@ class Puzzle(ItemBase):
             newlink["uniqueidentifier"] = session.puzzle.issueUniqueIdentifier()
             newlink["SrcNic"] = copy.copy(snic.my_id.json)
             newlink["DstNic"] = copy.copy(dnic.my_id.json)
-            if not isinstance(self.json.get("link"), list):
-                self.json["link"] = [self.json.get("link")]
+            conform_json_values(self.json, "link")
             self.json["link"].append(newlink)
             session.print(f"Created link: {newlink['hostname']}")
             device.mark_test_as_completed(

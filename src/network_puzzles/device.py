@@ -3,7 +3,7 @@ import logging
 from copy import deepcopy
 
 from . import packet, session
-from .core import ItemBase, get_puzzle_distance
+from .core import ItemBase, conform_json_values, get_puzzle_distance
 from .interface import BROADCAST_IP4, BROADCAST_MAC, GENERIC_IP4, Interface
 from .link import Link
 from .nic import Nic
@@ -105,11 +105,7 @@ class Device(ItemBase):
 
     @property
     def firewall_rules(self):
-        current_rules = self.json.get("firewallrule")
-        if current_rules is None:
-            self.json["firewallrule"] = list()
-        elif not isinstance(current_rules, list):
-            self.json["firewallrule"] = [current_rules]
+        conform_json_values(self.json, "firewallrule")
         return self.json.get("firewallrule")
 
     @property
@@ -153,8 +149,7 @@ class Device(ItemBase):
 
     @property
     def ip_connections(self):
-        if self.json.get("IPConnections") is None:
-            self.json["IPConnections"] = []  # make an empty array
+        conform_json_values(self.json, "IPConnections")
         return self.json.get("IPConnections")
 
     @ip_connections.setter
@@ -233,12 +228,14 @@ class Device(ItemBase):
         return self.json.get("mytype", "")
 
     @property
+    def nics_data(self) -> list:
+        conform_json_values(self.json, "nic")
+        return self.json.get("nic")
+
+    @property
     def nics(self):
         """Returns NIC objects."""
-        nics = []
-        for nic in self.all_nics():
-            nics.append(Nic(nic))
-        return nics
+        return [Nic(d) for d in self.nics_data]
 
     @property
     def powered_on(self) -> bool:
@@ -264,12 +261,7 @@ class Device(ItemBase):
     @property
     def routes(self):
         """Returns a list of static routes."""
-        if self.json.get("route") is None:
-            self.json["route"] = []
-        if not isinstance(self.json.get("route"), list):
-            self.json["route"] = [
-                self.json.get("route")
-            ]  # turn it into a list so we can iterate through it
+        conform_json_values(self.json, "route")
         return self.json.get("route")
 
     @property
@@ -290,13 +282,8 @@ class Device(ItemBase):
     def uniqueidentifier(self) -> str:
         return self.json.get("uniqueidentifier", "")
 
-    def all_nics(self) -> list:
-        if not isinstance(self.json.get("nic"), list):
-            self.json["nic"] = [self.json["nic"]]
-        return self.json.get("nic")
-
     def disable_nic_dhcp(self):
-        for onenic in self.all_nics():
+        for onenic in self.nics_data:
             # these come in json format.  Convert to a nic and define it
             Nic(onenic).uses_dhcp = False
 
@@ -327,19 +314,18 @@ class Device(ItemBase):
 
     def get_routes_from_nics(self):
         nic_routes = []
-        for nic in self.all_nics():
+        for nic in self.nics_data:
             n = Nic(nic)
             for interface in n.interfaces:
-                iface = Interface(interface)
                 # Use current IP config for gateway.
-                if iface.ip_data.get("gateway") == GENERIC_IP4:
-                    iface.ip_data["gateway"] = self.gateway
-                nic_routes.append(iface.ip_data)
+                if interface.ip_data.get("gateway") == GENERIC_IP4:
+                    interface.ip_data["gateway"] = self.gateway
+                nic_routes.append(interface.ip_data)
         return nic_routes
 
     def _get_wireless_nics_and_links(self):
         nics_and_links = list()
-        for nic_data in self.all_nics():
+        for nic_data in self.nics_data:
             nic = Nic(nic_data)
             if nic.type != "wlan":
                 continue  # We only autoconnect wport ports
@@ -362,30 +348,21 @@ class Device(ItemBase):
             A list of mac-addresses.  Each MAC is a struct containing at least the ip and mac.
         """
         maclist = []
-        if "nic" not in self.json:
-            return None
-        if not isinstance(self.json.get("nic"), list):
-            self.json["nic"] = [self.json.get("nic")]
-        for onenic in self.json.get("nic"):
-            # iterate through the list of nics
-            onenic = Nic(onenic).ensure_mac()
-            if not onenic.get("nicname") == "lo0":
-                if not isinstance(onenic.get("interface"), list):
-                    onenic["interface"] = [onenic.get("interface")]
-                for oneinterface in onenic.get("interface"):
-                    try:
-                        onemac = {
-                            "ip": ipaddress.ip_interface(
-                                oneinterface["myip"]["ip"]
-                                + "/"
-                                + oneinterface["myip"]["mask"]
-                            ),
-                            "mac": onenic["Mac"],
-                        }
-                        maclist.append(onemac)
-                    except ValueError:
-                        # If the IP is invalid, do not add it
-                        continue
+        for nic in self.nics:
+            nic.ensure_mac()
+            if nic.name == "lo0":
+                continue
+            for iface in nic.interfaces:
+                try:
+                    ip = ipaddress.ip_interface(iface.ipaddress)
+                except ValueError:
+                    # If the IP is invalid, do not add it
+                    continue
+                mac = {
+                    "ip": ip,
+                    "mac": nic.mac,
+                }
+                maclist.append(mac)
         return maclist
 
     def get_route_for_dest_ip(self, dest_ip: str):
@@ -500,8 +477,8 @@ class Device(ItemBase):
         """
         for nic in self.nics:
             for interface in nic.interfaces:
-                if interface.get("nicname") == name:
-                    return interface
+                if interface.nicname == name:
+                    return interface.json
         return None
 
     def interface_from_ip(self, ip):
@@ -511,8 +488,7 @@ class Device(ItemBase):
             the network interface record from the device or None
         """
         for nic in self.nics:
-            for interface_data in nic.interfaces:
-                iface = Interface(interface_data)
+            for iface in nic.interfaces:
                 logging.debug(f"checking interface: {iface.nicname}; {iface.ip}")
                 if iface.ip == ip:
                     return iface.json
@@ -605,7 +581,7 @@ class Device(ItemBase):
         session.print(f"gateway: {self.json['gateway']['ip']}")
         for onestring in allIPStrings(self.json, True, True):
             session.print(onestring)
-        for onenic in self.all_nics():
+        for onenic in self.nics_data:
             t_nic = Nic(onenic)
             if t_nic.type in ("wport", "wlan"):
                 session.print(
@@ -793,7 +769,7 @@ class Device(ItemBase):
                     ):
                         # logging.debug(f"Can we connect it to: {t_onedevice.hostname}")
                         # Check to see if ssid and key match.  And if so, does it have an empty port to connect to?
-                        for dstnic in t_onedevice.all_nics():
+                        for dstnic in t_onedevice.nics_data:
                             t_dstnic = Nic(dstnic)
                             # logging.debug(f"Checking out {t_dstnic.type} {t_dstnic.encryption_key} {t_dstnic.ssid}" )
                             if (
@@ -1112,7 +1088,7 @@ class Device(ItemBase):
             # session.puzzle.packets.append(packetpayload)
             vpninterface = None
 
-            for onenic in self.all_nics():
+            for onenic in self.nics_data:
                 nic_obj = Nic(onenic)
                 vpninterface = nic_obj.find_local_interface(
                     packetpayload.json["tdestIP"], True
@@ -1498,10 +1474,9 @@ class Device(ItemBase):
             tnic = Nic(self.nic_from_name("management_interface0"))
             logging.debug(f"The nic is now {nic.name}")
 
-        inboundip = tnic.interfaces[0]["myip"]["ip"]
-        logging.debug(
-            f"making a dhcp response on nic {tnic.name}; {tnic.interfaces[0]['myip']['ip']}"
-        )
+        inbound_interface = tnic.interfaces[0]
+        inboundip = inbound_interface.ip_obj.address
+        logging.debug(f"making a dhcp response on nic {tnic.name}; {inboundip}")
         iprange = None
         available_ip = ""  # start with it empty.  Fill it if we can
         for onerange in self.dhcp_range:
@@ -1546,14 +1521,14 @@ class Device(ItemBase):
             self.dhcp_list[pkt.source_mac] = available_ip
             # Now, make a new DHCP response packet
             nPacket = packet.Packet()
-            nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
+            nPacket.source_ip = inboundip
             nPacket.source_mac = tnic.mac
             nPacket.destination_ip = GENERIC_IP4
             nPacket.destination_mac = pkt.source_mac
             nPacket.packettype = "DHCP-Response"
             nPacket.payload = {
                 "ip": available_ip,
-                "subnet": tnic.interfaces[0]["myip"]["mask"],
+                "subnet": inbound_interface.ip_obj.netmask,
                 "gateway": self.json["gateway"]["ip"],
             }
             # if the dhcp server is a router/firewall, use the nic IP as the gateway
@@ -1719,7 +1694,7 @@ class Device(ItemBase):
                 onlyport = self.json.get("port_arps").get(pkt.destination_mac)
 
         # print("We are forwarding.")
-        for onenic in self.all_nics():
+        for onenic in self.nics_data:
             device_nic = Nic(onenic)
             if (
                 inbound_nic
@@ -1852,11 +1827,10 @@ def deviceFromIP(what):
     returns the device matching the id, or None"""
     for oneDevice in session.puzzle.devices:
         if oneDevice:
-            for oneNic in oneDevice["nic"]:
-                if not isinstance(oneNic["interface"], list):
-                    oneNic["interface"] = [oneNic["interface"]]
-                for oneInterface in oneNic["interface"]:
-                    if oneInterface["myip"]["ip"] == what:
+            for oneNic in oneDevice.get("nic"):
+                conform_json_values(oneNic, "interface")
+                for oneInterface in oneNic.get("interface"):
+                    if oneInterface.get("myip").get("ip") == what:
                         return oneDevice
     return None
 
@@ -1925,7 +1899,7 @@ def destIP(srcDevice, dstDevice):
             return oneDip
     # If the device has a gateway, choose the IP address that is local to the gateway
     tDevice = Device(dstDevice)
-    for onenic in tDevice.all_nics():
+    for onenic in tDevice.nics_data:
         nic_obj = Nic(onenic)
         one_interface = nic_obj.find_local_interface(
             srcDevice.get("gateway")["ip"], True
@@ -1946,11 +1920,13 @@ def destIP(srcDevice, dstDevice):
         logging.debug(f"Checking out nic: {onename}")
         theonenic = tDevice.nic_from_name(onename)
         if theonenic is not None:
-            addresslist = Nic(theonenic).interfaces
-            if len(addresslist) > 0:
+            nic = Nic(theonenic)
+            if len(nic.interfaces) > 0:
                 # grab the first interface IP for the interface
+                interface = nic.interfaces[0]
+                # TODO: Check if interface.ipaddress is equivalent to oneDip.
                 oneDip = ipaddress.IPv4Interface(
-                    f"{addresslist[0]['myip']['ip']}/{addresslist[0]['myip']['mask']}"
+                    f"{interface.ip_obj.address}/{interface.ip_obj.netmask}"
                 )
                 logging.debug(f"Had to guess at the IP.  Guessed {oneDip}")
                 return oneDip
@@ -2075,17 +2051,13 @@ def DeviceIPs(src, ignoreLoopback=True):
     if srcDevice is None:
         logging.error("Error: passed in an invalid source to function: sourceIP")
         return None
-    if not isinstance(srcDevice["nic"], list):
-        # If it is not a list, turn it into a list so we can iterate it
-        srcDevice["nic"] = [srcDevice["nic"]]
-    for onenic in srcDevice["nic"]:
+    conform_json_values(srcDevice, "nic")
+    for onenic in srcDevice.get("nic"):
         # Pull out all the nic interfaces
-        if not isinstance(onenic["interface"], list):
-            # turn it into a list so we can iterate it
-            onenic["interface"] = [onenic["interface"]]
+        conform_json_values(onenic, "interface")
         for oneinterface in onenic["interface"]:
             # add it to the list
-            if oneinterface["nicname"] == "lo0" and ignoreLoopback:
+            if oneinterface.get("nicname") == "lo0" and ignoreLoopback:
                 # skip this interface if we are told to do so
                 continue
             # print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
@@ -2116,14 +2088,10 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
     if srcDevice is None:
         logging.error("Error: passed in an invalid source to function: sourceIP")
         return None
-    if not isinstance(srcDevice["nic"], list):
-        # If it is not a list, turn it into a list so we can iterate it
-        srcDevice["nic"] = [srcDevice["nic"]]
+    conform_json_values(srcDevice, "nic")
     for onenic in srcDevice["nic"]:
         # Pull out all the nic interfaces
-        if not isinstance(onenic["interface"], list):
-            # turn it into a list so we can iterate it
-            onenic["interface"] = [onenic["interface"]]
+        conform_json_values(onenic, "interface")
         if onenic["nictype"][0] == "port" or onenic["nictype"][0] == "wport":
             # skip this interface if we are told to do so
             continue
@@ -2193,9 +2161,7 @@ def ip_is_broadcast_for_device(deviceRec, ipstr: str):
     """Return True if the specified ipstring is a broadcast IP for any of the interfaces defined on the device"""
     # FIXME: This should be a Device class method.
     # logging.debug("Checking to see if our device has a broadcast IP")
-    if not isinstance(deviceRec["nic"], list):
-        # If it is not a list, turn it into a list so we can iterate it
-        deviceRec["nic"] = [deviceRec["nic"]]
+    conform_json_values(deviceRec, "nic")
     for onenic in deviceRec["nic"]:
         # logging.debug(f"    Checking {onenic} {ipstr}")
         nic = Nic(onenic)
@@ -2214,9 +2180,9 @@ def ip_is_broadcast_for_nic(nic, ipstr: str):
     if nic.type == "port":
         return False  # Ports have no IP address
     # loop through all the interfaces and return any that might be local.
-    for oneIF in nic.interfaces:
+    for iface in nic.interfaces:
         # logging.debug(f"    Checking {ipstr} with {str(interfaceIP(oneIF))}")
-        if packet.isBroadcast(ipstr, str(Interface(oneIF).ipaddress)):
+        if packet.isBroadcast(ipstr, str(iface.ipaddress)):
             return True
     return False
 

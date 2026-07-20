@@ -5,7 +5,7 @@ import time
 from copy import deepcopy
 
 from . import device, session
-from .core import ItemBase, get_puzzle_distance
+from .core import ItemBase, conform_json_values, get_puzzle_distance
 from .interface import BROADCAST_MAC, GENERIC_IP4, IpAddress
 from .link import Link
 from .nic import Nic
@@ -96,6 +96,9 @@ class Packet(ItemBase):
     @property
     def hash_id(self):
         """Get unique identifier by hashing specific properties of packet data."""
+        # NOTE: When a packet is passed through and back out a device the new
+        # one is made from a copy of the old one. This requires that the hash_id
+        # get calculated on the fly rather than stored.
         return hash(
             (
                 self.source_ip,
@@ -178,8 +181,7 @@ class Packet(ItemBase):
 
     @property
     def path(self):
-        if self.json.get("path") is None:
-            self.json["path"] = []
+        conform_json_values(self.json, "path")
         return self.json.get("path")
 
     @property

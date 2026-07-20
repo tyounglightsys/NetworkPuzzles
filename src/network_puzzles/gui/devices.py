@@ -7,7 +7,7 @@ from kivy.uix.behaviors import DragBehavior
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 
-from .. import interface, nic, session
+from .. import interface, session
 from ..device import Device
 from .base import (
     HelpHighlight,
@@ -75,10 +75,6 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         if not isinstance(value, bool):
             raise ValueError("Value must be a boolean.")
         self._location_locked = value
-
-    @property
-    def nics(self):
-        return [nic.Nic(n) for n in self.all_nics()]
 
     def callback(self, cmd_string):
         self.app.ui.parse(cmd_string)
@@ -256,7 +252,7 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
         # Add IP addresses and netmasks.
         for n in self.nics:
             for iface in n.interfaces:
-                ip = iface.get("myip", {})
+                ip = iface.ip_data
                 ipaddr = ip.get("ip", "0.0.0.0")
                 if ipaddr != "0.0.0.0":
                     text += f"\n{ipaddr}/{ip.get('mask')}"
@@ -404,8 +400,8 @@ class EditDevicePopup(DevicePopup):
         Value to search can be NIC name or IP config data.
         """
         ip_config = None
-        for iface_data in nic_obj.interfaces:
-            iface = interface.Interface(iface_data)
+        for iface in nic_obj.interfaces:
+            # TODO: Check if iface.ipaddress is equivalent to iface_ip_config.
             iface_ip_config = interface.IpAddress(iface.ip_data)
             if self._is_ip_and_gateway(value):
                 if value.split("/") == [

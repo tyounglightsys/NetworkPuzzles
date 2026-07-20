@@ -134,7 +134,7 @@ class EditDhcpPopup(DevicePopup):
     @property
     def unset_configs(self):
         unset_configs = []
-        for data in self.device.all_nics():
+        for data in self.device.nics_data:
             n = nic.Nic(data)
             ips = [
                 ip.get("ip")
@@ -261,7 +261,7 @@ class EditNicPopup(DevicePopup):
         if not self.nic.name:  # add NIC
             self.app.ui.parse(f"create nic {self.device.hostname} {self.nic.type}")
             # Get JSON for newly-created NIC (last listed).
-            self.nic.name = self.device.all_nics()[-1].get("nicname")
+            self.nic.name = self.device.nics_data[-1].get("nicname")
         if self.nic.encryption_key != self.encryption_key_orig:
             self.app.ui.parse(
                 f"set {self.device.hostname} key {self.nic.name} {self.nic.encryption_key}"

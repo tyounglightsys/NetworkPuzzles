@@ -12,12 +12,12 @@ class TestPackets(unittest.TestCase):
     def test_ping(self):
         src = "pc0"
         src_ips = []
-        for n in device.Device(self.app.puzzle.device_from_name(src)).all_nics():
+        for n in device.Device(self.app.puzzle.device_from_name(src)).nics_data:
             for a in nic.Nic(n).ip_addresses:
                 src_ips.append(a.get("ip"))
         dst = "net_switch0"
         dst_ips = []
-        for n in device.Device(self.app.puzzle.device_from_name(dst)).all_nics():
+        for n in device.Device(self.app.puzzle.device_from_name(dst)).nics_data:
             for a in nic.Nic(n).ip_addresses:
                 dst_ips.append(a.get("ip"))
         command = f"ping {src} {dst}"

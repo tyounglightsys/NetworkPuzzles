@@ -1,8 +1,8 @@
 import json
 import unittest
-from network_puzzles import device
-from network_puzzles import session
-from network_puzzles import ui
+
+from network_puzzles import device, session, ui
+
 from . import PUZZLES_DIR
 
 
@@ -55,7 +55,7 @@ class TestGetDeviceAttribs(unittest.TestCase):
         self.device = device.Device(self.hostname)
 
     def test_allnics(self):
-        self.assertEqual(len(self.device.all_nics()), len(self.device_json.get("nic")))
+        self.assertEqual(len(self.device.nics_data), len(self.device_json.get("nic")))
 
     def test_alltests(self):
         puzzle_tests = self.network.get("nettest")
