@@ -1475,7 +1475,6 @@ class Device(ItemBase):
             logging.debug(f"The nic is now {nic.name}")
 
         inbound_interface = tnic.interfaces[0]
-        # inboundip = tnic.interfaces[0]["myip"]["ip"]
         inboundip = inbound_interface.ip_obj.address
         logging.debug(f"making a dhcp response on nic {tnic.name}; {inboundip}")
         iprange = None
@@ -1522,7 +1521,6 @@ class Device(ItemBase):
             self.dhcp_list[pkt.source_mac] = available_ip
             # Now, make a new DHCP response packet
             nPacket = packet.Packet()
-            # nPacket.source_ip = tnic.interfaces[0]["myip"]["ip"]
             nPacket.source_ip = inboundip
             nPacket.source_mac = tnic.mac
             nPacket.destination_ip = GENERIC_IP4
@@ -1530,7 +1528,6 @@ class Device(ItemBase):
             nPacket.packettype = "DHCP-Response"
             nPacket.payload = {
                 "ip": available_ip,
-                # "subnet": tnic.interfaces[0]["myip"]["mask"],
                 "subnet": inbound_interface.ip_obj.netmask,
                 "gateway": self.json["gateway"]["ip"],
             }
