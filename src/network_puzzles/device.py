@@ -259,6 +259,11 @@ class Device(ItemBase):
         return self.json.get("port_arps")
 
     @property
+    def routes(self):
+        """Returns a list of static route objects."""
+        return [Route(d) for d in self.routes_data]
+
+    @property
     def routes_data(self):
         """Returns a list of static routes."""
         conform_json_values(self.json, "route")
@@ -379,8 +384,7 @@ class Device(ItemBase):
         # Set gateway if dest IP is in device routes.
         # logging.debug(f"Checking for static route: {theDeviceRec["route"]}")
         destinationIP = ipaddress.ip_address(packet.justIP(dest_ip))
-        for route_data in self.routes_data:
-            route = Route(route_data)
+        for route in self.routes:
             staticroute = ipaddress.ip_network(route.network, strict=False)
             logging.debug(
                 f"Checking if destinationIp {dest_ip} is in staticroute {staticroute} from {route.network}"
@@ -505,8 +509,7 @@ class Device(ItemBase):
             session.print(f"Invalid target: {target} Must be a valid IP")
             return False
         # Check if route exists.
-        for rte in self.routes_data:
-            route = Route(rte)
+        for route in self.routes:
             if (
                 route.ip == str(target_IP.ip)
                 and route.netmask == str(target_IP.netmask)
@@ -553,8 +556,7 @@ class Device(ItemBase):
             session.print(f"Invalid target: {target} Must be a valid IP")
             return False
 
-        for rte in self.routes_data:
-            route = Route(rte)
+        for route in self.routes:
             if (
                 route.ip == str(target_IP.ip)
                 and route.netmask == str(target_IP.netmask)
@@ -589,8 +591,8 @@ class Device(ItemBase):
                 )
 
         # logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
-        for route in self.routes_data:
-            session.print(f"route: {Route(route)}")
+        for route in self.routes:
+            session.print(f"route: {route}")
 
         if len(self.firewall_rules) > 0:
             session.print("Firewall Rules:")
