@@ -1407,7 +1407,7 @@ class Device(ItemBase):
                 session.print(f"Not a valid target: {dest}")
                 return None
             logging.debug(f"Finding the IP for dest {hostname} ")
-            dest = destIP(self.json, dest)
+            dest = self.get_dest_ip(dest)
             if dest is None:
                 logging.error(f"Could not determine IP for {hostname}")
                 session.print(f"Not a valid target: {hostname}")
@@ -1442,6 +1442,96 @@ class Device(ItemBase):
             return None
         logging.debug(f"Packet created: {nPacket.json}")
         return nPacket
+
+    def get_dest_ip(self, dstDevice):
+        """
+        Find the destination IP address of the specified device, if going there from the source device.
+        Many devices have multiple IP addresses.  If the IP is local, we go straight to it.  If it is on
+        a different subnet, we get routed there.  This is a poor-man's DNS.
+        Args:
+            dstDevice:str - the hostname of the destination device
+            dstDevice:device - the device record of the destination
+        Returns:
+            the string IP address of the nic that is local betwee the two devices, or the IP address on the destination
+            that is connected to its gateway IP.  None if the IP cannot be determined
+        """
+        if dstDevice is None:
+            logging.error("None passed in as destination.")
+            return None
+        if "hostname" not in dstDevice:
+            logging.error("Not a valid destination device.")
+            return None
+        srcIPs = DeviceIPs(self.json)
+        dstIPs = DeviceIPs(dstDevice)
+        # logging.debug(f"we have IPs: src {len(srcIPs)} dst {len(dstIPs)}")
+        # logging.debug(f"we have IPs: src {srcIPs} dst {dstIPs}")
+
+        if srcIPs is None or dstIPs is None:
+            # we will not be able to find a match.
+            return None
+        for oneSip in srcIPs:
+            for oneDip in dstIPs:
+                # compare each of them to find one that is local
+                if oneSip in oneDip.network:
+                    if packet.justIP(str(oneDip)) != "0.0.0.0":
+                        # We found a match.  We are looking for the destination.  So we return that
+                        logging.debug(
+                            f"Checking ip addresses.  Comparing {oneSip} to {packet.justIP(str(oneDip))}"
+                        )
+                        tNic = self.nic_from_ip(str(oneSip))
+                        if tNic is not None:
+                            logging.debug(f" nictype  {tNic.get('nictype')[0]}")
+                            if tNic.get("nictype")[0] == "vpn":
+                                continue  # We do not find a machine across the VPN
+                        return oneDip
+        # if we get here, we did not find a match
+        logging.debug("No match so far.  Looking to find the local address")
+        for oneDip in dstIPs:
+            # compare each of them to find one that is local
+            logging.debug(
+                f"Making return packet {packet.justIP(dstDevice.get('gateway')['ip'])} {oneDip}"
+            )
+            if packet.justIP(oneDip) == "0.0.0.0":
+                # skip over undefined addresses
+                continue
+            if (
+                ipaddress.IPv4Interface(dstDevice.get("gateway")["ip"])
+                in oneDip.network
+            ):
+                return oneDip
+        # If the device has a gateway, choose the IP address that is local to the gateway
+        tDevice = Device(dstDevice)
+        for onenic in tDevice.nics_data:
+            nic_obj = Nic(onenic)
+            one_interface = nic_obj.find_local_interface(self.gateway, True)
+            if one_interface is not None:
+                oneDip = Interface(one_interface).ipaddress
+                logging.debug(
+                    f"Found an IP local to the gateway: {oneDip}  Gateway: {self.gateway}"
+                )
+                return oneDip
+
+        logging.debug(f"Could not find an IP local to the gateway.  GW: {self.gateway}")
+
+        # If we cannot find it, start guessing.  First we try the WAN, then the primary (eth0 or management)
+        for onename in ["wan0", "eth0", "wlan0", "management_interface0"]:
+            logging.debug(f"Checking out nic: {onename}")
+            theonenic = tDevice.nic_from_name(onename)
+            if theonenic is not None:
+                nic = Nic(theonenic)
+                if len(nic.interfaces) > 0:
+                    # grab the first interface IP for the interface
+                    interface = nic.interfaces[0]
+                    # TODO: Check if interface.ipaddress is equivalent to oneDip.
+                    oneDip = ipaddress.IPv4Interface(
+                        f"{interface.ip_obj.address}/{interface.ip_obj.netmask}"
+                    )
+                    logging.debug(f"Had to guess at the IP.  Guessed {oneDip}")
+                    return oneDip
+            else:
+                logging.debug(f"No such nic: {onename}")
+        logging.debug("Could not find an IP address for the destination.  Oops")
+        return None
 
     def make_dhcp_request(self):
         """Generate a DHCP request packet from the specified hostname, if that host has any
@@ -1834,107 +1924,6 @@ def deviceFromIP(what):
                 for oneInterface in oneNic.get("interface"):
                     if oneInterface.get("myip").get("ip") == what:
                         return oneDevice
-    return None
-
-
-def destIP(srcDevice, dstDevice):
-    """
-    Find the destination IP address of the specified device, if going there from the source device.
-    Many devices have multiple IP addresses.  If the IP is local, we go straight to it.  If it is on
-    a different subnet, we get routed there.  This is a poor-man's DNS.
-    Args:
-        srcDevice:str - the hostname of the source device
-        srcDevice:device - the device record of the source
-        dstDevice:str - the hostname of the destination device
-        dstDevice:device - the device record of the destination
-    Returns:
-        the string IP address of the nic that is local betwee the two devices, or the IP address on the destination
-        that is connected to its gateway IP.  None if the IP cannot be determined
-    """
-    # FIXME: This should be a Device class method.
-    if srcDevice is None:
-        logging.error("Error: function destIP: None passed in as source.")
-        return None
-    if dstDevice is None:
-        logging.error("Error: function destIP: None passed in as destination.")
-        return None
-    if "hostname" not in srcDevice:
-        logging.error("Error: function destIP: Not a valid source device.")
-        return None
-    if "hostname" not in dstDevice:
-        logging.error("Error: function destIP: Not a valid destination device.")
-        return None
-    srcIPs = DeviceIPs(srcDevice)
-    dstIPs = DeviceIPs(dstDevice)
-    # logging.debug(f"we have IPs: src {len(srcIPs)} dst {len(dstIPs)}")
-    # logging.debug(f"we have IPs: src {srcIPs} dst {dstIPs}")
-
-    if srcIPs is None or dstIPs is None:
-        # we will not be able to find a match.
-        return None
-    for oneSip in srcIPs:
-        for oneDip in dstIPs:
-            # compare each of them to find one that is local
-            if oneSip in oneDip.network:
-                if packet.justIP(str(oneDip)) != "0.0.0.0":
-                    # We found a match.  We are looking for the destination.  So we return that
-                    logging.debug(
-                        f"Checking ip addresses.  Comparing {oneSip} to {packet.justIP(str(oneDip))}"
-                    )
-                    tNic = Device(srcDevice).nic_from_ip(str(oneSip))
-                    if tNic is not None:
-                        logging.debug(f" nictype  {tNic.get('nictype')[0]}")
-                        if tNic.get("nictype")[0] == "vpn":
-                            continue  # We do not find a machine across the VPN
-                    return oneDip
-    # if we get here, we did not find a match
-    logging.debug("No match so far.  Looking to find the local address")
-    for oneDip in dstIPs:
-        # compare each of them to find one that is local
-        logging.debug(
-            f"Making return packet {packet.justIP(dstDevice.get('gateway')['ip'])} {oneDip}"
-        )
-        if packet.justIP(oneDip) == "0.0.0.0":
-            # skip over undefined addresses
-            continue
-        if ipaddress.IPv4Interface(dstDevice.get("gateway")["ip"]) in oneDip.network:
-            return oneDip
-    # If the device has a gateway, choose the IP address that is local to the gateway
-    tDevice = Device(dstDevice)
-    for onenic in tDevice.nics_data:
-        nic_obj = Nic(onenic)
-        one_interface = nic_obj.find_local_interface(
-            srcDevice.get("gateway")["ip"], True
-        )
-        if one_interface is not None:
-            oneDip = Interface(one_interface).ipaddress
-            logging.debug(
-                f"Found an IP local to the gateway: {oneDip}  Gateway: {srcDevice.get('gateway')['ip']}"
-            )
-            return oneDip
-
-    logging.debug(
-        f"Could not find an IP local to the gateway.  GW: {srcDevice.get('gateway')['ip']}"
-    )
-
-    # If we cannot find it, start guessing.  First we try the WAN, then the primary (eth0 or management)
-    for onename in ["wan0", "eth0", "wlan0", "management_interface0"]:
-        logging.debug(f"Checking out nic: {onename}")
-        theonenic = tDevice.nic_from_name(onename)
-        if theonenic is not None:
-            nic = Nic(theonenic)
-            if len(nic.interfaces) > 0:
-                # grab the first interface IP for the interface
-                interface = nic.interfaces[0]
-                # TODO: Check if interface.ipaddress is equivalent to oneDip.
-                oneDip = ipaddress.IPv4Interface(
-                    f"{interface.ip_obj.address}/{interface.ip_obj.netmask}"
-                )
-                logging.debug(f"Had to guess at the IP.  Guessed {oneDip}")
-                return oneDip
-        else:
-            logging.debug(f"No such nic: {onename}")
-    logging.debug("Could not find an IP address for the destination.  Oops")
     return None
 
 
