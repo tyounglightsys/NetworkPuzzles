@@ -5,7 +5,7 @@ import time
 from copy import deepcopy
 
 from . import device, session
-from .core import ItemBase, get_puzzle_distance
+from .core import ItemBase, conform_json_values, get_puzzle_distance
 from .interface import BROADCAST_MAC, GENERIC_IP4, IpAddress
 from .link import Link
 from .nic import Nic
@@ -181,8 +181,7 @@ class Packet(ItemBase):
 
     @property
     def path(self):
-        if self.json.get("path") is None:
-            self.json["path"] = []
+        conform_json_values(self.json, "path")
         return self.json.get("path")
 
     @property

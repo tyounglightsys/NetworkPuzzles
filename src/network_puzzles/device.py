@@ -3,7 +3,7 @@ import logging
 from copy import deepcopy
 
 from . import packet, session
-from .core import ItemBase, get_puzzle_distance
+from .core import ItemBase, conform_json_values, get_puzzle_distance
 from .interface import BROADCAST_IP4, BROADCAST_MAC, GENERIC_IP4, Interface
 from .link import Link
 from .nic import Nic
@@ -105,11 +105,7 @@ class Device(ItemBase):
 
     @property
     def firewall_rules(self):
-        current_rules = self.json.get("firewallrule")
-        if current_rules is None:
-            self.json["firewallrule"] = list()
-        elif not isinstance(current_rules, list):
-            self.json["firewallrule"] = [current_rules]
+        conform_json_values(self.json, "firewallrule")
         return self.json.get("firewallrule")
 
     @property
@@ -153,8 +149,7 @@ class Device(ItemBase):
 
     @property
     def ip_connections(self):
-        if self.json.get("IPConnections") is None:
-            self.json["IPConnections"] = []  # make an empty array
+        conform_json_values(self.json, "IPConnections")
         return self.json.get("IPConnections")
 
     @ip_connections.setter
@@ -233,15 +228,14 @@ class Device(ItemBase):
         return self.json.get("mytype", "")
 
     @property
+    def nics_data(self) -> list:
+        conform_json_values(self.json, "nic")
+        return self.json.get("nic")
+
+    @property
     def nics(self):
         """Returns NIC objects."""
         return [Nic(d) for d in self.nics_data]
-
-    @property
-    def nics_data(self) -> list:
-        if not isinstance(self.json.get("nic"), list):
-            self.json["nic"] = [self.json["nic"]]
-        return self.json.get("nic")
 
     @property
     def powered_on(self) -> bool:
@@ -267,12 +261,7 @@ class Device(ItemBase):
     @property
     def routes(self):
         """Returns a list of static routes."""
-        if self.json.get("route") is None:
-            self.json["route"] = []
-        if not isinstance(self.json.get("route"), list):
-            self.json["route"] = [
-                self.json.get("route")
-            ]  # turn it into a list so we can iterate through it
+        conform_json_values(self.json, "route")
         return self.json.get("route")
 
     @property
@@ -1841,11 +1830,10 @@ def deviceFromIP(what):
     returns the device matching the id, or None"""
     for oneDevice in session.puzzle.devices:
         if oneDevice:
-            for oneNic in oneDevice["nic"]:
-                if not isinstance(oneNic["interface"], list):
-                    oneNic["interface"] = [oneNic["interface"]]
-                for oneInterface in oneNic["interface"]:
-                    if oneInterface["myip"]["ip"] == what:
+            for oneNic in oneDevice.get("nic"):
+                conform_json_values(oneNic, "interface")
+                for oneInterface in oneNic.get("interface"):
+                    if oneInterface.get("myip").get("ip") == what:
                         return oneDevice
     return None
 
@@ -2066,17 +2054,13 @@ def DeviceIPs(src, ignoreLoopback=True):
     if srcDevice is None:
         logging.error("Error: passed in an invalid source to function: sourceIP")
         return None
-    if not isinstance(srcDevice["nic"], list):
-        # If it is not a list, turn it into a list so we can iterate it
-        srcDevice["nic"] = [srcDevice["nic"]]
-    for onenic in srcDevice["nic"]:
+    conform_json_values(srcDevice, "nic")
+    for onenic in srcDevice.get("nic"):
         # Pull out all the nic interfaces
-        if not isinstance(onenic["interface"], list):
-            # turn it into a list so we can iterate it
-            onenic["interface"] = [onenic["interface"]]
+        conform_json_values(onenic, "interface")
         for oneinterface in onenic["interface"]:
             # add it to the list
-            if oneinterface["nicname"] == "lo0" and ignoreLoopback:
+            if oneinterface.get("nicname") == "lo0" and ignoreLoopback:
                 # skip this interface if we are told to do so
                 continue
             # print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
@@ -2107,14 +2091,10 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
     if srcDevice is None:
         logging.error("Error: passed in an invalid source to function: sourceIP")
         return None
-    if not isinstance(srcDevice["nic"], list):
-        # If it is not a list, turn it into a list so we can iterate it
-        srcDevice["nic"] = [srcDevice["nic"]]
+    conform_json_values(srcDevice, "nic")
     for onenic in srcDevice["nic"]:
         # Pull out all the nic interfaces
-        if not isinstance(onenic["interface"], list):
-            # turn it into a list so we can iterate it
-            onenic["interface"] = [onenic["interface"]]
+        conform_json_values(onenic, "interface")
         if onenic["nictype"][0] == "port" or onenic["nictype"][0] == "wport":
             # skip this interface if we are told to do so
             continue
@@ -2184,9 +2164,7 @@ def ip_is_broadcast_for_device(deviceRec, ipstr: str):
     """Return True if the specified ipstring is a broadcast IP for any of the interfaces defined on the device"""
     # FIXME: This should be a Device class method.
     # logging.debug("Checking to see if our device has a broadcast IP")
-    if not isinstance(deviceRec["nic"], list):
-        # If it is not a list, turn it into a list so we can iterate it
-        deviceRec["nic"] = [deviceRec["nic"]]
+    conform_json_values(deviceRec, "nic")
     for onenic in deviceRec["nic"]:
         # logging.debug(f"    Checking {onenic} {ipstr}")
         nic = Nic(onenic)

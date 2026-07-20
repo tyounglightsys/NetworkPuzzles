@@ -25,9 +25,12 @@ def get_puzzle_distance(sx, sy, dx, dy, scale=5):
 def conform_json_values(json_data, key):
     """Ensures proper data format for JSON keys with list values."""
     current_values = json_data.get(key)
-    if current_values is None:
+    if isinstance(current_values, list):
+        # Data is properly conformed.
+        return
+    elif current_values is None:
         # Make values an empy list.
         json_data[key] = []
-    elif not isinstance(current_values, list):
+    else:
         # Make values a single-item list.
         json_data[key] = [current_values]

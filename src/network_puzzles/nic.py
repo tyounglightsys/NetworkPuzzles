@@ -2,7 +2,7 @@ import logging
 import random
 
 from . import interface, packet, session
-from .core import ItemBase
+from .core import ItemBase, conform_json_values
 from .link import Link
 
 
@@ -44,8 +44,7 @@ class Nic(ItemBase):
 
     @property
     def interfaces_data(self):
-        if not isinstance(self.json.get("interface"), list):
-            self.json["interface"] = [self.json.get("interface")]
+        conform_json_values(self.json, "interface")
         return self.json.get("interface")
 
     @property
