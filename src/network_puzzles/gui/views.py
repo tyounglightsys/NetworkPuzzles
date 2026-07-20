@@ -95,7 +95,7 @@ class RoutesRecView(AppRecView):
 
         if static:
             # Use copy of routes to avoid direct modification without parser command.
-            routes = deepcopy(self.root.device.routes)
+            routes = deepcopy(self.root.device.routes_data)
         else:
             routes = self.root.device.get_routes_from_nics()
         self.data = [{"text": t(r), "data": r} for r in routes]

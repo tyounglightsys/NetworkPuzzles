@@ -259,7 +259,7 @@ class Device(ItemBase):
         return self.json.get("port_arps")
 
     @property
-    def routes(self):
+    def routes_data(self):
         """Returns a list of static routes."""
         conform_json_values(self.json, "route")
         return self.json.get("route")
@@ -366,8 +366,8 @@ class Device(ItemBase):
         return maclist
 
     def get_route_for_dest_ip(self, dest_ip: str):
-        """return a routing record given a destination IP string.  The device record has the route, nic, interface, and gateway"""
-        # FIXME: This should be a Device class method.
+        """return a routing record given a destination IP string.
+        The device record has the route, nic, interface, and gateway"""
         # go through the device routes.
         if packet.isEmpty(dest_ip):
             logging.debug("routeRec failed; empty destination IP address")
@@ -379,7 +379,7 @@ class Device(ItemBase):
         # Set gateway if dest IP is in device routes.
         # logging.debug(f"Checking for static route: {theDeviceRec["route"]}")
         destinationIP = ipaddress.ip_address(packet.justIP(dest_ip))
-        for route_data in self.routes:
+        for route_data in self.routes_data:
             route = Route(route_data)
             staticroute = ipaddress.ip_network(route.network, strict=False)
             logging.debug(
@@ -505,7 +505,7 @@ class Device(ItemBase):
             session.print(f"Invalid target: {target} Must be a valid IP")
             return False
         # Check if route exists.
-        for rte in self.routes:
+        for rte in self.routes_data:
             route = Route(rte)
             if (
                 route.ip == str(target_IP.ip)
@@ -540,7 +540,7 @@ class Device(ItemBase):
             f"{self.hostname} successfully created route to {str(target_IP)}",
         )
 
-        self.routes.append(route.json)
+        self.routes_data.append(route.json)
         return True
 
     def route_del(self, target, gateway):
@@ -553,7 +553,7 @@ class Device(ItemBase):
             session.print(f"Invalid target: {target} Must be a valid IP")
             return False
 
-        for rte in self.routes:
+        for rte in self.routes_data:
             route = Route(rte)
             if (
                 route.ip == str(target_IP.ip)
@@ -561,7 +561,7 @@ class Device(ItemBase):
                 and route.gateway == gateway
             ):
                 logging.debug("  Deleting the route.")
-                self.routes.remove(route.json)
+                self.routes_data.remove(route.json)
                 return
         # If we get here, nothing yet matched.  Could not find it.  Nothing to drop
         session.print("No such route")
@@ -589,7 +589,7 @@ class Device(ItemBase):
                 )
 
         # logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
-        for route in self.routes:
+        for route in self.routes_data:
             session.print(f"route: {Route(route)}")
 
         if len(self.firewall_rules) > 0:
@@ -1961,7 +1961,7 @@ def sourceIP(src, dstIP, isBroadcast: bool = False):
         return None
 
     # return the IP that has a static route to it (add this later).
-    for route in src_dev.routes:
+    for route in src_dev.routes_data:
         staticroute = ipaddress.ip_network(route["ip"] + "/" + route["mask"], False)
         logging.info(f"We are looking for a static route to: {staticroute}")
         if dstIP in staticroute:
