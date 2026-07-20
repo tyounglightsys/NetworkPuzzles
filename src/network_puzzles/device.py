@@ -292,6 +292,23 @@ class Device(ItemBase):
             # these come in json format.  Convert to a nic and define it
             Nic(onenic).uses_dhcp = False
 
+    def has_ip(self, ip_str: str) -> bool:
+        tocheck = packet.justIP(ip_str)
+        for oneIP in allIPStrings(self.json):
+            if tocheck == packet.justIP(oneIP):
+                logging.debug(f"Device does have the IP: {ip_str}")
+                return True
+            try:
+                device_IP = ipaddress.IPv4Interface(oneIP)
+                logging.debug(
+                    f"checking if device has broadcast IP {device_IP.network.broadcast_address} {ip_str}"
+                )
+                if str(device_IP.network.broadcast_address) == str(ip_str):
+                    return True
+            except ValueError:
+                continue
+        return False
+
     def all_tests(self):
         tests = []
         for t in session.puzzle.all_tests():
@@ -1157,7 +1174,7 @@ class Device(ItemBase):
                 return True
 
         # If the packet is destined for here, process that
-        if self.routes_packets or deviceHasIP(self.json, pkt.destination_ip):
+        if self.routes_packets or self.has_ip(pkt.destination_ip):
             # decrement the ttl with every router
             pkt.ttl -= 1
             if pkt.ttl <= 0:
@@ -1186,9 +1203,7 @@ class Device(ItemBase):
                     pkt.status = "done"
                     return True
 
-        if not packet.isEmpty(pkt.destination_ip) and deviceHasIP(
-            self.json, pkt.destination_ip
-        ):
+        if not packet.isEmpty(pkt.destination_ip) and self.has_ip(pkt.destination_ip):
             pkt.status = "done"
             logging.info(f"Packet '{pkt}' arrived at destination")
 
@@ -2116,27 +2131,6 @@ def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
                     oneinterface["myip"]["ip"] + "/" + oneinterface["myip"]["mask"]
                 )
     return interfacelist
-
-
-def deviceHasIP(deviceRec, IPString: str):
-    # FIXME: This should be a Device class method.
-    if deviceRec is None:
-        return None
-    tocheck = packet.justIP(IPString)
-    for oneIP in allIPStrings(deviceRec):
-        if tocheck == packet.justIP(oneIP):
-            logging.debug(f"Device does have the IP: {IPString}")
-            return True
-        try:
-            device_IP = ipaddress.IPv4Interface(oneIP)
-            logging.debug(
-                f"checking if device has broadcast IP {device_IP.network.broadcast_address} {IPString}"
-            )
-            if str(device_IP.network.broadcast_address) == str(IPString):
-                return True
-        except ValueError:
-            continue
-    return False
 
 
 def ip_is_broadcast_for_device(deviceRec, ipstr: str):
