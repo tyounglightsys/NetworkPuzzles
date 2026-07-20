@@ -359,30 +359,21 @@ class Device(ItemBase):
             A list of mac-addresses.  Each MAC is a struct containing at least the ip and mac.
         """
         maclist = []
-        if "nic" not in self.json:
-            return None
-        if not isinstance(self.json.get("nic"), list):
-            self.json["nic"] = [self.json.get("nic")]
-        for onenic in self.json.get("nic"):
-            # iterate through the list of nics
-            onenic = Nic(onenic).ensure_mac()
-            if not onenic.get("nicname") == "lo0":
-                if not isinstance(onenic.get("interface"), list):
-                    onenic["interface"] = [onenic.get("interface")]
-                for oneinterface in onenic.get("interface"):
-                    try:
-                        onemac = {
-                            "ip": ipaddress.ip_interface(
-                                oneinterface["myip"]["ip"]
-                                + "/"
-                                + oneinterface["myip"]["mask"]
-                            ),
-                            "mac": onenic["Mac"],
-                        }
-                        maclist.append(onemac)
-                    except ValueError:
-                        # If the IP is invalid, do not add it
-                        continue
+        for nic in self.nics:
+            nic.ensure_mac()
+            if nic.name == "lo0":
+                continue
+            for iface in nic.interfaces:
+                try:
+                    ip = ipaddress.ip_interface(iface.ipaddress)
+                except ValueError:
+                    # If the IP is invalid, do not add it
+                    continue
+                mac = {
+                    "ip": ip,
+                    "mac": nic.mac,
+                }
+                maclist.append(mac)
         return maclist
 
     def get_route_for_dest_ip(self, dest_ip: str):
