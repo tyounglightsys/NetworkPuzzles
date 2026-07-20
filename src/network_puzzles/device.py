@@ -1461,8 +1461,10 @@ class Device(ItemBase):
         if "hostname" not in dstDevice:
             logging.error("Not a valid destination device.")
             return None
-        srcIPs = DeviceIPs(self.json)
-        dstIPs = DeviceIPs(dstDevice)
+        dest_device = Device(dstDevice)
+
+        srcIPs = self.get_ips()
+        dstIPs = dest_device.get_ips()
         # logging.debug(f"we have IPs: src {len(srcIPs)} dst {len(dstIPs)}")
         # logging.debug(f"we have IPs: src {srcIPs} dst {dstIPs}")
 
@@ -1487,23 +1489,16 @@ class Device(ItemBase):
         # if we get here, we did not find a match
         logging.debug("No match so far.  Looking to find the local address")
         for oneDip in dstIPs:
-            # compare each of them to find one that is local
-            logging.debug(
-                f"Making return packet {packet.justIP(dstDevice.get('gateway')['ip'])} {oneDip}"
-            )
+            logging.debug(f"Making return packet: {dest_device.gateway} {oneDip}")
             if packet.justIP(oneDip) == "0.0.0.0":
                 # skip over undefined addresses
                 continue
-            if (
-                ipaddress.IPv4Interface(dstDevice.get("gateway")["ip"])
-                in oneDip.network
-            ):
+            if ipaddress.IPv4Interface(dest_device.gateway) in oneDip.network:
                 return oneDip
         # If the device has a gateway, choose the IP address that is local to the gateway
-        tDevice = Device(dstDevice)
-        for onenic in tDevice.nics_data:
-            nic_obj = Nic(onenic)
-            one_interface = nic_obj.find_local_interface(self.gateway, True)
+
+        for nic in dest_device.nics:
+            one_interface = nic.find_local_interface(self.gateway, True)
             if one_interface is not None:
                 oneDip = Interface(one_interface).ipaddress
                 logging.debug(
@@ -1516,22 +1511,54 @@ class Device(ItemBase):
         # If we cannot find it, start guessing.  First we try the WAN, then the primary (eth0 or management)
         for onename in ["wan0", "eth0", "wlan0", "management_interface0"]:
             logging.debug(f"Checking out nic: {onename}")
-            theonenic = tDevice.nic_from_name(onename)
+            theonenic = dest_device.nic_from_name(onename)
             if theonenic is not None:
                 nic = Nic(theonenic)
                 if len(nic.interfaces) > 0:
                     # grab the first interface IP for the interface
                     interface = nic.interfaces[0]
-                    # TODO: Check if interface.ipaddress is equivalent to oneDip.
-                    oneDip = ipaddress.IPv4Interface(
-                        f"{interface.ip_obj.address}/{interface.ip_obj.netmask}"
+                    logging.debug(
+                        f"Had to guess at the IP.  Guessed {interface.ipaddress}"
                     )
-                    logging.debug(f"Had to guess at the IP.  Guessed {oneDip}")
-                    return oneDip
+                    return interface.ipaddress
             else:
                 logging.debug(f"No such nic: {onename}")
         logging.debug("Could not find an IP address for the destination.  Oops")
         return None
+
+    def get_ips(self, ignore_loopback=True):
+        """
+        Return a list of all the ip addresses (IP+subnet) the device has.
+        Args:
+            ignore_loopback:bool=True - whether to ignore the loopback
+        Returns:
+            A list of IP4Interface records (ip+mask)
+        """
+
+        interfacelist = []
+        # srcDevice = src
+        # if "hostname" not in src:
+        #     srcDevice = session.puzzle.device_from_name(src)
+        # if srcDevice is None:
+        #     logging.error("Error: passed in an invalid source to function: sourceIP")
+        #     return None
+        # conform_json_values(srcDevice, "nic")
+        # for onenic in srcDevice.get("nic"):
+        for nic in self.nics:
+            # Pull out all the nic interfaces
+            for interface in nic.interfaces:
+                # add it to the list
+                if interface.nicname == "lo0" and ignore_loopback:
+                    # skip this interface if we are told to do so
+                    continue
+                # print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
+                interfacelist.append(
+                    interface.ipaddress
+                    # ipaddress.IPv4Interface(
+                    #     oneinterface["myip"]["ip"] + "/" + oneinterface["myip"]["mask"]
+                    # )
+                )
+        return interfacelist
 
     def make_dhcp_request(self):
         """Generate a DHCP request packet from the specified hostname, if that host has any
@@ -1947,8 +1974,8 @@ def sourceIP(src, dstIP, isBroadcast: bool = False):
     src_dev = Device(srcDevice)
 
     # Get all the IPs from this device
-    allIPs = DeviceIPs(src)
-    if allIPs is None:
+    allIPs = src_dev.get_ips()
+    if len(allIPs) == 0:
         return None
 
     # return the IP that has a static route to it (add this later).
@@ -2022,42 +2049,6 @@ def deviceCaptions(deviceRec, howmuch: str):
         case "ip":
             captionstrings.append(allIPStrings(deviceRec))
     return captionstrings
-
-
-def DeviceIPs(src, ignoreLoopback=True):
-    """
-    Return a list of all the ip addresses (IP+subnet) the device has.
-    Args:
-        src:str - the hostname of the device
-        src:device - the device record itself
-        ignoreLoopback:bool=True - whether to ignore the loopback
-    Returns:
-        A list of IP4Interface records (ip+mask)
-    """
-    # FIXME: This should be a Device class method.
-    interfacelist = []
-    srcDevice = src
-    if "hostname" not in src:
-        srcDevice = session.puzzle.device_from_name(src)
-    if srcDevice is None:
-        logging.error("Error: passed in an invalid source to function: sourceIP")
-        return None
-    conform_json_values(srcDevice, "nic")
-    for onenic in srcDevice.get("nic"):
-        # Pull out all the nic interfaces
-        conform_json_values(onenic, "interface")
-        for oneinterface in onenic["interface"]:
-            # add it to the list
-            if oneinterface.get("nicname") == "lo0" and ignoreLoopback:
-                # skip this interface if we are told to do so
-                continue
-            # print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
-            interfacelist.append(
-                ipaddress.IPv4Interface(
-                    oneinterface["myip"]["ip"] + "/" + oneinterface["myip"]["mask"]
-                )
-            )
-    return interfacelist
 
 
 def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
