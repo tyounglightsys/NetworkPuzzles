@@ -20,3 +20,14 @@ def get_coordinate_distance(sx, sy, dx, dy):
 def get_puzzle_distance(sx, sy, dx, dy, scale=5):
     # The puzzle layout uses a 5/5 grid.
     return get_coordinate_distance(sx, sy, dx, dy) / scale
+
+
+def conform_json_values(json_data, key):
+    """Ensures proper data format for JSON keys with list values."""
+    current_values = json_data.get(key)
+    if current_values is None:
+        # Make values an empy list.
+        json_data[key] = []
+    elif not isinstance(current_values, list):
+        # Make values a single-item list.
+        json_data[key] = [current_values]
