@@ -260,10 +260,6 @@ class Puzzle(ItemBase):
                     return True
         return False
 
-    def devices_data(self):
-        conform_json_values(self.json, "devices")
-        return self.json.get("devices")
-
     def has_test_been_completed(self, shost, dhost, whattocheck):
         for test in self.all_tests():
             if (
