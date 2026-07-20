@@ -591,7 +591,7 @@ class Parser:
         if not dev_obj.serves_dhcp:
             session.print(f"{dev_obj.hostname} can not be a dhcp server")
             return False
-        pastvalue = "false"
+        # pastvalue = "false"
         if value.lower() in ("true", "yes"):
             dev_obj.is_dhcp = True
         else:
