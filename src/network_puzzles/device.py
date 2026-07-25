@@ -1269,7 +1269,9 @@ class Device(ItemBase):
             if pkt.ttl <= 0:
                 if pkt.packettype == "traceroute-request":
                     # We need to bounce a response back
-                    dest = deviceFromIP(packet.justIP(str(pkt.source_ip)))
+                    dest = session.puzzle.device_from_ip(
+                        packet.justIP(str(pkt.source_ip))
+                    )
                     logging.info(
                         f"A traceroute timed out at {self.hostname}.  Making a return packet"
                     )
@@ -1300,7 +1302,7 @@ class Device(ItemBase):
             if pkt.packettype == "ping":
                 # logging.debug(f"Test: Returning packet: {pkt.json}")
                 # logging.debug(f"Returning packet: {pkt.source_ip} - {packet.justIP(str(pkt.source_ip))}")
-                dest = deviceFromIP(packet.justIP(str(pkt.source_ip)))
+                dest = session.puzzle.device_from_ip(packet.justIP(str(pkt.source_ip)))
                 # logging.info(f"A ping came.  Making a return packet going to {dest}")
 
                 # we need to generate a ping response
@@ -1338,7 +1340,7 @@ class Device(ItemBase):
                 pkt.status = "done"
                 pingsrcip = packet.justIP(pkt.destination_ip)
                 srcip = pingdestip = packet.justIP(pkt.source_ip)
-                pingdest = deviceFromIP(pingdestip)
+                pingdest = session.puzzle.device_from_ip(pingdestip)
                 logging.info(f"sourceip is {srcip}")
                 logging.info(f"dest host is {pingdest.get('hostname')}")
                 # logging.debug(f"Showing orig dest as: {pkt.json.get("origPingDest")}")
@@ -1427,7 +1429,7 @@ class Device(ItemBase):
                 else:
                     pingsrcip = packet.justIP(pkt.destination_ip)
                     srcip = pingdestip = packet.justIP(pkt.source_ip)
-                    pingdest = deviceFromIP(pingdestip)
+                    pingdest = session.puzzle.device_from_ip(pingdestip)
                     if pkt.health < 100:
                         logging.info(
                             f"Packet was damaged during transit.  Not complete success: Health={pkt.health}"
@@ -2035,21 +2037,6 @@ def getDeviceNicFromLinkNicRec(linkNicRec):
         return None
     # If we get here, we have the nic record.
     return tNic
-
-
-def deviceFromIP(what):
-    """Return the device, given a name
-    Args: what:int the unique id of the device
-    returns the device matching the id, or None"""
-    # FIXME: This should be a Puzzle method.
-    for oneDevice in session.puzzle.devices:
-        if oneDevice:
-            for oneNic in oneDevice.get("nic"):
-                conform_json_values(oneNic, "interface")
-                for oneInterface in oneNic.get("interface"):
-                    if oneInterface.get("myip").get("ip") == what:
-                        return oneDevice
-    return None
 
 
 def untunnel_packet(pkt, thedevice):
