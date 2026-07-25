@@ -122,6 +122,10 @@ class Nic(ItemBase):
 
     @property
     def endpoint(self):
+        if self.json.get("tunnelendpoint") is None:
+            # Some JSON files have this set as `null`, which translates to
+            # `None`, but we need a dict for GUI use.
+            self.json["tunnelendpoint"] = {"ip": ""}
         return self.tunnel_endpoint.get("ip", "")
 
     @endpoint.setter

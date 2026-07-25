@@ -294,7 +294,7 @@ class Device(ItemBase):
 
     def has_ip(self, ip_str: str) -> bool:
         tocheck = packet.justIP(ip_str)
-        for oneIP in allIPStrings(self.json):
+        for oneIP in self.get_ips():
             if tocheck == packet.justIP(oneIP):
                 logging.debug(f"Device does have the IP: {ip_str}")
                 return True
@@ -657,14 +657,11 @@ class Device(ItemBase):
             for item in self.dhcp_range:
                 session.print(f"  Range: {item['ip']} {item['mask']}-{item['gateway']}")
         session.print(f"gateway: {self.json['gateway']['ip']}")
-        for onestring in allIPStrings(self.json, True, True):
-            session.print(onestring)
-        for onenic in self.nics_data:
-            t_nic = Nic(onenic)
-            if t_nic.type in ("wport", "wlan"):
-                session.print(
-                    f"{t_nic.name} ssid: {t_nic.ssid} key: {t_nic.encryption_key}"
-                )
+        for ip_entry in self.get_ips(True, True):
+            session.print(ip_entry)
+        for nic in self.nics:
+            if nic.type in ("wport", "wlan"):
+                session.print(f"{nic.name} ssid: {nic.ssid} key: {nic.encryption_key}")
 
         # logging.debug(f" showing device routes {len(thedevice.get("route"))} {thedevice.get("route")}")
         for route in self.routes:
@@ -1600,7 +1597,7 @@ class Device(ItemBase):
         logging.debug("Could not find an IP address for the destination.  Oops")
         return None
 
-    def get_ips(self, ignore_loopback=True):
+    def get_ips(self, ignore_loopback=True, append_interface_names=False):
         """
         Return a list of all the ip addresses (IP+subnet) the device has.
         Args:
@@ -1610,14 +1607,6 @@ class Device(ItemBase):
         """
 
         interfacelist = []
-        # srcDevice = src
-        # if "hostname" not in src:
-        #     srcDevice = session.puzzle.device_from_name(src)
-        # if srcDevice is None:
-        #     logging.error("Error: passed in an invalid source to function: sourceIP")
-        #     return None
-        # conform_json_values(srcDevice, "nic")
-        # for onenic in srcDevice.get("nic"):
         for nic in self.nics:
             # Pull out all the nic interfaces
             for interface in nic.interfaces:
@@ -1625,13 +1614,14 @@ class Device(ItemBase):
                 if interface.nicname == "lo0" and ignore_loopback:
                     # skip this interface if we are told to do so
                     continue
+                list_entry = interface.ipaddress
+                if append_interface_names:
+                    list_entry = f"{interface.nicname} {list_entry}"
+                    if nic.type == "vpn":
+                        list_entry = f"{list_entry} key: {nic.encryption_key} endpoint: {nic.endpoint}"
+                    interfacelist.append(list_entry)
                 # print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
-                interfacelist.append(
-                    interface.ipaddress
-                    # ipaddress.IPv4Interface(
-                    #     oneinterface["myip"]["ip"] + "/" + oneinterface["myip"]["mask"]
-                    # )
-                )
+                interfacelist.append(list_entry)
         return interfacelist
 
     def make_dhcp_request(self):
@@ -2038,88 +2028,22 @@ def deviceCaptions(deviceRec, howmuch: str):
     returns an array of strings to be printed next to each device
     """
     # FIXME: This should be a Device class method.
+    dev_obj = Device(deviceRec)
     captionstrings = []
     match howmuch:
         # case 'none':
         #
         case "full":
-            captionstrings.append(deviceRec["hostname"])
-            captionstrings.append(allIPStrings(deviceRec), True, True)
+            captionstrings.append(dev_obj.hostname)
+            captionstrings.append(dev_obj.get_ips(True, True))
         case "host":
-            captionstrings.append(deviceRec["hostname"])
+            captionstrings.append(dev_obj.hostname)
         case "host_ip":
-            captionstrings.append(deviceRec["hostname"])
-            captionstrings.append(allIPStrings(deviceRec))
+            captionstrings.append(dev_obj.hostname)
+            captionstrings.append(dev_obj.get_ips())
         case "ip":
-            captionstrings.append(allIPStrings(deviceRec))
+            captionstrings.append(dev_obj.get_ips())
     return captionstrings
-
-
-def allIPStrings(src, ignoreLoopback=True, appendInterfacNames=False):
-    """
-    Return a list of all the ip addresses (IP+subnet) the device has.
-    Args:
-        src:str - the hostname of the device
-        src:device - the device record itself
-        ignoreLoopback:bool=True - whether to ignore the loopback
-        appendInterfacNames:bool=False Add the interface names to the string - used for showing the status
-    Returns:
-        A list of strings (ip+mask)
-    """
-    # FIXME: This should be a Device class method.
-    interfacelist = []
-    srcDevice = src
-    if "hostname" not in src:
-        srcDevice = session.puzzle.device_from_name(src)
-    if srcDevice is None:
-        logging.error("Error: passed in an invalid source to function: sourceIP")
-        return None
-    conform_json_values(srcDevice, "nic")
-    for onenic in srcDevice["nic"]:
-        # Pull out all the nic interfaces
-        conform_json_values(onenic, "interface")
-        if onenic["nictype"][0] == "port" or onenic["nictype"][0] == "wport":
-            # skip this interface if we are told to do so
-            continue
-        for oneinterface in onenic["interface"]:
-            # add it to the list
-            if oneinterface["nicname"] == "lo0" and ignoreLoopback:
-                # skip this interface if we are told to do so
-                continue
-            # print("Making list of ips:" + oneinterface['myip']['ip'] + "/" + oneinterface['myip']['mask'])
-            if appendInterfacNames:
-                if onenic["nictype"][0] == "vpn":
-                    if "encryptionkey" not in onenic or onenic["encryptionkey"] is None:
-                        onenic["encryptionkey"] = ""
-                    if (
-                        "tunnelendpoint" not in onenic
-                        or onenic["tunnelendpoint"] is None
-                    ):
-                        onenic["tunnelendpoint"] = {"ip": ""}
-                    interfacelist.append(
-                        oneinterface["nicname"]
-                        + " "
-                        + oneinterface["myip"]["ip"]
-                        + "/"
-                        + oneinterface["myip"]["mask"]
-                        + " key:"
-                        + onenic["encryptionkey"]
-                        + " endpoint:"
-                        + onenic["tunnelendpoint"]["ip"]
-                    )
-                else:
-                    interfacelist.append(
-                        oneinterface["nicname"]
-                        + " "
-                        + oneinterface["myip"]["ip"]
-                        + "/"
-                        + oneinterface["myip"]["mask"]
-                    )
-            else:
-                interfacelist.append(
-                    oneinterface["myip"]["ip"] + "/" + oneinterface["myip"]["mask"]
-                )
-    return interfacelist
 
 
 def ip_is_broadcast_for_device(deviceRec, ipstr: str):
