@@ -288,9 +288,8 @@ class Device(ItemBase):
         return self.json.get("uniqueidentifier", "")
 
     def disable_nic_dhcp(self):
-        for onenic in self.nics_data:
-            # these come in json format.  Convert to a nic and define it
-            Nic(onenic).uses_dhcp = False
+        for nic in self.nics:
+            nic.uses_dhcp = False
 
     def has_ip(self, ip_str: str) -> bool:
         tocheck = packet.justIP(ip_str)
@@ -360,9 +359,8 @@ class Device(ItemBase):
 
     def get_routes_from_nics(self):
         nic_routes = []
-        for nic in self.nics_data:
-            n = Nic(nic)
-            for interface in n.interfaces:
+        for nic in self.nics:
+            for interface in nic.interfaces:
                 # Use current IP config for gateway.
                 if interface.ip_data.get("gateway") == GENERIC_IP4:
                     interface.ip_data["gateway"] = self.gateway
@@ -430,8 +428,7 @@ class Device(ItemBase):
 
     def _get_wireless_nics_and_links(self):
         nics_and_links = list()
-        for nic_data in self.nics_data:
-            nic = Nic(nic_data)
+        for nic in self.nics:
             if nic.type != "wlan":
                 continue  # We only autoconnect wport ports
             link_data = nic.get_connected_link()
@@ -877,8 +874,7 @@ class Device(ItemBase):
                     ):
                         # logging.debug(f"Can we connect it to: {t_onedevice.hostname}")
                         # Check to see if ssid and key match.  And if so, does it have an empty port to connect to?
-                        for dstnic in t_onedevice.nics_data:
-                            t_dstnic = Nic(dstnic)
+                        for t_dstnic in t_onedevice.nics:
                             # logging.debug(f"Checking out {t_dstnic.type} {t_dstnic.encryption_key} {t_dstnic.ssid}" )
                             if (
                                 t_dstnic.type == "wport"
@@ -1196,9 +1192,8 @@ class Device(ItemBase):
             # session.puzzle.packets.append(packetpayload)
             vpninterface = None
 
-            for onenic in self.nics_data:
-                nic_obj = Nic(onenic)
-                vpninterface = nic_obj.find_local_interface(
+            for nic in self.nics:
+                vpninterface = nic.find_local_interface(
                     packetpayload.json["tdestIP"], True
                 )
                 if vpninterface is not None:
@@ -1206,13 +1201,13 @@ class Device(ItemBase):
             if vpninterface is not None:
                 # we have a VPN interface that is local to the tunneled packet.
                 #  Send the packet down that way
-                if pkt.key == nic_obj.encryption_key:
-                    nic_obj.begin_ingress(packetpayload, self)
+                if pkt.key == nic.encryption_key:
+                    nic.begin_ingress(packetpayload, self)
                     return True
                 else:
                     session.print("Key mismatch.  Cannot decrypt")
                     logging.debug(
-                        f"Key mismatch.  Cannot decrypt: key1 {pkt.key} - key2 {nic_obj.encryption_key}"
+                        f"Key mismatch.  Cannot decrypt: key1 {pkt.key} - key2 {nic.encryption_key}"
                     )
         return False
 
@@ -1912,8 +1907,7 @@ class Device(ItemBase):
                 onlyport = self.json.get("port_arps").get(pkt.destination_mac)
 
         # print("We are forwarding.")
-        for onenic in self.nics_data:
-            device_nic = Nic(onenic)
+        for device_nic in self.nics:
             if (
                 inbound_nic
                 and inbound_nic.uniqueidentifier == device_nic.uniqueidentifier
