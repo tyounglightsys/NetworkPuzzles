@@ -658,7 +658,7 @@ class Parser:
         # Now we create a new DHCP entry.  It looks like: {ip:[ip of nic], mask:[rangestart],gateway:[range-end],type:"dhcp}
         if ethip == "":
             # We need to figure out the IP address of the ethernet belonging to the range
-            localIP = device.sourceIP(dev_obj.json, ipaddress.IPv4Address(startip))
+            localIP = dev_obj.get_source_ip(ipaddress.IPv4Address(startip))
             if localIP is not None and localIP != "":
                 ethip = packet.justIP(localIP)
         if ethip == "":

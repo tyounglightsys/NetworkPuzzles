@@ -345,6 +345,65 @@ class Device(ItemBase):
                 nic_routes.append(interface.ip_data)
         return nic_routes
 
+    def get_source_ip(self, dest_ip, is_broadcast: bool = False):
+        """
+        Find the IP address to use when pinging the destination.  If the address is local, use the local nic.
+        If the address is at a distance, we use the IP address associated with whatever route gets us there.
+        Args:
+            destIP:str - connect to this ip.  Eg: "192.168.1.1"
+        return: an IP address string, or None
+        """
+        # Get all the IPs from this device
+        all_ips = self.get_ips()
+        if len(all_ips) == 0:
+            return None
+
+        # return the IP that has a static route to it (add this later).
+        for route in self.routes_data:
+            staticroute = ipaddress.ip_network(route["ip"] + "/" + route["mask"], False)
+            logging.info(f"We are looking for a static route to: {staticroute}")
+            if dest_ip in staticroute:
+                # We found the route.  But we need to find the IP address that is local to the route
+                routeip = ipaddress.ip_network(
+                    route["gateway"] + "/" + route["mask"], False
+                )
+                logging.info("A static route matched.  Finding the IP for that route")
+                # logging.info(f"looking for {routeip} through routes {allIPs}")
+                for oneip in all_ips:
+                    # oneip=ipaddress.IPv4Interface
+                    if oneip in routeip:
+                        logging.info(
+                            "We found a local interface that worked with the route"
+                        )
+                        logging.debug(oneip.ip)
+                        return oneip
+
+        # return the IP that is local to the dest IP
+        for oneip in all_ips:
+            # oneip=ipaddress.IPv4Interface
+            # logging.debug(f" Creating packet.  Networks {oneip.exploded}")
+            if not is_broadcast and oneip.exploded == "0.0.0.0/0":
+                # logging.debug("Skipped NIC with no IP")
+                continue
+            if dest_ip in oneip.network:
+                logging.info("We found a local network ")
+                logging.debug(oneip.ip)
+                return oneip
+        # if we get here, we do not have a nic that is local to the destination.  Return the nic that the GW is on
+        gw = ipaddress.ip_address(self.gateway)
+        for oneip in all_ips:
+            if gw in oneip.network:
+                # print("The gateway is the way forward ")
+                # print(oneip.ip)
+                return oneip
+
+        # if we do not have a GW, we need to report, "no route to host"
+        logging.info(
+            f"sourceIP Giving 'No Route to host' from {self.hostname} when looking for {dest_ip}"
+        )
+        session.print("No route to host")
+        return None
+
     def _get_wireless_nics_and_links(self):
         nics_and_links = list()
         for nic_data in self.nics_data:
@@ -1442,7 +1501,7 @@ class Device(ItemBase):
         # This is what we are hoping for; make an empty packet.
         nPacket = packet.Packet()
         nPacket.packettype = packettype
-        nPacket.source_ip = sourceIP(self.json, dest, False)
+        nPacket.source_ip = self.get_source_ip(dest, False)
         # The MAC address of the above IP
         nPacket.source_mac = self.arp_lookup(nPacket.source_ip)
         # Figure this out
@@ -1959,6 +2018,7 @@ def deviceFromIP(what):
     """Return the device, given a name
     Args: what:int the unique id of the device
     returns the device matching the id, or None"""
+    # FIXME: This should be a Puzzle method.
     for oneDevice in session.puzzle.devices:
         if oneDevice:
             for oneNic in oneDevice.get("nic"):
@@ -1966,77 +2026,6 @@ def deviceFromIP(what):
                 for oneInterface in oneNic.get("interface"):
                     if oneInterface.get("myip").get("ip") == what:
                         return oneDevice
-    return None
-
-
-def sourceIP(src, dstIP, isBroadcast: bool = False):
-    """
-    Find the IP address to use when pinging the destination.  If the address is local, use the local nic.
-    If the address is at a distance, we use the IP address associated with whatever route gets us there.
-    Args:
-        src:str - use the hostname as the source
-        src:device - use src as the source device
-        destIP:str - connect to this ip.  Eg: "192.168.1.1"
-    return: an IP address string, or None
-    """
-    # FIXME: This should be a Device class method.
-    srcDevice = src
-    if "hostname" not in src:
-        srcDevice = session.puzzle.device_from_name(src)
-    if srcDevice is None:
-        logging.error("Error: passed in an invalid source to function: sourceIP")
-        return None
-    src_dev = Device(srcDevice)
-
-    # Get all the IPs from this device
-    allIPs = src_dev.get_ips()
-    if len(allIPs) == 0:
-        return None
-
-    # return the IP that has a static route to it (add this later).
-    for route in src_dev.routes_data:
-        staticroute = ipaddress.ip_network(route["ip"] + "/" + route["mask"], False)
-        logging.info(f"We are looking for a static route to: {staticroute}")
-        if dstIP in staticroute:
-            # We found the route.  But we need to find the IP address that is local to the route
-            routeip = ipaddress.ip_network(
-                route["gateway"] + "/" + route["mask"], False
-            )
-            logging.info("A static route matched.  Finding the IP for that route")
-            # logging.info(f"looking for {routeip} through routes {allIPs}")
-            for oneip in allIPs:
-                # oneip=ipaddress.IPv4Interface
-                if oneip in routeip:
-                    logging.info(
-                        "We found a local interface that worked with the route"
-                    )
-                    logging.debug(oneip.ip)
-                    return oneip
-
-    # return the IP that is local to the dest IP
-    for oneip in allIPs:
-        # oneip=ipaddress.IPv4Interface
-        # logging.debug(f" Creating packet.  Networks {oneip.exploded}")
-        if not isBroadcast and oneip.exploded == "0.0.0.0/0":
-            # logging.debug("Skipped NIC with no IP")
-            continue
-        if dstIP in oneip.network:
-            logging.info("We found a local network ")
-            logging.debug(oneip.ip)
-            return oneip
-    # if we get here, we do not have a nic that is local to the destination.  Return the nic that the GW is on
-    gw = ipaddress.ip_address(src_dev.gateway)
-    for oneip in allIPs:
-        if gw in oneip.network:
-            # print("The gateway is the way forward ")
-            # print(oneip.ip)
-            return oneip
-
-    # if we do not have a GW, we need to report, "no route to host"
-    logging.info(
-        f"sourceIP Giving 'No Route to host' from {src_dev.hostname} when looking for {dstIP}"
-    )
-    session.print("No route to host")
     return None
 
 
