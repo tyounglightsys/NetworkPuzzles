@@ -122,6 +122,10 @@ class Nic(ItemBase):
 
     @property
     def endpoint(self):
+        if self.json.get("tunnelendpoint") is None:
+            # Some JSON files have this set as `null`, which translates to
+            # `None`, but we need a dict for GUI use.
+            self.json["tunnelendpoint"] = {"ip": ""}
         return self.tunnel_endpoint.get("ip", "")
 
     @endpoint.setter
@@ -301,6 +305,18 @@ class Nic(ItemBase):
                     return one
         # we did not find anything that matched.  Return None
         return None
+
+    def is_broadcast_ip(self, ipstr: str):
+        """Return True if the specified ipstring is a broadcast IP for the specified NIC"""
+        # logging.debug("Checking to see if our nic has broadcast IP")
+        if self.type == "port":
+            return False  # Ports have no IP address
+        # loop through all the interfaces and return any that might be local.
+        for iface in self.interfaces:
+            # logging.debug(f"    Checking {ipstr} with {str(interfaceIP(oneIF))}")
+            if packet.isBroadcast(ipstr, str(iface.ipaddress)):
+                return True
+        return False
 
     def is_connected(self):
         """Connected status of given interface.

@@ -135,7 +135,7 @@ class Puzzle(ItemBase):
         iplist = list()
         for onedevice in self.devices:
             if onedevice:
-                iplist.extend(device.DeviceIPs(onedevice, True))
+                iplist.extend(device.Device(onedevice).get_ips(True))
         return iplist
 
     def commands_from_tests(self, hostname=None):
@@ -310,6 +310,7 @@ class Puzzle(ItemBase):
     def check_local_IP_test(self, shost):
         """Check to see if there is a test we need to check for completion"""
         # logging.debug(f"{shost.get('hostname')=}")
+        allIPList = self.all_puzzle_IPs()
         for test in self.all_tests():
             if test.get("completed"):
                 # only check tests which are not completed
@@ -323,26 +324,26 @@ class Puzzle(ItemBase):
                 # verify we do not have duplicate IPs.
                 # verify that the IP is local to the one on the target device.
                 if test.get("shost") == shost.get("hostname"):
-                    dhost = self.device_from_name(test.get("dhost"))
+                    host_type = "dhost"
                 else:
-                    dhost = self.device_from_name(test.get("shost"))
-                allIPList = self.all_puzzle_IPs()
+                    host_type = "shost"
+                dhost = self.device_from_name(test.get(host_type))
                 if dhost is None:
                     continue
-                dstlist = device.DeviceIPs(dhost, True)
-                srclist = device.DeviceIPs(shost, True)
-                for one_s_ip in srclist:
+                dst_dev = device.Device(dhost)
+                src_dev = device.Device(shost)
+                for src_ip in src_dev.get_ips():
                     # make sure we do not have a duplicate IP
-                    if allIPList.count(one_s_ip) > 1:
+                    if allIPList.count(src_ip) > 1:
                         continue  # There is a duplicate.  It does not count as success.
-                    for one_d_ip in dstlist:
+                    for dst_ip in dst_dev.get_ips():
                         # Now, check to see if the source is in the destination network
-                        if one_d_ip != one_s_ip and one_s_ip in one_d_ip.network:
+                        if dst_ip != src_ip and src_ip in dst_ip.network:
                             # It is true.
                             test["completed"] = True
                             test["acknowledged"] = False
                             test["message"] = (
-                                f"{shost.get('hostname')} has local IP to {dhost.get('hostname')}"
+                                f"{src_dev.hostname} has local IP to {dst_dev.hostname}"
                             )
 
     def is_solved(self):
