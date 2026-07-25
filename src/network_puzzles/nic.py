@@ -306,6 +306,18 @@ class Nic(ItemBase):
         # we did not find anything that matched.  Return None
         return None
 
+    def is_broadcast_ip(self, ipstr: str):
+        """Return True if the specified ipstring is a broadcast IP for the specified NIC"""
+        # logging.debug("Checking to see if our nic has broadcast IP")
+        if self.type == "port":
+            return False  # Ports have no IP address
+        # loop through all the interfaces and return any that might be local.
+        for iface in self.interfaces:
+            # logging.debug(f"    Checking {ipstr} with {str(interfaceIP(oneIF))}")
+            if packet.isBroadcast(ipstr, str(iface.ipaddress)):
+                return True
+        return False
+
     def is_connected(self):
         """Connected status of given interface.
         returns: boolean

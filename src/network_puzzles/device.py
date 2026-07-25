@@ -443,6 +443,15 @@ class Device(ItemBase):
             nics_and_links.append({"nic": nic, "link": tlink})
         return nics_and_links
 
+    def is_broadcast_ip(self, ipstr: str):
+        """Return True if the specified ipstring is a broadcast IP for any of the interfaces defined on the device"""
+        for nic in self.nics:
+            # logging.debug(f"    Checking {onenic} {ipstr}")
+            if nic.is_broadcast_ip(ipstr):
+                # logging.debug("    SUCCESS! It is a broadcast!")
+                return True
+        return False
+
     def mac_list(self):
         """
         Return a list of all the MAC addresses of all the nics on the device
@@ -1529,7 +1538,7 @@ class Device(ItemBase):
         nPacket.destination_ip = dest  # this should now be the IP
         # If the IP is local, we use the MAC of the host. Otherwise it is the MAC of the gateway,
         nPacket.destination_mac = globalArpLookup(dest)
-        if ip_is_broadcast_for_device(self.json, dest):
+        if self.is_broadcast_ip(dest):
             # It is a broadcast, use the broadcast MAC
             logging.debug("It is a broadcast, using broadcast MAC")
             nPacket.destination_mac = BROADCAST_MAC
@@ -2041,36 +2050,6 @@ def deviceFromIP(what):
                     if oneInterface.get("myip").get("ip") == what:
                         return oneDevice
     return None
-
-
-def ip_is_broadcast_for_device(deviceRec, ipstr: str):
-    """Return True if the specified ipstring is a broadcast IP for any of the interfaces defined on the device"""
-    # FIXME: This should be a Device class method.
-    # logging.debug("Checking to see if our device has a broadcast IP")
-    conform_json_values(deviceRec, "nic")
-    for onenic in deviceRec["nic"]:
-        # logging.debug(f"    Checking {onenic} {ipstr}")
-        nic = Nic(onenic)
-        if ip_is_broadcast_for_nic(nic, ipstr):
-            # logging.debug("    SUCCESS! It is a broadcast!")
-            return True
-    return False
-
-
-def ip_is_broadcast_for_nic(nic, ipstr: str):
-    """Return True if the specified ipstring is a broadcast IP for the specified NIC"""
-    # FIXME: This should be a Nic class method.
-    # logging.debug("Checking to see if our nic has broadcast IP")
-    if nic is None:
-        return False
-    if nic.type == "port":
-        return False  # Ports have no IP address
-    # loop through all the interfaces and return any that might be local.
-    for iface in nic.interfaces:
-        # logging.debug(f"    Checking {ipstr} with {str(interfaceIP(oneIF))}")
-        if packet.isBroadcast(ipstr, str(iface.ipaddress)):
-            return True
-    return False
 
 
 def untunnel_packet(pkt, thedevice):
