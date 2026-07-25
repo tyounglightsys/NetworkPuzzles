@@ -316,6 +316,30 @@ class Device(ItemBase):
                 tests.append(t)
         return tests
 
+    def get_captions(self, howmuch: str):
+        """
+        return a list of strings, giving information about this device.
+        Args:
+            deviceRec - a device record.  pc0, laptop0, etc.
+            howmuch:str - one of: 'none', 'full', 'host','host_ip','ip'
+        returns an array of strings to be printed next to each device
+        """
+        captions = []
+        match howmuch:
+            # case 'none':
+            #
+            case "full":
+                captions.append(self.hostname)
+                captions.append(self.get_ips(True, True))
+            case "host":
+                captions.append(self.hostname)
+            case "host_ip":
+                captions.append(self.hostname)
+                captions.append(self.get_ips())
+            case "ip":
+                captions.append(self.get_ips())
+        return captions
+
     def get_nics_local_to(self, ip_address):
         logging.debug(f"Dev: {ip_address=}")
         nics = []
@@ -2017,33 +2041,6 @@ def deviceFromIP(what):
                     if oneInterface.get("myip").get("ip") == what:
                         return oneDevice
     return None
-
-
-def deviceCaptions(deviceRec, howmuch: str):
-    """
-    return a list of strings, giving information about this device.
-    Args:
-        deviceRec - a device record.  pc0, laptop0, etc.
-        howmuch:str - one of: 'none', 'full', 'host','host_ip','ip'
-    returns an array of strings to be printed next to each device
-    """
-    # FIXME: This should be a Device class method.
-    dev_obj = Device(deviceRec)
-    captionstrings = []
-    match howmuch:
-        # case 'none':
-        #
-        case "full":
-            captionstrings.append(dev_obj.hostname)
-            captionstrings.append(dev_obj.get_ips(True, True))
-        case "host":
-            captionstrings.append(dev_obj.hostname)
-        case "host_ip":
-            captionstrings.append(dev_obj.hostname)
-            captionstrings.append(dev_obj.get_ips())
-        case "ip":
-            captionstrings.append(dev_obj.get_ips())
-    return captionstrings
 
 
 def ip_is_broadcast_for_device(deviceRec, ipstr: str):
