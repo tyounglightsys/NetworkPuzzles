@@ -1,4 +1,5 @@
 from kivy.properties import BooleanProperty
+from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.label import Label
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 
@@ -11,8 +12,18 @@ class ThemedLabel(Label):
         return session.app
 
 
-class CheckBoxLabel(ThemedLabel):
-    pass
+class CheckBoxLabel(ButtonBehavior, ThemedLabel):
+    @property
+    def checkbox(self):
+        for sibling in self.parent.children:
+            if hasattr(sibling, "active"):
+                return sibling
+
+    def on_press(self):
+        """Toggle sibling checkbox, if found."""
+        cb = self.checkbox
+        if cb:
+            cb._do_press()
 
 
 class DeviceLabel(ThemedLabel):
