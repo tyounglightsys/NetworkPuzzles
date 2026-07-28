@@ -1825,10 +1825,9 @@ class Device(ItemBase):
             if route_nic.type == "vpn":
                 logging.debug("  Using VPN")
                 # We are going out a VPN. Generate a new packet, with the current packet being the payload.
-                VPN(
-                    self.json,
-                    route_nic.json["tunnelendpoint"]["ip"],
-                    route_nic.json["encryptionkey"],
+                self._send_out_vpn(
+                    route_nic.json.get("tunnelendpoint").get("ip"),
+                    route_nic.json.get("encryptionkey"),
                     pkt,
                 )
                 return False  # At this point in time, the packet is "tunneled" and we have a new packet to worry about.  All done for now.
@@ -1954,6 +1953,29 @@ class Device(ItemBase):
         if not self.routes_packets:
             pkt.status = "done"
             return True
+
+    def _send_out_vpn(self, dest, key, pkt):
+    # def VPN(src, dest, key, opacket):
+        """Generate a VPN packet, starting at the srcdevice and destined for the destination device
+        Args:
+            dest:dstDevice (also works with a hostname)
+            key:the encryption key; must be the same at both ends of the VPN
+            packet:the packet being tunneled
+        """
+        nPacket = self.create_packet(dest, "tunnel")
+        if nPacket is None:
+            # The problem should have been logged and the user informed in the
+            # self.create_packet method; fail silently.
+            # logging.error("Failed to create Ping packet.")
+            return
+        nPacket.payload = pkt
+        nPacket.key = key
+        nPacket.json["origPingDest"] = dest
+
+        pkt.status = "tunneled"  # we will change this back to good when we un-tunnel the packet later on
+
+        self.send_packet(nPacket)
+        nPacket.add_to_packet_list()
 
     # Generic functions
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict | None:
@@ -2140,32 +2162,6 @@ def traceroute(src, dest, newTTL=1):
     logging.info(
         f"Starting traceroute packet from {srchost.hostname} to {desthost.hostname}"
     )
-    Device(src).send_packet(nPacket)
-    nPacket.add_to_packet_list()
-
-
-def VPN(src, dest, key, opacket):
-    """Generate a VPN packet, starting at the srcdevice and destined for the destination device
-    Args:
-        src:srcDevice (also works with a hostname)
-        dest:dstDevice (also works with a hostname)
-        key:the encryption key; must be the same at both ends of the VPN
-        packet:the packet being tunneled
-    """
-    nPacket = packetFromTo(src, dest, "tunnel")
-    if nPacket is None:
-        # The problem should have been logged and the user informed in the
-        # packetFromTo function; fail silently.
-        # logging.error("Failed to create Ping packet.")
-        return
-    # nPacket.packettype = "tunnel"
-    nPacket.justcreated = True
-    nPacket.payload = opacket
-    nPacket.key = key
-    nPacket.json["origPingDest"] = dest
-
-    opacket.status = "tunneled"  # we will change this back to good when we un-tunnel the packet later on
-
     Device(src).send_packet(nPacket)
     nPacket.add_to_packet_list()
 
