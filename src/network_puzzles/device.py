@@ -1760,7 +1760,7 @@ class Device(ItemBase):
                 f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {pkt.source_mac}"
             )
 
-    def send_packet(self, pkt, inbound_nic=None, nic_out=None):
+    def send_packet(self, pkt, inbound_nic=None, outbound_nic=None):
         """Send the packet out of the device."""
 
         # Ensure Packet object.
@@ -1783,9 +1783,9 @@ class Device(ItemBase):
 
         # Determine outbound link.
         destlink = None
-        if nic_out is not None:
+        if outbound_nic is not None:
             # We have a specific NIC we are sending this out.
-            destlink = Nic(nic_out).get_connected_link()
+            destlink = Nic(outbound_nic).get_connected_link()
 
         # set the source MAC address on the packet as from the nic
         if destlink is None:
