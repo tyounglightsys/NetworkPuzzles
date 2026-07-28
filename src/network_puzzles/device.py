@@ -1523,8 +1523,9 @@ class Device(ItemBase):
             dest = ipaddress.IPv4Address(dest)
         if packet.isEmpty(dest):
             # This means we were unable to figure out the dest.  No such host, or something
-            logging.info(f"Error: Not a valid target: {dest}")
-            session.print(f"Not a valid target: {dest}")
+            msg = f"Not a valid target: {dest}"
+            logging.error(msg)
+            session.print(msg)
             return None
 
         logging.debug(f"Creating packet from {self.hostname} to {dest}")
@@ -1543,6 +1544,9 @@ class Device(ItemBase):
             logging.debug("It is a broadcast, using broadcast MAC")
             nPacket.destination_mac = BROADCAST_MAC
         if nPacket.destination_mac is None:
+            msg = f"No route to host: {dest}"
+            logging.error(msg)
+            session.print(msg)
             return None
         logging.debug(f"Packet created: {nPacket.json}")
         return nPacket
@@ -1965,16 +1969,17 @@ class Device(ItemBase):
             key:the encryption key; must be the same at both ends of the VPN
             packet:the packet being tunneled
         """
+        logging.debug(f"Sending packet to VPN connection: {pkt}")
         nPacket = self.create_packet(dest, "tunnel")
         if nPacket is None:
+            # Kill original packet.
+            pkt.status = "done"
             # The problem should have been logged and the user informed in the
             # self.create_packet method; fail silently.
-            # logging.error("Failed to create Ping packet.")
             return
         nPacket.payload = pkt
         nPacket.key = key
         nPacket.json["origPingDest"] = dest
-
         pkt.status = "tunneled"  # we will change this back to good when we un-tunnel the packet later on
 
         self.send_packet(nPacket)
@@ -2098,7 +2103,6 @@ def ping(src, dest):
     if nPacket is None:
         # The problem should have been logged and the user informed in the
         # Device.create_packet method; fail silently.
-        # logging.error("Failed to create Ping packet.")
         return
     nPacket.json["origPingDest"] = dest
     src_obj.send_packet(nPacket)
