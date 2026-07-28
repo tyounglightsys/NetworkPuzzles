@@ -2068,10 +2068,10 @@ def untunnel_packet(pkt, thedevice):
         return False
 
 
-def ensureHostRec(item):
-    """Return a device from either a hostname or a device
-    Args: item: string or device
-    returns: a device structure"""
+def ensureDeviceObj(item):
+    """Return a `Device` object from either a hostname or device JSON data.
+    Args: item: string or JSON data
+    returns: a `Device` object"""
     newitem = item
     if "hostname" not in item:
         # The function is being improperly used. Can we fix it?
@@ -2079,7 +2079,7 @@ def ensureHostRec(item):
         if newitem is None:
             # we were unable to fix it.  Complain bitterly
             logging.error(
-                "Error: invalid source passed to ensureHostRec.  item must be a device."
+                "Error: invalid source passed to ensureDeviceObj.  item must be a device."
             )
             return None
     return Device(newitem)
@@ -2101,44 +2101,21 @@ def ensureHostname(item):
     return hostname
 
 
-def packetFromTo(src, dest, packettype: str):
-    """Generate a packet, starting at the srcdevice and destined for the destination device
-    Args:
-        src:srcDevice (also works with a hostname)
-        dest:dstDevice (also works with a hostname)
-    """
-    # logging.debug(f"starting a packet from {src} to {dest}")
-    if src is None:
-        # the function is being improperly used
-        logging.error(
-            "packetFromTo function must have a valid device as src.  None was passed in."
-        )
-        return None
-    elif isinstance(src, str):
-        # Assume a hostname was passed.
-        src = session.puzzle.device_from_name(src)
-
-    if isinstance(src, dict):
-        return Device(src).create_packet(dest, packettype)
-    else:
-        logging.error("Invalid source passed to packetFromTo.  src must be a device.")
-        return None
-
-
 def ping(src, dest):
     """Generate a ping packet, starting at the srcdevice and destined for the destination device
     Args:
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
     """
-    nPacket = packetFromTo(src, dest, "ping")
+    src_obj = ensureDeviceObj(src)
+    nPacket = src_obj.create_packet(dest, "ping")
     if nPacket is None:
         # The problem should have been logged and the user informed in the
-        # packetFromTo function; fail silently.
+        # Device.create_packet method; fail silently.
         # logging.error("Failed to create Ping packet.")
         return
     nPacket.json["origPingDest"] = dest
-    Device(src).send_packet(nPacket)
+    src_obj.send_packet(nPacket)
     nPacket.add_to_packet_list()
 
 
@@ -2148,21 +2125,21 @@ def traceroute(src, dest, newTTL=1):
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
     """
-    srchost = ensureHostRec(src)
-    desthost = ensureHostRec(dest)
-    nPacket = packetFromTo(src, dest, "traceroute-request")
+    src_obj = ensureDeviceObj(src)
+    dest_obj = ensureDeviceObj(dest)
+    nPacket = src_obj.create_packet(dest_obj.json, "traceroute-request")
     nPacket.ttl = newTTL  # This is the secret to the traceroute.
     nPacket.payload = {
         "origTTL": newTTL,  # We will increase this as we go out.
-        "origSHostname": srchost.hostname,
+        "origSHostname": src_obj.hostname,
         "origSourceIP": nPacket.source_ip,
-        "origDHostname": desthost.hostname,
+        "origDHostname": dest_obj.hostname,
         "origDestIP": nPacket.destination_ip,
     }
     logging.info(
-        f"Starting traceroute packet from {srchost.hostname} to {desthost.hostname}"
+        f"Starting traceroute packet from {src_obj.hostname} to {dest_obj.hostname}"
     )
-    Device(src).send_packet(nPacket)
+    src_obj.send_packet(nPacket)
     nPacket.add_to_packet_list()
 
 
