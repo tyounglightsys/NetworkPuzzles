@@ -36,7 +36,7 @@ class Packet(ItemBase):
         "status": "good",
         "statusmessage": "",
         "payload": "",
-        "justcreated": False,
+        "justcreated": True,
         "key": "",  # encryption key; used for VPNs
         "packetlocation": "",  # where the packet is.  Should almost always be a link name
         "packetDirection": 0,  # Which direction are we going on a network link.  1=src to dest, 2=dest to src

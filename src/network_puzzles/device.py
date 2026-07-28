@@ -2111,8 +2111,6 @@ def ping(src, dest):
         # packetFromTo function; fail silently.
         # logging.error("Failed to create Ping packet.")
         return
-    # nPacket.packettype = "ping"
-    nPacket.justcreated = True
     nPacket.json["origPingDest"] = dest
     Device(src).send_packet(nPacket)
     nPacket.add_to_packet_list()
@@ -2127,8 +2125,6 @@ def traceroute(src, dest, newTTL=1):
     srchost = ensureHostRec(src)
     desthost = ensureHostRec(dest)
     nPacket = packetFromTo(src, dest, "traceroute-request")
-    # nPacket.packettype = "traceroute-request"
-    nPacket.justcreated = True
     nPacket.ttl = newTTL  # This is the secret to the traceroute.
     nPacket.payload = {
         "origTTL": newTTL,  # We will increase this as we go out.
