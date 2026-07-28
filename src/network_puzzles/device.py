@@ -1987,6 +1987,7 @@ def globalArpLookup(ip):
     Returns:
         The MAC address corresponding to the IP as a string or None.
     """
+    logging.debug(f"Looking up '{ip}' in global ARP.")
     buildGlobalMACList()
     if isinstance(ip, str):
         if ip == "0.0.0.0":
@@ -1996,10 +1997,13 @@ def globalArpLookup(ip):
     else:
         if packet.isEmpty(str(ip)):
             return None  # Never find a mac for this.  Possible many devices would match and it it not a valid IP
+    logging.debug(f"IP converted to {ip}")
     for oneMac in session.maclist:
         # print ("globalARP: comparing: " + packet.justIP(oneMac['ip']) + " to " + packet.justIP(ip))
         if packet.justIP(oneMac["ip"]) == packet.justIP(ip):
+            logging.debug(f"Found matching MAC: {oneMac}")
             return oneMac["mac"]
+    logging.info(f"No MAC found for {ip}")
     return None
 
 
