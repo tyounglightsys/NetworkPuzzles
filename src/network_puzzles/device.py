@@ -28,6 +28,9 @@ class Device(ItemBase):
                 json_data = session.puzzle.device_from_name(value)
             elif isinstance(value, dict):
                 json_data = value
+            elif isinstance(value, Device):
+                # Already a Device object!
+                return value
             else:
                 raise ValueError(
                     f"Not a valid uniqueidentifier, hostname, or JSON data: {value}"
@@ -2068,23 +2071,6 @@ def untunnel_packet(pkt, thedevice):
         return False
 
 
-def ensureDeviceObj(item):
-    """Return a `Device` object from either a hostname or device JSON data.
-    Args: item: string or JSON data
-    returns: a `Device` object"""
-    newitem = item
-    if "hostname" not in item:
-        # The function is being improperly used. Can we fix it?
-        newitem = session.puzzle.device_from_name(item)
-        if newitem is None:
-            # we were unable to fix it.  Complain bitterly
-            logging.error(
-                "Error: invalid source passed to ensureDeviceObj.  item must be a device."
-            )
-            return None
-    return Device(newitem)
-
-
 def ensureHostname(item):
     """Return a hostname from either a hostname or a device
     Args: item: string or device
@@ -2107,7 +2093,7 @@ def ping(src, dest):
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
     """
-    src_obj = ensureDeviceObj(src)
+    src_obj = Device(src)
     nPacket = src_obj.create_packet(dest, "ping")
     if nPacket is None:
         # The problem should have been logged and the user informed in the
@@ -2125,8 +2111,8 @@ def traceroute(src, dest, newTTL=1):
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
     """
-    src_obj = ensureDeviceObj(src)
-    dest_obj = ensureDeviceObj(dest)
+    src_obj = Device(src)
+    dest_obj = Device(dest)
     nPacket = src_obj.create_packet(dest_obj.json, "traceroute-request")
     nPacket.ttl = newTTL  # This is the secret to the traceroute.
     nPacket.payload = {
