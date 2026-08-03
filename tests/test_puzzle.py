@@ -1,7 +1,7 @@
 import json
 import unittest
 
-from network_puzzles import device, nic, puzzle, session, ui
+from network_puzzles import device, puzzle, session, ui
 
 from . import PUZZLES_DIR
 
