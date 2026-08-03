@@ -330,7 +330,7 @@ class Nic(ItemBase):
             if (
                 self.my_id.hostname == link.src and self.name == link.src_nic.nic_name
             ):  # NIC used as link src
-                return link.linktype == "broken"
+                return link.linktype != "broken"
 
             if (
                 self.my_id.hostname == link.dest and self.name == link.dest_nic.nic_name
