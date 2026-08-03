@@ -28,9 +28,6 @@ class Device(ItemBase):
                 json_data = session.puzzle.device_from_name(value)
             elif isinstance(value, dict):
                 json_data = value
-            elif isinstance(value, Device):
-                # Already a Device object!
-                return value
             else:
                 raise ValueError(
                     f"Not a valid uniqueidentifier, hostname, or JSON data: {value}"
@@ -2098,7 +2095,10 @@ def ping(src, dest):
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
     """
-    src_obj = Device(src)
+    if isinstance(src, Device):
+        src_obj = src
+    else:
+        src_obj = Device(src)
     nPacket = src_obj.create_packet(dest, "ping")
     if nPacket is None:
         # The problem should have been logged and the user informed in the
@@ -2115,8 +2115,16 @@ def traceroute(src, dest, newTTL=1):
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
     """
-    src_obj = Device(src)
-    dest_obj = Device(dest)
+    if isinstance(src, Device):
+        src_obj = src
+    else:
+        src_obj = Device(src)
+
+    if isinstance(dest, Device):
+        dest_obj = dest
+    else:
+        dest_obj = Device(dest)
+
     nPacket = src_obj.create_packet(dest_obj.json, "traceroute-request")
     nPacket.ttl = newTTL  # This is the secret to the traceroute.
     nPacket.payload = {
