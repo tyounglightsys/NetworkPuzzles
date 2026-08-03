@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # buildozer setup shared at https://stackoverflow.com/a/78946735
       # Install dependencies
@@ -71,7 +71,7 @@ jobs:
 
       # Set up Python
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12" #set your python version
 
