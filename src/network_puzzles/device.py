@@ -1970,7 +1970,7 @@ class Device(ItemBase):
         nPacket = self.create_packet(dest, "tunnel")
         if nPacket is None:
             # Kill original packet.
-            pkt.status = "done"
+            pkt.status = "failed"
             # The problem should have been logged and the user informed in the
             # self.create_packet method; fail silently.
             return
