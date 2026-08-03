@@ -37,5 +37,6 @@ builtins = ["_"]
 quote-style = "preserve"
 
 [tool.ruff.lint.per-file-ignores]
+"src/network_puzzles/*" = ["LOG015"]
 "__init__.py" = ["E402"]
 "pyinstaller*.spec" = ["F821"]

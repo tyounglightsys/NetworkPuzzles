@@ -59,12 +59,11 @@ class Parser:
             )
             return
         # We will make this a lot more interesting later.  For now, just do a very simple thing
-        if command is not None:
-            if command.startswith("#") or len(command) == 0:
-                # Ignore empty commands and comments; usually coming from the
-                # testing files.
-                logging.info("Ignoring non-command.")
-                return
+        if command is not None and command.startswith("#") or len(command) == 0:
+            # Ignore empty commands and comments; usually coming from the
+            # testing files.
+            logging.info("Ignoring non-command.")
+            return
         logging.debug(f"{command=}")
 
         previous_state_json = None
@@ -143,13 +142,13 @@ class Parser:
         if (
             fromuser
             and previous_state_json is not None
-            and not session.puzzle.json == previous_state_json
+            and session.puzzle.json != previous_state_json
         ):
             if command not in ["undo", "redo", "show"]:
                 # something changed.  We want to stash an undo
                 session.store_undo(command, previous_state_json)
                 # zero out the redo if we have done anything except an undo/redo
-                session.redolist = list()
+                session.redolist = []
 
             # we only need to do this if something changed.
             # after we do anything, rebuild network wires if needed.
@@ -966,11 +965,5 @@ class Parser:
                 self.set_position_value(dev_obj, *values)
             case _:
                 # Set IP address of NIC, where nicname == prop.
-                if (
-                    prop.startswith("eth")
-                    or prop.startswith("wan")
-                    or prop.startswith("vpn")
-                    or prop.startswith("wlan")
-                    or prop.startswith("management")
-                ):
+                if prop.startswith(("eth", "management", "vpn", "wan", "wlan")):
                     self.set_ip_value(dev_obj, prop, values[0], fromuser)

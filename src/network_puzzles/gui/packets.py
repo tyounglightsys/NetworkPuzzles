@@ -6,15 +6,15 @@ from ..packet import Packet
 
 
 class GuiPacket(Widget):
-    COLORS = {
-        "dhcp": (237 / 255, 51 / 255, 59 / 255),  # red:#ED333B
-        "none": (0.5, 0.5, 0.5),  # gray
-        "ping": (98 / 255, 160 / 255, 234 / 255),  # blue:#62A0EA
-        "traceroute": (192 / 255, 191 / 255, 188 / 255),  # white:#C0BFBC
-        "tunnel": (246 / 255, 211 / 255, 45 / 255),  # yellow:#F8E45C -> #F6D32D
-    }
 
     def __init__(self, base_packet=None, **kwargs):
+        self.COLORS = {
+            "dhcp": (237 / 255, 51 / 255, 59 / 255),  # red:#ED333B
+            "none": (0.5, 0.5, 0.5),  # gray
+            "ping": (98 / 255, 160 / 255, 234 / 255),  # blue:#62A0EA
+            "traceroute": (192 / 255, 191 / 255, 188 / 255),  # white:#C0BFBC
+            "tunnel": (246 / 255, 211 / 255, 45 / 255),  # yellow:#F8E45C -> #F6D32D
+        }
         if isinstance(base_packet, Packet):
             self.base = base_packet
         elif base_packet is None:

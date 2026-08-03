@@ -53,7 +53,7 @@ class Nic(ItemBase):
 
     @property
     def ip_addresses(self):
-        ips = list()
+        ips = []
         for iface in self.interfaces:
             if iface.nicname == self.name:
                 ip_addr = interface.IpAddress(iface.ip_data)
@@ -188,6 +188,8 @@ class Nic(ItemBase):
             # We need to track ARP.  Saying, this MAC address is on this port. Simulates STP (Spanning Tree Protocol)
             if pkt.source_mac not in dev.port_arps:
                 dev.port_arps[pkt.source_mac] = self.name
+            else:
+                pass
 
         # Look better tracking for network loops
         # If the same packet hits the same switch, we determine it is a loop
@@ -328,17 +330,13 @@ class Nic(ItemBase):
             if (
                 self.my_id.hostname == link.src and self.name == link.src_nic.nic_name
             ):  # NIC used as link src
-                if link.linktype == "broken":
-                    return False
-                else:
-                    return True
+                return link.linktype == "broken"
+
             if (
                 self.my_id.hostname == link.dest and self.name == link.dest_nic.nic_name
             ):  # NIC used as link dest
-                if link.linktype == "broken":
-                    return False
-                else:
-                    return True
+                return link.linktype != "broken"
+
         return False
 
     def receive_packet(self, pkt, dev, nic=None):

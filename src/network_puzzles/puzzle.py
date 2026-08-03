@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 # All the functions needed for reading the EduNetwork Puzzle file
 # And getting information from it
 import copy
@@ -91,7 +90,7 @@ class Puzzle(ItemBase):
         elif isinstance(pkt, dict):
             data = pkt
         else:
-            raise ValueError(f"Invalid packet data type: {type(pkt)}")
+            raise TypeError(f"Invalid packet data type: {type(pkt)}")
         # Ensure packet entry exists.
         conform_json_values(self.json, "packet")
         self.json["packet"].append(data)
@@ -132,14 +131,14 @@ class Puzzle(ItemBase):
         return tests
 
     def all_puzzle_IPs(self):
-        iplist = list()
+        iplist = []
         for onedevice in self.devices:
             if onedevice:
                 iplist.extend(device.Device(onedevice).get_ips(True))
         return iplist
 
     def commands_from_tests(self, hostname=None):
-        commands = list()
+        commands = []
         dev_json = self.device_from_name(hostname)
         if dev_json:
             dev = device.Device(dev_json)
@@ -254,10 +253,7 @@ class Puzzle(ItemBase):
                 test.get("shost") == thost.get("hostname")
                 and test.get("thetest") == "DeviceIsFrozen"
             ):
-                if test.get("completed"):
-                    return False
-                else:
-                    return True
+                return not test.get("completed")
         return False
 
     def has_test_been_completed(self, shost, dhost, whattocheck):
@@ -555,8 +551,7 @@ class Puzzle(ItemBase):
     def packets_need_processing(self):
         """Determine if we should continue to loop through packets
         returns True or False"""
-        if len(self.packets) > session.maxpackets:
-            session.maxpackets = len(self.packets)
+        session.maxpackets = max((len(self.packets), session.maxpackets))
         if len(self.packets) > 30:
             if not session.packetstorm:
                 logging.info(f"We started a storm: {len(self.packets)}")
@@ -609,13 +604,13 @@ class Puzzle(ItemBase):
                         # We could not find the record.  This should never happen.  For now, blow up
                         logging.error(f"Bad Link: {current_link}")
                         logging.error(f"Direction = {pkt.direction}")
-                        raise Exception("Could not find the endpoint of the link.")
+                        raise PuzzleException("Could not find the endpoint of the link.")
                     dest_nic = end_nics[1]
                     # We are here. Call a function on the device to start the
                     # packet entering the device.
                     dev_data = session.puzzle.device_from_uid(dest_nic.my_id.host_id)
                     if dev_data is None:
-                        raise Exception(f"Device not found for NIC: {dest_nic.name}")
+                        raise PuzzleException(f"Device not found for NIC: {dest_nic.name}")
                     dst_dev = device.Device(dev_data)
                     logging.debug(f"Packet: Arrived at: {dst_dev.hostname}:{dest_nic}")
                     dst_dev.accept_packet(pkt, dest_nic)
@@ -811,7 +806,7 @@ class Puzzle(ItemBase):
                 "ip": "0.0.0.0",
                 "netmask": "0.0.0.0",
             },
-            "nic": list(),
+            "nic": [],
         }
         if device_type not in ("tree", "fluorescent", "microwave"):
             self.createNIC(newdevice, "lo")
@@ -888,6 +883,8 @@ class Puzzle(ItemBase):
                     # we are not sure if it is a devicename or a port.
                     session.print(f"Could not match: {args[0]}")
                     return False
+                else:
+                    pass
 
         else:
             # get rid of it. if it is none, we use the arg as the dest hostname
@@ -1028,7 +1025,7 @@ class PuzzleTest:
     @acknowledged.setter
     def acknowledged(self, value):
         if not isinstance(value, bool):
-            raise ValueError(f"Must be boolean: {value}")
+            raise TypeError(f"Must be boolean: {value}")
         self.json["acknowledged"] = value
 
     @property
@@ -1038,7 +1035,7 @@ class PuzzleTest:
     @completed.setter
     def completed(self, value):
         if not isinstance(value, bool):
-            raise ValueError(f"Must be boolean: {value}")
+            raise TypeError(f"Must be boolean: {value}")
         self.json["completed"] = value
 
     @property
@@ -1056,6 +1053,10 @@ class PuzzleTest:
     @property
     def shost(self):
         return self.json.get("shost")
+
+
+class PuzzleException(Exception):
+    pass
 
 
 def read_json_file(file_path):
@@ -1083,10 +1084,7 @@ def read_json_file(file_path):
 def matches_filter(name: str, pattern: str | None) -> bool:
     if pattern is None:
         return True
-    elif re.match(pattern, name, re.IGNORECASE):
-        return True
-    else:
-        return False
+    return bool(re.match(pattern, name, re.IGNORECASE))
 
 
 def sort_session_puzzles():
@@ -1110,13 +1108,13 @@ def filter_items(items: list, pattern: str, json_files: bool = False) -> list:
     return filtered_items
 
 
-def listPuzzlesFromDisk(regex_pattern: str = None):
+def listPuzzlesFromDisk(regex_pattern: str | None = None):
     dir = DATA_DIR / "resources" / "puzzles"
     puzzle_names = [f.name for f in dir.iterdir() if f.is_file()]
     return filter_items(puzzle_names, regex_pattern, json_files=True)
 
 
-def listPuzzles(regex_pattern: str = None):
+def listPuzzles(regex_pattern: str | None = None):
     if len(session.puzzlelist) == 0:
         readPuzzle()
     sort_session_puzzles()
@@ -1136,12 +1134,10 @@ def readPuzzle():
             session.puzzlelist.append(oneentry)
             # print("loading: " + one)
         sort_session_puzzles()
-        session.undolist = (
-            list()
-        )  # get rid of undo history; it would not apply to the new puzzle
-        session.redolist = (
-            list()
-        )  # get rid of redo history; it would not apply to the new puzzle
+        # get rid of undo history; it would not apply to the new puzzle
+        session.undolist = []
+        # get rid of redo history; it would not apply to the new puzzle
+        session.redolist = []
 
 
 def choosePuzzleFromName(what: str):
@@ -1179,9 +1175,9 @@ def choosePuzzle(what, filter=None):
             # this means it is a valid filter. Try to use it.
             try:
                 what = filteredList[int(what)]
-            except Exception:
+            except ValueError:
                 # It did not work.  Ignore the filter.
-                1  # This command does nothing.  It allows us to have an exception that does not blow anything up
+                pass
 
     if isinstance(what, int):
         puz = copy.deepcopy(session.puzzlelist[what]["EduNetworkBuilder"]["Network"])
@@ -1191,7 +1187,7 @@ def choosePuzzle(what, filter=None):
             puz = copy.deepcopy(
                 session.puzzlelist[int(what)]["EduNetworkBuilder"]["Network"]
             )
-        except Exception:
+        except ValueError:
             puz = choosePuzzleFromName(what)
     if puz is not None:
         session.print("Loaded: " + puz["name"])

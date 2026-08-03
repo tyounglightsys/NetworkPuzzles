@@ -60,7 +60,7 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
 
     @property
     def links(self):
-        links = list()
+        links = []
         for lnk in self.app.root.ids.layout.links:
             if self.hostname in lnk.hostname:
                 links.append(lnk)
@@ -73,7 +73,7 @@ class GuiDevice(DragBehavior, ThemedBoxLayout, Device):
     @location_locked.setter
     def location_locked(self, value):
         if not isinstance(value, bool):
-            raise ValueError("Value must be a boolean.")
+            raise TypeError("Value must be a boolean.")
         self._location_locked = value
 
     def callback(self, cmd_string):

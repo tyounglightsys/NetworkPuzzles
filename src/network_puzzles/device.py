@@ -37,7 +37,7 @@ class Device(ItemBase):
     @property
     def arp_table(self):
         if self.json.get("maclist") is None:
-            self.json["maclist"] = list()
+            self.json["maclist"] = []
         return self.json.get("maclist")
 
     @property
@@ -85,7 +85,7 @@ class Device(ItemBase):
     @property
     def dhcp_range(self):
         if self.json.get("dhcprange") is None:
-            self.json["dhcprange"] = list()
+            self.json["dhcprange"] = []
         return self.json.get("dhcprange")
 
     @dhcp_range.setter
@@ -155,7 +155,7 @@ class Device(ItemBase):
     @ip_connections.setter
     def ip_connections(self, value):
         if not isinstance(value, list):
-            raise ValueError(
+            raise TypeError(
                 f"Cannot set {self.__class__.__name__}.ip_connections to non-list value: {value}"
             )
         self.json["IPConnections"] = value
@@ -220,7 +220,7 @@ class Device(ItemBase):
     def location(self) -> tuple:
         loc = self.json.get("location")
         if loc:
-            return tuple((int(c) for c in loc.split(",")))
+            return tuple(int(c) for c in loc.split(","))
         raise ValueError(f"Invalid JSON location data for '{self.hostname}'")
 
     @property
@@ -352,7 +352,7 @@ class Device(ItemBase):
 
     def get_nontest_commands(self):
         # Add item-related commands for items not mentioned in tests.
-        commands = list()
+        commands = []
         if not self.powered_on:
             commands.append(f"set {self.hostname} power on")
         return commands
@@ -427,7 +427,7 @@ class Device(ItemBase):
         return None
 
     def _get_wireless_nics_and_links(self):
-        nics_and_links = list()
+        nics_and_links = []
         for nic in self.nics:
             if nic.type != "wlan":
                 continue  # We only autoconnect wport ports
@@ -646,7 +646,7 @@ class Device(ItemBase):
             self.hostname,
             str(target_IP),
             "NeedsRouteToNet",
-            f"{self.hostname} successfully created route to {str(target_IP)}",
+            f"{self.hostname} successfully created route to {target_IP}",
         )
 
         self.routes_data.append(route.json)
@@ -709,9 +709,7 @@ class Device(ItemBase):
     def does_firewall(self):
         """Return `True` if the device does firewalls, `False` if it does not."""
         # If it does not exist at all
-        if self.mytype in ["firewall", "wrouter"]:
-            return True
-        return False
+        return self.mytype in ["firewall", "wrouter"]
 
     @property
     def HasAdvancedFirewall(self):
@@ -1215,7 +1213,7 @@ class Device(ItemBase):
         """When a packet enters a device, coming from an interface and network card.  Here we respond to stuff, route, or switch..."""
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
-            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+            raise TypeError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
         if not self.powered_on:
             pkt.status = "done"
@@ -1223,13 +1221,12 @@ class Device(ItemBase):
             return False
         # We would check if it was frozen.  That is a test, not a status.  We do not have that check yet.
         logging.debug(
-            f"Receiving packet: {str(pkt)} in {self.hostname}:{inbound_nic.name} "
+            f"Receiving packet: {pkt} in {self.hostname}:{inbound_nic.name} "
         )
         # Deal with DHCP.
         # If it is a request and this is a DHCP server, serve an IP back.
         if pkt.packettype == "dhcp-request":
-            if self.serves_dhcp:
-                if self.is_dhcp and self.dhcp_range:
+            if self.serves_dhcp and self.is_dhcp and self.dhcp_range:
                     session.print(f"Arrived at DHCP server: {self.hostname}")
                     self._make_dhcp_response(pkt, inbound_nic)
                     pkt.status = "done"
@@ -1454,12 +1451,14 @@ class Device(ItemBase):
         ) and self.forwards_packets:
             # with a wrouter, we handle this during "SendPacketOutDevice"
             if self.mytype != "wrouter":
-                logging.debug(f"Forwarding packet: {str(pkt)} from {self.hostname}")
+                logging.debug(f"Forwarding packet: {pkt} from {self.hostname}")
                 pkt.status = "good"
                 self._send_out_hubswitch(pkt, inbound_nic)
                 pkt.status = "done"
                 return
             # If it is a wireless router, we might route the packet out the WAN too
+            else:
+                pass
 
         # if the packet is not done and we route, route
         if pkt.status != "done" and self.routes_packets:
@@ -1473,7 +1472,7 @@ class Device(ItemBase):
                     pkt.status = "done"
                     return
 
-                logging.debug(f"Routing packet: {str(pkt)} from {self.hostname}")
+                logging.debug(f"Routing packet: {pkt} from {self.hostname}")
                 self.send_packet(pkt, inbound_nic=inbound_nic)
             else:
                 # if it is a broadcast, the packet stops here.
@@ -1579,18 +1578,17 @@ class Device(ItemBase):
         for oneSip in srcIPs:
             for oneDip in dstIPs:
                 # compare each of them to find one that is local
-                if oneSip in oneDip.network:
-                    if packet.justIP(str(oneDip)) != "0.0.0.0":
-                        # We found a match.  We are looking for the destination.  So we return that
-                        logging.debug(
-                            f"Checking ip addresses.  Comparing {oneSip} to {packet.justIP(str(oneDip))}"
-                        )
-                        tNic = self.nic_from_ip(str(oneSip))
-                        if tNic is not None:
-                            logging.debug(f" nictype  {tNic.get('nictype')[0]}")
-                            if tNic.get("nictype")[0] == "vpn":
-                                continue  # We do not find a machine across the VPN
-                        return oneDip
+                if oneSip in oneDip.network and packet.justIP(str(oneDip)) != "0.0.0.0":
+                    # We found a match.  We are looking for the destination.  So we return that
+                    logging.debug(
+                        f"Checking ip addresses.  Comparing {oneSip} to {packet.justIP(str(oneDip))}"
+                    )
+                    tNic = self.nic_from_ip(str(oneSip))
+                    if tNic is not None:
+                        logging.debug(f" nictype  {tNic.get('nictype')[0]}")
+                        if tNic.get("nictype")[0] == "vpn":
+                            continue  # We do not find a machine across the VPN
+                    return oneDip
         # if we get here, we did not find a match
         logging.debug("No match so far.  Looking to find the local address")
         for oneDip in dstIPs:
@@ -1683,7 +1681,7 @@ class Device(ItemBase):
     def _make_dhcp_response(self, pkt, nic):
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
-            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+            raise TypeError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
         tnic = nic
         if nic.type == "port" or nic.type == "wport":
@@ -1769,7 +1767,7 @@ class Device(ItemBase):
 
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
-            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+            raise TypeError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
         pkt.distance = 0  # always reset this
 
         # determine which interface/nic we are exiting out of - routing
@@ -1808,7 +1806,7 @@ class Device(ItemBase):
                     # We are on a local link.  Set the destmac to be the mac of our destination computer
                     pkt.destination_mac = globalArpLookup(pkt.destination_ip)
                 logging.debug(
-                    f"Using dest mac {pkt.destination_mac} for {str(pkt)} at {self.hostname}"
+                    f"Using dest mac {pkt.destination_mac} for {pkt} at {self.hostname}"
                 )
                 for d in session.puzzle.devices:
                     logging.debug(f"{d.get('hostname')=}; {Device(d).mac_list()}")
@@ -1893,7 +1891,7 @@ class Device(ItemBase):
     def _send_out_hubswitch(self, pkt, inbound_nic=None):
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
-            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+            raise TypeError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
         # Log the anticipated action.
         msg = f"Sending packet out {self.mytype}; {self.hostname}"
@@ -1908,6 +1906,8 @@ class Device(ItemBase):
             if pkt.destination_mac in self.json.get("port_arps", {}):
                 # we just send this out the one port.
                 onlyport = self.json.get("port_arps").get(pkt.destination_mac)
+            else:
+                pass
 
         # print("We are forwarding.")
         for device_nic in self.nics:

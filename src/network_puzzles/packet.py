@@ -23,30 +23,30 @@ PACKET_TYPES = (
 
 
 class Packet(ItemBase):
-    EMPTY_PACKET_JSON = {
-        "packettype": "",
-        "VLANID": 0,  # start on the default vlan
-        "health": 100,  # health.  This will drop as the packet goes too close to things causing interferance
-        "sourceIP": "",
-        "TTL": 32,  # The initial time-to-live.  This is really only needed for traceroute packets
-        "sourceMAC": "",
-        "destIP": "",
-        "destMAC": "",
-        "tdestIP": "",  # If we are going through a router.  Mainly so we know which interface we are supposed to be using
-        "status": "good",
-        "statusmessage": "",
-        "payload": "",
-        "justcreated": True,
-        "key": "",  # encryption key; used for VPNs
-        "packetlocation": "",  # where the packet is.  Should almost always be a link name
-        "packetDirection": 0,  # Which direction are we going on a network link.  1=src to dest, 2=dest to src
-        "packetDistance": 0,  # The % distance the packet has traversed.  This is incremented until it reaches 100%
-    }
 
     def __init__(self, json_data=None):
+        EMPTY_PACKET_JSON = {
+            "packettype": "",
+            "VLANID": 0,  # start on the default vlan
+            "health": 100,  # health.  This will drop as the packet goes too close to things causing interferance
+            "sourceIP": "",
+            "TTL": 32,  # The initial time-to-live.  This is really only needed for traceroute packets
+            "sourceMAC": "",
+            "destIP": "",
+            "destMAC": "",
+            "tdestIP": "",  # If we are going through a router.  Mainly so we know which interface we are supposed to be using
+            "status": "good",
+            "statusmessage": "",
+            "payload": "",
+            "justcreated": True,
+            "key": "",  # encryption key; used for VPNs
+            "packetlocation": "",  # where the packet is.  Should almost always be a link name
+            "packetDirection": 0,  # Which direction are we going on a network link.  1=src to dest, 2=dest to src
+            "packetDistance": 0,  # The % distance the packet has traversed.  This is incremented until it reaches 100%
+        }
         if json_data is None:
             # deepcopy keeps class attribute from being changed.
-            json_data = deepcopy(self.EMPTY_PACKET_JSON)
+            json_data = deepcopy(EMPTY_PACKET_JSON)
             # Seconds since epoc. Failsafe that will kill the packet if too much time has passed
             json_data["starttime"] = int(time.time() * 1000)
         super().__init__(json_data)
@@ -154,7 +154,7 @@ class Packet(ItemBase):
     @packettype.setter
     def packettype(self, value):
         if not isinstance(value, str):
-            raise ValueError(f"Invalid type for `packettype`: {type(value)}")
+            raise TypeError(f"Invalid type for `packettype`: {type(value)}")
         elif value.lower() not in PACKET_TYPES:
             raise ValueError(f"Invalid value for `packettype`: {value}")
         self.json["packettype"] = value.lower()
@@ -166,7 +166,7 @@ class Packet(ItemBase):
     @key.setter
     def key(self, value):
         if not isinstance(value, str):
-            raise ValueError(f"Invalid type for `key`: {type(value)}")
+            raise TypeError(f"Invalid type for `key`: {type(value)}")
         self.json["key"] = value
 
     @property
@@ -176,7 +176,7 @@ class Packet(ItemBase):
     @justcreated.setter
     def justcreated(self, value):
         if not isinstance(value, bool):
-            raise ValueError(f"Invalid type for `justcreated`: {type(value)}")
+            raise TypeError(f"Invalid type for `justcreated`: {type(value)}")
         self.json["justcreated"] = value
 
     @property
@@ -226,7 +226,7 @@ class Packet(ItemBase):
     @status.setter
     def status(self, value):
         if not isinstance(value, str):
-            raise ValueError(f"Invalid type for status: {type(value)}")
+            raise TypeError(f"Invalid type for status: {type(value)}")
         self.json["status"] = value
 
     @property
@@ -274,8 +274,8 @@ class Packet(ItemBase):
 
         devices = self.get_current_link_endpoint_devices()
         if devices is None or not isinstance(devices, tuple):
-            return None
-        src_device, dest_device = devices
+            return
+        src_device, _ = devices
         sx, sy = src_device.location
 
         # List damage-causing devices in puzzle.
@@ -369,7 +369,7 @@ class Packet(ItemBase):
         deltax = (dx - sx) / 100
         deltay = (dy - sy) / 100
 
-        points = list()
+        points = []
         for dist_pct in range(int(self.distance), int(self.distance + tick_pct), 2):
             # Stop at 100% because the packet can only travel 100% of wire.
             if dist_pct > 100:
@@ -508,11 +508,7 @@ def isEmpty(iptocheck: str | ipaddress.IPv4Address):
     if isinstance(iptocheck, str) and justIP(iptocheck) == GENERIC_IP4:
         logging.debug("  Is empty")
         return True
-    if isinstance(iptocheck, ipaddress.IPv4Address) and (
+    return isinstance(iptocheck, ipaddress.IPv4Address) and (
         iptocheck == ipaddress.IPv4Interface(f"{GENERIC_IP4}/0")
         or iptocheck == ipaddress.IPv4Address(GENERIC_IP4)
-    ):
-        # logging.debug("  Is empty")
-        return True
-    # logging.debug("  Not empty")
-    return False
+    )

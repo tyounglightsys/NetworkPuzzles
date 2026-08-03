@@ -51,10 +51,12 @@ class ActionPopupButtons(SingleRowLayout):
 
 class AppTray(ThemedBoxLayout):
     def __init__(
-        self, choices=list(), orientation="horizontal", parent_button=None, **kwargs
+        self, choices=None, orientation="horizontal", parent_button=None, **kwargs
     ):
         super().__init__(**kwargs)
         self.parent_button = parent_button
+        if choices is None:
+            choices = []
         self.choices = choices
         self.buttons = [MenuButton(c) for c in self.choices]
         self.orientation = orientation
@@ -111,8 +113,6 @@ class SelectableRecycleBoxLayout(
     FocusBehavior, LayoutSelectionBehavior, RecycleBoxLayout
 ):
     """Adds selection and focus behaviour to the view."""
-
-    pass
 
 
 class PuzzleLayout(RelativeLayout):
@@ -358,6 +358,8 @@ class PuzzleLayout(RelativeLayout):
                 # widgets can receive it; e.g. so that Device buttons are able
                 # to be "pressed".
                 return super().on_touch_up(touch)
+            else:
+                pass
 
     def remove_item(self, item):
         """Remove widget from layout by widget or item JSON data."""
@@ -367,7 +369,7 @@ class PuzzleLayout(RelativeLayout):
 
         # TODO: Add parser command to also remove widget from puzzle JSON.
         widget = None
-        if isinstance(item, GuiLink) or isinstance(item, GuiDevice):
+        if isinstance(item, (GuiLink, GuiDevice)):
             widget = item
         elif isinstance(item, dict):
             widget = self.get_widget_by_hostname(item.get("hostname"))

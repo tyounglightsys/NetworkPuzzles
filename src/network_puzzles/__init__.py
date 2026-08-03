@@ -43,9 +43,7 @@ argparser.add_argument(
 
 args, unknown_args = argparser.parse_known_args()
 log_level = logging.WARNING
-if "unittest" in sys.argv:
-    log_level = logging.CRITICAL
-elif "-m" in sys.argv:  # CLI invokation
+if "unittest" in sys.argv or "-m" in sys.argv:
     log_level = logging.CRITICAL
 if args.verbose:
     log_level = logging.INFO

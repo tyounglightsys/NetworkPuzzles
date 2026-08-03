@@ -149,8 +149,8 @@ class AppButton(ThemedButton):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.cb = None
-        self.cb_args = list()
-        self.cb_kwargs = dict()
+        self.cb_args = []
+        self.cb_kwargs = {}
 
     def callback(self):
         if callable(self.cb):
@@ -185,8 +185,8 @@ class MenuButton(AppButton):
 
     def _set_callback(self):
         self.cb = self.props.get("cb")
-        self.cb_args = self.props.get("cb_args", list())
-        self.cb_kwargs = self.props.get("cb_kwargs", dict())
+        self.cb_args = self.props.get("cb_args", [])
+        self.cb_kwargs = self.props.get("cb_kwargs", {})
 
     def _set_face(self):
         text = self.props.get("text")
