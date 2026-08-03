@@ -1,19 +1,21 @@
+from copy import deepcopy
+
 from .core import ItemBase
 
 
 class Route(ItemBase):
-    NEW = {
-        "ip": "",
-        "mask": "",
-        "gateway": None,
-        "interface": None,
-        "nic": None,
-        "type": "route",
-    }
 
     def __init__(self, json_data=None, gateway=None, ip=None, netmask=None):
+        NEW = {
+            "ip": "",
+            "mask": "",
+            "gateway": None,
+            "interface": None,
+            "nic": None,
+            "type": "route",
+        }
         if json_data is None:
-            json_data = self.NEW.copy()
+            json_data = deepcopy(NEW)
         super().__init__(json_data)
         if gateway:
             self.gateway = gateway

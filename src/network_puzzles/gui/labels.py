@@ -48,7 +48,7 @@ class SelectableLabel(RecycleDataViewBehavior, ThemedLabel):
     def refresh_view_attrs(self, rv, index, data):
         """Catch and handle the view changes"""
         self.index = index
-        return super(SelectableLabel, self).refresh_view_attrs(rv, index, data)
+        return super().refresh_view_attrs(rv, index, data)
 
     def on_touch_up(self, touch):
         """Add selection on touch up"""

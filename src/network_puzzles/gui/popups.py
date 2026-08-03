@@ -294,7 +294,7 @@ class EditRoutePopup(BaseIpPopup):
     def __init__(self, routes_popup, **kwargs):
         self.routes_popup = routes_popup
         super().__init__(**kwargs)
-        if "ip_address" not in kwargs.keys():
+        if "ip_address" not in kwargs:
             self.old_target_ip = None
             self.old_gateway = None
         else:

@@ -1,6 +1,5 @@
 import logging
 from dataclasses import dataclass
-from typing import Tuple
 
 from kivy.graphics import Color, Ellipse
 from kivy.properties import StringProperty
@@ -115,14 +114,14 @@ class HelpLevel:
 @dataclass
 class Theme:
     name: str
-    fg3: Tuple[float, float, float, float]
-    fg2: Tuple[float, float, float, float]
-    fg1: Tuple[float, float, float, float]
-    neutral: Tuple[float, float, float, float]
-    detail: Tuple[float, float, float, float]
-    bg1: Tuple[float, float, float, float]
-    bg2: Tuple[float, float, float, float]
-    bg3: Tuple[float, float, float, float]
+    fg3: tuple[float, float, float, float]
+    fg2: tuple[float, float, float, float]
+    fg1: tuple[float, float, float, float]
+    neutral: tuple[float, float, float, float]
+    detail: tuple[float, float, float, float]
+    bg1: tuple[float, float, float, float]
+    bg2: tuple[float, float, float, float]
+    bg3: tuple[float, float, float, float]
 
 
 @dataclass
@@ -220,14 +219,10 @@ def pos_to_location(pos, size) -> tuple:
     y = pos[1]
 
     # Limit x and y to non-padded values.
-    if x < PADDING:
-        x = PADDING
-    if x > size[0] - PADDING:
-        x = size[0] - PADDING
-    if y < PADDING:
-        y = PADDING
-    if y > size[1] - PADDING:
-        y = size[1] - PADDING
+    x = max(x, PADDING)
+    x = min(x, size[0] - PADDING)
+    y = max(y, PADDING)
+    y = min(y, size[1] - PADDING)
     # logging.debug(f"Base: limited pos: ({x}, {y})")
 
     # Subtract padding to get pos in effective puzzle area.

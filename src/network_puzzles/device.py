@@ -37,7 +37,7 @@ class Device(ItemBase):
     @property
     def arp_table(self):
         if self.json.get("maclist") is None:
-            self.json["maclist"] = list()
+            self.json["maclist"] = []
         return self.json.get("maclist")
 
     @property
@@ -85,7 +85,7 @@ class Device(ItemBase):
     @property
     def dhcp_range(self):
         if self.json.get("dhcprange") is None:
-            self.json["dhcprange"] = list()
+            self.json["dhcprange"] = []
         return self.json.get("dhcprange")
 
     @dhcp_range.setter
@@ -155,7 +155,7 @@ class Device(ItemBase):
     @ip_connections.setter
     def ip_connections(self, value):
         if not isinstance(value, list):
-            raise ValueError(
+            raise TypeError(
                 f"Cannot set {self.__class__.__name__}.ip_connections to non-list value: {value}"
             )
         self.json["IPConnections"] = value
@@ -220,7 +220,7 @@ class Device(ItemBase):
     def location(self) -> tuple:
         loc = self.json.get("location")
         if loc:
-            return tuple((int(c) for c in loc.split(",")))
+            return tuple(int(c) for c in loc.split(","))
         raise ValueError(f"Invalid JSON location data for '{self.hostname}'")
 
     @property
@@ -352,7 +352,7 @@ class Device(ItemBase):
 
     def get_nontest_commands(self):
         # Add item-related commands for items not mentioned in tests.
-        commands = list()
+        commands = []
         if not self.powered_on:
             commands.append(f"set {self.hostname} power on")
         return commands
@@ -427,7 +427,7 @@ class Device(ItemBase):
         return None
 
     def _get_wireless_nics_and_links(self):
-        nics_and_links = list()
+        nics_and_links = []
         for nic in self.nics:
             if nic.type != "wlan":
                 continue  # We only autoconnect wport ports
@@ -646,7 +646,7 @@ class Device(ItemBase):
             self.hostname,
             str(target_IP),
             "NeedsRouteToNet",
-            f"{self.hostname} successfully created route to {str(target_IP)}",
+            f"{self.hostname} successfully created route to {target_IP}",
         )
 
         self.routes_data.append(route.json)
@@ -709,9 +709,7 @@ class Device(ItemBase):
     def does_firewall(self):
         """Return `True` if the device does firewalls, `False` if it does not."""
         # If it does not exist at all
-        if self.mytype in ["firewall", "wrouter"]:
-            return True
-        return False
+        return self.mytype in ["firewall", "wrouter"]
 
     @property
     def HasAdvancedFirewall(self):
@@ -1215,7 +1213,7 @@ class Device(ItemBase):
         """When a packet enters a device, coming from an interface and network card.  Here we respond to stuff, route, or switch..."""
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
-            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+            raise TypeError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
         if not self.powered_on:
             pkt.status = "done"
@@ -1223,13 +1221,12 @@ class Device(ItemBase):
             return False
         # We would check if it was frozen.  That is a test, not a status.  We do not have that check yet.
         logging.debug(
-            f"Receiving packet: {str(pkt)} in {self.hostname}:{inbound_nic.name} "
+            f"Receiving packet: {pkt} in {self.hostname}:{inbound_nic.name} "
         )
         # Deal with DHCP.
         # If it is a request and this is a DHCP server, serve an IP back.
         if pkt.packettype == "dhcp-request":
-            if self.serves_dhcp:
-                if self.is_dhcp and self.dhcp_range:
+            if self.serves_dhcp and self.is_dhcp and self.dhcp_range:
                     session.print(f"Arrived at DHCP server: {self.hostname}")
                     self._make_dhcp_response(pkt, inbound_nic)
                     pkt.status = "done"
@@ -1454,12 +1451,14 @@ class Device(ItemBase):
         ) and self.forwards_packets:
             # with a wrouter, we handle this during "SendPacketOutDevice"
             if self.mytype != "wrouter":
-                logging.debug(f"Forwarding packet: {str(pkt)} from {self.hostname}")
+                logging.debug(f"Forwarding packet: {pkt} from {self.hostname}")
                 pkt.status = "good"
                 self._send_out_hubswitch(pkt, inbound_nic)
                 pkt.status = "done"
                 return
             # If it is a wireless router, we might route the packet out the WAN too
+            else:
+                pass
 
         # if the packet is not done and we route, route
         if pkt.status != "done" and self.routes_packets:
@@ -1473,7 +1472,7 @@ class Device(ItemBase):
                     pkt.status = "done"
                     return
 
-                logging.debug(f"Routing packet: {str(pkt)} from {self.hostname}")
+                logging.debug(f"Routing packet: {pkt} from {self.hostname}")
                 self.send_packet(pkt, inbound_nic=inbound_nic)
             else:
                 # if it is a broadcast, the packet stops here.
@@ -1520,8 +1519,9 @@ class Device(ItemBase):
             dest = ipaddress.IPv4Address(dest)
         if packet.isEmpty(dest):
             # This means we were unable to figure out the dest.  No such host, or something
-            logging.info(f"Error: Not a valid target: {dest}")
-            session.print(f"Not a valid target: {dest}")
+            msg = f"Not a valid target: {dest}"
+            logging.error(msg)
+            session.print(msg)
             return None
 
         logging.debug(f"Creating packet from {self.hostname} to {dest}")
@@ -1540,6 +1540,9 @@ class Device(ItemBase):
             logging.debug("It is a broadcast, using broadcast MAC")
             nPacket.destination_mac = BROADCAST_MAC
         if nPacket.destination_mac is None:
+            msg = f"No route to host: {dest}"
+            logging.error(msg)
+            session.print(msg)
             return None
         logging.debug(f"Packet created: {nPacket.json}")
         return nPacket
@@ -1575,18 +1578,17 @@ class Device(ItemBase):
         for oneSip in srcIPs:
             for oneDip in dstIPs:
                 # compare each of them to find one that is local
-                if oneSip in oneDip.network:
-                    if packet.justIP(str(oneDip)) != "0.0.0.0":
-                        # We found a match.  We are looking for the destination.  So we return that
-                        logging.debug(
-                            f"Checking ip addresses.  Comparing {oneSip} to {packet.justIP(str(oneDip))}"
-                        )
-                        tNic = self.nic_from_ip(str(oneSip))
-                        if tNic is not None:
-                            logging.debug(f" nictype  {tNic.get('nictype')[0]}")
-                            if tNic.get("nictype")[0] == "vpn":
-                                continue  # We do not find a machine across the VPN
-                        return oneDip
+                if oneSip in oneDip.network and packet.justIP(str(oneDip)) != "0.0.0.0":
+                    # We found a match.  We are looking for the destination.  So we return that
+                    logging.debug(
+                        f"Checking ip addresses.  Comparing {oneSip} to {packet.justIP(str(oneDip))}"
+                    )
+                    tNic = self.nic_from_ip(str(oneSip))
+                    if tNic is not None:
+                        logging.debug(f" nictype  {tNic.get('nictype')[0]}")
+                        if tNic.get("nictype")[0] == "vpn":
+                            continue  # We do not find a machine across the VPN
+                    return oneDip
         # if we get here, we did not find a match
         logging.debug("No match so far.  Looking to find the local address")
         for oneDip in dstIPs:
@@ -1679,7 +1681,7 @@ class Device(ItemBase):
     def _make_dhcp_response(self, pkt, nic):
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
-            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+            raise TypeError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
         tnic = nic
         if nic.type == "port" or nic.type == "wport":
@@ -1760,12 +1762,12 @@ class Device(ItemBase):
                 f"Responding to dhcp request.  Assigned IP: {available_ip} to mac {pkt.source_mac}"
             )
 
-    def send_packet(self, pkt, inbound_nic=None, nic_out=None):
+    def send_packet(self, pkt, inbound_nic=None, outbound_nic=None):
         """Send the packet out of the device."""
 
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
-            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+            raise TypeError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
         pkt.distance = 0  # always reset this
 
         # determine which interface/nic we are exiting out of - routing
@@ -1783,9 +1785,9 @@ class Device(ItemBase):
 
         # Determine outbound link.
         destlink = None
-        if nic_out is not None:
+        if outbound_nic is not None:
             # We have a specific NIC we are sending this out.
-            destlink = Nic(nic_out).get_connected_link()
+            destlink = Nic(outbound_nic).get_connected_link()
 
         # set the source MAC address on the packet as from the nic
         if destlink is None:
@@ -1804,7 +1806,7 @@ class Device(ItemBase):
                     # We are on a local link.  Set the destmac to be the mac of our destination computer
                     pkt.destination_mac = globalArpLookup(pkt.destination_ip)
                 logging.debug(
-                    f"Using dest mac {pkt.destination_mac} for {str(pkt)} at {self.hostname}"
+                    f"Using dest mac {pkt.destination_mac} for {pkt} at {self.hostname}"
                 )
                 for d in session.puzzle.devices:
                     logging.debug(f"{d.get('hostname')=}; {Device(d).mac_list()}")
@@ -1825,10 +1827,9 @@ class Device(ItemBase):
             if route_nic.type == "vpn":
                 logging.debug("  Using VPN")
                 # We are going out a VPN. Generate a new packet, with the current packet being the payload.
-                VPN(
-                    self.json,
-                    route_nic.json["tunnelendpoint"]["ip"],
-                    route_nic.json["encryptionkey"],
+                self._send_out_vpn(
+                    route_nic.json.get("tunnelendpoint").get("ip"),
+                    route_nic.json.get("encryptionkey"),
                     pkt,
                 )
                 return False  # At this point in time, the packet is "tunneled" and we have a new packet to worry about.  All done for now.
@@ -1890,7 +1891,7 @@ class Device(ItemBase):
     def _send_out_hubswitch(self, pkt, inbound_nic=None):
         # Ensure Packet object.
         if not isinstance(pkt, packet.Packet):
-            raise ValueError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
+            raise TypeError(f"packet arg should be `packet.Packet' not '{type(pkt)}'")
 
         # Log the anticipated action.
         msg = f"Sending packet out {self.mytype}; {self.hostname}"
@@ -1905,6 +1906,8 @@ class Device(ItemBase):
             if pkt.destination_mac in self.json.get("port_arps", {}):
                 # we just send this out the one port.
                 onlyport = self.json.get("port_arps").get(pkt.destination_mac)
+            else:
+                pass
 
         # print("We are forwarding.")
         for device_nic in self.nics:
@@ -1955,6 +1958,30 @@ class Device(ItemBase):
             pkt.status = "done"
             return True
 
+    def _send_out_vpn(self, dest, key, pkt):
+    # def VPN(src, dest, key, opacket):
+        """Generate a VPN packet, starting at the srcdevice and destined for the destination device
+        Args:
+            dest:dstDevice (also works with a hostname)
+            key:the encryption key; must be the same at both ends of the VPN
+            packet:the packet being tunneled
+        """
+        logging.debug(f"Sending packet to VPN connection: {pkt}")
+        nPacket = self.create_packet(dest, "tunnel")
+        if nPacket is None:
+            # Kill original packet.
+            pkt.status = "failed"
+            # The problem should have been logged and the user informed in the
+            # self.create_packet method; fail silently.
+            return
+        nPacket.payload = pkt
+        nPacket.key = key
+        nPacket.json["origPingDest"] = dest
+        pkt.status = "tunneled"  # we will change this back to good when we un-tunnel the packet later on
+
+        self.send_packet(nPacket)
+        nPacket.add_to_packet_list()
+
     # Generic functions
     def _item_by_attrib(self, items: list, attrib: str, value: str) -> dict | None:
         # Returns first match; i.e. assumes only one item in list matches given
@@ -1987,6 +2014,7 @@ def globalArpLookup(ip):
     Returns:
         The MAC address corresponding to the IP as a string or None.
     """
+    logging.debug(f"Looking up '{ip}' in global ARP.")
     buildGlobalMACList()
     if isinstance(ip, str):
         if ip == "0.0.0.0":
@@ -1996,10 +2024,13 @@ def globalArpLookup(ip):
     else:
         if packet.isEmpty(str(ip)):
             return None  # Never find a mac for this.  Possible many devices would match and it it not a valid IP
+    logging.debug(f"IP converted to {ip}")
     for oneMac in session.maclist:
         # print ("globalARP: comparing: " + packet.justIP(oneMac['ip']) + " to " + packet.justIP(ip))
         if packet.justIP(oneMac["ip"]) == packet.justIP(ip):
+            logging.debug(f"Found matching MAC: {oneMac}")
             return oneMac["mac"]
+    logging.info(f"No MAC found for {ip}")
     return None
 
 
@@ -2042,23 +2073,6 @@ def untunnel_packet(pkt, thedevice):
         return False
 
 
-def ensureHostRec(item):
-    """Return a device from either a hostname or a device
-    Args: item: string or device
-    returns: a device structure"""
-    newitem = item
-    if "hostname" not in item:
-        # The function is being improperly used. Can we fix it?
-        newitem = session.puzzle.device_from_name(item)
-        if newitem is None:
-            # we were unable to fix it.  Complain bitterly
-            logging.error(
-                "Error: invalid source passed to ensureHostRec.  item must be a device."
-            )
-            return None
-    return Device(newitem)
-
-
 def ensureHostname(item):
     """Return a hostname from either a hostname or a device
     Args: item: string or device
@@ -2075,46 +2089,23 @@ def ensureHostname(item):
     return hostname
 
 
-def packetFromTo(src, dest, packettype: str):
-    """Generate a packet, starting at the srcdevice and destined for the destination device
-    Args:
-        src:srcDevice (also works with a hostname)
-        dest:dstDevice (also works with a hostname)
-    """
-    # logging.debug(f"starting a packet from {src} to {dest}")
-    if src is None:
-        # the function is being improperly used
-        logging.error(
-            "packetFromTo function must have a valid device as src.  None was passed in."
-        )
-        return None
-    elif isinstance(src, str):
-        # Assume a hostname was passed.
-        src = session.puzzle.device_from_name(src)
-
-    if isinstance(src, dict):
-        return Device(src).create_packet(dest, packettype)
-    else:
-        logging.error("Invalid source passed to packetFromTo.  src must be a device.")
-        return None
-
-
 def ping(src, dest):
     """Generate a ping packet, starting at the srcdevice and destined for the destination device
     Args:
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
     """
-    nPacket = packetFromTo(src, dest, "ping")
+    if isinstance(src, Device):
+        src_obj = src
+    else:
+        src_obj = Device(src)
+    nPacket = src_obj.create_packet(dest, "ping")
     if nPacket is None:
         # The problem should have been logged and the user informed in the
-        # packetFromTo function; fail silently.
-        # logging.error("Failed to create Ping packet.")
+        # Device.create_packet method; fail silently.
         return
-    # nPacket.packettype = "ping"
-    nPacket.justcreated = True
     nPacket.json["origPingDest"] = dest
-    Device(src).send_packet(nPacket)
+    src_obj.send_packet(nPacket)
     nPacket.add_to_packet_list()
 
 
@@ -2124,49 +2115,29 @@ def traceroute(src, dest, newTTL=1):
         src:srcDevice (also works with a hostname)
         dest:dstDevice (also works with a hostname)
     """
-    srchost = ensureHostRec(src)
-    desthost = ensureHostRec(dest)
-    nPacket = packetFromTo(src, dest, "traceroute-request")
-    # nPacket.packettype = "traceroute-request"
-    nPacket.justcreated = True
+    if isinstance(src, Device):
+        src_obj = src
+    else:
+        src_obj = Device(src)
+
+    if isinstance(dest, Device):
+        dest_obj = dest
+    else:
+        dest_obj = Device(dest)
+
+    nPacket = src_obj.create_packet(dest_obj.json, "traceroute-request")
     nPacket.ttl = newTTL  # This is the secret to the traceroute.
     nPacket.payload = {
         "origTTL": newTTL,  # We will increase this as we go out.
-        "origSHostname": srchost.hostname,
+        "origSHostname": src_obj.hostname,
         "origSourceIP": nPacket.source_ip,
-        "origDHostname": desthost.hostname,
+        "origDHostname": dest_obj.hostname,
         "origDestIP": nPacket.destination_ip,
     }
     logging.info(
-        f"Starting traceroute packet from {srchost.hostname} to {desthost.hostname}"
+        f"Starting traceroute packet from {src_obj.hostname} to {dest_obj.hostname}"
     )
-    Device(src).send_packet(nPacket)
-    nPacket.add_to_packet_list()
-
-
-def VPN(src, dest, key, opacket):
-    """Generate a VPN packet, starting at the srcdevice and destined for the destination device
-    Args:
-        src:srcDevice (also works with a hostname)
-        dest:dstDevice (also works with a hostname)
-        key:the encryption key; must be the same at both ends of the VPN
-        packet:the packet being tunneled
-    """
-    nPacket = packetFromTo(src, dest, "tunnel")
-    if nPacket is None:
-        # The problem should have been logged and the user informed in the
-        # packetFromTo function; fail silently.
-        # logging.error("Failed to create Ping packet.")
-        return
-    # nPacket.packettype = "tunnel"
-    nPacket.justcreated = True
-    nPacket.payload = opacket
-    nPacket.key = key
-    nPacket.json["origPingDest"] = dest
-
-    opacket.status = "tunneled"  # we will change this back to good when we un-tunnel the packet later on
-
-    Device(src).send_packet(nPacket)
+    src_obj.send_packet(nPacket)
     nPacket.add_to_packet_list()
 
 

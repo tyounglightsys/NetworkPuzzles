@@ -36,7 +36,7 @@ class UI:
         """Used to show terminal output to the user."""
         raise NotImplementedError
 
-    def load_puzzle(self, puzzle_ref, filter: str = None):
+    def load_puzzle(self, puzzle_ref, filter: str | None = None):
         """Set up the UI based on the data in the puzzle file.
         Args:
             puzzle:str - the name of the puzzle itself

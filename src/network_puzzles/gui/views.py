@@ -11,7 +11,7 @@ from ..util import exclude_from_list
 class AppRecView(RecycleView):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self.data = list()
+        self.data = []
         self.selected_item = None
 
     @property

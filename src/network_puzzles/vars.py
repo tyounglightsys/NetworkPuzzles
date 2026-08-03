@@ -72,14 +72,14 @@ class Session:
         self._device_type = None
         self._lang = None
         self.locale = str(locale.getlocale()[0])
-        self.maclist: list = list()
-        self.puzzlelist: list = list()
+        self.maclist: list = []
+        self.puzzlelist: list = []
         self.puzzle = None
         self.packetstorm = False
         self.maxpackets = 0
-        self.history = list()
-        self.undolist = list()
-        self.redolist = list()
+        self.history = []
+        self.undolist = []
+        self.redolist = []
         self.ui = None
         self.startinglevel = ""
         # WirelessReconnectDistance was 80, but that would not reach with Level5_WirelessRepeater.  90 was OK, but 100 made it 'easy'
