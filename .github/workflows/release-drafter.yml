@@ -49,7 +49,7 @@ jobs:
         with:
           prerelease: true
           prerelease-identifier: "rc"
-          version-template: ${{ needs.get-version.outputs.version }}
+          version: ${{ needs.get-version.outputs.version }}
 
   run-tests:
     uses: ./.github/workflows/run-tests.yml
