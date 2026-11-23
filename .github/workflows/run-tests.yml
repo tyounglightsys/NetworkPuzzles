@@ -6,7 +6,9 @@ on:
     branches:
       - main
     paths:
+      - "scripts/**"
       - "src/network_puzzles/**"
+      - "tests/**"
       - "pyproject.toml"
       - "uv.lock"
 
@@ -22,7 +24,9 @@ jobs:
           enable-cache: true
 
       - name: Install project
-        run: uv sync --locked
+        run: |
+          uv sync --locked
+          uv run ./scripts/compile-locales.py
 
       - name: CLI tests
         run: uv run ./scripts/test-puzzles.sh 2>/dev/null

@@ -29,11 +29,9 @@ jobs:
 
       - name: Install project + build tools
         shell: bash
-        run: uv sync --locked --no-editable --group build
-
-      # - name: Ensure localization binaries  # needs gettext binaries
-      #   shell: bash
-      #   run: ./scripts/update-locales.sh mo
+        run: |
+          uv sync --locked --no-editable --group build
+          uv run ./scripts/compile-locales.py
 
       - name: Run EXE PyInstaller
         id: pyinstaller

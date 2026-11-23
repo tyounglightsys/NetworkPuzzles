@@ -28,13 +28,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12" #set your python version
-
-      # # Install pip dependencies
-      # - name: Install pip dependencies
-      #   run: |
-      #     pip install --upgrade pip
-      #     pip install cython==0.29.33 setuptools
+          python-version: "3.12" # set your python version
 
       - name: Install app python package
         run: pip install .
@@ -46,8 +40,8 @@ jobs:
       #     path: .buildozer_global
       #     key: buildozer-global-${{ hashFiles('buildozer.spec') }} # Replace with your path
 
-      # - name: Ensure localization binaries
-      #   run: ./scripts/update-locales.sh mo
+      - name: Ensure localization binaries
+        run: pip install babel && python ./scripts/compile-locales.py
 
       # Build APK
       - name: Build with Buildozer Action

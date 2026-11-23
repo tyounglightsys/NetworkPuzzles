@@ -38,6 +38,12 @@ uv sync
 `.venv` folder, and installs everything listed in `uv.lock`. Re-run `uv sync`
 any time you pull changes — it's fast and safe to run often.
 
+The build translation files (needed for the tests and for French):
+```shell
+uv run ./scripts/compile-locales.py
+```
+Rerun this after pulling changes to any `.po` file.
+
 ### 3. Run things with `uv run`
 
 Put `uv run` in front of any command that needs the project's Python. It always
