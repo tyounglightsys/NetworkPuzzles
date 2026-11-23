@@ -19,10 +19,7 @@ if [[ $1 == po ]]; then
         msgmerge --update --no-fuzzy-matching --backup=off "${locale_dir}/${lang}.po" "$messages_temp"
     done
 elif [[ $1 == mo ]]; then
-    for lang in "en" "fr"; do
-	    mkdir -p "${locale_dir}/${lang}/LC_MESSAGES"
-	    msgfmt -c -o "${locale_dir}/${lang}/LC_MESSAGES/networkpuzzles.mo" "${locale_dir}/${lang}.po"
-    done
+    uv run "${scripts_dir}/compile-locales.py"
 else
     usage
 fi
