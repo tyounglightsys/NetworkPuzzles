@@ -1,5 +1,5 @@
-from . import messages
-from .core import ItemBase
+from network_puzzles import messages
+from network_puzzles.core import ItemBase
 
 
 class NetTest(ItemBase):

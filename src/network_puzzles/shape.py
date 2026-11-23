@@ -1,7 +1,7 @@
 from copy import deepcopy
 
-from . import session
-from .core import ItemBase
+from network_puzzles import session
+from network_puzzles.core import ItemBase
 
 
 class Shape(ItemBase):

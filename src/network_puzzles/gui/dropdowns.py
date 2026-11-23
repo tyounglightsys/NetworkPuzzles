@@ -2,9 +2,9 @@ import logging
 
 from kivy.uix.dropdown import DropDown
 
-from .. import session
-from ..vars import USER_DATA_DIR
-from .popups import AppRestartPopup
+from network_puzzles import session
+from network_puzzles.gui.popups import AppRestartPopup
+from network_puzzles.vars import USER_DATA_DIR
 
 langfile = USER_DATA_DIR / "lang.txt"
 

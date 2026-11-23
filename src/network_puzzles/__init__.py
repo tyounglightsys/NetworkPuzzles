@@ -3,7 +3,7 @@ import gettext
 import logging
 import sys
 
-from .vars import APP_TITLE, DATA_DIR, Session
+from network_puzzles.vars import APP_TITLE, DATA_DIR, Session
 
 __version__ = "0.1"
 

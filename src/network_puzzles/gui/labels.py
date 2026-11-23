@@ -3,7 +3,7 @@ from kivy.uix.behaviors import ButtonBehavior
 from kivy.uix.label import Label
 from kivy.uix.recycleview.views import RecycleDataViewBehavior
 
-from .. import session
+from network_puzzles import session
 
 
 class ThemedLabel(Label):

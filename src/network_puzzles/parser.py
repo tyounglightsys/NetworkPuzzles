@@ -5,8 +5,8 @@ import ipaddress
 import logging
 import sys
 
-from . import device, link, nic, packet, puzzle, session
-from .interface import GENERIC_IP4
+from network_puzzles import device, link, nic, packet, puzzle, session
+from network_puzzles.interface import GENERIC_IP4
 
 
 class Parser:

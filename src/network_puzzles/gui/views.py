@@ -4,8 +4,8 @@ from copy import deepcopy
 
 from kivy.uix.recycleview import RecycleView
 
-from .. import session
-from ..util import exclude_from_list
+from network_puzzles import session
+from network_puzzles.util import exclude_from_list
 
 
 class AppRecView(RecycleView):

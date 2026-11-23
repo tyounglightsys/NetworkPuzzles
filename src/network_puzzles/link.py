@@ -1,5 +1,5 @@
-from . import session
-from .core import ItemBase, get_puzzle_distance
+from network_puzzles import session
+from network_puzzles.core import ItemBase, get_puzzle_distance
 
 
 class EndNic(ItemBase):

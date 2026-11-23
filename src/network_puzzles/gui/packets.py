@@ -2,7 +2,7 @@ import logging
 
 from kivy.uix.widget import Widget
 
-from ..packet import Packet
+from network_puzzles.packet import Packet
 
 
 class GuiPacket(Widget):

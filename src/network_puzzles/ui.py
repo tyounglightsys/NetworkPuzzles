@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from . import parser, puzzle, session
+from network_puzzles import parser, puzzle, session
 
 
 class UI:

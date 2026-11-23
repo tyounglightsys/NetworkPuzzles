@@ -8,11 +8,11 @@ from kivy.uix.recycleboxlayout import RecycleBoxLayout
 from kivy.uix.recycleview.layout import LayoutSelectionBehavior
 from kivy.uix.relativelayout import RelativeLayout
 
-from .. import session
-from .base import NETWORK_ITEMS, DeviceIndicator, pos_to_location
-from .buttons import MenuButton
-from .headless import handle_dp as dp
-from .headless import handle_sp as sp
+from network_puzzles import session
+from network_puzzles.gui.base import NETWORK_ITEMS, DeviceIndicator, pos_to_location
+from network_puzzles.gui.buttons import MenuButton
+from network_puzzles.gui.headless import handle_dp as dp
+from network_puzzles.gui.headless import handle_sp as sp
 
 
 class ThemedBoxLayout(BoxLayout):

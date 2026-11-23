@@ -7,10 +7,10 @@ from kivy.uix.checkbox import CheckBox
 from kivy.uix.slider import Slider
 from kivy.uix.widget import Widget
 
-from .. import session
-from ..vars import DATA_DIR
-from .headless import handle_dp as dp
-from .headless import handle_sp as sp
+from network_puzzles import session
+from network_puzzles.gui.headless import handle_dp as dp
+from network_puzzles.gui.headless import handle_sp as sp
+from network_puzzles.vars import DATA_DIR
 
 # Size limits
 BUTTON_MAX_H = dp(32)
