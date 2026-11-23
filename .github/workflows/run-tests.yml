@@ -7,6 +7,8 @@ on:
       - main
     paths:
       - "src/network_puzzles/**"
+      - "pyproject.toml"
+      - "uv.lock"
 
 jobs:
   run-tests:
@@ -14,17 +16,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Set up Python
-      - name: Set up Python
-        uses: actions/setup-python@v7
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.12" #set your python version
+          enable-cache: true
 
-      - name: Install app python package
-        run: pip install .
+      - name: Install project
+        run: uv sync --locked
 
       - name: CLI tests
-        run: ./scripts/test-puzzles.sh 2>/dev/null
+        run: uv run ./scripts/test-puzzles.sh 2>/dev/null
 
       - name: GUI tests
-        run: ./scripts/run-tests.sh
+        run: uv run ./scripts/run-tests.sh

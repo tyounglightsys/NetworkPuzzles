@@ -19,11 +19,16 @@ dependencies = [
 ]
 dynamic = ["readme", "version"]
 
-[project.optional-dependencies]
+[dependency-groups]
+dev = [
+    "ruff",
+]
 build = [
-    "buildozer",
+    # buildozer only works on Linux/macOS (Android builds); skip on Windows.
+    "buildozer; sys_platform != 'win32'",
     "pyinstaller",
 ]
+
 
 [tool.setuptools.dynamic]
 readme = {file = ["README.md"], content-type = "text/plain"}
