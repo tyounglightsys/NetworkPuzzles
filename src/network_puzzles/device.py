@@ -2,12 +2,21 @@ import ipaddress
 import logging
 from copy import deepcopy
 
-from . import packet, session
-from .core import ItemBase, conform_json_values, get_puzzle_distance
-from .interface import BROADCAST_IP4, BROADCAST_MAC, GENERIC_IP4, Interface
-from .link import Link
-from .nic import Nic
-from .route import Route
+from network_puzzles import packet, session
+from network_puzzles.core import (
+    ItemBase,
+    conform_json_values,
+    get_puzzle_distance,
+)
+from network_puzzles.interface import (
+    BROADCAST_IP4,
+    BROADCAST_MAC,
+    GENERIC_IP4,
+    Interface,
+)
+from network_puzzles.link import Link
+from network_puzzles.nic import Nic
+from network_puzzles.route import Route
 
 
 class Device(ItemBase):

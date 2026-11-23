@@ -2,7 +2,7 @@
 
 import sys
 
-from .ui import CLI
+from network_puzzles.ui import CLI
 
 if __name__ == '__main__':
     try:

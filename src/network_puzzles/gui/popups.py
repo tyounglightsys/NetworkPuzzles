@@ -3,11 +3,11 @@ from copy import deepcopy
 
 from kivy.uix.popup import Popup
 
-from .. import interface, nic, session
-from .inputs import ValueInput
-from .labels import CheckBoxLabel
-from .layouts import SingleRowLayout
-from .views import PuzzlesRecView  # needed by PuzzleChooserPopup #  noqa: F401
+from network_puzzles import interface, nic, session
+from network_puzzles.gui.inputs import ValueInput
+from network_puzzles.gui.labels import CheckBoxLabel
+from network_puzzles.gui.layouts import SingleRowLayout
+from network_puzzles.gui.views import PuzzlesRecView  # needed by PuzzleChooserPopup #  noqa: F401
 
 
 class ThemedPopup(Popup):

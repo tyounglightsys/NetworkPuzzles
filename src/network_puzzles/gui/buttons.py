@@ -5,9 +5,9 @@ from kivy.core.window import Window
 from kivy.properties import StringProperty
 from kivy.uix.button import Button
 
-from .. import session
-from .headless import handle_dp as dp
-from .labels import ToolTip
+from network_puzzles import session
+from network_puzzles.gui.headless import handle_dp as dp
+from network_puzzles.gui.labels import ToolTip
 
 
 class ThemedButton(Button):

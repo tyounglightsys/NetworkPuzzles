@@ -1,9 +1,9 @@
 import logging
 import random
 
-from . import interface, packet, session
-from .core import ItemBase, conform_json_values
-from .link import Link
+from network_puzzles import interface, packet, session
+from network_puzzles.core import ItemBase, conform_json_values
+from network_puzzles.link import Link
 
 
 class Nic(ItemBase):

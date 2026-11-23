@@ -4,11 +4,11 @@ import re
 import time
 from copy import deepcopy
 
-from . import device, session
-from .core import ItemBase, conform_json_values, get_puzzle_distance
-from .interface import BROADCAST_MAC, GENERIC_IP4, IpAddress
-from .link import Link
-from .nic import Nic
+from network_puzzles import device, session
+from network_puzzles.core import ItemBase, conform_json_values, get_puzzle_distance
+from network_puzzles.interface import BROADCAST_MAC, GENERIC_IP4, IpAddress
+from network_puzzles.link import Link
+from network_puzzles.nic import Nic
 
 PACKET_TYPES = (
     "dhcp",

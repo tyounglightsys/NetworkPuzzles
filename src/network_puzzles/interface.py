@@ -1,7 +1,7 @@
 import ipaddress
 from copy import deepcopy
 
-from .core import ItemBase, conform_json_values
+from network_puzzles.core import ItemBase, conform_json_values
 
 BROADCAST_MAC = "FFFFFFFFFFFF"
 GENERIC_IP4 = "0.0.0.0"

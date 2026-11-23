@@ -2,11 +2,15 @@ from kivy.graphics import Color, Line
 from kivy.properties import ListProperty
 from kivy.uix.widget import Widget
 
-from .. import session
-from ..device import Device
-from ..link import Link
-from .base import IMAGES_DIR, get_device_image_path_by_type, hide_widget
-from .popups import ThemedPopup
+from network_puzzles import session
+from network_puzzles.device import Device
+from network_puzzles.gui.base import (
+    IMAGES_DIR,
+    get_device_image_path_by_type,
+    hide_widget,
+)
+from network_puzzles.gui.popups import ThemedPopup
+from network_puzzles.link import Link
 
 
 class GuiLink(Widget, Link):

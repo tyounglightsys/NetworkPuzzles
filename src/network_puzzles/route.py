@@ -1,6 +1,6 @@
 from copy import deepcopy
 
-from .core import ItemBase
+from network_puzzles.core import ItemBase
 
 
 class Route(ItemBase):

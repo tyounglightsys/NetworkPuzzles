@@ -7,9 +7,9 @@ from kivy.uix.behaviors import DragBehavior
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.image import Image
 
-from .. import interface, session
-from ..device import Device
-from .base import (
+from network_puzzles import interface, session
+from network_puzzles.device import Device
+from network_puzzles.gui.base import (
     HelpHighlight,
     LockEmblem,
     get_device_image_path_by_type,
@@ -18,10 +18,10 @@ from .base import (
     location_to_pos,
     pos_to_location,
 )
-from .buttons import CommandButton
-from .headless import handle_dp as dp
-from .layouts import ThemedBoxLayout
-from .popups import (
+from network_puzzles.gui.buttons import CommandButton
+from network_puzzles.gui.headless import handle_dp as dp
+from network_puzzles.gui.layouts import ThemedBoxLayout
+from network_puzzles.gui.popups import (
     DeviceCommandsPopup,
     DevicePopup,
     EditDhcpPopup,

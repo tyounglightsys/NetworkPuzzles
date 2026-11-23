@@ -6,8 +6,8 @@ import traceback
 
 from kivy.config import Config
 
-from .. import session
-from ..vars import DATA_DIR
+from network_puzzles import session
+from network_puzzles.vars import DATA_DIR
 
 # Set kivy config before any other kivy activity.
 if session.device_type == "desktop":
@@ -37,10 +37,8 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.uix.textinput import TextInput
 
-from .. import messages, nettests
-from ..puzzle import PuzzleTest
-from ..vars import INSTALL_TYPE, USER_DATA_DIR
-from .base import (
+from network_puzzles import messages, nettests
+from network_puzzles.gui.base import (
     BUTTON_FONT_SIZE,
     BUTTON_MAX_H,
     DEVICE_BUTTON_MAX_H,
@@ -51,15 +49,17 @@ from .base import (
     print_layout_info,
     show_grid,
 )
-from .devices import GuiDevice
-from .dropdowns import LangDropDown
-from .packets import PacketManager
-from .popups import (
+from network_puzzles.gui.devices import GuiDevice
+from network_puzzles.gui.dropdowns import LangDropDown
+from network_puzzles.gui.packets import PacketManager
+from network_puzzles.gui.popups import (
     CommandPopup,
     ExceptionPopup,
     PuzzleChooserPopup,
     PuzzleCompletePopup,
 )
+from network_puzzles.puzzle import PuzzleTest
+from network_puzzles.vars import INSTALL_TYPE, USER_DATA_DIR
 
 
 class NetworkPuzzlesApp(App):

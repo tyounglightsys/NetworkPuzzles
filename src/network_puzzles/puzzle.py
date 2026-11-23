@@ -9,13 +9,13 @@ import time
 from packaging.version import Version
 
 # define the global network list
-from . import device, packet, session
-from .core import ItemBase, conform_json_values
+from network_puzzles import device, packet, session
+from network_puzzles.core import ItemBase, conform_json_values
 
 # from .link import Link
-from .nic import Nic
-from .shape import Shape
-from .vars import DATA_DIR
+from network_puzzles.nic import Nic
+from network_puzzles.shape import Shape
+from network_puzzles.vars import DATA_DIR
 
 
 class Puzzle(ItemBase):
