@@ -31,9 +31,16 @@ build = [
 ]
 
 
-[tool.setuptools.dynamic]
-readme = {file = ["README.md"], content-type = "text/plain"}
-version = {attr = "network_puzzles.__version__"}
+[tool.pyright]
+include = ["src", "tests", "scripts"]
+exclude = ["**/__pycache__", ".buildozer", "bin", "build", "dist"]
+venvPath = "."
+venv = ".venv"            # resolve kivy, babel, etc. from the uv venv
+typeCheckingMode = "basic"  # "off" | "basic" | "standard" (default) | "strict"
+
+# Turn off individual noisy rules as needed:
+reportAttributeAccessIssue = false   # Kivy's dynamic properties and self.ids
+reportOptionalMemberAccess = false
 
 [tool.ruff]
 builtins = ["_"]
@@ -46,3 +53,7 @@ quote-style = "preserve"
 "src/network_puzzles/*" = ["LOG015"]
 "__init__.py" = ["E402"]
 "pyinstaller*.spec" = ["F821"]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"], content-type = "text/plain"}
+version = {attr = "network_puzzles.__version__"}
