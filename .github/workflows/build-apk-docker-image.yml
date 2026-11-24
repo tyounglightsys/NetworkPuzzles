@@ -19,7 +19,7 @@ jobs:
   build:
     outputs:
       artifact: ${{ steps.artifact-name.outputs.artifact }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -28,7 +28,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: "3.12" # set your python version
+          python-version-file: .python-version
 
       - name: Install app python package
         run: pip install .
@@ -43,18 +43,18 @@ jobs:
       - name: Ensure localization binaries
         run: pip install babel && python ./scripts/compile-locales.py
 
-      # Build APK
-      - name: Build with Buildozer Action
-        # uses: ArtemSBulgakov/buildozer-action@v1
-        uses: n8marti/buildozer-action@fix-ubuntu-2604
-        id: buildozer
+      - name: Build APK with Buildozer
+        run: |
+          docker run --rm \
+            -v "$PWD":/home/user/hostcwd \
+            -e APP_ANDROID_ACCEPT_SDK_LICENSE=1 \
+            ghcr.io/kivy/buildozer:latest android debug
 
       - id: artifact-name
-        run: echo "artifact=$(basename ${{ steps.buildozer.outputs.filename }})" >> $GITHUB_OUTPUT
+        run: echo "artifact=$(basename "$(ls bin/*.apk | head -n1)")" >> "$GITHUB_OUTPUT"
 
-      # Upload artifacts
       - name: Upload APK artifact
         uses: actions/upload-artifact@v7
         with:
-          path: ${{ steps.buildozer.outputs.filename }}
+          path: bin/*.apk
           archive: false
