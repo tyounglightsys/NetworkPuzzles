@@ -1,21 +1,23 @@
-# All the functions needed for reading the EduNetwork Puzzle file
-# And getting information from it
+""" All the functions needed for reading the EduNetwork Puzzle file and getting information from it"""
+
+import contextlib
 import copy
 import json
 import logging
 import re
 import time
+from collections.abc import Iterable
+from typing import Any, Literal
 
 from packaging.version import Version
 
-# define the global network list
 from network_puzzles import device, messages, packet, session
 from network_puzzles.core import ItemBase, conform_json_values
-
-# from .link import Link
 from network_puzzles.nic import Nic
 from network_puzzles.shape import Shape
 from network_puzzles.vars import DATA_DIR
+
+ItemType = Literal["link", "device", "nettest", "packet", "shape"]
 
 
 class Puzzle(ItemBase):
@@ -64,9 +66,9 @@ class Puzzle(ItemBase):
                 logging.warning(f"Ignoring invalid link data, {lnk}")
 
     @property
-    def packets(self):
+    def packets(self) -> list:
         conform_json_values(self.json, "packet")
-        return self.json.get("packet")
+        return self.json.get("packet", [])
 
     @property
     def tests(self):
@@ -704,8 +706,8 @@ class Puzzle(ItemBase):
 
         return False
 
-    def issueUniqueIdentifier(self):
-        availableval = self.json.get("uniqueidentifier")
+    def issueUniqueIdentifier(self) -> str:
+        availableval = self.json["uniqueidentifier"]
         nextval = str(int(availableval) + 1)
         self.json["uniqueidentifier"] = nextval
         return availableval
@@ -727,12 +729,7 @@ class Puzzle(ItemBase):
             ]  # pull off the last digit if the name is eth0 or port6
         self.createNIC(sdevice, nictype)
 
-    def createNIC(self, thedevicejson, nictype):
-        thedevice = device.Device(thedevicejson)
-        count = 0
-        while (thedevice.nic_from_name(f"{nictype}{count}")) is not None:
-            count = count + 1
-        newnicname = f"{nictype}{count}"
+    def createNIC(self, thedevicejson, nictype) -> dict[str, Any] | None:
         if nictype not in {
             "eth",
             "vpn",
@@ -745,6 +742,11 @@ class Puzzle(ItemBase):
         }:
             logging.debug(f"Oops.  Cannot create a nic of type: {nictype}")
             return None
+        thedevice = device.Device(thedevicejson)
+        count = 0
+        while (thedevice.nic_from_name(f"{nictype}{count}")) is not None:
+            count = count + 1
+        newnicname = f"{nictype}{count}"
         newid = self.issueUniqueIdentifier()
         newip = "0.0.0.0"
         newmask = "0.0.0.0"
@@ -819,7 +821,8 @@ class Puzzle(ItemBase):
             case "ip_phone":
                 # an IP phone has one nic that is DHCP enabled
                 newnic = self.createNIC(newdevice, "eth")
-                newnic["usesdhcp"] = "True"
+                if newnic is not None:
+                    newnic["usesdhcp"] = "True"
             case "laptop":
                 self.createNIC(newdevice, "eth")
                 self.createNIC(newdevice, "wlan")
@@ -931,7 +934,7 @@ class Puzzle(ItemBase):
         existinglink = dnic.get_connected_link()
         if existinglink is not None:
             session.print(
-                f"Destination nic already in use: {dnic['myid']['hostname']} {dnic['myid']['nicname']}"
+                f"Destination nic already in use: {dnic.my_id.hostname} {dnic.my_id.nicname}"
             )
             return False
         # verify the port types match
@@ -980,29 +983,27 @@ class Puzzle(ItemBase):
         for onedevice in self.devices:
             device.Device(onedevice).ClearIPConnections()
 
-    def _get_items(self, item_type: str):
+    def _get_items(self, item_type: ItemType) -> list[dict[str, Any]]:
+        """Return a list of the given item_type.
+
+        Valid types include: "link", "device", "nettest", "packet", "shape".
         """
-        Return a list of the given item_type.
-        Valid types include: "link", "device", "nettest", "packet", "shape
-        """
-        items = []
-        only_one_item = False
-        for item in self.json.get(item_type, []):
-            # Some item attribs are single-item dicts. Convert if necessary.
-            if not isinstance(item, dict):
-                only_one_item = True
-                item = self.json.get(item_type)
+        # Wrap a single-item dict in a list, or add an empty list if the key is missing.
+        conform_json_values(self.json, item_type)
+        items: list[dict[str, Any]] = []
+        for item in self.json[item_type]:
             match item_type:
                 case "link" | "device":
                     if "hostname" in item:
                         items.append(item)
                 case "nettest" | "packet" | "shape":
                     items.append(item)
-            if only_one_item:
-                break  # stop iterating through dict keys
         return items
 
-    def _item_by_attrib(self, items: iter, attrib: str, value: str) -> dict | None:
+
+    def _item_by_attrib(
+        self, items: Iterable[dict[str, Any] | None], attrib: str, value: str
+    ) -> dict[str, Any] | None:
         # Returns first match; i.e. assumes only one item in list matches given
         # attribute. It also assumes that 'items' is a list of dicts or json data.
         for item in items:
@@ -1074,7 +1075,7 @@ def get_puzzle_text(network: dict) -> tuple[str, str]:
     )
 
 
-def read_json_file(file_path):
+def read_json_file(file_path) -> dict[str, Any] | None:
     """
     Reads a JSON file and returns the data as a Python dictionary.
 
@@ -1085,7 +1086,7 @@ def read_json_file(file_path):
         dict: The JSON data as a Python dictionary, or None if an error occurs.
     """
     try:
-        with open(file_path, "r") as file:
+        with open(file_path) as file:
             data = json.load(file)
             return data
     except FileNotFoundError:
@@ -1111,7 +1112,7 @@ def sort_session_puzzles():
     )
 
 
-def filter_items(items: list, pattern: str, json_files: bool = False) -> list:
+def filter_items(items: list, pattern: str | None, json_files: bool = False) -> list:
     filtered_items = []
     for item in items:
         if not json_files:
@@ -1145,8 +1146,9 @@ def readPuzzle():
             # We stripped off the ".json" from the name, so we need to add it back
             file_path = str(puzzles_dir / f"{one}.json")
             oneentry = read_json_file(file_path)
-            oneentry["EduNetworkBuilder"]["Network"]["name"] = one
-            session.puzzlelist.append(oneentry)
+            if oneentry is not None:
+                oneentry["EduNetworkBuilder"]["Network"]["name"] = one
+                session.puzzlelist.append(oneentry)
             # print("loading: " + one)
         sort_session_puzzles()
         # get rid of undo history; it would not apply to the new puzzle
@@ -1188,11 +1190,8 @@ def choosePuzzle(what, filter=None):
         filteredList = listPuzzles(filter)
         if len(filteredList) > 0:
             # this means it is a valid filter. Try to use it.
-            try:
+            with contextlib.suppress(ValueError):
                 what = filteredList[int(what)]
-            except ValueError:
-                # It did not work.  Ignore the filter.
-                pass
 
     if isinstance(what, int):
         puz = copy.deepcopy(session.puzzlelist[what]["EduNetworkBuilder"]["Network"])

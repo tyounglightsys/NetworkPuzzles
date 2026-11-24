@@ -236,8 +236,7 @@ class Nic(ItemBase):
             or packet.is_broadcast_mac(pkt.destination_mac)
             or dev.routes_packets
             or dev.is_wireless_forwarder
-            or self.type == "port"
-            or self.type == "wport"
+            or self.type in {"port", "wport"}
         ):
             # The packet is good, and has reached the computer.  Pass it on to the device
             logging.debug(f"Packet entering device: {dev.hostname}")
@@ -253,15 +252,12 @@ class Nic(ItemBase):
             return False
 
     def ensure_mac(self, data=None):
-        if data is not None:
-            new_data = data
-        else:
-            new_data = self.json
+        new_data = data if data is not None else self.json
 
         if "Mac" not in new_data:
             # Most of the network cards do not have this done yet.  We generate a new random one
             localmac = ""
-            for i in range(1, 13):
+            for _ in range(1, 13):
                 localmac = localmac + random.choice("ABCDEF1234567890")
             new_data["Mac"] = localmac
 
