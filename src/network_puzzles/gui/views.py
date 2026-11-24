@@ -4,7 +4,7 @@ from copy import deepcopy
 
 from kivy.uix.recycleview import RecycleView
 
-from network_puzzles import session
+from network_puzzles import puzzle, session
 from network_puzzles.util import exclude_from_list
 
 
@@ -76,7 +76,16 @@ class PuzzlesRecView(AppRecView):
             filtered_puzzles = exclude_from_list(
                 filtered_puzzles, self.app.gui_level_exclusions
             )
-        self.data = [{"text": n} for n in filtered_puzzles]
+        networks = {
+            p["EduNetworkBuilder"]["Network"]["name"]: p["EduNetworkBuilder"]["Network"]
+            for p in session.puzzlelist
+        }
+        data = []
+        for name in filtered_puzzles:
+            net = networks[name]
+            title = puzzle.get_puzzle_text(net)[0]
+            data.append({"text": _("Level {level}: {title}").format(level=net["level"], title=title)})
+        self.data = data
 
 
 class RoutesRecView(AppRecView):

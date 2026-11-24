@@ -24,7 +24,7 @@ if hasattr(sys, "_MEIPASS"):
     resource_add_path(os.path.join(sys._MEIPASS))
 # Close pyinstaller splash.
 try:
-    import pyi_splash
+    import pyi_splash  # pyright: ignore[reportMissingModuleSource]
 
     pyi_splash.close()
 except ModuleNotFoundError:
@@ -37,7 +37,7 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.uix.textinput import TextInput
 
-from network_puzzles import messages, nettests
+from network_puzzles import nettests, puzzle
 from network_puzzles.gui.base import (
     BUTTON_FONT_SIZE,
     BUTTON_MAX_H,
@@ -149,17 +149,7 @@ class NetworkPuzzlesApp(App):
 
         self.reset_display()
 
-        # Get puzzle text from localized messages, if possible, but fallback to
-        # English text in JSON data.
-        puzzle_data = self.ui.puzzle.json
-        logging.debug(f"App: {self.ui.puzzle.uid=}")
-        puzzle_messages = messages.puzzles.get(self.ui.puzzle.uid)
-        if puzzle_messages:
-            title = puzzle_messages.get("title")
-            info = puzzle_messages.get("info")
-        else:
-            title = puzzle_data.get("en_title", "<no title>")
-            info = puzzle_data.get("en_message", "<no message>")
+        title, info = puzzle.get_puzzle_text(self.ui.puzzle.json)
 
         self.title += f": {title}"
         self.root.ids.info.text = f"[b]{title}[/b]\n\n{info}"

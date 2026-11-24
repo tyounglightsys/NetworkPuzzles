@@ -9,7 +9,7 @@ import time
 from packaging.version import Version
 
 # define the global network list
-from network_puzzles import device, packet, session
+from network_puzzles import device, messages, packet, session
 from network_puzzles.core import ItemBase, conform_json_values
 
 # from .link import Link
@@ -82,7 +82,7 @@ class Puzzle(ItemBase):
 
     @property
     def uid(self):
-        return f"{self.json.get('level')}.{self.json.get('sortorder')}"
+        return puzzle_uid(self.json)
 
     def add_packet(self, pkt):
         if isinstance(pkt, packet.Packet):
@@ -1057,6 +1057,21 @@ class PuzzleTest:
 
 class PuzzleException(Exception):
     pass
+
+
+def puzzle_uid(network: dict) -> str:
+    return f"{network.get('level')}.{network.get('sortorder')}"
+
+
+def get_puzzle_text(network: dict) -> tuple[str, str]:
+    """Return (title, info), translated when available; else English from JSON."""
+    msgs = messages.puzzles.get(puzzle_uid(network))
+    if msgs:
+        return msgs["title"], msgs["info"]
+    return (
+        network.get("en_title", "<no title>"),
+        network.get("en_message", "<no message>"),
+    )
 
 
 def read_json_file(file_path):
