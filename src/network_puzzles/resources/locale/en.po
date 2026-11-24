@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-01 10:21-0400\n"
+"POT-Creation-Date: 2026-11-24 08:54+0100\n"
 "PO-Revision-Date: 2026-06-26 07:06-0500\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -397,8 +397,8 @@ msgstr ""
 #: messages.py:173
 msgid ""
 "One of the subnets has a poorly crafted subnet. There are two ways to "
-"represent subnets. The \"dot-decimal\" notation (255.255.255.0) and CIDR "
-"(/24). \n"
+"represent subnets. The \"dot-decimal\" notation (255.255.255.0) and CIDR (/"
+"24). \n"
 "\n"
 "Here, we are using a subnet of 255.255.255.129. The 129, in binary, is "
 "10000001. That trailing 1 is the problem. It basically puts the odd numbers "
@@ -586,10 +586,10 @@ msgstr ""
 #: messages.py:279
 msgid ""
 "Packets that go through a VPN are \"encapsulated.\"  This means that they "
-"are packed up and put inside a VPN packet. A traceroute packet has a "
-"\"TTL\" (Time to Live). Every router along the path is supposed to subtract "
-"one from the TTL, and when the TTL is zero, the device that has it will drop "
-"the traceroute packet and respond to the originating machine. \n"
+"are packed up and put inside a VPN packet. A traceroute packet has a \"TTL\" "
+"(Time to Live). Every router along the path is supposed to subtract one from "
+"the TTL, and when the TTL is zero, the device that has it will drop the "
+"traceroute packet and respond to the originating machine. \n"
 "\n"
 "As you do the traceroutes, notice that the router in the center never "
 "responds to the traceroute. That is because the traceroute packet is "
@@ -956,32 +956,45 @@ msgstr ""
 msgid "needs to traceroute to:"
 msgstr ""
 
-#: networkpuzzles.kv:36
-msgid "choose puzzle"
+#: devices.kv:34
+msgid "Hostname"
 msgstr ""
 
-#: networkpuzzles.kv:46
-msgid "restart puzzle"
+#: devices.kv:40
+msgid "Gateway"
 msgstr ""
 
-#: networkpuzzles.kv:52
-msgid "undo"
+#: devices.kv:46 popups.kv:180
+msgid "Routes"
 msgstr ""
 
-#: networkpuzzles.kv:58
-msgid "redo"
+#: devices.kv:57
+msgid "DHCP server"
 msgstr ""
 
-#: networkpuzzles.kv:64
-msgid "choose language"
+#: devices.kv:60
+msgid "DHCP"
 msgstr ""
 
-#: networkpuzzles.kv:70
-msgid "help"
+#: devices.kv:70 devices.kv:73
+msgid "Firewall"
 msgstr ""
 
-#: networkpuzzles.kv:79
-msgid "Help level:"
+#: devices.kv:77
+msgid "VLANs"
+msgstr ""
+
+#: devices.kv:89
+msgid "NICs"
+msgstr ""
+
+#: devices.kv:104 devices.kv:131 popups.kv:111 popups.kv:211 links.kv:41
+#: devices.py:221 devices.py:228 devices.py:266 popups.py:254
+msgid "Edit"
+msgstr ""
+
+#: devices.kv:115
+msgid "IPs"
 msgstr ""
 
 #: popups.kv:13
@@ -994,6 +1007,10 @@ msgstr ""
 
 #: popups.kv:29
 msgid "Gateway:"
+msgstr ""
+
+#: popups.kv:42
+msgid "Choose NIC"
 msgstr ""
 
 #: popups.kv:54
@@ -1020,9 +1037,8 @@ msgstr ""
 msgid "Edit Firewall configuration"
 msgstr ""
 
-#: popups.kv:111 popups.kv:211 devices.py:225 devices.py:232 links.kv:41
-#: devices.kv:104 devices.kv:131
-msgid "Edit"
+#: popups.kv:121
+msgid "Edit IP configuration:"
 msgstr ""
 
 #: popups.kv:129
@@ -1047,6 +1063,10 @@ msgstr ""
 
 #: popups.kv:167
 msgid "Encryption key"
+msgstr ""
+
+#: popups.kv:177
+msgid "Edit route"
 msgstr ""
 
 #: popups.kv:185
@@ -1113,8 +1133,52 @@ msgstr ""
 msgid "Restart the app?"
 msgstr ""
 
-#: devices.py:222 devices.py:230
+#: links.kv:2
+msgid "Link"
+msgstr ""
+
+#: links.kv:28
+msgid "link type:"
+msgstr ""
+
+#: links.kv:38
+msgid "Delete"
+msgstr ""
+
+#: networkpuzzles.kv:36
+msgid "choose puzzle"
+msgstr ""
+
+#: networkpuzzles.kv:46
+msgid "restart puzzle"
+msgstr ""
+
+#: networkpuzzles.kv:52
+msgid "undo"
+msgstr ""
+
+#: networkpuzzles.kv:58
+msgid "redo"
+msgstr ""
+
+#: networkpuzzles.kv:64
+msgid "choose language"
+msgstr ""
+
+#: networkpuzzles.kv:70
+msgid "help"
+msgstr ""
+
+#: networkpuzzles.kv:79
+msgid "Help level:"
+msgstr ""
+
+#: devices.py:218 devices.py:226
 msgid "Ping [host]"
+msgstr ""
+
+#: devices.py:270
+msgid "Ping [host] from"
 msgstr ""
 
 #: layouts.py:27
@@ -1125,46 +1189,11 @@ msgstr ""
 msgid "add new item"
 msgstr ""
 
-#: links.kv:2
-msgid "Link"
+#: popups.py:256
+msgid "Add NIC to"
 msgstr ""
 
-#: links.kv:38
-msgid "Delete"
-msgstr ""
-
-#: devices.kv:34
-msgid "Hostname"
-msgstr ""
-
-#: devices.kv:40
-msgid "Gateway"
-msgstr ""
-
-#: devices.kv:46
-msgid "Routes"
-msgstr ""
-
-#: devices.kv:57
-msgid "DHCP server"
-msgstr ""
-
-#: devices.kv:60
-msgid "DHCP"
-msgstr ""
-
-#: devices.kv:70 devices.kv:73
-msgid "Firewall"
-msgstr ""
-
-#: devices.kv:77
-msgid "VLANs"
-msgstr ""
-
-#: devices.kv:89
-msgid "NICs"
-msgstr ""
-
-#: devices.kv:115
-msgid "IPs"
+#: views.py:89
+#, python-brace-format
+msgid "Level {level}: {title}"
 msgstr ""
