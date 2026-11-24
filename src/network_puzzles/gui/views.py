@@ -70,7 +70,7 @@ class PuzzlesRecView(AppRecView):
         self.update_data()
 
     def update_data(self):
-        filtered_puzzles = [n for n in self.app.filtered_puzzlelist]
+        filtered_puzzles = list(self.app.filtered_puzzlelist)
         # FIXME: Remove this limit after development is complete.
         if hasattr(self.app, "gui_level_exclusions"):
             filtered_puzzles = exclude_from_list(
@@ -84,7 +84,15 @@ class PuzzlesRecView(AppRecView):
         for name in filtered_puzzles:
             net = networks[name]
             title = puzzle.get_puzzle_text(net)[0]
-            data.append({"text": _("Level {level}: {title}").format(level=net["level"], title=title)})
+            data.append(
+                {
+                    "text": _("Level {level}: {title}").format(
+                        level=net["level"], title=title
+                    ),
+                    "data": name,
+                }
+            )
+
         self.data = data
 
 

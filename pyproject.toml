@@ -49,6 +49,10 @@ builtins = ["_"]
 # Preserve quote style in code b/c xgettext doesn't recognize `_('text')` strings.
 quote-style = "preserve"
 
+[tool.ruff.lint]
+# Consider adding later: "N", "RET"
+extend-select = ["B", "C4", "SIM", "UP", "PLR1714"]
+
 [tool.ruff.lint.per-file-ignores]
 "src/network_puzzles/*" = ["LOG015"]
 "__init__.py" = ["E402"]

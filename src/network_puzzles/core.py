@@ -1,15 +1,17 @@
+from typing import Any
+
+
 class ItemBase:
     """Base class for all puzzle items that provides access to item's JSON data."""
 
-    def __init__(self, json_data=None):
-        if json_data is not None:
-            if not isinstance(json_data, dict):
-                raise ValueError(
-                    f"{self.__class__} requires JSON data, not '{type(json_data)}'."
-                )
-            self.json = json_data
-        else:
-            self.json = {}
+    def __init__(self, json_data: dict[str, Any] | None = None):
+        if json_data is None:
+            json_data = {}
+        elif not isinstance(json_data, dict):
+            raise ValueError(
+                f"{self.__class__} requires JSON data, not '{type(json_data)}'."
+            )
+        self.json: dict[str, Any] = json_data
 
 
 def get_coordinate_distance(sx, sy, dx, dy):

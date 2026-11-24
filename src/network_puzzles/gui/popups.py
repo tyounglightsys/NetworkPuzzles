@@ -384,7 +384,10 @@ class PingHostPopup(DevicePopup):
 
 class PuzzleChooserPopup(ActionPopup):
     def on_load(self):
-        self.app.selected_puzzle = self.ids.puzzles_view.selected_item.get("data")
+        item = self.ids.puzzles_view.selected_item
+        if not item or not item.get("data"):
+            return  # nothing selected
+        self.app.selected_puzzle = item["data"]
         self.app.setup_puzzle()
         super().on_okay()
 
