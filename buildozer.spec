@@ -329,8 +329,16 @@ android.allow_backup = True
 #p4a.fork = kivy
 
 # (str) python-for-android branch to use, defaults to master
-p4a.branch = master
-# p4a.branch = develop
+# p4a.branch = master
+# Note @2026-11-24:
+# In python-for-android v2026.05.09, the pure-Python module install stage creates a temporary build
+# venv and then runs pip install -U pip inside it, which can leave the venv with a mix of files from
+# two pip versions. Others have reported the same capture_logging ImportError: one project traced it
+# to p4a's throwaway pip venv ending up with two pip versions mixed together. The fix, PR #3360, was
+# merged on July 30, 2026. It adds --clear to the venv creation so a contaminated venv is wiped, and
+# it removes the pip self-upgrade step completely, because the pip that comes with the host Python's
+# ensurepip can already install Cython and pure-Python packages.
+p4a.branch = develop
 
 # (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch
 #p4a.commit = HEAD
