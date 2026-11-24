@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 0.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-07-01 10:21-0400\n"
+"POT-Creation-Date: 2026-11-24 08:54+0100\n"
 "PO-Revision-Date: 2025-05-18 16:52+0100\n"
 "Last-Translator: Nate Marti <nate_marti@sil.org>\n"
 "Language-Team: Nate Marti <nate_marti@sil.org>\n"
@@ -32,7 +32,7 @@ msgstr ""
 
 #: messages.py:11
 msgid "Ping Test"
-msgstr "Teste de ping"
+msgstr "Test de ping"
 
 #: messages.py:13
 msgid ""
@@ -40,7 +40,7 @@ msgid ""
 "address or the hostname of the device you are trying to ping in the pop-up "
 "window."
 msgstr ""
-"Tape or clique sur pc0 et faire ping de laptop0 à laptop1. Dans la fenêtre "
+"Tape or clique sur pc0 et faire ping à laptop0 et à laptop1. Dans la fenêtre "
 "pop-up tu peux saisir l'adresse IP ou le nom d'hôte de l'appareil auquel tu "
 "essaies de faire ping. "
 
@@ -58,8 +58,8 @@ msgid ""
 msgstr ""
 "Connecter l'appareil isolé au réseau. \n"
 "\n"
-"Tape ou clique sur le bouton d'ajout (le « +\"), puis choisis le « câble "
-"» (icône de ligne) du menu. Choisis le premier appareil et une NIC, puis le "
+"Tape ou clique sur le bouton d'ajout (le « +\"), puis choisis le « câble » "
+"(icône de ligne) du menu. Choisis le premier appareil et une NIC, puis le "
 "deuxième appareil et une NIC."
 
 #: messages.py:23
@@ -467,8 +467,8 @@ msgstr ""
 "différents PCs aux machines sur l'autre réseau.\n"
 "\n"
 "Celui-ci est le même réseau comme le dernière, sauf qu'il n'y a qu'un seul "
-"routeur au lieu de deux. Nous allons employer ce concept plus tard quand nous "
-"aborderons le sujet de la sécurité. Il sera utile afin de séparer de "
+"routeur au lieu de deux. Nous allons employer ce concept plus tard quand "
+"nous aborderons le sujet de la sécurité. Il sera utile afin de séparer de "
 "différents groupes d'utilisateurs sur un réseau (par exemple, des étudiants, "
 "les professeurs, et des invités), et nous voulons donner un niveaux de "
 "sécurité différent à chaque groupe. En forçant le trafic réseau des "
@@ -552,8 +552,8 @@ msgstr "Mauvais masque de réseau"
 #: messages.py:173
 msgid ""
 "One of the subnets has a poorly crafted subnet. There are two ways to "
-"represent subnets. The \"dot-decimal\" notation (255.255.255.0) and CIDR "
-"(/24). \n"
+"represent subnets. The \"dot-decimal\" notation (255.255.255.0) and CIDR (/"
+"24). \n"
 "\n"
 "Here, we are using a subnet of 255.255.255.129. The 129, in binary, is "
 "10000001. That trailing 1 is the problem. It basically puts the odd numbers "
@@ -800,10 +800,10 @@ msgstr "Des VPNs et traceroute"
 #: messages.py:279
 msgid ""
 "Packets that go through a VPN are \"encapsulated.\"  This means that they "
-"are packed up and put inside a VPN packet. A traceroute packet has a "
-"\"TTL\" (Time to Live). Every router along the path is supposed to subtract "
-"one from the TTL, and when the TTL is zero, the device that has it will drop "
-"the traceroute packet and respond to the originating machine. \n"
+"are packed up and put inside a VPN packet. A traceroute packet has a \"TTL\" "
+"(Time to Live). Every router along the path is supposed to subtract one from "
+"the TTL, and when the TTL is zero, the device that has it will drop the "
+"traceroute packet and respond to the originating machine. \n"
 "\n"
 "As you do the traceroutes, notice that the router in the center never "
 "responds to the traceroute. That is because the traceroute packet is "
@@ -813,9 +813,9 @@ msgid ""
 "traceroute."
 msgstr ""
 "Des paquets que traversent un VPN sont « encapsulés.\" Ça veut dire qu'il "
-"sont rangés et stockés dans un paquet VPN. Un paquet traceroute inclut un « "
-"TTL » (Time to Live). Chaque routeur au long du chemin devrait soustraire un "
-"du TTL, et quand le TTL arrive à zéro, l'appareil qui tient le paquet le "
+"sont rangés et stockés dans un paquet VPN. Un paquet traceroute inclut un "
+"« TTL » (Time to Live). Chaque routeur au long du chemin devrait soustraire "
+"un du TTL, et quand le TTL arrive à zéro, l'appareil qui tient le paquet le "
 "lâchera et envoyer une réponse à la machine d'origine du traceroute. \n"
 "\n"
 "Lors que tu fais le traceroute, observe que le routeur au centre ne répond "
@@ -1201,33 +1201,46 @@ msgstr "doit faire un traceroute"
 msgid "needs to traceroute to:"
 msgstr "doit faire un traceroute à :"
 
-#: networkpuzzles.kv:36
-msgid "choose puzzle"
-msgstr "sélection de puzzle"
+#: devices.kv:34
+msgid "Hostname"
+msgstr "Nom d'hôte"
 
-#: networkpuzzles.kv:46
-msgid "restart puzzle"
-msgstr "recommencer"
+#: devices.kv:40
+msgid "Gateway"
+msgstr "Passerelle"
 
-#: networkpuzzles.kv:52
-msgid "undo"
-msgstr "annuler"
+#: devices.kv:46 popups.kv:180
+msgid "Routes"
+msgstr "Routes"
 
-#: networkpuzzles.kv:58
-msgid "redo"
-msgstr "refaire"
+#: devices.kv:57
+msgid "DHCP server"
+msgstr "serveur DHCP"
 
-#: networkpuzzles.kv:64
-msgid "choose language"
-msgstr "choisir la langue"
+#: devices.kv:60
+msgid "DHCP"
+msgstr "DHCP"
 
-#: networkpuzzles.kv:70
-msgid "help"
-msgstr "aide"
+#: devices.kv:70 devices.kv:73
+msgid "Firewall"
+msgstr "Pare-feu"
 
-#: networkpuzzles.kv:79
-msgid "Help level:"
-msgstr "Niveau d'aide :"
+#: devices.kv:77
+msgid "VLANs"
+msgstr "VLANs"
+
+#: devices.kv:89
+msgid "NICs"
+msgstr "NICs"
+
+#: devices.kv:104 devices.kv:131 popups.kv:111 popups.kv:211 links.kv:41
+#: devices.py:221 devices.py:228 devices.py:266 popups.py:254
+msgid "Edit"
+msgstr "Modifier"
+
+#: devices.kv:115
+msgid "IPs"
+msgstr "Adresses IP"
 
 #: popups.kv:13
 msgid "IP Address:"
@@ -1240,6 +1253,10 @@ msgstr "Masque de réseau :"
 #: popups.kv:29
 msgid "Gateway:"
 msgstr "Passerelle :"
+
+#: popups.kv:42
+msgid "Choose NIC"
+msgstr "Choix de NIC"
 
 #: popups.kv:54
 msgid "Input command:"
@@ -1265,10 +1282,9 @@ msgstr "Fin de plage"
 msgid "Edit Firewall configuration"
 msgstr "Modifier configuration de pare-feu"
 
-#: popups.kv:111 popups.kv:211 devices.py:225 devices.py:232 links.kv:41
-#: devices.kv:104 devices.kv:131
-msgid "Edit"
-msgstr "Modifier"
+#: popups.kv:121
+msgid "Edit IP configuration:"
+msgstr "Modifier configuration de IP :"
 
 #: popups.kv:129
 msgid "NIC type"
@@ -1293,6 +1309,10 @@ msgstr "Point de terminaison VPN"
 #: popups.kv:167
 msgid "Encryption key"
 msgstr "Clé de chiffrage"
+
+#: popups.kv:177
+msgid "Edit route"
+msgstr "Modifier route"
 
 #: popups.kv:185
 msgid "Routes from NICs (read-only)"
@@ -1358,9 +1378,53 @@ msgstr "Redémarrer l'appli ?"
 msgid "Restart the app?"
 msgstr "Redémarrer l'appli ?"
 
-#: devices.py:222 devices.py:230
+#: links.kv:2
+msgid "Link"
+msgstr "Lien"
+
+#: links.kv:28
+msgid "link type:"
+msgstr "type de lien :"
+
+#: links.kv:38
+msgid "Delete"
+msgstr "Supprimer"
+
+#: networkpuzzles.kv:36
+msgid "choose puzzle"
+msgstr "sélection de puzzle"
+
+#: networkpuzzles.kv:46
+msgid "restart puzzle"
+msgstr "recommencer"
+
+#: networkpuzzles.kv:52
+msgid "undo"
+msgstr "annuler"
+
+#: networkpuzzles.kv:58
+msgid "redo"
+msgstr "refaire"
+
+#: networkpuzzles.kv:64
+msgid "choose language"
+msgstr "choisir la langue"
+
+#: networkpuzzles.kv:70
+msgid "help"
+msgstr "aide"
+
+#: networkpuzzles.kv:79
+msgid "Help level:"
+msgstr "Niveau d'aide :"
+
+#: devices.py:218 devices.py:226
 msgid "Ping [host]"
 msgstr "Faire ping à [hôte]"
+
+#: devices.py:270
+msgid "Ping [host] from"
+msgstr "Faire ping à [hôte] à partir de"
 
 #: layouts.py:27
 msgid "Cancel"
@@ -1370,49 +1434,14 @@ msgstr "Annuler"
 msgid "add new item"
 msgstr "ajouter un élément"
 
-#: links.kv:2
-msgid "Link"
-msgstr "Lien"
+#: popups.py:256
+msgid "Add NIC to"
+msgstr "Ajouter NIC à"
 
-#: links.kv:38
-msgid "Delete"
-msgstr "Supprimer"
-
-#: devices.kv:34
-msgid "Hostname"
-msgstr "Nom d'hôte"
-
-#: devices.kv:40
-msgid "Gateway"
-msgstr "Passerelle"
-
-#: devices.kv:46
-msgid "Routes"
-msgstr "Routes"
-
-#: devices.kv:57
-msgid "DHCP server"
-msgstr "serveur DHCP"
-
-#: devices.kv:60
-msgid "DHCP"
-msgstr "DHCP"
-
-#: devices.kv:70 devices.kv:73
-msgid "Firewall"
-msgstr "Pare-feu"
-
-#: devices.kv:77
-msgid "VLANs"
-msgstr "VLANs"
-
-#: devices.kv:89
-msgid "NICs"
-msgstr "NICs"
-
-#: devices.kv:115
-msgid "IPs"
-msgstr "Adresses IP"
+#: views.py:89
+#, python-brace-format
+msgid "Level {level}: {title}"
+msgstr "Niveau {level}: {title}"
 
 #~ msgid ""
 #~ "This puzzle shows you what happens when you create a network loop.  A "

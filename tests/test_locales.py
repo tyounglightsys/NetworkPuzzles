@@ -12,4 +12,4 @@ class TestGettext(unittest.TestCase):
             )
         except FileNotFoundError:
             self.fail("FR .mo file not found; run `uv run scripts/compile-locales.py`")
-        self.assertEqual(t.gettext("Ping Test"), "Teste de ping")
+        self.assertEqual(t.gettext("Ping Test"), "Test de ping")
