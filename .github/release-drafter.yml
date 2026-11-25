@@ -1,6 +1,5 @@
-# Ref: https://github.com/marketplace/actions/release-drafter
-tag-template: "$RESOLVED_VERSION"
+# Full-release drafts: changes since the last full (non-pre) release.
+# Tag, name and heading are passed in by the workflow.
+include-pre-releases: false
 template: |
-  ## What's Changed in v$RESOLVED_VERSION
-
   $CHANGES

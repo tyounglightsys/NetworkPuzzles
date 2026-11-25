@@ -1,0 +1,5 @@
+# Pre-release drafts: changes since the last release of any kind,
+# including earlier pre-releases.
+include-pre-releases: true
+template: |
+  $CHANGES

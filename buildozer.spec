@@ -339,6 +339,7 @@ android.allow_backup = True
 # it removes the pip self-upgrade step completely, because the pip that comes with the host Python's
 # ensurepip can already install Cython and pure-Python packages.
 p4a.branch = develop
+p4a.commit = 9562d1b4f306d0af1e76991c711114010dea4152
 
 # (str) python-for-android specific commit to use, defaults to HEAD, must be within p4a.branch
 #p4a.commit = HEAD

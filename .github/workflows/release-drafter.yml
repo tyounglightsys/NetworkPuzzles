@@ -1,9 +1,13 @@
 name: Create/update draft releases
+
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+    paths:
+      # Only pushes that touch the version file can bump the version. 
+      - src/network_puzzles/__init__.py
 
 permissions:
   contents: write
@@ -11,19 +15,48 @@ permissions:
 
 jobs:
   get-version:
+    runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
-    runs-on: ubuntu-latest
+      base: ${{ steps.version.outputs.base }}
+      is_pre: ${{ steps.version.outputs.is_pre }}
+      changed: ${{ steps.version.outputs.changed }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # needed to read the version at github.event.before
 
       - id: version
+        env:
+          EVENT: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
         run: |
           version_file=src/network_puzzles/__init__.py
           regexp='(?<=__version__ = ")[0-9a-z.~+-]+(?=")'
           version=$(grep -oP "$regexp" "$version_file")
-          echo "$regexp; $version_file -> $version"
-          echo "version=$version" >> $GITHUB_OUTPUT
+
+          # Base release number: MAJOR.MINOR.PATCH, required.
+          base=$(grep -oP '^[0-9]+\.[0-9]+\.[0-9]+' <<< "$version") || {
+            echo "::error::__version__ '$version' must start with MAJOR.MINOR.PATCH"
+            exit 1
+          }
+          # Anything after M.m.p makes it a pre-release.
+          if [[ "$version" == "$base" ]]; then is_pre=false; else is_pre=true; fi
+
+          # Did this push change the version? (Manual runs always count.)
+          changed=true
+          if [[ "$EVENT" == push && -n "$BEFORE" && ! "$BEFORE" =~ ^0+$ ]]; then
+            previous=$(git show "$BEFORE:$version_file" 2>/dev/null | grep -oP "$regexp" || true)
+            if [[ "$previous" == "$version" ]]; then changed=false; fi
+          fi
+
+          echo "version=$version base=$base is_pre=$is_pre changed=$changed"
+          {
+            echo "version=$version"
+            echo "base=$base"
+            echo "is_pre=$is_pre"
+            echo "changed=$changed"
+          } >> "$GITHUB_OUTPUT"
 
   update-release-draft:
     outputs:
@@ -37,21 +70,9 @@ jobs:
         with:
           version: ${{ needs.get-version.outputs.version }}
 
-  update-prerelease-draft:
-    outputs:
-      tag_name: ${{ steps.prerelease.outputs.tag_name }}
-    needs: get-version
-    runs-on: ubuntu-latest
-    steps:
-      - name: prepare prerelease draft
-        id: prerelease
-        uses: release-drafter/release-drafter@v7
-        with:
-          prerelease: true
-          prerelease-identifier: "rc"
-          version: ${{ needs.get-version.outputs.version }}
-
   run-tests:
+    needs: get-version
+    if: needs.get-version.outputs.changed == 'true'
     uses: ./.github/workflows/run-tests.yml
 
   build-exe:
@@ -62,42 +83,56 @@ jobs:
     needs: run-tests
     uses: ./.github/workflows/build-apk-docker-image.yml
 
-  upload-exes:
-    needs: [build-exe, update-prerelease-draft, update-release-draft]
+  update-drafts:
+    # Runs only after both builds succeed, so a draft never ends up half-populated.
+    needs: [get-version, build-exe, build-apk]
     runs-on: ubuntu-latest
+    concurrency:
+      group: release-drafts
+      cancel-in-progress: false
+    env:
+      VERSION: ${{ needs.get-version.outputs.version }}
+      BASE: ${{ needs.get-version.outputs.base }}
     steps:
-      - uses: actions/checkout@v7
+      # Always: the full-release draft, with changes since the last full release.
+      - name: Update release draft
+        id: release
+        uses: release-drafter/release-drafter@v7
+        with:
+          tag: ${{ env.BASE }}
+          name: v${{ env.BASE }}
+          header: "## What's Changed in v${{ env.BASE }}"
+          commitish: ${{ github.sha }}
+
+      # Pre-release versions only: changes since the last release of any kind.
+      - name: Update pre-release draft
+        id: prerelease
+        if: needs.get-version.outputs.is_pre == 'true'
+        uses: release-drafter/release-drafter@v7
+        with:
+          config-name: release-drafter-prerelease.yml
+          prerelease: true
+          tag: ${{ env.VERSION }}
+          name: v${{ env.VERSION }}
+          header: "## What's Changed in v${{ env.VERSION }}"
+          commitish: ${{ github.sha }}
 
       - uses: actions/download-artifact@v8
         with:
           name: NetworkPuzzles.exe
-          
-      - name: upload prerelease EXE
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ needs.update-prerelease-draft.outputs.tag_name }} NetworkPuzzles.exe --clobber
-
-      - name: upload release EXE
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ needs.update-release-draft.outputs.tag_name }} NetworkPuzzles.exe --clobber
-
-  upload-apks:
-    needs: [build-apk, update-prerelease-draft, update-release-draft]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
+          path: dist
 
       - uses: actions/download-artifact@v8
         with:
           name: ${{ needs.build-apk.outputs.artifact }}
+          path: dist
 
-      - name: upload prerelease APK
+      # Binaries go to exactly one draft: the one matching the version's type.
+      - name: Upload binaries
         env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ needs.update-prerelease-draft.outputs.tag_name }} ${{ needs.build-apk.outputs.artifact }} --clobber
-
-      - name: upload release APK
-        env:
-          GITHUB_TOKEN: ${{ github.TOKEN }}
-        run: gh release upload ${{ needs.update-release-draft.outputs.tag_name }} ${{ needs.build-apk.outputs.artifact }} --clobber
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ needs.get-version.outputs.is_pre == 'true' && steps.prerelease.outputs.tag_name || steps.release.outputs.tag_name }}
+        run: |
+          ls -l dist
+          gh release upload "$TAG" dist/* --clobber

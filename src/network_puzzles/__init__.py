@@ -5,7 +5,7 @@ import sys
 
 from network_puzzles.vars import APP_TITLE, DATA_DIR, Session
 
-__version__ = "0.1"
+__version__ = "0.1.0rc1"
 
 localedir = DATA_DIR / "resources" / "locale"
 t_en = gettext.translation(
