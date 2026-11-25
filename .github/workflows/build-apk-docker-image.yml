@@ -43,11 +43,18 @@ jobs:
       - name: Ensure localization binaries
         run: pip install babel && python ./scripts/compile-locales.py
 
+      - name: Compute Android versionCode
+        run: |
+          code=$(python scripts/android-version-code.py)
+          echo "Android versionCode: $code"
+          echo "APP_ANDROID_NUMERIC_VERSION=$code" >> "$GITHUB_ENV"
+
       - name: Build APK with Buildozer
         run: |
           docker run --rm \
             -v "$PWD":/home/user/hostcwd \
             -e APP_ANDROID_ACCEPT_SDK_LICENSE=1 \
+            -e APP_ANDROID_NUMERIC_VERSION \
             ghcr.io/kivy/buildozer:latest android debug
 
       - id: artifact-name
